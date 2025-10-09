@@ -1,56 +1,17 @@
-import { supabase } from './supabaseClient';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
+import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
 
-// Helper to convert DB snake_case to JS camelCase
-// Supabase returns fields with quotes (e.g., "useCases") as is, so we only need to convert a few.
-const packageTierFromDb = (dbPackage: any): PackageTier => ({
-  ...dbPackage,
-  is_recommended: dbPackage.is_recommended,
-  tier_color: dbPackage.tier_color,
-});
+interface FetchDataResult {
+    packages: PackageTier[];
+    features: ProductFeature[];
+    alaCarteOptions: AlaCarteOption[];
+}
 
-const featureFromDb = (dbFeature: any): ProductFeature => ({
-    ...dbFeature,
-    useCases: dbFeature.useCases || [],
-});
-
-const alaCarteOptionFromDb = (dbOption: any): AlaCarteOption => ({
-    ...dbOption,
-    isNew: dbOption.isNew,
-    useCases: dbOption.useCases || [],
-});
-
-
-export async function fetchAllData() {
-  const [packagesRes, featuresRes, alaCarteOptionsRes] = await Promise.all([
-    supabase
-      .from('packages')
-      .select(`
-        id,
-        name,
-        price,
-        is_recommended,
-        tier_color,
-        features (
-          id,
-          name,
-          description,
-          points,
-          "useCases",
-          price
-        )
-      `),
-    supabase.from('features').select('*'),
-    supabase.from('ala_carte_options').select('*')
-  ]);
-
-  if (packagesRes.error) throw new Error(`Failed to fetch packages: ${packagesRes.error.message}`);
-  if (featuresRes.error) throw new Error(`Failed to fetch features: ${featuresRes.error.message}`);
-  if (alaCarteOptionsRes.error) throw new Error(`Failed to fetch a la carte options: ${alaCarteOptionsRes.error.message}`);
-
-  const packages: PackageTier[] = packagesRes.data.map(packageTierFromDb);
-  const features: ProductFeature[] = featuresRes.data.map(featureFromDb);
-  const alaCarteOptions: AlaCarteOption[] = alaCarteOptionsRes.data.map(alaCarteOptionFromDb);
-
-  return { packages, features, alaCarteOptions };
+// Data fetching is now synchronous and uses local mock data.
+export function fetchAllData(): FetchDataResult {
+  return {
+      packages: MOCK_PACKAGES,
+      features: MOCK_FEATURES,
+      alaCarteOptions: MOCK_ALA_CARTE_OPTIONS,
+  };
 }

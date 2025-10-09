@@ -9,78 +9,73 @@ interface PackageCardProps {
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
 }
 
-const CheckIcon: React.FC<{className?: string}> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 ${className}`}>
-        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clipRule="evenodd" />
-    </svg>
-);
-
-const DashIcon: React.FC<{className?: string}> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 ${className}`}>
-        <path d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" />
-    </svg>
+const Divider: React.FC<{text: string}> = ({ text }) => (
+    <div className="flex items-center justify-center my-3">
+        <div className="h-px bg-gray-600 flex-grow"></div>
+        <span className={`font-bold px-2 text-xs uppercase ${text === 'OR' ? 'text-yellow-400' : 'text-green-400'}`}>{text}</span>
+        <div className="h-px bg-gray-600 flex-grow"></div>
+    </div>
 );
 
 
 export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeaturesForDisplay, isSelected, onSelect, onViewFeature }) => {
-  const isGold = packageInfo.name.toLowerCase() === 'gold';
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
   
+  // Create a list of only the features included in this package, maintaining the display order
+  const includedPackageFeatures = allFeaturesForDisplay.filter(feature => 
+    packageInfo.features.some(pkgFeature => pkgFeature.id === feature.id)
+  );
+
   return (
     <div className={`
-      bg-gray-800 rounded-xl shadow-2xl flex flex-col transition-all duration-300 h-full
+      bg-gray-800 rounded-xl shadow-2xl grid grid-rows-[auto_1fr_auto] transition-all duration-300 h-full
       ${isSelected ? 'transform scale-105 ring-4 ring-offset-4 ring-offset-gray-900 ring-blue-500' : 'hover:scale-102'}
-      ${packageInfo.is_recommended ? 'border-4 border-blue-500' : `border-2 ${packageInfo.tier_color} border-opacity-70`}
+      ${packageInfo.is_recommended ? 'border-4 border-blue-500' : `border-2 border-${packageInfo.tier_color} border-opacity-70`}
     `}>
       {packageInfo.is_recommended && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-0.5 rounded-full text-xs font-bold shadow-lg uppercase tracking-wider">Most Popular</div>
       )}
-      <div className="p-4">
-        <h3 className={`font-teko text-2xl sm:text-3xl font-bold uppercase tracking-wider ${packageInfo.tier_color.replace('border-', 'text-')}`}>{packageInfo.name}</h3>
-        <p className="text-2xl sm:text-3xl font-bold font-teko">{formatPrice(packageInfo.price)}</p>
-        <p className="text-xs text-gray-400 text-shadow">5 Year Coverage on all products + Lifetime on RustGuard Pro</p>
+      <div className="p-6 pb-2">
+        <h3 className={`font-teko text-3xl sm:text-4xl font-bold uppercase tracking-wider text-center text-${packageInfo.tier_color}`}>{packageInfo.name}</h3>
       </div>
 
-      <div className="flex-grow p-4 pt-0 space-y-2">
-        {allFeaturesForDisplay.map((feature) => {
-          const isIncluded = packageInfo.features.some(pkgFeature => pkgFeature.id === feature.id);
+      <div className="p-6 pt-2">
+        {includedPackageFeatures.map((feature, index) => {
+          let divider = null;
+          // Add a divider before every feature except the first one
+          if (index > 0) {
+            const isGold = packageInfo.name.toLowerCase() === 'gold';
+            // The special "OR" case for the Gold package's third item
+            const isInteriorFeatureForGold = feature.name.toLowerCase().includes('interior');
+            divider = <Divider text={isGold && isInteriorFeatureForGold ? 'OR' : 'AND'} />;
+          }
 
           return (
-            <React.Fragment key={feature.id}>
-              {isGold && feature.name.toLowerCase().includes('interior') && (
-                  <div className="flex items-center justify-center">
-                      <div className="h-px bg-gray-600 flex-grow"></div>
-                      <span className="font-bold text-yellow-500 px-2 text-[10px]">OR</span>
-                      <div className="h-px bg-gray-600 flex-grow"></div>
-                  </div>
-              )}
-              <div className="flex items-start space-x-2">
-                  {isIncluded ? (
-                    <CheckIcon className="flex-shrink-0 w-4 h-4 mt-0.5 text-green-400"/>
-                  ) : (
-                    <DashIcon className="flex-shrink-0 w-4 h-4 mt-0.5 text-gray-500" />
-                  )}
-                  <div>
-                      <button
-                        onClick={() => onViewFeature(feature)}
-                        className={`font-semibold text-sm text-left hover:text-blue-400 transition-colors text-shadow ${isIncluded ? 'text-gray-200' : 'text-gray-200 opacity-60'}`}
-                        aria-label={`Learn more about ${feature.name}`}
-                      >
-                        {feature.name}
-                      </button>
-                      <ul className={`list-disc list-inside text-xs mt-0.5 text-shadow ${isIncluded ? 'text-gray-400' : 'text-gray-400 opacity-60'}`}>
-                          {feature.points.map(p => <li key={p}>{p}</li>)}
-                      </ul>
-                  </div>
+            <div key={feature.id}>
+              {divider}
+              <div className="text-center mt-2">
+                  <button
+                    onClick={() => onViewFeature(feature)}
+                    className="font-semibold text-lg hover:text-blue-400 transition-colors text-shadow text-gray-200 underline"
+                    aria-label={`Learn more about ${feature.name}`}
+                  >
+                    {feature.name}
+                  </button>
+                  <ul className="text-sm mt-1 text-shadow text-gray-400">
+                      {feature.points.map(p => <li key={p}>*{p}</li>)}
+                  </ul>
               </div>
-            </React.Fragment>
+            </div>
           );
         })}
       </div>
       
-      <div className="p-4 mt-auto">
+      <div className="p-4 space-y-3">
+        <div className={`py-2 rounded-lg text-center bg-red-700`}>
+            <p className="text-4xl sm:text-5xl font-bold font-teko text-white text-shadow">{formatPrice(packageInfo.price)}</p>
+        </div>
         <button
           onClick={onSelect}
           className={`w-full py-2 px-6 rounded-lg text-base font-bold uppercase tracking-wider transition-all duration-300 transform active:scale-95

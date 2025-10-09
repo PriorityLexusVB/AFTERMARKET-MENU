@@ -11,11 +11,12 @@ interface CustomerInfo {
 interface SummaryProps {
   selectedPackage: PackageTier | null;
   customPackageItems: AlaCarteOption[];
-  totalCost: number;
+  totalPrice: number;
   customerInfo: CustomerInfo;
+  onShowAgreement: () => void;
 }
 
-export const Summary: React.FC<SummaryProps> = ({ selectedPackage, customPackageItems, totalCost, customerInfo }) => {
+export const Summary: React.FC<SummaryProps> = ({ selectedPackage, customPackageItems, totalPrice, customerInfo, onShowAgreement }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(price);
   };
@@ -49,24 +50,22 @@ export const Summary: React.FC<SummaryProps> = ({ selectedPackage, customPackage
               ))}
             </div>
           </div>
-          <div className="text-center md:text-right">
-             <p className="text-gray-300 text-sm font-teko tracking-wider">Total Purchase Price</p>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-bold font-teko text-white">{formatPrice(totalCost)}</p>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="text-center md:text-right">
+              <p className="text-gray-300 text-sm font-teko tracking-wider">Total Purchase Price</p>
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold font-teko text-white">{formatPrice(totalPrice)}</p>
+            </div>
+             <button
+                onClick={onShowAgreement}
+                className="bg-green-600 text-white px-4 py-3 sm:px-5 sm:py-4 rounded-lg font-bold uppercase tracking-wider text-base hover:bg-green-700 transition-colors transform active:scale-95 self-center flex items-center gap-2"
+                aria-label="Finalize and Print"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 12.75 2.25 2.25 4.5-4.5m4.5 2.25-2.25 2.25-4.5-4.5m-4.5 4.5L6.75 12m12.75 3H3.25" />
+                </svg>
+                <span className="hidden sm:inline">Finalize Agreement</span>
+            </button>
           </div>
-        </div>
-        <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col md:flex-row gap-4 items-center text-sm text-gray-500">
-            <div className="w-full md:flex-1 flex items-baseline gap-2">
-                <span className="flex-shrink-0">Customer Name:</span>
-                <span className="w-full border-b border-gray-600 font-sans text-base text-gray-200 pl-2">{customerInfo.name}</span>
-            </div>
-            <div className="w-full md:flex-1 flex items-baseline gap-2">
-                <span className="flex-shrink-0">Customer Signature:</span>
-                <span className="w-full border-b border-gray-600"></span>
-            </div>
-            <div className="w-full md:w-auto flex items-baseline gap-2">
-                <span className="flex-shrink-0">Date:</span>
-                <span className="w-full md:w-32 border-b border-gray-600"></span>
-            </div>
         </div>
       </div>
     </footer>

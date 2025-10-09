@@ -26,7 +26,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({ items, onVie
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
       {items.map((item) => (
         <AlaCarteItem
           key={item.id}

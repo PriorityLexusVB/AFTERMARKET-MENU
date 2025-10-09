@@ -16,7 +16,7 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({ item, onViewItem, on
     <div 
       draggable
       onDragStart={onDragStart}
-      className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 flex flex-col relative cursor-grab active:cursor-grabbing transition-shadow hover:shadow-lg hover:shadow-blue-500/10"
+      className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 flex flex-col relative cursor-grab active:cursor-grabbing transition-all duration-200 hover:scale-102 hover:shadow-lg hover:shadow-blue-500/10"
     >
       {item.isNew && (
         <div className="absolute top-0 right-0 -mt-3 -mr-3 bg-red-500 text-white text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">New</div>

@@ -7,11 +7,13 @@ import { FeatureModal } from './components/FeatureModal';
 import { CustomPackageBuilder } from './components/CustomPackageBuilder';
 import { AddonSelector } from './components/AddonSelector';
 import { SettingsModal } from './components/SettingsModal';
+import { AgreementView } from './components/AgreementView';
 import { MAIN_PAGE_ADDON_IDS } from './constants';
 import { fetchAllData } from './data';
 import type { PackageTier, AlaCarteOption, ProductFeature } from './types';
 
 type Page = 'packages' | 'alacarte';
+type View = 'menu' | 'agreement';
 
 interface CustomerInfo {
   name: string;
@@ -20,19 +22,26 @@ interface CustomerInfo {
   model: string;
 }
 
+export interface PriceOverrides {
+  [id: string]: {
+    price?: number;
+    cost?: number;
+  };
+}
+
 const App: React.FC = () => {
   // Data state
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [allFeatures, setAllFeatures] = useState<ProductFeature[]>([]);
   const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<AlaCarteOption[]>([]);
 
   // UI State
+  const [currentView, setCurrentView] = useState<View>('menu');
   const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(null);
   const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
   const [viewingDetailItem, setViewingDetailItem] = useState<ProductFeature | AlaCarteOption | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('packages');
+  const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
@@ -43,33 +52,23 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const { packages, features, alaCarteOptions } = await fetchAllData();
-        setPackages(packages);
-        setAllFeatures(features);
-        setAllAlaCarteOptions([...alaCarteOptions, ...features]);
-        setError(null);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(`Failed to load product data: ${err.message}. Please check your Supabase configuration in the README.`);
-        } else {
-          setError('An unknown error occurred while loading data.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+    // Data loading is now synchronous from local mock data.
+    const { packages, features, alaCarteOptions } = fetchAllData();
+    setPackages(packages);
+    setAllFeatures(features);
+    setAllAlaCarteOptions([...alaCarteOptions, ...features]);
   }, []);
 
   const handleOpenSettings = useCallback(() => setIsSettingsOpen(true), []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
-  const handleSaveSettings = useCallback((info: CustomerInfo) => {
-    setCustomerInfo(info);
+  const handleSaveSettings = useCallback((data: { customerInfo: CustomerInfo; priceOverrides: PriceOverrides }) => {
+    setCustomerInfo(data.customerInfo);
+    setPriceOverrides(data.priceOverrides);
     setIsSettingsOpen(false);
   }, []);
+  
+  const handleShowAgreement = useCallback(() => setCurrentView('agreement'), []);
+  const handleShowMenu = useCallback(() => setCurrentView('menu'), []);
 
   const handleSelectPackage = useCallback((pkg: PackageTier) => {
     setSelectedPackage(prev => (prev?.id === pkg.id ? null : pkg));
@@ -106,25 +105,52 @@ const App: React.FC = () => {
   const handleCloseModal = useCallback(() => {
     setViewingDetailItem(null);
   }, []);
-  
-  const totalCost = useMemo(() => {
-    let total = 0;
-    if (selectedPackage) {
-      total += selectedPackage.price;
-    }
-    customPackageItems.forEach(item => {
-      total += item.price;
+
+  // Generic function to apply price/cost overrides
+  const applyOverrides = <T extends { id: string; price: number; cost: number }>(items: T[], overrides: PriceOverrides): T[] => {
+    return items.map(item => {
+      const override = overrides[item.id];
+      if (!override) return item;
+      return {
+        ...item,
+        price: override.price ?? item.price,
+        cost: override.cost ?? item.cost,
+      };
     });
-    return total;
-  }, [selectedPackage, customPackageItems]);
+  };
+
+  // Apply price overrides to all data for display
+  const displayPackages = useMemo(() => applyOverrides(packages, priceOverrides), [packages, priceOverrides]);
+  const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
+  const displayCustomPackageItems = useMemo(() => applyOverrides(customPackageItems, priceOverrides), [customPackageItems, priceOverrides]);
+  
+  const { totalPrice, totalCost } = useMemo(() => {
+    let price = 0;
+    let cost = 0;
+
+    if (selectedPackage) {
+      const currentPackage = displayPackages.find(p => p.id === selectedPackage.id);
+      if (currentPackage) {
+        price += currentPackage.price;
+        cost += currentPackage.cost;
+      }
+    }
+
+    displayCustomPackageItems.forEach(item => {
+      price += item.price;
+      cost += item.cost;
+    });
+
+    return { totalPrice: price, totalCost: cost };
+  }, [selectedPackage, displayPackages, displayCustomPackageItems]);
 
   const mainPageAddons = useMemo(() => {
-    return allAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
-  }, [allAlaCarteOptions]);
+    return displayAllAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
+  }, [displayAllAlaCarteOptions]);
 
   const availableAlaCarteItems = useMemo(() => {
-    return allAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
-  }, [customPackageItems, allAlaCarteOptions]);
+    return displayAllAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
+  }, [customPackageItems, displayAllAlaCarteOptions]);
   
   const NavButton: React.FC<{page: Page, label: string}> = ({ page, label }) => (
     <button
@@ -141,28 +167,38 @@ const App: React.FC = () => {
   );
 
   const renderContent = () => {
-    if (loading) {
+    if (currentView === 'agreement') {
       return (
-        <div className="text-center py-20">
-          <p className="text-xl text-gray-400">Loading Protection Menu...</p>
-        </div>
+        <AgreementView 
+          onBack={handleShowMenu}
+          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) : null}
+          customPackageItems={displayCustomPackageItems}
+          totalPrice={totalPrice}
+          totalCost={totalCost}
+          customerInfo={customerInfo}
+        />
       );
     }
-    if (error) {
-      return (
-         <div className="text-center py-20 px-6 bg-red-900/20 border border-red-500 rounded-lg max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold font-teko text-red-400">Error Loading Data</h3>
-            <p className="text-red-300 mt-2">{error}</p>
-        </div>
-      )
-    }
+    
     return (
       <>
+        <div className="text-center mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-teko tracking-wider uppercase text-gray-100">Vehicle Protection Menu</h2>
+          <p className="text-base text-gray-400 mt-1 max-w-3xl mx-auto">
+            Select one of our expertly curated packages, or build a custom package from our a la carte options.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
+          <NavButton page="packages" label="Protection Packages" />
+          <NavButton page="alacarte" label="A La Carte Options" />
+        </div>
+      
         {currentPage === 'packages' && (
           <div className="flex-grow flex flex-col lg:flex-row gap-8 items-stretch">
             <div className="w-full lg:w-3/4">
               <PackageSelector
-                packages={packages}
+                packages={displayPackages}
                 allFeaturesForDisplay={allFeatures}
                 selectedPackage={selectedPackage}
                 onSelectPackage={handleSelectPackage}
@@ -192,7 +228,7 @@ const App: React.FC = () => {
             <div className="xl:w-2/5 flex flex-col">
                <h3 className="text-4xl font-teko font-bold tracking-wider text-gray-300 mb-6">Your Custom Package</h3>
               <CustomPackageBuilder
-                items={customPackageItems}
+                items={displayCustomPackageItems}
                 onDropItem={handleDropAlaCarte}
                 onRemoveItem={handleRemoveAlaCarte}
               />
@@ -207,34 +243,29 @@ const App: React.FC = () => {
     <div className="bg-gray-900 text-white min-h-screen antialiased flex flex-col">
       <Header onOpenSettings={handleOpenSettings} />
       <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-teko tracking-wider uppercase text-gray-100">Vehicle Protection Menu</h2>
-          <p className="text-base text-gray-400 mt-1 max-w-3xl mx-auto">
-            Select one of our expertly curated packages, or build a custom package from our a la carte options.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
-          <NavButton page="packages" label="Protection Packages" />
-          <NavButton page="alacarte" label="A La Carte Options" />
-        </div>
-
         <div className="flex-grow flex flex-col">
           {renderContent()}
         </div>
       </main>
-      <Summary 
-        selectedPackage={selectedPackage}
-        customPackageItems={customPackageItems}
-        totalCost={totalCost}
-        customerInfo={customerInfo}
-      />
+      {currentView === 'menu' && (
+        <Summary 
+          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) : null}
+          customPackageItems={displayCustomPackageItems}
+          totalPrice={totalPrice}
+          customerInfo={customerInfo}
+          onShowAgreement={handleShowAgreement}
+        />
+      )}
       {viewingDetailItem && <FeatureModal feature={viewingDetailItem} onClose={handleCloseModal} />}
       <SettingsModal 
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
         currentInfo={customerInfo}
+        packages={packages}
+        allAlaCarteOptions={allAlaCarteOptions}
+        currentPriceOverrides={priceOverrides}
+        totalCost={totalCost}
       />
     </div>
   );

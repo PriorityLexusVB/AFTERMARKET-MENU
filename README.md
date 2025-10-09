@@ -26,9 +26,11 @@ CREATE TABLE features (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   price NUMERIC NOT NULL,
+  cost NUMERIC NOT NULL,
   description TEXT,
   points TEXT[],
-  "useCases" TEXT[] -- Using quotes to preserve camelCase
+  "useCases" TEXT[], -- Using quotes to preserve camelCase
+  warranty TEXT
 );
 
 -- Create the table for standalone a la carte options
@@ -36,6 +38,7 @@ CREATE TABLE ala_carte_options (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   price NUMERIC NOT NULL,
+  cost NUMERIC NOT NULL,
   description TEXT,
   points TEXT[],
   "isNew" BOOLEAN DEFAULT false, -- Using quotes to preserve camelCase
@@ -48,6 +51,7 @@ CREATE TABLE packages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   price NUMERIC NOT NULL,
+  cost NUMERIC NOT NULL,
   is_recommended BOOLEAN DEFAULT false,
   tier_color TEXT NOT NULL
 );
@@ -79,26 +83,20 @@ Now you can add your products and packages using the Supabase interface.
 
 ## Step 4: Configure App Credentials
 
-The application needs to know how to connect to your new Supabase project.
+The application needs your Supabase URL and Key to connect to the database. You must provide these as secret environment variables.
 
 1.  **Find Your Credentials:**
     *   In the left sidebar of your Supabase dashboard, go to **Project Settings** (the gear icon).
     *   Click on the **API** tab.
-    *   Under **Project API Keys**, you will find your **Project URL** and your `anon` `public` key.
+    *   Under **Project API Keys**, copy your **Project URL** and your `anon` `public` key.
 
-2.  **Create a `.env` file:**
-    *   In the root directory of the application code, create a new file named `.env`.
-    *   Add the following content to this file, replacing the placeholder values with the ones you just copied from your Supabase dashboard.
+2.  **Add Your Credentials as Secrets:**
+    *   In the development environment where you are editing the code, look for a "Secrets" panel (it is often represented by a key icon 🔑 in the left sidebar).
+    *   Create two new secrets:
+        *   **Name:** `SUPABASE_URL`
+        *   **Value:** Paste your **Project URL** here.
+    *   Create another secret:
+        *   **Name:** `SUPABASE_ANON_KEY`
+        *   **Value:** Paste your `anon` `public` key here.
 
-    ```
-    SUPABASE_URL="YOUR_SUPABASE_URL"
-    SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
-    ```
-
-    *   **Example:**
-        ```
-        SUPABASE_URL="https://xyzabcdefg.supabase.co"
-        SUPABASE_ANON_KEY="eyJh...YourVeryLongPublicKey...abc"
-        ```
-
-That's it! Once the `.env` file is in place, restart your application, and it will now fetch all its data directly from your Supabase project.
+Once you have saved these secrets, the preview will automatically refresh, and the application will be able to connect to your Supabase project.

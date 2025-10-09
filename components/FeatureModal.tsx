@@ -14,7 +14,7 @@ const CheckIcon: React.FC<{className?: string}> = ({ className }) => (
 
 const LightbulbIcon: React.FC<{className?: string}> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 ${className}`}>
-        <path d="M10 2a.75.75 0 00-1.5 0v1.25a.75.75 0 001.5 0V2zM3.81 4.31a.75.75 0 00-1.06-1.06L1.5 4.5a.75.75 0 001.06 1.06l1.25-1.25zM16.19 4.31a.75.75 0 001.06-1.06l-1.25-1.25a.75.75 0 00-1.06 1.06l1.25 1.25zM2 10a.75.75 0 000 1.5h1.25a.75.75 0 000-1.5H2zM16.75 10a.75.75 0 000 1.5h1.25a.75.75 0 000-1.5h-1.25zM4.81 15.19a.75.75 0 00-1.06 1.06l1.25 1.25a.75.75 0 001.06-1.06l-1.25-1.25zM15.19 15.19a.75.75 0 001.06 1.06l1.25 1.25a.75.75 0 00-1.06-1.06l-1.25 1.25zM10 16a.75.75 0 00-1.5 0v1.25a.75.75 0 001.5 0V16z" />
+        <path d="M10 2a.75.75 0 00-1.5 0v1.25a.75.75 0 001.5 0V2zM3.81 4.31a.75.75 0 00-1.06-1.06L1.5 4.5a.75.75 0 001.06 1.06l1.25-1.25zM16.19 4.31a.75.75 0 001.06-1.06l-1.25-1.25a.75.75 0 00-1.06 1.06l1.25 1.25zM2 10a.75.75 0 000 1.5h1.25a.75.75 0 000-1.5H2zM16.75 10a.75.75 0 000 1.5h1.25a.75.75 0 000-1.5h-1.25zM4.81 15.19a.75.75 0 00-1.06 1.06l1.25 1.25a.75.75 0 001.06-1.06l-1.25-1.25zM15.19 15.19a.75.75 0 001.06 1.06l1.25 1.25a.75.75 0 00-1.06-1.06l-1.25-1.25zM10 16a.75.75 0 00-1.5 0v1.25a.75.75 0 001.5 0V16z" />
         <path fillRule="evenodd" d="M9 4.75A4.25 4.25 0 004.75 9C4.75 11.347 6.653 13.25 9 13.25s4.25-1.903 4.25-4.25A4.25 4.25 0 009 4.75zM7.25 9a1.75 1.75 0 103.5 0 1.75 1.75 0 00-3.5 0z" clipRule="evenodd" />
     </svg>
 );
@@ -36,10 +36,6 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
     };
   }, [onClose]);
   
-  const isAlaCarteOption = (f: ProductFeature | AlaCarteOption): f is AlaCarteOption => {
-    return 'price' in f;
-  }
-
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 animate-fade-in"
@@ -56,7 +52,7 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
           <div>
             <h2 id="feature-modal-title" className="text-3xl sm:text-4xl font-bold font-teko text-white tracking-wider">{feature.name}</h2>
             <p className="text-gray-400 mt-1">{feature.description}</p>
-            {isAlaCarteOption(feature) && feature.warranty && (
+            {'warranty' in feature && feature.warranty && (
                 <p className="mt-2 text-sm font-bold bg-yellow-400/10 text-yellow-300 px-2 py-1 rounded-md inline-block">{feature.warranty}</p>
             )}
           </div>

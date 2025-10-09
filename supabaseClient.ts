@@ -1,10 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
+let supabase: SupabaseClient | null = null;
+let supabaseInitializationError: string | null = null;
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Supabase URL and anonymous key are required. Make sure you have a .env file with SUPABASE_URL and SUPABASE_ANON_KEY defined.");
+  supabaseInitializationError = "Supabase URL and anonymous key are not configured. Please go to the 'Secrets' tab (key icon 🔑) and set SUPABASE_URL and SUPABASE_ANON_KEY. You can find these in your Supabase project's API settings.";
+} else {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } catch (error) {
+    if (error instanceof Error) {
+      supabaseInitializationError = `Failed to initialize Supabase client: ${error.message}`;
+    } else {
+      supabaseInitializationError = 'An unknown error occurred during Supabase client initialization.';
+    }
+  }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export { supabase, supabaseInitializationError };

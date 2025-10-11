@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth/lite';
+import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Header } from './components/Header';
 import { PackageSelector } from './components/PackageSelector';
 import { AlaCarteSelector } from './components/AlaCarteSelector';
@@ -63,10 +63,12 @@ const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     if (firebaseInitializationError || !auth) {
       setIsAuthLoading(false);
+      setIsDemoMode(true); // Enter demo mode if Firebase isn't configured
       return;
     }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -94,12 +96,17 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    // Load data for a logged-in user OR if in demo mode
+    if (user || isDemoMode) {
       loadData();
     }
-  }, [user, loadData]);
+  }, [user, isDemoMode, loadData]);
   
   const handleLogout = useCallback(async () => {
+    if (isDemoMode) {
+      alert("Logout is disabled in demo mode.");
+      return;
+    }
     if (!auth) return;
     try {
       await signOut(auth);
@@ -107,11 +114,15 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Logout failed:", error);
     }
-  }, []);
+  }, [isDemoMode]);
   
   const handleToggleAdminView = useCallback(() => {
+    if (isDemoMode) {
+      alert("The Admin Panel is disabled in demo mode. Please configure a Firebase backend to use this feature.");
+      return;
+    }
     setIsAdminView(prev => !prev);
-  }, []);
+  }, [isDemoMode]);
 
   const handleOpenSettings = useCallback(() => setIsSettingsOpen(true), []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
@@ -319,9 +330,9 @@ const App: React.FC = () => {
     );
   }
 
-  if (!user) {
-    // The Login component now handles all states for a non-authenticated user,
-    // including auth loading and Firebase initialization errors.
+  // If not authenticated and not in demo mode, show the Login screen.
+  // This also handles the initial authentication loading state.
+  if (!user && !isDemoMode) {
     return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
   }
 
@@ -335,7 +346,7 @@ const App: React.FC = () => {
         isAdminView={isAdminView}
       />
       
-      {isAdminView ? (
+      {isAdminView && !isDemoMode ? (
         <AdminPanel onDataUpdate={loadData} />
       ) : (
         <>

@@ -1,75 +1,105 @@
+
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 
 // MOCK FEATURES (these would be in the 'features' table)
+// These are the individual services that make up the packages.
 export const MOCK_FEATURES: ProductFeature[] = [
   {
-    id: 'ppf-full',
-    name: 'Full Front Paint Protection Film',
-    description: 'Virtually invisible film applied to high-impact areas to protect from chips, scratches, and stains.',
-    points: ['Full Hood, Fenders & Bumper', 'Mirrors & Door Edges', 'Self-Healing Technology', '10-Year Warranty'],
-    useCases: ['Protects against rock chips on the highway.', 'Keeps the front end looking new.', 'Prevents damage from insects and bird droppings.'],
-    price: 1895,
-    cost: 900,
-    warranty: '10-Year Limited Warranty'
+    id: 'rustguard-pro',
+    name: 'RustGuard Pro',
+    description: 'Underbody protection to prevent corrosion and structural damage.',
+    points: [
+      'Prolongs the life of vehicle',
+      'Reduce repair/replacement costs',
+      'Prevent structural weakness',
+    ],
+    useCases: [
+      'Protects against road salt in winter.',
+      'Prevents rust from forming on the chassis.',
+    ],
+    price: 0, // Price is included in package
+    cost: 300,
+    warranty: 'Lifetime coverage',
   },
   {
-    id: 'ceramic-coating',
-    name: 'Graphene Ceramic Coating',
-    description: 'A liquid polymer that bonds to the factory paint, creating a long-lasting layer of protection.',
-    points: ['Extreme Gloss & Shine', 'Hydrophobic Properties', 'UV & Chemical Resistance', 'Easier Cleaning'],
-    useCases: ['Water beads and rolls off the surface.', 'Protects paint from fading due to sun exposure.', 'Reduces the need for frequent waxing.'],
-    price: 1295,
-    cost: 600,
-    warranty: '7-Year Limited Warranty'
+    id: 'toughguard-premium',
+    name: 'ToughGuard Premium',
+    description: 'A premium paint sealant that protects against environmental damage.',
+    points: [
+      'One Time Application',
+      'Eliminates waxing',
+      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+    ],
+    useCases: [
+      'Keeps your car looking glossy and new.',
+      'Makes washing easier as dirt and grime slide off.',
+    ],
+    price: 0, // Price is included in package
+    cost: 250,
   },
   {
     id: 'interior-protection',
-    name: 'Total Interior Protection',
-    description: 'Advanced sealant applied to all interior surfaces to protect against spills, stains, and UV damage.',
-    points: ['Fabric, Leather & Vinyl', 'Repels Spills & Stains', 'Prevents Fading & Cracking', 'Reduces Odors'],
-    useCases: ['Makes cleaning up coffee spills easy.', 'Protects leather seats from dye transfer from jeans.', 'Keeps the dashboard from cracking in the sun.'],
-    price: 795,
-    cost: 350,
-    warranty: '5-Year Limited Warranty'
+    name: 'Interior Leather & Fabric Protection',
+    description: 'A complete interior treatment to protect against stains and damage.',
+    points: [
+      'Protects against stains such as: coffee, juices, crayons, chocolate, gum',
+      'Prevents cracking, covers rips, tears & burns',
+    ],
+    useCases: [
+      'Ideal for families with children or pets.',
+      'Maintains the value and appearance of your interior.',
+    ],
+    price: 0, // Price is included in package
+    cost: 200,
   },
-   {
-    id: 'window-tint',
-    name: 'Ceramic Window Tint',
-    description: 'High-performance ceramic tint that provides maximum heat rejection and UV protection.',
-    points: ['99% UV Ray Rejection', 'Superior Heat Reduction', 'Reduces Glare', 'Will Not Interfere With Electronics'],
-    useCases: ['Keeps the car cooler on hot days.', 'Protects interior from fading.', 'Increases privacy and security.'],
-    price: 595,
-    cost: 250,
-    warranty: 'Lifetime Warranty'
+  {
+    id: 'diamond-shield',
+    name: 'Diamond Shield Windshield Protection',
+    description: 'A treatment that improves visibility and protects your windshield.',
+    points: [
+      'Increase visibility in rain',
+      'Protects against night glare',
+      'Help against chipping, cracking, clouding, sand, salt',
+    ],
+    useCases: [
+      'Safer driving in bad weather conditions.',
+      'Prevents minor chips from turning into large cracks.',
+    ],
+    price: 0, // Price is included in package
+    cost: 150,
   },
 ];
 
 // MOCK PACKAGES (these would be in the 'packages' table)
 export const MOCK_PACKAGES: PackageTier[] = [
   {
+    id: 'package-elite',
+    name: 'Elite',
+    price: 3499,
+    cost: 900,
+    // All four features included
+    features: [MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2], MOCK_FEATURES[3]],
+    tier_color: 'gray-400',
+  },
+  {
     id: 'package-platinum',
     name: 'Platinum',
-    price: 3995,
-    cost: 1900,
-    features: [ MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2], MOCK_FEATURES[3] ],
+    price: 2899,
+    cost: 750,
+    // First three features included
+    features: [MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2]],
     is_recommended: true,
     tier_color: 'blue-400',
   },
   {
     id: 'package-gold',
     name: 'Gold',
-    price: 2995,
-    cost: 1400,
-    features: [ MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2] ],
+    price: 2399,
+    cost: 550,
+    // RustGuard, and then either ToughGuard OR Interior Protection
+    // The UI will show both with an "OR" divider.
+    features: [MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2]],
     tier_color: 'yellow-400',
-  },
-  {
-    id: 'package-silver',
-    name: 'Silver',
-    price: 1995,
-    cost: 800,
-    features: [ MOCK_FEATURES[1], MOCK_FEATURES[2] ],
-    tier_color: 'gray-400',
   },
 ];
 
@@ -77,54 +107,58 @@ export const MOCK_PACKAGES: PackageTier[] = [
 export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
   {
     id: 'suntek-complete',
-    name: 'Suntek Complete PPF',
-    price: 1895,
-    cost: 900,
-    description: 'Full front-end coverage including hood, fenders, bumper, and mirrors.',
-    points: ['10-Year Warranty', 'Self-Healing Film'],
-    isNew: true,
-    warranty: '10-Year Limited Warranty'
+    name: 'Suntek Pro Complete Package',
+    price: 1195,
+    cost: 550,
+    description: 'Protects the most vulnerable parts of your vehicle from rock chips and scratches.',
+    points: [
+      'Prevents Rock Chips',
+      'Protects 18"-24" Hood',
+      'Front Bumper',
+      'Fenders',
+      'Mirrors',
+      'Door Cups',
+    ],
+    warranty: '10 Year Warranty',
   },
   {
     id: 'suntek-standard',
-    name: 'Suntek Standard PPF',
-    price: 995,
-    cost: 450,
-    description: 'Partial hood and fender coverage, plus mirrors and door cups.',
-    points: ['Protects key impact zones', 'Cost-effective solution'],
-    warranty: '10-Year Limited Warranty'
-  },
-  {
-    id: 'evernew',
-    name: 'EverNew Interior Repair',
-    price: 499,
-    cost: 200,
-    description: 'On-demand repair of interior rips, tears, and burns.',
-    points: ['Covers vinyl, leather, and fabric', 'Keeps interior pristine'],
-    isNew: false,
-  },
-  {
-    id: 'screen-defender',
-    name: 'Screen Defender',
-    price: 299,
-    cost: 100,
-    description: 'Anti-glare and anti-fingerprint protection for your infotainment screen.',
-    points: ['Reduces glare', 'Easy to clean'],
+    name: 'Suntek Pro Standard Package',
+    price: 795,
+    cost: 350,
+    description: 'Essential protection for the front-facing areas of your car.',
+    points: ['Protects 18"-24" Hood', 'Fenders', 'Mirrors'],
+    warranty: '10 Year Warranty',
   },
   {
     id: 'headlights',
-    name: 'Headlight Protection',
-    price: 199,
-    cost: 75,
-    description: 'Protects headlights from yellowing, cracking, and road debris.',
-    points: [],
+    name: 'Headlights Protection',
+    price: 295,
+    cost: 125,
+    description: 'A durable film to prevent hazing, yellowing, and cracking of headlight lenses.',
+    points: ['Maintains clarity for optimal night visibility.'],
   },
   {
     id: 'doorcups',
-    name: 'Door Cup Protection',
-    price: 149,
-    cost: 50,
-    description: 'Prevents scratches behind the door handle from keys and fingernails.',
-    points: [],
-  }
+    name: 'Door Cups Only',
+    price: 195,
+    cost: 75,
+    description: 'Invisible film applied behind door handles to prevent scratches from keys and fingernails.',
+    points: ['Protects a high-wear area from daily use.'],
+  },
+  {
+    id: 'evernew',
+    name: 'EverNew Appearance Protection',
+    price: 899,
+    cost: 400,
+    description: 'Mobile cosmetic repair service for minor damages.',
+    points: [
+      'Scratch, Chip, & Dent Repair',
+      'Eliminate Insurance Claims',
+      'Eliminate Bad Carfax',
+      'Covered for 5 years',
+      'We Come to You!',
+    ],
+    isNew: true,
+  },
 ];

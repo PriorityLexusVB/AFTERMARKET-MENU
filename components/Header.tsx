@@ -1,4 +1,5 @@
 import React from 'react';
+import { User } from 'firebase/auth/lite';
 
 const SettingsIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -8,10 +9,14 @@ const SettingsIcon: React.FC = () => (
 );
 
 interface HeaderProps {
+    user: User | null;
     onOpenSettings: () => void;
+    onLogout: () => void;
+    onToggleAdminView: () => void;
+    isAdminView: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
+export const Header: React.FC<HeaderProps> = ({ user, onOpenSettings, onLogout, onToggleAdminView, isAdminView }) => {
   return (
     <header className="bg-black bg-opacity-30 backdrop-blur-sm py-4 border-b border-gray-700 sticky top-0 z-30">
       <div className="container mx-auto px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -19,8 +24,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
           <h1 className="text-3xl sm:text-4xl font-bold tracking-widest font-teko text-white">PRIORITY <span className="text-gray-400">LEXUS</span></h1>
           <p className="text-sm text-gray-400 tracking-widest">VIRGINIA BEACH</p>
         </div>
-        <div className="flex items-center gap-6">
-          <p className="text-lg text-gray-300 font-light font-teko tracking-widest mt-2 sm:mt-0">PRIORITIES FOR LIFE</p>
+        <div className="flex items-center gap-4">
+            <button 
+              onClick={onToggleAdminView} 
+              className="text-sm font-semibold text-gray-300 hover:text-white transition-colors bg-gray-700/50 px-3 py-1.5 rounded-md"
+            >
+              {isAdminView ? 'View Menu' : 'Admin Panel'}
+            </button>
+             <button 
+              onClick={onLogout} 
+              className="text-sm font-semibold text-gray-300 hover:text-white transition-colors"
+            >
+              Logout
+            </button>
+          <div className="h-6 w-px bg-gray-600"></div>
+          <p className="text-lg text-gray-300 font-light font-teko tracking-widest hidden md:block">PRIORITIES FOR LIFE</p>
            <button 
             onClick={onOpenSettings} 
             className="text-gray-400 hover:text-white hover:rotate-90 transition-all duration-300"

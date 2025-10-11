@@ -11,42 +11,43 @@ const Step: React.FC<{ number: number; title: string; children: React.ReactNode 
         <div className="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">{number}</div>
         <div>
             <h4 className="font-bold text-lg text-gray-100">{title}</h4>
-            <div className="text-gray-400">{children}</div>
+            <div className="text-gray-400 text-sm">{children}</div>
         </div>
     </div>
 );
 
+interface SetupGuideProps {
+    error: string | null;
+}
 
-export const SetupGuide: React.FC = () => {
+export const SetupGuide: React.FC<SetupGuideProps> = ({ error }) => {
     return (
-        <div className="flex-grow flex items-center justify-center animate-fade-in">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 max-w-2xl w-full mx-4 shadow-2xl">
-                <h2 className="text-4xl font-bold font-teko tracking-wider text-yellow-400 text-center">Connection Required</h2>
-                <p className="text-center text-gray-300 mt-2 mb-8">This app is in <strong>Demo Mode</strong>. To connect to your live Supabase database, please follow these steps.</p>
+        <div className="animate-fade-in text-left">
+            <p className="text-center text-gray-300 mb-6">This app is in <strong>Demo Mode</strong>. To enable login, please connect to your live Firebase database by adding your project's configuration.</p>
 
-                <div className="space-y-6">
-                    <Step number={1} title="Open the Secrets Panel">
-                        <p>In the Google AI Studio left sidebar, click the <KeyIcon /> <strong>Secrets</strong> icon.</p>
-                    </Step>
-                    <Step number={2} title="Add Supabase URL">
-                        <p>Click <strong>"+ Add secret"</strong> and create a new secret:</p>
-                        <ul className="mt-2 text-sm list-disc list-inside bg-gray-900 p-3 rounded-md font-mono">
-                            <li><strong>Name:</strong> <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">SUPABASE_URL</code></li>
-                            <li><strong>Value:</strong> Your project's URL from the Supabase dashboard.</li>
-                        </ul>
-                    </Step>
-                    <Step number={3} title="Add Supabase Key">
-                        <p>Click <strong>"+ Add secret"</strong> again:</p>
-                        <ul className="mt-2 text-sm list-disc list-inside bg-gray-900 p-3 rounded-md font-mono">
-                            <li><strong>Name:</strong> <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">SUPABASE_ANON_KEY</code></li>
-                            <li><strong>Value:</strong> Your project's `anon` `public` key from Supabase.</li>
-                        </ul>
-                    </Step>
+            <div className="space-y-6">
+                <Step number={1} title="Open the Secrets Panel">
+                    <p>In the editor's left sidebar, click the <KeyIcon /> <strong>Secrets</strong> icon.</p>
+                </Step>
+                <Step number={2} title="Add Firebase Configuration">
+                    <p>Click <strong>"+ Add new secret"</strong> and create a single secret:</p>
+                    <ul className="mt-2 text-xs list-disc list-inside bg-gray-900 p-3 rounded-md font-mono">
+                        <li><strong>Name:</strong> <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">FIREBASE_CONFIG</code></li>
+                        <li><strong>Value:</strong> Paste your entire Firebase config object here.</li>
+                    </ul>
+                     <p className="text-xs text-gray-500 mt-2">Find your config object in your Firebase project's settings page. It starts with <code className="text-gray-400">{`{`}</code> and ends with <code className="text-gray-400">{`}`}</code>.</p>
+                </Step>
+            </div>
+            
+            {error && (
+                <div className="mt-6 border-t border-gray-700 pt-4">
+                    <h4 className="text-base font-bold text-red-400">Diagnostic Information</h4>
+                    <pre className="mt-2 bg-gray-900 text-red-300 p-3 rounded-md text-xs whitespace-pre-wrap font-mono">{error}</pre>
                 </div>
-                
-                <div className="mt-8 text-center text-sm text-gray-500">
-                    <p>After adding the secrets, the app preview will restart automatically and connect to your database.</p>
-                </div>
+            )}
+
+            <div className="mt-6 text-center text-xs text-gray-500">
+                <p>After adding the secret, the app preview will restart automatically.</p>
             </div>
             <style>{`
                 @keyframes fade-in {

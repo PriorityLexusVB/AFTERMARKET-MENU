@@ -1,102 +1,126 @@
-# Setting up the Supabase Backend
+# Setting up the Firebase Backend
 
-This document guides you through setting up a [Supabase](https://supabase.com/) project to act as a dynamic backend for the product menu application. This will allow you to manage packages, a la carte options, and pricing from a user-friendly dashboard without needing to change any code.
+This document guides you through setting up a [Firebase](https://firebase.google.com/) project to act as a dynamic backend for the product menu application. This will allow you to manage packages, a la carte options, and pricing from the Firebase console without needing to change any code.
 
-## Step 1: Create a Supabase Project
+## Step 1: Create a Firebase Project
 
-1.  Go to [supabase.com](https://supabase.com/) and sign up for a free account.
-2.  Once logged in, click on **"New project"**.
-3.  Choose an organization and give your project a **Name** (e.g., `lexus-menu-backend`).
-4.  Generate a secure **Database Password** and save it somewhere safe (you won't need it for the app, but it's important for database management).
-5.  Select a **Region** that is closest to your user base.
-6.  Click **"Create new project"**. Wait a few minutes for your project to be set up.
+1.  Go to the [Firebase Console](https://console.firebase.google.com/) and sign in with your Google account.
+2.  Click on **"Add project"**.
+3.  Give your project a **Name** (e.g., `lexus-menu-backend`).
+4.  You can disable Google Analytics for this project if you don't need it.
+5.  Click **"Create project"**. Wait for your project to be set up.
 
-## Step 2: Set Up Database Tables
+## Step 2: Set Up Firestore Database
 
-Once your project is ready, we need to create the tables to hold your data.
+1.  In your new project's dashboard, go to the **Build** section in the left sidebar and click on **Firestore Database**.
+2.  Click **"Create database"**.
+3.  Choose to start in **Production mode**. Click **"Next"**.
+4.  Select a **Cloud Firestore location** that is closest to your user base. Click **"Enable"**.
 
-1.  In the left sidebar of your Supabase dashboard, find the **SQL Editor** (it has a database icon).
-2.  Click on **"+ New query"**.
-3.  Copy the entire SQL script below and paste it into the SQL Editor.
-4.  Click the **"RUN"** button. This will create all the necessary tables and relationships.
+## Step 3: Create Data Collections
 
-```sql
--- Create the table for individual features/products that can be part of a package
-CREATE TABLE features (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  price NUMERIC NOT NULL,
-  cost NUMERIC NOT NULL,
-  description TEXT,
-  points TEXT[],
-  "useCases" TEXT[], -- Using quotes to preserve camelCase
-  warranty TEXT
-);
+You need to create three collections to store your product data.
 
--- Create the table for standalone a la carte options
-CREATE TABLE ala_carte_options (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  price NUMERIC NOT NULL,
-  cost NUMERIC NOT NULL,
-  description TEXT,
-  points TEXT[],
-  "isNew" BOOLEAN DEFAULT false, -- Using quotes to preserve camelCase
-  warranty TEXT,
-  "useCases" TEXT[] -- Using quotes to preserve camelCase
-);
+1.  Go to the **Data** tab within Firestore.
+2.  Click **"+ Start collection"** and create the following three collections. Use "Auto-ID" for Document IDs unless you have a specific ID you want to use (like `ppf-full`).
 
--- Create the table for the main package tiers
-CREATE TABLE packages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  price NUMERIC NOT NULL,
-  cost NUMERIC NOT NULL,
-  is_recommended BOOLEAN DEFAULT false,
-  tier_color TEXT NOT NULL
-);
+    *   **Collection ID:** `features`
+    *   **Collection ID:** `ala_carte_options`
+    *   **Collection ID:** `packages`
 
--- Create a "join table" to handle the many-to-many relationship
--- between packages and features.
-CREATE TABLE package_features (
-  package_id UUID NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
-  feature_id UUID NOT NULL REFERENCES features(id) ON DELETE CASCADE,
-  PRIMARY KEY (package_id, feature_id)
-);
-```
+## Step 4: Add Your Product Data
 
-## Step 3: Add Your Product Data
+Here is how your documents should be structured in each collection.
 
-Now you can add your products and packages using the Supabase interface.
+### `features` collection
+Each document represents a single product feature.
+*   **Example Document:**
+    *   **name** (string): "Graphene Ceramic Coating"
+    *   **price** (number): 1295
+    *   **cost** (number): 600
+    *   **description** (string): "A liquid polymer that bonds..."
+    *   **points** (array): ["Extreme Gloss & Shine", "Hydrophobic Properties"]
+    *   **useCases** (array): ["Water beads and rolls off...", "Protects paint..."]
+    *   **warranty** (string): "7-Year Limited Warranty"
 
-1.  In the left sidebar, click the **Table Editor** icon (looks like a spreadsheet).
-2.  You will see the tables you just created (`features`, `ala_carte_options`, `packages`).
-3.  Click on a table (e.g., `features`) and use the **"+ Insert row"** button to add your data. Fill in the fields for each product.
-    *   **Important:** For fields like `points` and `useCases`, which are arrays, enter values in this format: `{"Point 1", "Point 2", "Another Point"}`.
-4.  Do the same for `ala_carte_options` and `packages`.
-5.  **To link features to a package:**
-    *   Go to the `package_features` table.
-    *   Click **"+ Insert row"**.
-    *   In the `package_id` column, select the package you want to add a feature to.
-    *   In the `feature_id` column, select the feature you want to include in that package.
-    *   Repeat for every feature you want in every package.
+### `ala_carte_options` collection
+Each document represents a standalone menu item.
+*   **Example Document:**
+    *   **name** (string): "Suntek Standard PPF"
+    *   **price** (number): 995
+    *   **cost** (number): 450
+    *   **description** (string): "Partial hood and fender coverage..."
+    *   **points** (array): ["Protects key impact zones"]
+    *   **isNew** (boolean): true
+    *   **warranty** (string): "10-Year Limited Warranty"
 
-## Step 4: Configure App Credentials
+### `packages` collection
+Each document represents a protection package.
+*   **Example Document:**
+    *   **name** (string): "Platinum"
+    *   **price** (number): 3995
+    *   **cost** (number): 1900
+    *   **is_recommended** (boolean): true
+    *   **tier_color** (string): "blue-400"
+    *   **featureIds** (array): ["ppf-full", "ceramic-coating", "interior-protection"]
+        *   **IMPORTANT:** This is an array of strings. Each string must be the **Document ID** of a document in your `features` collection.
 
-The application needs your Supabase URL and Key to connect to the database. You must provide these as secret environment variables.
+## Step 5: Configure Firestore Security Rules
 
-1.  **Find Your Credentials:**
-    *   In the left sidebar of your Supabase dashboard, go to **Project Settings** (the gear icon).
-    *   Click on the **API** tab.
-    *   Under **Project API Keys**, copy your **Project URL** and your `anon` `public` key.
+For this app to read data publicly but only allow logged-in admins to make changes, you need to update your security rules.
 
-2.  **Add Your Credentials as Secrets:**
-    *   In the development environment where you are editing the code, look for a "Secrets" panel (it is often represented by a key icon 🔑 in the left sidebar).
-    *   Create two new secrets:
-        *   **Name:** `SUPABASE_URL`
-        *   **Value:** Paste your **Project URL** here.
-    *   Create another secret:
-        *   **Name:** `SUPABASE_ANON_KEY`
-        *   **Value:** Paste your `anon` `public` key here.
+1.  In Firestore, go to the **Rules** tab.
+2.  Replace the default rules with the following:
+    ```
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        // Allow public read access to all collections
+        match /{document=**} {
+          allow read: if true;
+          // Allow write access only for authenticated users (your admins)
+          allow write: if request.auth != null;
+        }
+      }
+    }
+    ```
+3.  Click **"Publish"**.
 
-Once you have saved these secrets, the preview will automatically refresh, and the application will be able to connect to your Supabase project.
+## Step 6: Set Up Authentication
+
+To create user accounts for the admin panel, you need to enable Email/Password authentication.
+
+1.  In your Firebase project, go to the **Build** section and click on **Authentication**.
+2.  Click the **"Get started"** button.
+3.  In the **Sign-in method** tab, select **"Email/Password"** from the list of providers.
+4.  Enable the provider and click **"Save"**.
+5.  Go to the **Users** tab and click **"Add user"**. Create at least one user account that you will use to log into the admin panel.
+
+## Step 7: Get App Credentials
+
+The application needs your Firebase configuration to connect to the database.
+
+1.  In the left sidebar, go to **Project Settings** (the gear icon next to "Project Overview").
+2.  Under the **General** tab, scroll down to **"Your apps"**.
+3.  Click the **Web** icon (`</>`) to register a new web app.
+4.  Give the app a nickname (e.g., "Menu App") and click **"Register app"**.
+5.  You will be shown a `firebaseConfig` object. Copy this entire object. It will look like this:
+    ```javascript
+    const firebaseConfig = {
+      apiKey: "AIza...",
+      authDomain: "your-project.firebaseapp.com",
+      projectId: "your-project",
+      storageBucket: "your-project.appspot.com",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+    ```
+
+## Step 8: Add Credentials as a Secret
+
+1.  In the development environment where you are editing the code, look for a "Secrets" panel (it is often represented by a key icon 🔑 in the left sidebar).
+2.  Create **one** new secret:
+    *   **Name:** `FIREBASE_CONFIG`
+    *   **Value:** Paste the entire `firebaseConfig` object you copied from Firebase, including the opening `{` and closing `}`.
+
+Once you have saved this secret, the preview will automatically refresh and connect to your Firebase project.

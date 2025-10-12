@@ -98,22 +98,6 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
         </div>
 
       </div>
-       <style>{`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @keyframes slide-up {
-            from { transform: translateY(20px) scale(0.98); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.3s ease-out forwards;
-          }
-          .animate-slide-up {
-            animation: slide-up 0.3s ease-out forwards;
-          }
-        `}</style>
     </div>
   );
 };

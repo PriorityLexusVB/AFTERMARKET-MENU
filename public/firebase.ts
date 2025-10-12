@@ -8,19 +8,23 @@ let auth: Auth | null = null;
 let firebaseInitializationError: string | null = null;
 
 try {
-  // Using the hardcoded Firebase configuration provided by the user.
-  // This bypasses the need for the FIREBASE_CONFIG secret.
-  const firebaseConfig = {
-    apiKey: "AIzaSyA_fZp_gw_ABK02RYMITxfENf6kPdBT-gg",
-    authDomain: "gen-lang-client-0877787739.firebaseapp.com",
-    projectId: "gen-lang-client-0877787739",
-    storageBucket: "gen-lang-client-0877787739.firebasestorage.app",
-    messagingSenderId: "351793974523",
-    appId: "1:351793974523:web:710469295a3e7bacca745e"
-  };
+  const firebaseConfigStr = process.env.FIREBASE_CONFIG;
+  if (!firebaseConfigStr) {
+    firebaseInitializationError = "Firebase configuration is missing. Please go to the 'Secrets' tab (key icon 🔑) and set FIREBASE_CONFIG with the configuration object from your Firebase project's settings.";
+    throw new Error(firebaseInitializationError);
+  }
+
+  let firebaseConfig;
+  try {
+    firebaseConfig = JSON.parse(firebaseConfigStr);
+  } catch (e) {
+    firebaseInitializationError = "Failed to parse FIREBASE_CONFIG. Please ensure it's a valid JSON object copied from your Firebase project's settings.";
+    throw new Error(firebaseInitializationError);
+  }
 
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-    throw new Error("The provided Firebase configuration is incomplete.");
+    firebaseInitializationError = "The FIREBASE_CONFIG is incomplete. Please provide the full configuration object from your Firebase project.";
+    throw new Error(firebaseInitializationError);
   }
   
   app = initializeApp(firebaseConfig);
@@ -29,9 +33,9 @@ try {
 
 } catch (error) {
   console.error("Firebase initialization failed:", error);
-  if (error instanceof Error) {
-      firebaseInitializationError = `Failed to initialize Firebase: ${error.message}. Please check the hardcoded configuration in firebase.ts.`;
-  } else {
+  if (error instanceof Error && !firebaseInitializationError) {
+      firebaseInitializationError = `Failed to initialize Firebase: ${error.message}. Please check your FIREBASE_CONFIG secret.`;
+  } else if (!firebaseInitializationError) {
       firebaseInitializationError = "An unknown error occurred during Firebase initialization.";
   }
 }

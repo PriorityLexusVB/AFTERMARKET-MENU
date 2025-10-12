@@ -159,32 +159,6 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
           isManagerView={isManagerView}
         />
       </div>
-
-       <style>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
-          
-          /* Print-specific styles */
-          .print-mount {
-            display: none;
-          }
-          
-          @media print {
-            body > *:not(.print-mount) {
-              display: none !important;
-            }
-            .print-mount {
-              display: block !important;
-            }
-            @page {
-              size: A4;
-              margin: 1cm;
-            }
-          }
-        `}</style>
     </>
   );
 };

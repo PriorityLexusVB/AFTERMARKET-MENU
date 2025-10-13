@@ -159,6 +159,27 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
           isManagerView={isManagerView}
         />
       </div>
+
+       <style>{`
+          
+          /* Print-specific styles */
+          .print-mount {
+            display: none;
+          }
+          
+          @media print {
+            body > *:not(.print-mount) {
+              display: none !important;
+            }
+            .print-mount {
+              display: block !important;
+            }
+            @page {
+              size: A4;
+              margin: 1cm;
+            }
+          }
+        `}</style>
     </>
   );
 };

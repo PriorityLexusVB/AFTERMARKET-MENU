@@ -8,11 +8,11 @@ let auth: Auth | null = null;
 let firebaseInitializationError: string | null = null;
 
 try {
-  // Standardize on FIREBASE_CONFIG to be consistent with API_KEY convention.
+  // Use `process.env.FIREBASE_CONFIG` to align with the rest of the application's environment variable strategy
+  // and resolve TypeScript errors related to `import.meta.env` which is not correctly configured in this project.
   const firebaseConfigStr = process.env.FIREBASE_CONFIG;
-  // Fix: Check for empty string value which can be set by Vite's define plugin.
   if (!firebaseConfigStr || firebaseConfigStr === '""') {
-    firebaseInitializationError = "Firebase configuration is missing. Please go to the 'Secrets' tab (key icon 🔑) and set FIREBASE_CONFIG with the configuration object from your Firebase project's settings.";
+    firebaseInitializationError = "Firebase configuration is missing. Please set the FIREBASE_CONFIG environment variable with the configuration object from your Firebase project's settings.";
     throw new Error(firebaseInitializationError);
   }
 
@@ -36,7 +36,7 @@ try {
 } catch (error) {
   console.error("Firebase initialization failed:", error);
   if (error instanceof Error && !firebaseInitializationError) {
-      firebaseInitializationError = `Failed to initialize Firebase: ${error.message}. Please check your FIREBASE_CONFIG secret.`;
+      firebaseInitializationError = `Failed to initialize Firebase: ${error.message}. Please check your FIREBASE_CONFIG.`;
   } else if (!firebaseInitializationError) {
       firebaseInitializationError = "An unknown error occurred during Firebase initialization.";
   }

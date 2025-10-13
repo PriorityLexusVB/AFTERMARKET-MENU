@@ -133,7 +133,7 @@ ${buildProductContext()}`;
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:justify-end sm:items-end p-0 sm:p-8" role="dialog" aria-modal="true">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>
           
-          <div className="bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full h-full sm:h-[70vh] sm:max-h-[600px] sm:w-[440px] flex flex-col transform transition-transform duration-300 ease-in-out translate-y-0 sm:translate-y-0 opacity-100 animate-slide-up-fast">
+          <div className="bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full h-full sm:h-[70vh] sm:max-h-[600px] sm:w-[440px] flex flex-col transform transition-transform duration-300 ease-in-out animate-slide-up-fast">
             <header className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <AssistantIcon />

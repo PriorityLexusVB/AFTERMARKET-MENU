@@ -1,4 +1,3 @@
-
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 
 // MOCK FEATURES (these would be in the 'features' table)

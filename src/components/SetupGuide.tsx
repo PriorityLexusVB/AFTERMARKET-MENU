@@ -23,19 +23,15 @@ interface SetupGuideProps {
 export const SetupGuide: React.FC<SetupGuideProps> = ({ error }) => {
     return (
         <div className="animate-fade-in text-left">
-            <p className="text-center text-gray-300 mb-6">This app is in <strong>Demo Mode</strong>. To enable login, please connect to your live Firebase database by adding your project's configuration.</p>
+            <p className="text-center text-gray-300 mb-6">This app is in <strong>Demo Mode</strong>. To enable authentication and data persistence, please connect to your Firebase project.</p>
 
             <div className="space-y-6">
-                <Step number={1} title="Open the Secrets Panel">
-                    <p>In the editor's left sidebar, click the <KeyIcon /> <strong>Secrets</strong> icon.</p>
+                <Step number={1} title="Create a .env file">
+                    <p>In the root of the project, create a new file named <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">.env</code>. You can copy the contents of <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">.env.example</code> to get started.</p>
                 </Step>
                 <Step number={2} title="Add Firebase Configuration">
-                    <p>Click <strong>"+ Add new secret"</strong> and create a single secret:</p>
-                    <ul className="mt-2 text-xs list-disc list-inside bg-gray-900 p-3 rounded-md font-mono">
-                        <li><strong>Name:</strong> <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">FIREBASE_CONFIG</code></li>
-                        <li><strong>Value:</strong> Paste your entire Firebase config object here.</li>
-                    </ul>
-                     <p className="text-xs text-gray-500 mt-2">Find your config object in your Firebase project's settings page. It starts with <code className="text-gray-400">{`{`}</code> and ends with <code className="text-gray-400">{`}`}</code>.</p>
+                    <p>Fill in the <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">.env</code> file with your Firebase project's credentials. All variables must start with <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">VITE_</code>.</p>
+                    <p className="text-xs text-gray-500 mt-2">Find your config object in your Firebase project's settings page under "Your apps".</p>
                 </Step>
             </div>
             
@@ -47,7 +43,7 @@ export const SetupGuide: React.FC<SetupGuideProps> = ({ error }) => {
             )}
 
             <div className="mt-6 text-center text-xs text-gray-500">
-                <p>After adding the secret, the app preview will restart automatically.</p>
+                <p>After adding the environment variables, the app preview will restart automatically.</p>
             </div>
         </div>
     );

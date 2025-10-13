@@ -120,7 +120,7 @@ The application needs your Firebase configuration to connect to the database.
 
 1.  In the development environment where you are editing the code, look for a "Secrets" panel (it is often represented by a key icon 🔑 in the left sidebar).
 2.  Create **one** new secret:
-    *   **Name:** `VITE_FIREBASE_CONFIG`
+    *   **Name:** `FIREBASE_CONFIG`
     *   **Value:** Paste the entire `firebaseConfig` object you copied from Firebase, including the opening `{` and closing `}`.
 
 Once you have saved this secret, the preview will automatically refresh and connect to your Firebase project.

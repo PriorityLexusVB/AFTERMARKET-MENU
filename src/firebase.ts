@@ -9,8 +9,9 @@ let firebaseInitializationError: string | null = null;
 
 try {
   // Standardize on FIREBASE_CONFIG to be consistent with API_KEY convention.
-  const firebaseConfigStr = (process.env as any).FIREBASE_CONFIG;
-  if (!firebaseConfigStr) {
+  const firebaseConfigStr = process.env.FIREBASE_CONFIG;
+  // Fix: Check for empty string value which can be set by Vite's define plugin.
+  if (!firebaseConfigStr || firebaseConfigStr === '""') {
     firebaseInitializationError = "Firebase configuration is missing. Please go to the 'Secrets' tab (key icon 🔑) and set FIREBASE_CONFIG with the configuration object from your Firebase project's settings.";
     throw new Error(firebaseInitializationError);
   }

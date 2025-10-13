@@ -66,16 +66,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
 
     setError(null);
     setMessages([{ role: 'model', text: 'Hello! I am the Priority Lexus AI Assistant. How can I help you choose the perfect protection for your vehicle today?' }]);
-    
-    // Fix: Use process.env.API_KEY as required by the guidelines, and check for empty string.
-    if (!process.env.API_KEY || process.env.API_KEY === "") {
+    const apiKey = process.env.API_KEY;
+
+    if (!apiKey) {
       setError("The AI Assistant is not configured. Please add the API_KEY to the application's secrets.");
       return;
     }
 
     try {
-      // Fix: Pass apiKey as a named parameter.
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = `You are a friendly and knowledgeable sales assistant for Priority Lexus of Virginia Beach. Your goal is to help customers understand and choose the best vehicle protection products. You must only use the information provided below about the available packages and a la carte options. Do not invent products or prices. Be concise, helpful, and professional. If a user asks about something unrelated to Lexus vehicles or protection plans, politely steer the conversation back to the products. Do not use markdown for your responses.
       
 ${buildProductContext()}`;
@@ -108,7 +107,6 @@ ${buildProductContext()}`;
 
     try {
       const response = await chatRef.current.sendMessage({ message: userMessage.text });
-      // Fix: Use response.text to get the model's reply directly.
       const modelMessage: Message = { role: 'model', text: response.text };
       setMessages(prev => [...prev, modelMessage]);
     } catch (e) {

@@ -14,53 +14,44 @@ h1, h2, h3, h4, .font-teko {
   text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
-/* Custom animations from original inline styles */
-.animate-icon-pop-in { animation: icon-pop-in 0.3s ease-out forwards; }
-.animate-summary-item-in { animation: summary-item-in 0.4s ease-out forwards; }
-.animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
-.animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
-.animate-slide-up-fast { animation: slide-up-fast 0.3s ease-out forwards; }
-
+/* Animation for add-on button icons */
 @keyframes icon-pop-in {
   from { transform: scale(0.5); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+.animate-icon-pop-in {
+  animation: icon-pop-in 0.3s ease-out forwards;
+}
+
+/* Animation for summary items */
 @keyframes summary-item-in {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.animate-summary-item-in {
+  animation: summary-item-in 0.4s ease-out forwards;
+}
+
+/* Generic modal animations */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
 @keyframes slide-up {
   from { transform: translateY(20px) scale(0.98); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
+
+/* AI Assistant specific animation */
 @keyframes slide-up-fast {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
 @media (min-width: 640px) {
     @keyframes slide-up-fast {
-      from { transform: translateY(20px) scale(0.98); opacity: 0; }
-      to { transform: translateY(0) scale(1); opacity: 1; }
-    }
-}
-
-/* Print-specific styles from AgreementView */
-.print-mount {
-  display: none;
-}
-@media print {
-  body > *:not(.print-mount) {
-    display: none !important;
-  }
-  .print-mount {
-    display: block !important;
-  }
-  @page {
-    size: A4;
-    margin: 1cm;
+    from { transform: translateY(20px) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
   }
 }

@@ -1,22 +1,39 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+// Fix: Import fileURLToPath to handle ES module paths.
+import { fileURLToPath } from 'url';
 
-// https://vitejs.dev/config/
+// Fix for both errors:
+// 1. `process.cwd()` type error: This is replaced with `__dirname`.
+// 2. `__dirname` not defined: This is defined for an ES module context using `import.meta.url`.
+// This works because `vite.config.ts` is at the project root, making `__dirname` equivalent to `process.cwd()`.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig(({ mode }) => {
-  // Fix: Replaced process.cwd() with '' to avoid a TypeScript type error.
-  // loadEnv resolves an empty string to the current working directory.
-  const env = loadEnv(mode, '', '');
-  return {
-    plugins: [react()],
-    publicDir: false,
-    build: {
-      outDir: 'dist'
-    },
-    define: {
-      'process.env.API_KEY': env.API_KEY ? JSON.stringify(env.API_KEY) : '""',
-      'process.env.FIREBASE_CONFIG': env.FIREBASE_CONFIG ? JSON.stringify(env.FIREBASE_CONFIG) : '""',
-      'process.env.SUPABASE_URL': env.SUPABASE_URL ? JSON.stringify(env.SUPABASE_URL) : '""',
-      'process.env.SUPABASE_ANON_KEY': env.SUPABASE_ANON_KEY ? JSON.stringify(env.SUPABASE_ANON_KEY) : '""',
+    const env = loadEnv(mode, __dirname, '');
+
+    // Expose all environment variables to the client, stringified.
+    const processEnv = {};
+    for (const key in env) {
+      if (Object.prototype.hasOwnProperty.call(env, key)) {
+        processEnv[key] = JSON.stringify(env[key]);
+      }
     }
-  }
-})
+
+    return {
+      server: {
+        port: 3000,
+        host: '0.0.0.0',
+      },
+      plugins: [react()],
+      define: {
+        'process.env': processEnv,
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, './src'),
+        },
+      },
+    };
+});

@@ -50,7 +50,6 @@ h1, h2, h3, h4, .font-teko {
   animation: slide-up 0.3s ease-out forwards;
 }
 
-
 /* AI Assistant specific animation */
 @keyframes slide-up-fast {
   from { transform: translateY(100%); opacity: 0; }
@@ -66,4 +65,22 @@ h1, h2, h3, h4, .font-teko {
 
 .animate-slide-up-fast {
   animation: slide-up-fast 0.3s ease-out forwards;
+}
+
+/* Print-specific styles */
+.print-mount {
+  display: none;
+}
+
+@media print {
+  body > *:not(.print-mount) {
+    display: none !important;
+  }
+  .print-mount {
+    display: block !important;
+  }
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
 }

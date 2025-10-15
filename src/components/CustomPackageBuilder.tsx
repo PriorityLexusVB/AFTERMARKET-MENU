@@ -64,7 +64,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({ item
                 {items.map(item => (
                     <div 
                         key={item.id} 
-                        className={`rounded-md p-3 flex justify-between items-center transition-all duration-500 ease-out animate-fade-in
+                        className={`rounded-md p-3 flex justify-between items-center animate-fade-in transition-all duration-500 ease-out
                         ${highlightedItemId === item.id ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-gray-700'}`}
                     >
                         <div>

@@ -1,7 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getEnvValue } from './env';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = getEnvValue('SUPABASE_URL');
+const supabaseAnonKey = getEnvValue('SUPABASE_ANON_KEY');
 
 let supabase: SupabaseClient | null = null;
 let supabaseInitializationError: string | null = null;

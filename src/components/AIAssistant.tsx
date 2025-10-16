@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import type { PackageTier, AlaCarteOption } from '../types';
+import { getEnvValue } from '../env';
 
 interface AIAssistantProps {
   packages: PackageTier[];
@@ -66,7 +67,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
 
     setError(null);
     setMessages([{ role: 'model', text: 'Hello! I am the Priority Lexus AI Assistant. How can I help you choose the perfect protection for your vehicle today?' }]);
-    const apiKey = process.env.API_KEY;
+    const apiKey = getEnvValue('API_KEY');
 
     if (!apiKey) {
       setError("The AI Assistant is not configured. An API_KEY is required.");

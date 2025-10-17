@@ -14,21 +14,47 @@ npm install
 ```
 
 ### Step 3: Set Up Environment Variables
-The application connects to a Firebase project for data and authentication. You need to provide your project's credentials.
+The application connects to a Firebase project for data and uses the Gemini API for its AI Assistant. You need to provide credentials for both.
 
 1.  Create a new file named `.env` in the root of the project.
-2.  Copy the contents of `.env.example` into your new `.env` file.
-3.  Fill in the values with your actual Firebase Web App configuration. You can find these in your Firebase project settings.
+2.  Copy the template below and paste it into your new `.env` file.
 
-Your `.env` file should look like this:
 ```
-VITE_FIREBASE_API_KEY=AIzaSy...
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=1234567890
-VITE_FIREBASE_APP_ID=1:1234567890:web:abcdef123456
+# Priority Lexus Aftermarket Menu Environment Variables
+#
+# Fill in your Firebase and Gemini API credentials below.
+# For Firebase, you can use either Option A (recommended) or Option B.
+
+# Option A: Paste the entire Firebase config JSON object here.
+# This is often easier to manage. Find this in your Firebase Project Settings.
+# Ensure the JSON is enclosed in single quotes if it contains special characters.
+FIREBASE_CONFIG='{
+  "apiKey": "YOUR_API_KEY",
+  "authDomain": "YOUR_PROJECT_ID.firebaseapp.com",
+  "projectId": "YOUR_PROJECT_ID",
+  "storageBucket": "YOUR_PROJECT_ID.appspot.com",
+  "messagingSenderId": "YOUR_SENDER_ID",
+  "appId": "YOUR_APP_ID"
+}'
+
+# Option B: Alternatively, provide each key individually.
+# The VITE_ prefix is required for them to be exposed to the client-side code by Vite.
+# Uncomment these lines if you choose this option.
+# VITE_FIREBASE_API_KEY=
+# VITE_FIREBASE_AUTH_DOMAIN=
+# VITE_FIREBASE_PROJECT_ID=
+# VITE_FIREBASE_STORAGE_BUCKET=
+# VITE_FIREBASE_MESSAGING_SENDER_ID=
+# VITE_FIREBASE_APP_ID=
+
+
+# AI Assistant API Key
+# This key is for the Gemini API used by the AI Assistant feature.
+# You can get a key from Google AI Studio.
+API_KEY=YOUR_GEMINI_API_KEY
 ```
+
+3.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key.
 
 ### Step 4: Run the Development Server
 Start the Vite development server.

@@ -25,12 +25,30 @@ const buildFirebaseConfig = (): FirebaseConfig | null => {
     }
   }
 
-  const apiKey = getEnvValue('VITE_FIREBASE_API_KEY') ?? getEnvValue('FIREBASE_API_KEY');
-  const projectId = getEnvValue('VITE_FIREBASE_PROJECT_ID') ?? getEnvValue('FIREBASE_PROJECT_ID');
-  const authDomain = getEnvValue('VITE_FIREBASE_AUTH_DOMAIN') ?? getEnvValue('FIREBASE_AUTH_DOMAIN');
-  const storageBucket = getEnvValue('VITE_FIREBASE_STORAGE_BUCKET') ?? getEnvValue('FIREBASE_STORAGE_BUCKET');
-  const messagingSenderId = getEnvValue('VITE_FIREBASE_MESSAGING_SENDER_ID') ?? getEnvValue('FIREBASE_MESSAGING_SENDER_ID');
-  const appId = getEnvValue('VITE_FIREBASE_APP_ID') ?? getEnvValue('FIREBASE_APP_ID');
+  const apiKey =
+    getEnvValue('VITE_FIREBASE_API_KEY') ??
+    getEnvValue('FIREBASE_API_KEY') ??
+    getEnvValue('NEXT_PUBLIC_FIREBASE_API_KEY');
+  const projectId =
+    getEnvValue('VITE_FIREBASE_PROJECT_ID') ??
+    getEnvValue('FIREBASE_PROJECT_ID') ??
+    getEnvValue('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+  const authDomain =
+    getEnvValue('VITE_FIREBASE_AUTH_DOMAIN') ??
+    getEnvValue('FIREBASE_AUTH_DOMAIN') ??
+    getEnvValue('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
+  const storageBucket =
+    getEnvValue('VITE_FIREBASE_STORAGE_BUCKET') ??
+    getEnvValue('FIREBASE_STORAGE_BUCKET') ??
+    getEnvValue('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
+  const messagingSenderId =
+    getEnvValue('VITE_FIREBASE_MESSAGING_SENDER_ID') ??
+    getEnvValue('FIREBASE_MESSAGING_SENDER_ID') ??
+    getEnvValue('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID');
+  const appId =
+    getEnvValue('VITE_FIREBASE_APP_ID') ??
+    getEnvValue('FIREBASE_APP_ID') ??
+    getEnvValue('NEXT_PUBLIC_FIREBASE_APP_ID');
 
   if (apiKey && projectId && authDomain) {
     return {

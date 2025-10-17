@@ -67,10 +67,16 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
 
     setError(null);
     setMessages([{ role: 'model', text: 'Hello! I am the Priority Lexus AI Assistant. How can I help you choose the perfect protection for your vehicle today?' }]);
-    const apiKey = getEnvValue('API_KEY');
+    const apiKey =
+      getEnvValue('API_KEY') ??
+      getEnvValue('GOOGLE_API_KEY') ??
+      getEnvValue('GENAI_API_KEY') ??
+      getEnvValue('NEXT_PUBLIC_GOOGLE_API_KEY');
 
     if (!apiKey) {
-      setError("The AI Assistant is not configured. An API_KEY is required.");
+      setError(
+        "The AI Assistant is not configured. Please add API_KEY (or GOOGLE_API_KEY / GENAI_API_KEY) to the application's secrets."
+      );
       return;
     }
 

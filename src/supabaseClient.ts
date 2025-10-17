@@ -1,8 +1,14 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getEnvValue } from './env';
 
-const supabaseUrl = getEnvValue('SUPABASE_URL');
-const supabaseAnonKey = getEnvValue('SUPABASE_ANON_KEY');
+const supabaseUrl =
+  getEnvValue('SUPABASE_URL') ??
+  getEnvValue('VITE_SUPABASE_URL') ??
+  getEnvValue('NEXT_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey =
+  getEnvValue('SUPABASE_ANON_KEY') ??
+  getEnvValue('VITE_SUPABASE_ANON_KEY') ??
+  getEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
 let supabase: SupabaseClient | null = null;
 let supabaseInitializationError: string | null = null;

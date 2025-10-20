@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { getAuth } from '../firebase';
 import { SetupGuide } from './SetupGuide';
 
 interface LoginProps {
@@ -16,6 +16,7 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const auth = getAuth();
     if (!auth) {
       setError("Firebase authentication is not available.");
       return;

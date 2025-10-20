@@ -15,7 +15,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { CompareModal } from './components/CompareModal';
 import { MAIN_PAGE_ADDON_IDS } from './constants';
 import { fetchAllData } from './data';
-import { auth, firebaseInitializationError } from './firebase';
+import { getAuth, firebaseInitializationError } from './firebase';
 import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from './types';
 
 type Page = 'packages' | 'alacarte';
@@ -59,6 +59,7 @@ const App: React.FC = () => {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
+    const auth = getAuth();
     if (firebaseInitializationError || !auth) {
       setIsAuthLoading(false);
       setIsDemoMode(true); // Enter demo mode if Firebase isn't configured
@@ -100,6 +101,7 @@ const App: React.FC = () => {
       alert("Logout is disabled in demo mode.");
       return;
     }
+    const auth = getAuth();
     if (!auth) return;
     try {
       await signOut(auth);

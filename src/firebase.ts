@@ -17,12 +17,21 @@ let auth: Auth | null = null;
 let firebaseInitializationError: string | null = null;
 
 try {
+
+
+  if (!firebaseConfig) {
+    firebaseInitializationError = "Firebase configuration is missing. Please create a `.env` file in the project root and add your Firebase credentials. See the README.md file for instructions.";
+    throw new Error(firebaseInitializationError);
+  }
+
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
 } catch (error) {
   console.error('Firebase initialization failed:', error);
-  firebaseInitializationError = error instanceof Error ? error.message : 'Unknown error';
+  if (!firebaseInitializationError) {
+    firebaseInitializationError = error instanceof Error ? error.message : 'An unknown error occurred during Firebase initialization.';
+  }
 }
 
 export { db, auth, firebaseInitializationError };

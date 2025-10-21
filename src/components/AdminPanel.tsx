@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
-import { getDb } from '../firebase';
+import { db } from '../firebase';
 import type { ProductFeature } from '../types';
 import { FeatureForm } from './FeatureForm';
 
@@ -19,7 +19,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   
   const fetchFeatures = useCallback(async () => {
-    const db = getDb();
     if (!db) {
       setError("Firebase is not connected.");
       setIsLoading(false);

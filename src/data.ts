@@ -1,5 +1,5 @@
 import { collection, getDocs, addDoc } from 'firebase/firestore/lite';
-import { getDb } from './firebase';
+import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
 
@@ -21,7 +21,6 @@ interface FirebasePackage {
 }
 
 export async function fetchAllData(): Promise<FetchDataResult> {
-  const db = getDb();
   // If db is null (e.g., config error), we will fall back to mock data.
   if (!db) {
     console.warn("Firebase not initialized, falling back to mock data.");
@@ -86,7 +85,6 @@ export async function fetchAllData(): Promise<FetchDataResult> {
  * @returns A promise that resolves when the document is successfully added.
  */
 export async function addFeature(featureData: Omit<ProductFeature, 'id'>): Promise<void> {
-  const db = getDb();
   if (!db) {
     throw new Error("Firebase is not initialized. Cannot add feature.");
   }

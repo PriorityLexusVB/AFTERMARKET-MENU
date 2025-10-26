@@ -8,26 +8,22 @@ let auth: Auth | null = null;
 let firebaseInitializationError: string | null = null;
 
 try {
-  // Standardize on FIREBASE_CONFIG to be consistent with API_KEY convention.
-  const firebaseConfigStr = process.env.FIREBASE_CONFIG;
-  if (!firebaseConfigStr || firebaseConfigStr === '""') {
-    firebaseInitializationError = "Firebase configuration is missing. Please go to the 'Secrets' tab (key icon 🔑) and set FIREBASE_CONFIG with the configuration object from your Firebase project's settings.";
-    throw new Error(firebaseInitializationError);
-  }
+  // Vite exposes env variables on `import.meta.env`
+  const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  };
 
-  let firebaseConfig;
-  try {
-    firebaseConfig = JSON.parse(firebaseConfigStr);
-  } catch (e) {
-    firebaseInitializationError = "Failed to parse FIREBASE_CONFIG. Please ensure it's a valid JSON object copied from your Firebase project's settings.";
-    throw new Error(firebaseInitializationError);
-  }
-
+  // Basic validation
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-    firebaseInitializationError = "The FIREBASE_CONFIG is incomplete. Please provide the full configuration object from your Firebase project.";
+    firebaseInitializationError = "Firebase configuration is missing or incomplete. Please check your .env file or environment variables.";
     throw new Error(firebaseInitializationError);
   }
-  
+
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
@@ -35,7 +31,7 @@ try {
 } catch (error) {
   console.error("Firebase initialization failed:", error);
   if (error instanceof Error && !firebaseInitializationError) {
-      firebaseInitializationError = `Failed to initialize Firebase: ${error.message}. Please check your FIREBASE_CONFIG secret.`;
+      firebaseInitializationError = `Failed to initialize Firebase: ${error.message}. Please check your environment variables.`;
   } else if (!firebaseInitializationError) {
       firebaseInitializationError = "An unknown error occurred during Firebase initialization.";
   }

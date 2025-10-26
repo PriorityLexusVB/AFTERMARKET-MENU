@@ -3,6 +3,7 @@ import { getFirestore, Firestore } from 'firebase/firestore/lite';
 import { getAuth, Auth } from 'firebase/auth';
 
  fix-aistudio-dependency-issue
+ main
 // Extend the Window interface to include our injected config
 declare global {
   interface Window {
@@ -19,7 +20,7 @@ declare global {
 
 // Read the configuration from the window object
 const firebaseConfig = window.firebaseConfig;
-
+ fix-aistudio-dependency-issue
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -29,13 +30,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
  main
-
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
 let firebaseInitializationError: string | null = null;
 
 try {
+ fix-aistudio-dependency-issue
+  // Check if the config was successfully injected
+  if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    throw new Error('Firebase configuration is missing. The server may have failed to inject it.');
+
  fix-aistudio-dependency-issue
   // Check if the config was successfully injected
   if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {

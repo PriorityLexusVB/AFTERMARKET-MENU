@@ -8,7 +8,10 @@ let auth: Auth | null = null;
 let firebaseInitializationError: string | null = null;
 
 try {
+ fix-aistudio-dependency-issue
   // Vite exposes env variables on `import.meta.env`
+
+ main
   const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -20,7 +23,11 @@ try {
 
   // Basic validation
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+ fix-aistudio-dependency-issue
     firebaseInitializationError = "Firebase configuration is missing or incomplete. Please check your .env file or environment variables.";
+
+    firebaseInitializationError = "Firebase configuration is incomplete. Please provide the full configuration object from your Firebase project.";
+ main
     throw new Error(firebaseInitializationError);
   }
 

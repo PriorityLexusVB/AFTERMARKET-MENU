@@ -19,6 +19,7 @@ The application connects to a Firebase project and uses the Gemini API. You need
 1.  Create a new file named `.env.local` in the root of the project.
 2.  Copy the contents of `.env.example` into your new `.env.local` file.
 3.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key. All variables must start with `VITE_` to be recognized by the application.
+3.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key.
 
 ### Step 4: Run the Development Server
 Start the Vite development server.
@@ -54,6 +55,36 @@ gcloud run deploy YOUR_SERVICE_NAME \
 *   `--set-build-env-vars`: This is the crucial flag. It takes a comma-separated list of key-value pairs and makes them available to the build process.
 
 After running this command, your application should be successfully deployed and fully functional.
+This application is configured to be deployed to Google Cloud Run.
+
+### Step 1: Build the Application
+First, build the application for production.
+```bash
+npm run build
+```
+
+### Step 2: Deploy to Google Cloud Run
+Deploy the application using the `gcloud` CLI. You will be prompted to set up the service during the first deployment.
+
+```bash
+gcloud run deploy
+```
+
+### Step 3: Configure Environment Variables in Google Cloud Run
+After deploying, you need to configure the environment variables in the Google Cloud Run service.
+
+1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2.  Navigate to your Cloud Run service.
+3.  Click **"Edit & Deploy New Revision"**.
+4.  Under the **"Variables & Secrets"** tab, add the following environment variables with their corresponding values from your Firebase project and Google AI Studio:
+    *   `VITE_FIREBASE_API_KEY`
+    *   `VITE_FIREBASE_AUTH_DOMAIN`
+    *   `VITE_FIREBASE_PROJECT_ID`
+    *   `VITE_FIREBASE_STORAGE_BUCKET`
+    *   `VITE_FIREBASE_MESSAGING_SENDER_ID`
+    *   `VITE_FIREBASE_APP_ID`
+    *   `VITE_GEMINI_API_KEY`
+5.  Click **"Deploy"** to apply the changes.
 
 ## Firebase Backend Setup
 
@@ -132,4 +163,4 @@ service cloud.firestore {
 
 1. Go to **Project Settings** (gear icon).
 2. Under **"Your apps"**, click the Web icon (`</>`) to register a web app if you haven't already.
-3. Find the `firebaseConfig` object. Copy the key-value pairs from this object into your `.env` file as shown in the "Local Development Setup" section.
+3. Find the `firebaseConfig` object. Copy the key-value pairs from this object into your `.env.local` file as shown in the "Local Development Setup" section.

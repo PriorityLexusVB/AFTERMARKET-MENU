@@ -42,37 +42,7 @@ app.get("/__debug", (_req,res)=>{
 });
 
 // SPA fallback
-app.get("*", (_req, res) => {
-  if (!indexExists) {
-    return res.status(200).send(splashHtml);
-  }
-
-  // Read the index.html file to inject the runtime config
-  fs.readFile(indexHtml, 'utf8', (err, html) => {
-    if (err) {
-      console.error('Error reading index.html:', err);
-      return res.status(500).send('Error loading the application.');
-    }
-
-    // Prepare the Firebase config from runtime environment variables
-    const firebaseConfig = {
-      apiKey: process.env.VITE_FIREBASE_API_KEY,
-      authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.VITE_FIREBASE_APP_ID,
-    };
-
-    // Inject the config into a script tag in the head. This makes it available on the window object.
-    const injectedHtml = html.replace(
-      '</head>',
-      `<script>window.firebaseConfig = ${JSON.stringify(firebaseConfig)};</script></head>`
-    );
-
-    res.send(injectedHtml);
-  });
-});
+app.get("*", (_req,res)=> indexExists ? res.sendFile(indexHtml) : res.status(200).send(splashHtml));
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`[BOOT] Aftermarket Menu listening on :${port}`));
+app.listen(port, ()=>console.log(`[BOOT] Aftermarket Menu listening on :${port}`));

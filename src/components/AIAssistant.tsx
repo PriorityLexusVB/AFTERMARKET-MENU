@@ -66,11 +66,19 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
 
     setError(null);
     setMessages([{ role: 'model', text: 'Hello! I am the Priority Lexus AI Assistant. How can I help you choose the perfect protection for your vehicle today?' }]);
+
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
     if (!apiKey) {
       setError(
         "The AI Assistant is not configured. Please add the VITE_GEMINI_API_KEY to the application's environment variables."
+
+    const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+
+    if (!apiKey) {
+      setError(
+        "The AI Assistant is not configured. Please add VITE_GOOGLE_API_KEY to the application's secrets."
+
       );
       return;
     }

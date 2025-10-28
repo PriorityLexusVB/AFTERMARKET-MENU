@@ -14,10 +14,11 @@ npm install
 ```
 
 ### Step 3: Set Up Environment Variables
-The application connects to a Firebase project for data and uses the Gemini API for its AI Assistant. You need to provide credentials for both.
+The application connects to a Firebase project and uses the Gemini API. You need to provide credentials for both.
 
 1.  Create a new file named `.env.local` in the root of the project.
 2.  Copy the contents of `.env.example` into your new `.env.local` file.
+3.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key. All variables must start with `VITE_` to be recognized by the application.
 3.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key.
 
 ### Step 4: Run the Development Server
@@ -29,6 +30,31 @@ The application will now be running on your local machine, typically at `http://
 
 ## Deploying to Google Cloud Run
 
+### The Problem: Build-Time vs. Run-Time Variables
+A Vite application like this one needs its environment variables (the ones starting with `VITE_`) to be available when it's **built**, not just when it's running. This is because Vite bundles the values directly into the final JavaScript files. The standard Google Cloud Run deployment process sets variables for run-time, which is too late for the build step, causing the build to fail or the app to run in a broken state.
+
+### The Solution: Pass Variables to the Build
+The correct way to fix this is to explicitly tell Google Cloud Build (which `gcloud run deploy` uses behind the scenes) to use your variables during the build.
+
+### Step 1: Deploy from Your Local Machine
+Run the following command from your project's root directory. This single command will build your application with the correct variables and deploy it to Cloud Run.
+
+**Replace all the `YOUR_...` placeholders with your actual keys and settings.**
+
+```bash
+gcloud run deploy YOUR_SERVICE_NAME \
+  --source . \
+  --region YOUR_REGION \
+  --allow-unauthenticated \
+  --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=YOUR_APP_ID,VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY"
+```
+
+**Command Breakdown:**
+*   `YOUR_SERVICE_NAME`: The name you want for your Cloud Run service (e.g., `lexus-aftermarket-menu`).
+*   `YOUR_REGION`: The Google Cloud region where you want to host your service (e.g., `us-central1`).
+*   `--set-build-env-vars`: This is the crucial flag. It takes a comma-separated list of key-value pairs and makes them available to the build process.
+
+After running this command, your application should be successfully deployed and fully functional.
 This application is configured to be deployed to Google Cloud Run.
 
 ### Step 1: Build the Application

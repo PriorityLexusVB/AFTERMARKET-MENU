@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import type { PackageTier, AlaCarteOption } from '../types';
+import { trackAIAssistantOpen, trackAIAssistantMessage, trackAIAssistantClose } from '../analytics';
 
 interface AIAssistantProps {
   packages: PackageTier[];
@@ -45,6 +46,9 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
   const [messageCount, setMessageCount] = useState(0);
   const [rateLimitResetTime, setRateLimitResetTime] = useState(Date.now());
 
+  // Track user messages sent
+  const userMessagesSentRef = useRef(0);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -75,6 +79,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
 
   useEffect(() => {
     if (!isOpen) return;
+
+    // Track AI Assistant open
+    trackAIAssistantOpen();
+    userMessagesSentRef.current = 0;
 
     setError(null);
     setMessages([{ role: 'model', text: 'Hello! I am the Priority Lexus AI Assistant. How can I help you choose the perfect protection for your vehicle today?' }]);
@@ -149,6 +157,10 @@ ${buildProductContext()}`;
     setIsLoading(true);
     setError(null); // Clear any previous errors
 
+    // Track message sent
+    userMessagesSentRef.current += 1;
+    trackAIAssistantMessage(input.length);
+
     try {
       let responseText: string;
 
@@ -192,6 +204,11 @@ ${buildProductContext()}`;
     }
   };
 
+  const handleClose = useCallback(() => {
+    trackAIAssistantClose(userMessagesSentRef.current);
+    setIsOpen(false);
+  }, []);
+
   return (
     <>
       <button
@@ -204,7 +221,7 @@ ${buildProductContext()}`;
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:justify-end sm:items-end p-0 sm:p-8" role="dialog" aria-modal="true">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose}></div>
           
           <div className="bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full h-full sm:h-[70vh] sm:max-h-[600px] sm:w-[440px] flex flex-col transform transition-transform duration-300 ease-in-out translate-y-0 sm:translate-y-0 opacity-100 animate-slide-up-fast">
             <header className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
@@ -212,7 +229,7 @@ ${buildProductContext()}`;
                 <AssistantIcon />
                 <h3 className="font-bold font-teko text-2xl tracking-wider">AI Assistant</h3>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">&times;</button>
+              <button onClick={handleClose} className="text-gray-400 hover:text-white">&times;</button>
             </header>
             
             <div className="flex-grow p-4 overflow-y-auto">

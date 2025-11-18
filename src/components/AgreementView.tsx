@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { PackageTier, AlaCarteOption } from '../types';
 import { PrintView } from './PrintView';
+import { trackQuotePrint } from '../analytics';
 
 interface CustomerInfo {
   name: string;
@@ -30,6 +31,9 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
   const [isManagerView, setIsManagerView] = useState(false);
   
   const handlePrint = () => {
+    // Track print action
+    trackQuotePrint(totalPrice);
+
     // Quick note for users in restrictive environments like the previewer
     try {
         window.print();

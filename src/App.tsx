@@ -17,6 +17,17 @@ import { MAIN_PAGE_ADDON_IDS } from './constants';
 import { fetchAllData } from './data';
 import { auth, firebaseInitializationError } from './firebase';
 import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from './types';
+import {
+  initializeAnalytics,
+  trackPackageSelect,
+  trackAlaCarteAdd,
+  trackAlaCarteRemove,
+  trackFeatureView,
+  trackQuoteFinalize,
+  trackSettingsOpen,
+  trackAdminPanelAccess,
+  trackUserLogout,
+} from './analytics';
 
 type Page = 'packages' | 'alacarte';
 type View = 'menu' | 'agreement';
@@ -59,6 +70,9 @@ const App: React.FC = () => {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
+    // Initialize Firebase Analytics
+    initializeAnalytics();
+
     if (firebaseInitializationError || !auth) {
       setIsAuthLoading(false);
       setIsDemoMode(true); // Enter demo mode if Firebase isn't configured
@@ -103,6 +117,7 @@ const App: React.FC = () => {
     if (!auth) return;
     try {
       await signOut(auth);
+      trackUserLogout();
       setIsAdminView(false); // Reset to menu view on logout
     } catch (error) {
       console.error("Logout failed:", error);
@@ -114,10 +129,19 @@ const App: React.FC = () => {
       alert("The Admin Panel is disabled in demo mode. Please configure a Firebase backend to use this feature.");
       return;
     }
-    setIsAdminView(prev => !prev);
+    setIsAdminView(prev => {
+      const newValue = !prev;
+      if (newValue) {
+        trackAdminPanelAccess();
+      }
+      return newValue;
+    });
   }, [isDemoMode]);
 
-  const handleOpenSettings = useCallback(() => setIsSettingsOpen(true), []);
+  const handleOpenSettings = useCallback(() => {
+    trackSettingsOpen();
+    setIsSettingsOpen(true);
+  }, []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
   const handleSaveSettings = useCallback((data: { customerInfo: CustomerInfo; priceOverrides: PriceOverrides }) => {
     setCustomerInfo(data.customerInfo);
@@ -125,11 +149,28 @@ const App: React.FC = () => {
     setIsSettingsOpen(false);
   }, []);
   
-  const handleShowAgreement = useCallback(() => setCurrentView('agreement'), []);
+  const handleShowAgreement = useCallback(() => {
+    // Track quote finalization
+    const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model].filter(Boolean).join(' ');
+    trackQuoteFinalize({
+      selectedPackage,
+      customItems: customPackageItems,
+      totalPrice,
+      customerName: customerInfo.name,
+      vehicleInfo: vehicleString,
+    });
+    setCurrentView('agreement');
+  }, [selectedPackage, customPackageItems, totalPrice, customerInfo]);
   const handleShowMenu = useCallback(() => setCurrentView('menu'), []);
 
   const handleSelectPackage = useCallback((pkg: PackageTier) => {
-    setSelectedPackage(prev => (prev?.id === pkg.id ? null : pkg));
+    setSelectedPackage(prev => {
+      const isSelecting = prev?.id !== pkg.id;
+      if (isSelecting) {
+        trackPackageSelect(pkg);
+      }
+      return prev?.id === pkg.id ? null : pkg;
+    });
   }, []);
   
   const handleOpenCompareModal = useCallback(() => setIsCompareModalOpen(true), []);
@@ -144,8 +185,10 @@ const App: React.FC = () => {
     setCustomPackageItems(prev => {
       const isSelected = prev.some(i => i.id === item.id);
       if (isSelected) {
+        trackAlaCarteRemove(item);
         return prev.filter(i => i.id !== item.id);
       } else {
+        trackAlaCarteAdd(item);
         return [...prev, item];
       }
     });
@@ -156,17 +199,27 @@ const App: React.FC = () => {
       if (prev.find(i => i.id === item.id)) {
         return prev;
       }
+      trackAlaCarteAdd(item);
       return [...prev, item];
     });
   }, []);
 
   const handleRemoveAlaCarte = useCallback((itemId: string) => {
-    setCustomPackageItems(prev => prev.filter(i => i.id !== itemId));
+    setCustomPackageItems(prev => {
+      const item = prev.find(i => i.id === itemId);
+      if (item) {
+        trackAlaCarteRemove(item);
+      }
+      return prev.filter(i => i.id !== itemId);
+    });
   }, []);
 
   const handleViewDetail = useCallback((item: ProductFeature | AlaCarteOption) => {
+    // Determine if it's a package feature or a la carte option
+    const isAlaCarteOption = allAlaCarteOptions.some(opt => opt.id === item.id);
+    trackFeatureView(item.name, isAlaCarteOption ? 'alacarte' : 'package');
     setViewingDetailItem(item);
-  }, []);
+  }, [allAlaCarteOptions]);
 
   const handleCloseModal = useCallback(() => {
     setViewingDetailItem(null);

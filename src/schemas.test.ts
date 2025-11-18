@@ -1,0 +1,230 @@
+import { describe, it, expect } from 'vitest';
+import {
+  ProductFeatureSchema,
+  AlaCarteOptionSchema,
+  PackageTierSchema,
+  PriceOverridesSchema,
+  validateDataArray,
+  safeParseData,
+} from './schemas';
+
+describe('ProductFeatureSchema', () => {
+  it('should validate a valid product feature', () => {
+    const validFeature = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: ['Point 1', 'Point 2'],
+      useCases: ['Use case 1'],
+      price: 1000,
+      cost: 500,
+      warranty: '5 years',
+    };
+
+    const result = ProductFeatureSchema.safeParse(validFeature);
+    expect(result.success).toBe(true);
+  });
+
+  it('should fail validation with negative price', () => {
+    const invalidFeature = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: -100,
+      cost: 500,
+    };
+
+    const result = ProductFeatureSchema.safeParse(invalidFeature);
+    expect(result.success).toBe(false);
+  });
+
+  it('should accept optional image URLs', () => {
+    const featureWithImage = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      imageUrl: 'https://example.com/image.jpg',
+      thumbnailUrl: 'https://example.com/thumb.jpg',
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithImage);
+    expect(result.success).toBe(true);
+  });
+
+  it('should fail with invalid image URL', () => {
+    const featureWithInvalidUrl = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      imageUrl: 'not-a-url',
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithInvalidUrl);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('AlaCarteOptionSchema', () => {
+  it('should validate a valid a la carte option', () => {
+    const validOption = {
+      id: 'option-1',
+      name: 'Test Option',
+      price: 500,
+      cost: 250,
+      description: 'Test description',
+      points: ['Point 1'],
+    };
+
+    const result = AlaCarteOptionSchema.safeParse(validOption);
+    expect(result.success).toBe(true);
+  });
+
+  it('should accept isNew flag', () => {
+    const newOption = {
+      id: 'option-1',
+      name: 'New Option',
+      price: 500,
+      cost: 250,
+      description: 'Test description',
+      points: [],
+      isNew: true,
+    };
+
+    const result = AlaCarteOptionSchema.safeParse(newOption);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.isNew).toBe(true);
+    }
+  });
+});
+
+describe('PackageTierSchema', () => {
+  it('should validate a complete package', () => {
+    const validPackage = {
+      id: 'pkg-1',
+      name: 'Elite Package',
+      price: 3000,
+      cost: 1500,
+      features: [
+        {
+          id: 'feat-1',
+          name: 'Feature 1',
+          description: 'Desc',
+          points: [],
+          useCases: [],
+          price: 1000,
+          cost: 500,
+        },
+      ],
+      tier_color: 'blue-400',
+      is_recommended: true,
+    };
+
+    const result = PackageTierSchema.safeParse(validPackage);
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('PriceOverridesSchema', () => {
+  it('should validate price overrides', () => {
+    const overrides = {
+      'item-1': { price: 1200 },
+      'item-2': { cost: 600 },
+      'item-3': { price: 1500, cost: 750 },
+    };
+
+    const result = PriceOverridesSchema.safeParse(overrides);
+    expect(result.success).toBe(true);
+  });
+
+  it('should fail with negative overrides', () => {
+    const invalidOverrides = {
+      'item-1': { price: -100 },
+    };
+
+    const result = PriceOverridesSchema.safeParse(invalidOverrides);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('safeParseData', () => {
+  it('should return data on successful parse', () => {
+    const validData = {
+      id: 'test',
+      name: 'Test',
+      description: 'Desc',
+      points: [],
+      useCases: [],
+      price: 100,
+      cost: 50,
+    };
+
+    const result = safeParseData(ProductFeatureSchema, validData);
+    expect(result).toEqual(validData);
+  });
+
+  it('should return null on failed parse', () => {
+    const invalidData = {
+      id: 'test',
+      name: 'Test',
+      // missing required fields
+    };
+
+    const result = safeParseData(ProductFeatureSchema, invalidData);
+    expect(result).toBeNull();
+  });
+});
+
+describe('validateDataArray', () => {
+  it('should filter out invalid items', () => {
+    const mixedData = [
+      {
+        id: 'valid-1',
+        name: 'Valid',
+        description: 'Desc',
+        points: [],
+        useCases: [],
+        price: 100,
+        cost: 50,
+      },
+      {
+        id: 'invalid',
+        // missing required fields
+      },
+      {
+        id: 'valid-2',
+        name: 'Valid 2',
+        description: 'Desc 2',
+        points: [],
+        useCases: [],
+        price: 200,
+        cost: 100,
+      },
+    ];
+
+    const result = validateDataArray(ProductFeatureSchema, mixedData);
+    expect(result).toHaveLength(2);
+    expect(result[0]?.id).toBe('valid-1');
+    expect(result[1]?.id).toBe('valid-2');
+  });
+
+  it('should return empty array for all invalid items', () => {
+    const invalidData = [
+      { id: 'bad-1' },
+      { id: 'bad-2' },
+    ];
+
+    const result = validateDataArray(ProductFeatureSchema, invalidData);
+    expect(result).toHaveLength(0);
+  });
+});

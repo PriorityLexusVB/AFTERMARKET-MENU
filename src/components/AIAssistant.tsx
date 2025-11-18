@@ -70,7 +70,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
   }, [packages, alaCarteOptions]);
 
   // Check if we should use backend proxy (production) or direct API (development)
-  const useBackendProxy = import.meta.env.VITE_USE_AI_PROXY === 'true';
+  const useBackendProxy = import.meta.env['VITE_USE_AI_PROXY'] === 'true';
   const systemInstructionRef = useRef<string>('');
 
   useEffect(() => {
@@ -86,7 +86,7 @@ ${buildProductContext()}`;
 
     // Only initialize direct API client if not using proxy
     if (!useBackendProxy) {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = import.meta.env['VITE_GEMINI_API_KEY'];
 
       if (!apiKey) {
         setError(
@@ -96,7 +96,7 @@ ${buildProductContext()}`;
       }
 
       try {
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI({ apiKey: apiKey as string });
         chatRef.current = ai.chats.create({
           model: 'gemini-2.5-flash',
           config: { systemInstruction: systemInstructionRef.current },
@@ -174,7 +174,7 @@ ${buildProductContext()}`;
       } else {
         // Use direct API call
         const response = await chatRef.current!.sendMessage({ message: userMessage.text });
-        responseText = response.text;
+        responseText = response.text || 'No response received';
       }
 
       const modelMessage: Message = { role: 'model', text: responseText };

@@ -16,7 +16,7 @@ interface HeaderProps {
     isAdminView: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, onOpenSettings, onLogout, onToggleAdminView, isAdminView }) => {
+export const Header: React.FC<HeaderProps> = ({ user: _user, onOpenSettings, onLogout, onToggleAdminView, isAdminView }) => {
   return (
     <header className="bg-black bg-opacity-30 backdrop-blur-sm py-4 border-b border-gray-700 sticky top-0 z-30">
       <div className="container mx-auto px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">

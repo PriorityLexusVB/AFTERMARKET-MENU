@@ -242,9 +242,9 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (currentView === 'agreement') {
       return (
-        <AgreementView 
+        <AgreementView
           onBack={handleShowMenu}
-          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) : null}
+          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
           customPackageItems={displayCustomPackageItems}
           totalPrice={totalPrice}
           totalCost={totalCost}
@@ -354,8 +354,8 @@ const App: React.FC = () => {
           </main>
           {currentView === 'menu' && !isLoading && (
             <>
-              <Summary 
-                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) : null}
+              <Summary
+                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
                 customPackageItems={displayCustomPackageItems}
                 totalPrice={totalPrice}
                 customerInfo={customerInfo}

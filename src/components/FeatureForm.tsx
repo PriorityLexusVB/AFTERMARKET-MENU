@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { addFeature } from '../data';
+import { ImageUploader } from './ImageUploader';
 
 interface FeatureFormProps {
   onSaveSuccess: () => void;
@@ -169,35 +170,65 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
                 />
             </FormRow>
 
-            {/* Media URLs Section */}
+            {/* Media Section */}
             <div className="pt-4 border-t border-gray-700/50 space-y-4">
                 <h3 className="text-lg font-teko font-semibold text-gray-200 tracking-wider">Media (Optional)</h3>
 
-                <FormRow>
-                    <Label htmlFor="imageUrl" text="Image URL" helpText="Main product image" />
-                    <input
-                        type="url"
-                        id="imageUrl"
-                        name="imageUrl"
-                        value={formData.imageUrl}
-                        onChange={handleChange}
-                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
-                        placeholder="https://example.com/image.jpg"
-                    />
+                {/* Image Upload */}
+                <FormRow className="md:grid-cols-1">
+                    <div className="space-y-2">
+                        <p className="text-sm font-semibold text-gray-300">Product Image</p>
+                        <p className="text-xs text-gray-500">Upload a high-quality image of the product</p>
+                        <ImageUploader
+                            onUploadComplete={(urls) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    imageUrl: urls.imageUrl,
+                                    thumbnailUrl: urls.thumbnailUrl,
+                                }));
+                            }}
+                            onUploadError={(error) => {
+                                setError(error);
+                            }}
+                            existingImageUrl={formData.imageUrl}
+                            maxSizeMB={5}
+                        />
+                    </div>
                 </FormRow>
 
-                <FormRow>
-                    <Label htmlFor="thumbnailUrl" text="Thumbnail URL" helpText="Small preview (optional)" />
-                    <input
-                        type="url"
-                        id="thumbnailUrl"
-                        name="thumbnailUrl"
-                        value={formData.thumbnailUrl}
-                        onChange={handleChange}
-                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
-                        placeholder="https://example.com/thumbnail.jpg"
-                    />
-                </FormRow>
+                {/* Manual URL Entry (Alternative) */}
+                <details className="group">
+                    <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-300 transition-colors">
+                        Or enter image URLs manually
+                    </summary>
+                    <div className="mt-4 space-y-4 pl-4">
+                        <FormRow>
+                            <Label htmlFor="imageUrl" text="Image URL" helpText="Main product image" />
+                            <input
+                                type="url"
+                                id="imageUrl"
+                                name="imageUrl"
+                                value={formData.imageUrl}
+                                onChange={handleChange}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                                placeholder="https://example.com/image.jpg"
+                            />
+                        </FormRow>
+
+                        <FormRow>
+                            <Label htmlFor="thumbnailUrl" text="Thumbnail URL" helpText="Small preview (optional)" />
+                            <input
+                                type="url"
+                                id="thumbnailUrl"
+                                name="thumbnailUrl"
+                                value={formData.thumbnailUrl}
+                                onChange={handleChange}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                                placeholder="https://example.com/thumbnail.jpg"
+                            />
+                        </FormRow>
+                    </div>
+                </details>
 
                 <FormRow>
                     <Label htmlFor="videoUrl" text="Video URL" helpText="Product video (optional)" />

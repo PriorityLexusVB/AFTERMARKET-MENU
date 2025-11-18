@@ -27,6 +27,10 @@ const SendIcon = () => (
 
 const formatPrice = (price: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 
+// Rate limiting constants
+const MAX_MESSAGES_PER_MINUTE = 10;
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+
 export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOptions }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,6 +40,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
   const chatRef = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Rate limiting state
+  const [messageCount, setMessageCount] = useState(0);
+  const [rateLimitResetTime, setRateLimitResetTime] = useState(Date.now());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,36 +69,45 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ packages, alaCarteOpti
     return context;
   }, [packages, alaCarteOptions]);
 
+  // Check if we should use backend proxy (production) or direct API (development)
+  const useBackendProxy = import.meta.env.VITE_USE_AI_PROXY === 'true';
+  const systemInstructionRef = useRef<string>('');
+
   useEffect(() => {
     if (!isOpen) return;
 
     setError(null);
     setMessages([{ role: 'model', text: 'Hello! I am the Priority Lexus AI Assistant. How can I help you choose the perfect protection for your vehicle today?' }]);
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-    if (!apiKey) {
-      setError(
-        "The AI Assistant is not configured. Please add the VITE_GEMINI_API_KEY to the application's environment variables."
-      );
-      return;
-    }
+    // Build system instruction and store it
+    systemInstructionRef.current = `You are a friendly and knowledgeable sales assistant for Priority Lexus of Virginia Beach. Your goal is to help customers understand and choose the best vehicle protection products. You must only use the information provided below about the available packages and a la carte options. Do not invent products or prices. Be concise, helpful, and professional. If a user asks about something unrelated to Lexus vehicles or protection plans, politely steer the conversation back to the products. Do not use markdown for your responses.
 
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = `You are a friendly and knowledgeable sales assistant for Priority Lexus of Virginia Beach. Your goal is to help customers understand and choose the best vehicle protection products. You must only use the information provided below about the available packages and a la carte options. Do not invent products or prices. Be concise, helpful, and professional. If a user asks about something unrelated to Lexus vehicles or protection plans, politely steer the conversation back to the products. Do not use markdown for your responses.
-      
 ${buildProductContext()}`;
 
-      chatRef.current = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        config: { systemInstruction },
-      });
-    } catch (e) {
+    // Only initialize direct API client if not using proxy
+    if (!useBackendProxy) {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      if (!apiKey) {
+        setError(
+          "The AI Assistant is not configured. Please add the VITE_GEMINI_API_KEY to the application's environment variables."
+        );
+        return;
+      }
+
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        chatRef.current = ai.chats.create({
+          model: 'gemini-2.5-flash',
+          config: { systemInstruction: systemInstructionRef.current },
+        });
+      } catch (e) {
         console.error("AI Initialization Error:", e);
         setError("There was an error initializing the AI Assistant.");
+      }
     }
 
-  }, [isOpen, buildProductContext]);
+  }, [isOpen, buildProductContext, useBackendProxy]);
 
   useEffect(() => {
     if(isOpen) {
@@ -100,20 +117,74 @@ ${buildProductContext()}`;
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !chatRef.current) return;
+    if (!input.trim() || isLoading) return;
+
+    // For direct API, require chatRef
+    if (!useBackendProxy && !chatRef.current) return;
+
+    // Rate limiting check
+    const now = Date.now();
+    const timeSinceReset = now - rateLimitResetTime;
+
+    // Reset counter if window has passed
+    if (timeSinceReset > RATE_LIMIT_WINDOW_MS) {
+      setMessageCount(0);
+      setRateLimitResetTime(now);
+    }
+
+    // Check if rate limit exceeded
+    if (messageCount >= MAX_MESSAGES_PER_MINUTE) {
+      const secondsRemaining = Math.ceil((RATE_LIMIT_WINDOW_MS - timeSinceReset) / 1000);
+      setError(`Rate limit exceeded. Please wait ${secondsRemaining} seconds before sending more messages.`);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    // Increment message count
+    setMessageCount(prev => prev + 1);
 
     const userMessage: Message = { role: 'user', text: input };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null); // Clear any previous errors
 
     try {
-      const response = await chatRef.current.sendMessage({ message: userMessage.text });
-      const modelMessage: Message = { role: 'model', text: response.text };
+      let responseText: string;
+
+      if (useBackendProxy) {
+        // Use backend proxy endpoint
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: userMessage.text,
+            systemInstruction: systemInstructionRef.current,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        responseText = data.text;
+      } else {
+        // Use direct API call
+        const response = await chatRef.current!.sendMessage({ message: userMessage.text });
+        responseText = response.text;
+      }
+
+      const modelMessage: Message = { role: 'model', text: responseText };
       setMessages(prev => [...prev, modelMessage]);
     } catch (e) {
-      console.error("Gemini API Error:", e);
-      const errorMessage: Message = { role: 'model', text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment." };
+      console.error("AI Error:", e);
+      const errorMessage: Message = {
+        role: 'model',
+        text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment."
+      };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);

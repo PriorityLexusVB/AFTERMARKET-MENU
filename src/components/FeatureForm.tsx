@@ -12,7 +12,10 @@ const initialFormState = {
   description: '',
   warranty: '',
   points: '',
-  useCases: ''
+  useCases: '',
+  imageUrl: '',
+  thumbnailUrl: '',
+  videoUrl: ''
 };
 
 export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
@@ -46,6 +49,9 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
             warranty: formData.warranty || '',
             points: formData.points.split('\n').filter(line => line.trim() !== ''),
             useCases: formData.useCases.split('\n').filter(line => line.trim() !== ''),
+            ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
+            ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
+            ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
         };
 
         if (isNaN(featureData.price) || isNaN(featureData.cost)) {
@@ -162,7 +168,51 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
                     placeholder="e.g., Water beads and rolls off the surface.&#10;Protects paint from fading."
                 />
             </FormRow>
-            
+
+            {/* Media URLs Section */}
+            <div className="pt-4 border-t border-gray-700/50 space-y-4">
+                <h3 className="text-lg font-teko font-semibold text-gray-200 tracking-wider">Media (Optional)</h3>
+
+                <FormRow>
+                    <Label htmlFor="imageUrl" text="Image URL" helpText="Main product image" />
+                    <input
+                        type="url"
+                        id="imageUrl"
+                        name="imageUrl"
+                        value={formData.imageUrl}
+                        onChange={handleChange}
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                        placeholder="https://example.com/image.jpg"
+                    />
+                </FormRow>
+
+                <FormRow>
+                    <Label htmlFor="thumbnailUrl" text="Thumbnail URL" helpText="Small preview (optional)" />
+                    <input
+                        type="url"
+                        id="thumbnailUrl"
+                        name="thumbnailUrl"
+                        value={formData.thumbnailUrl}
+                        onChange={handleChange}
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                        placeholder="https://example.com/thumbnail.jpg"
+                    />
+                </FormRow>
+
+                <FormRow>
+                    <Label htmlFor="videoUrl" text="Video URL" helpText="Product video (optional)" />
+                    <input
+                        type="url"
+                        id="videoUrl"
+                        name="videoUrl"
+                        value={formData.videoUrl}
+                        onChange={handleChange}
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                        placeholder="https://youtube.com/watch?v=..."
+                    />
+                </FormRow>
+            </div>
+
             <FormRow className="pt-4 border-t border-gray-700/50">
                 <div className="md:col-start-2 md:col-span-2">
                      {error && <p className="text-red-400 text-sm mb-3 bg-red-500/10 p-3 rounded-md border border-red-500/30">{error}</p>}

@@ -1,6 +1,18 @@
 # Priority Lexus Aftermarket Menu
 
-This is an interactive digital menu for customers to explore and select vehicle protection packages and a la carte options. The application is built with React, TypeScript, Vite, and Tailwind CSS, and it uses Firebase for its backend data storage and authentication.
+This is an interactive digital menu for customers to explore and select vehicle protection packages and a la carte options. The application is built with React, TypeScript, Vite, and Tailwind CSS, and it uses Firebase for its backend data storage, authentication, analytics, and file storage.
+
+## Features
+
+- 🎨 **Interactive Package Selection** - Browse and select from curated protection packages
+- 🛒 **A La Carte Options** - Build custom packages with individual options
+- 🤖 **AI Assistant** - Get help choosing the right protection with Google Gemini AI
+- 📊 **Analytics Tracking** - Comprehensive Firebase Analytics integration
+- 📸 **Image Upload** - Firebase Storage integration for product images
+- 🔒 **Admin Panel** - Secure admin interface for managing products
+- ✅ **Type-Safe** - Full TypeScript with strict mode enabled
+- 🧪 **Tested** - 72 unit tests with Vitest
+- 📱 **Responsive** - Mobile-friendly design with Tailwind CSS
 
 ## Local Development Setup
 
@@ -27,6 +39,30 @@ Start the Vite development server.
 npm run dev
 ```
 The application will now be running on your local machine, typically at `http://localhost:5173`.
+
+## Available Scripts
+
+### Development
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build locally
+npm run typecheck    # Run TypeScript type checking
+```
+
+### Testing
+```bash
+npm test             # Run tests in watch mode
+npm run test:ui      # Open Vitest UI for interactive testing
+npm run test:run     # Run all tests once (CI mode)
+npm run test:coverage # Generate test coverage report
+```
+
+### Deployment
+```bash
+npm start            # Build and start production server
+npm run serve        # Start production server (requires build)
+```
 
 ## Deploying to Google Cloud Run
 
@@ -159,8 +195,120 @@ service cloud.firestore {
 2.  Enable the **Email/Password** sign-in provider.
 3.  In the **Users** tab, click **"Add user"** to create an account for the admin panel.
 
-### Step 7: Get App Credentials for `.env` file
+### Step 7: Enable Firebase Analytics
+
+1. Go to **Build > Analytics** and click **"Get started"**.
+2. Follow the prompts to enable Google Analytics for your Firebase project.
+3. Analytics will automatically track user interactions and custom events.
+
+### Step 8: Set Up Firebase Storage
+
+1. Go to **Build > Storage** and click **"Get started"**.
+2. Start in **Production mode** (you'll configure rules later).
+3. Select a Cloud Storage location and click **"Done"**.
+
+#### Configure Storage Security Rules
+
+In the **Rules** tab of Storage, use these rules for secure image uploads:
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /product_images/{imageId} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
+
+### Step 9: Get App Credentials for `.env` file
 
 1. Go to **Project Settings** (gear icon).
 2. Under **"Your apps"**, click the Web icon (`</>`) to register a web app if you haven't already.
 3. Find the `firebaseConfig` object. Copy the key-value pairs from this object into your `.env.local` file as shown in the "Local Development Setup" section.
+
+## Testing
+
+This project uses **Vitest** for unit testing with **React Testing Library** for component tests.
+
+### Running Tests
+```bash
+npm test              # Run tests in watch mode
+npm run test:ui       # Open interactive test UI
+npm run test:coverage # Generate coverage report
+```
+
+### Test Coverage
+- **72 tests** across 5 test files
+- Comprehensive coverage of core components and utilities
+- Mock data factories for consistent test data
+- Type-safe test utilities
+
+### Writing Tests
+Tests are located in `src/` alongside their source files with `.test.tsx` or `.test.ts` extensions.
+
+Example:
+```typescript
+// src/components/MyComponent.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '../test/test-utils';
+import { MyComponent } from './MyComponent';
+
+describe('MyComponent', () => {
+  it('should render correctly', () => {
+    render(<MyComponent />);
+    expect(screen.getByText('Hello World')).toBeInTheDocument();
+  });
+});
+```
+
+## Analytics
+
+The application includes comprehensive **Firebase Analytics** tracking:
+
+### Tracked Events
+- **Package Selection** - Which packages users choose
+- **A La Carte Options** - Individual options added/removed
+- **Feature Views** - Which features users click to learn more
+- **Quote Finalization** - When users finalize their selection
+- **Print Actions** - Quote printing behavior
+- **AI Assistant Usage** - Assistant opens, messages sent, engagement
+- **Admin Actions** - Admin panel access and feature management
+
+### Viewing Analytics
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+2. Navigate to **Analytics > Dashboard**
+3. View real-time user activity and custom events
+
+## Architecture
+
+### Technology Stack
+- **Frontend**: React 18.2.0 with TypeScript 5.2.2
+- **Build Tool**: Vite 5.2.0
+- **Styling**: Tailwind CSS 3.4.3
+- **Backend**: Firebase 10.14.1 (Firestore, Auth, Analytics, Storage)
+- **AI**: Google Gemini AI
+- **Testing**: Vitest 4.0.10 + React Testing Library
+- **Validation**: Zod 4.1.12
+- **Deployment**: Google Cloud Run (containerized Express.js server)
+
+### Project Structure
+```
+src/
+├── components/       # React components
+│   ├── *.tsx        # Component files
+│   └── *.test.tsx   # Component tests
+├── test/            # Test utilities
+│   ├── setup.ts     # Test setup and global mocks
+│   ├── test-utils.tsx # Custom render and mock factories
+│   └── vitest.d.ts  # Type declarations for tests
+├── analytics.ts     # Firebase Analytics utilities
+├── firebase.ts      # Firebase initialization
+├── schemas.ts       # Zod validation schemas
+├── types.ts         # TypeScript type definitions
+├── data.ts          # Firestore data access layer
+└── App.tsx          # Main application component
+```

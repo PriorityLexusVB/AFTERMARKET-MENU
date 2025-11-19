@@ -12,21 +12,17 @@ import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from '../src/moc
 dotenv.config({ path: '.env.local' });
 
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
+  apiKey: process.env['VITE_FIREBASE_API_KEY'],
+  authDomain: process.env['VITE_FIREBASE_AUTH_DOMAIN'],
+  projectId: process.env['VITE_FIREBASE_PROJECT_ID'],
+  storageBucket: process.env['VITE_FIREBASE_STORAGE_BUCKET'],
+  messagingSenderId: process.env['VITE_FIREBASE_MESSAGING_SENDER_ID'],
+  appId: process.env['VITE_FIREBASE_APP_ID'],
 };
 
-const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'] as const;
-const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
-
-if (missingFields.length > 0) {
-  console.error('❌ Firebase configuration is missing required fields:');
-  missingFields.forEach(field => console.error(`  - ${field}`));
-  console.error('Make sure .env.local exists with all VITE_FIREBASE_* variables.');
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error('❌ Firebase configuration is missing!');
+  console.error('Make sure .env.local exists with VITE_FIREBASE_* variables.');
   process.exit(1);
 }
 
@@ -57,15 +53,19 @@ async function importData() {
       console.log(`\n✓ Imported ${MOCK_FEATURES.length} features\n`);
     } else {
       console.log(`⚠️  Features collection already has ${existingFeatures.size} documents. Skipping features import.\n`);
-      
-      // Build featureIds map from existing features for package import
+
+      // Map existing features to featureIds for package import
       existingFeatures.forEach(doc => {
-        const featureData = doc.data();
-        const mockFeature = MOCK_FEATURES.find(mf => mf.name === featureData.name);
+        const data = doc.data();
+        if (!('name' in data)) {
+          console.warn(`⚠️  Feature document ${doc.id} is missing 'name' field. Skipping.`);
+          return;
+        }
+        const mockFeature = MOCK_FEATURES.find(mf => mf.name === data['name']);
         if (mockFeature) {
           featureIds[mockFeature.id] = doc.id;
         } else {
-          console.warn(`  ⚠️  Firestore feature "${featureData.name}" doesn't match any MOCK_FEATURES`);
+          console.warn(`⚠️  Feature document ${doc.id} with name '${data['name']}' could not be matched to any mock feature.`);
         }
       });
     }
@@ -78,21 +78,21 @@ async function importData() {
       return;
     }
 
-    // Import Packages (checked independently)
+    // Import Packages (with correct feature IDs)
     console.log('📦 Importing packages...');
     const packagesCol = collection(db, 'packages');
     const existingPackages = await getDocs(packagesCol);
 
     if (existingPackages.empty) {
-      let importedPackageCount = 0;
-      
+      let importedCount = 0;
+
       for (const pkg of MOCK_PACKAGES) {
         const { id: mockId, features, ...packageData } = pkg;
 
-        // Map feature IDs from mock to actual Firestore IDs with validation
-        const featureIdsArray: string[] = [];
+        // Map feature IDs from mock to actual Firestore IDs
+        const featureIds_array: string[] = [];
         const missingFeatures: string[] = [];
-        
+
         for (const f of features) {
           const mockFeatureId = MOCK_FEATURES.find(mf => mf.name === f.name)?.id;
           if (!mockFeatureId) {
@@ -103,7 +103,7 @@ async function importData() {
             console.error(`  ❌ Error: Package "${pkg.name}" requires feature "${f.name}" but it wasn't imported to Firestore`);
             missingFeatures.push(f.name);
           } else {
-            featureIdsArray.push(featureIds[mockFeatureId]);
+            featureIds_array.push(featureIds[mockFeatureId]);
           }
         }
 
@@ -115,15 +115,15 @@ async function importData() {
 
         const packageDoc = {
           ...packageData,
-          featureIds: featureIdsArray,
+          featureIds: featureIds_array,
         };
 
         const docRef = await addDoc(packagesCol, packageDoc);
         console.log(`  ✓ Added package: ${pkg.name} (${docRef.id})`);
-        importedPackageCount++;
+        importedCount++;
       }
 
-      console.log(`\n✓ Imported ${importedPackageCount} packages\n`);
+      console.log(`\n✓ Imported ${importedCount} packages\n`);
     } else {
       console.log(`⚠️  Packages collection already has ${existingPackages.size} documents. Skipping packages import.\n`);
     }

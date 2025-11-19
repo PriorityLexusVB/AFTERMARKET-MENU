@@ -32,9 +32,15 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDoma
   }
 } else {
   // Create a more informative error message if variables are missing.
+  const keyToEnvVar: Record<string, string> = {
+    apiKey: 'VITE_FIREBASE_API_KEY',
+    projectId: 'VITE_FIREBASE_PROJECT_ID',
+    authDomain: 'VITE_FIREBASE_AUTH_DOMAIN',
+  };
+
   const missingVars = Object.entries(firebaseConfig)
     .filter(([key, value]) => !value && ['apiKey', 'projectId', 'authDomain'].includes(key))
-    .map(([key]) => `VITE_FIREBASE_${key.toUpperCase()}`);
+    .map(([key]) => keyToEnvVar[key]);
 
   const errorMessage = `Firebase initialization was skipped because the following required environment variables are missing: ${missingVars.join(', ')}. Please ensure they are set in your .env.local file for local development or in your hosting provider's environment settings.`;
   console.error(errorMessage);

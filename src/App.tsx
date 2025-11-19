@@ -148,7 +148,49 @@ const App: React.FC = () => {
     setPriceOverrides(data.priceOverrides);
     setIsSettingsOpen(false);
   }, []);
-  
+
+  // Price calculations and display data (must be before handleShowAgreement)
+  const applyOverrides = <T extends { id: string; price: number; cost: number }>(items: T[], overrides: PriceOverrides): T[] => {
+    return items.map(item => {
+      const override = overrides[item.id];
+      if (!override) return item;
+      return {
+        ...item,
+        price: override.price ?? item.price,
+        cost: override.cost ?? item.cost,
+      };
+    });
+  };
+
+  const displayPackages = useMemo(() => applyOverrides(packages, priceOverrides), [packages, priceOverrides]);
+  const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
+  const displayCustomPackageItems = useMemo(() => applyOverrides(customPackageItems, priceOverrides), [customPackageItems, priceOverrides]);
+
+  const { totalPrice, totalCost } = useMemo(() => {
+    let price = 0;
+    let cost = 0;
+    if (selectedPackage) {
+      const currentPackage = displayPackages.find(p => p.id === selectedPackage.id);
+      if (currentPackage) {
+        price += currentPackage.price;
+        cost += currentPackage.cost;
+      }
+    }
+    displayCustomPackageItems.forEach(item => {
+      price += item.price;
+      cost += item.cost;
+    });
+    return { totalPrice: price, totalCost: cost };
+  }, [selectedPackage, displayPackages, displayCustomPackageItems]);
+
+  const mainPageAddons = useMemo(() => {
+    return displayAllAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
+  }, [displayAllAlaCarteOptions]);
+
+  const availableAlaCarteItems = useMemo(() => {
+    return displayAllAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
+  }, [customPackageItems, displayAllAlaCarteOptions]);
+
   const handleShowAgreement = useCallback(() => {
     // Track quote finalization
     const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model].filter(Boolean).join(' ');
@@ -225,47 +267,6 @@ const App: React.FC = () => {
     setViewingDetailItem(null);
   }, []);
 
-  const applyOverrides = <T extends { id: string; price: number; cost: number }>(items: T[], overrides: PriceOverrides): T[] => {
-    return items.map(item => {
-      const override = overrides[item.id];
-      if (!override) return item;
-      return {
-        ...item,
-        price: override.price ?? item.price,
-        cost: override.cost ?? item.cost,
-      };
-    });
-  };
-
-  const displayPackages = useMemo(() => applyOverrides(packages, priceOverrides), [packages, priceOverrides]);
-  const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
-  const displayCustomPackageItems = useMemo(() => applyOverrides(customPackageItems, priceOverrides), [customPackageItems, priceOverrides]);
-  
-  const { totalPrice, totalCost } = useMemo(() => {
-    let price = 0;
-    let cost = 0;
-    if (selectedPackage) {
-      const currentPackage = displayPackages.find(p => p.id === selectedPackage.id);
-      if (currentPackage) {
-        price += currentPackage.price;
-        cost += currentPackage.cost;
-      }
-    }
-    displayCustomPackageItems.forEach(item => {
-      price += item.price;
-      cost += item.cost;
-    });
-    return { totalPrice: price, totalCost: cost };
-  }, [selectedPackage, displayPackages, displayCustomPackageItems]);
-
-  const mainPageAddons = useMemo(() => {
-    return displayAllAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
-  }, [displayAllAlaCarteOptions]);
-
-  const availableAlaCarteItems = useMemo(() => {
-    return displayAllAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
-  }, [customPackageItems, displayAllAlaCarteOptions]);
-  
   const NavButton: React.FC<{page: Page, label: string}> = ({ page, label }) => (
     <button
       onClick={() => setCurrentPage(page)}

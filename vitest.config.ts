@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  // @ts-ignore - Vitest uses its own bundled Vite version
   plugins: [react()],
   test: {
     globals: true,

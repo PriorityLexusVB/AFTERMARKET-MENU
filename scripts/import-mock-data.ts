@@ -64,8 +64,18 @@ async function importData() {
         const mockFeature = MOCK_FEATURES.find(mf => mf.name === data.name);
         if (mockFeature) {
           featureIds[mockFeature.id] = doc.id;
+        } else {
+          console.warn(`  ⚠️  Firestore feature "${data.name}" doesn't match any MOCK_FEATURES`);
         }
       });
+    }
+
+    // If features collection was skipped but no matching features found, abort package import
+    if (Object.keys(featureIds).length === 0 && !existingFeatures.empty) {
+      console.error('❌ Error: No matching features found between Firestore and MOCK_FEATURES.');
+      console.error('   Cannot import packages without feature mappings.\n');
+      console.log('✅ Data import complete!\n');
+      return;
     }
 
     // Import Packages (independent of features check)
@@ -74,6 +84,8 @@ async function importData() {
     const existingPackages = await getDocs(packagesCol);
 
     if (existingPackages.empty) {
+      let importedCount = 0;
+      
       for (const pkg of MOCK_PACKAGES) {
         const { id: mockId, features, ...packageData } = pkg;
 
@@ -83,7 +95,12 @@ async function importData() {
         
         for (const f of features) {
           const mockFeatureId = MOCK_FEATURES.find(mf => mf.name === f.name)?.id;
-          if (!mockFeatureId || !featureIds[mockFeatureId]) {
+          if (!mockFeatureId) {
+            missingFeatures.push(f.name);
+            continue;
+          }
+          if (!featureIds[mockFeatureId]) {
+            console.error(`  ❌ Error: Package "${pkg.name}" requires feature "${f.name}" but it wasn't imported to Firestore`);
             missingFeatures.push(f.name);
           } else {
             featureIds_array.push(featureIds[mockFeatureId]);
@@ -103,9 +120,10 @@ async function importData() {
 
         const docRef = await addDoc(packagesCol, packageDoc);
         console.log(`  ✓ Added package: ${pkg.name} (${docRef.id})`);
+        importedCount++;
       }
 
-      console.log(`\n✓ Imported ${MOCK_PACKAGES.length} packages\n`);
+      console.log(`\n✓ Imported ${importedCount} packages\n`);
     } else {
       console.log(`⚠️  Packages collection already has ${existingPackages.size} documents. Skipping packages import.\n`);
     }

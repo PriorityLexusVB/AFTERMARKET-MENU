@@ -18,7 +18,8 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "import-data": "tsx scripts/import-mock-data.ts"
   },
   "dependencies": {
     "@google/genai": "^0.12.0",
@@ -41,7 +42,9 @@
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitest/ui": "^4.0.10",
+    "dotenv": "^17.2.3",
     "jsdom": "^27.2.0",
+    "tsx": "^4.20.6",
     "vitest": "^4.0.10"
   }
 }

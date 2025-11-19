@@ -57,9 +57,15 @@ async function importData() {
       // Map existing features to featureIds for package import
       existingFeatures.forEach(doc => {
         const data = doc.data();
+        if (!('name' in data)) {
+          console.warn(`⚠️  Feature document ${doc.id} is missing 'name' field. Skipping.`);
+          return;
+        }
         const mockFeature = MOCK_FEATURES.find(mf => mf.name === data['name']);
         if (mockFeature) {
           featureIds[mockFeature.id] = doc.id;
+        } else {
+          console.warn(`⚠️  Feature document ${doc.id} with name '${data['name']}' could not be matched to any mock feature.`);
         }
       });
     }

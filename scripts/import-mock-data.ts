@@ -74,11 +74,13 @@ async function importData() {
     const existingPackages = await getDocs(packagesCol);
 
     if (existingPackages.empty) {
+      let importedPackageCount = 0;
+      
       for (const pkg of MOCK_PACKAGES) {
         const { id: mockId, features, ...packageData } = pkg;
 
         // Map feature IDs from mock to actual Firestore IDs with validation
-        const featureIds_array: string[] = [];
+        const featureIdsArray: string[] = [];
         const missingFeatures: string[] = [];
         
         for (const f of features) {
@@ -86,7 +88,7 @@ async function importData() {
           if (!mockFeatureId || !featureIds[mockFeatureId]) {
             missingFeatures.push(f.name);
           } else {
-            featureIds_array.push(featureIds[mockFeatureId]);
+            featureIdsArray.push(featureIds[mockFeatureId]);
           }
         }
 
@@ -98,14 +100,15 @@ async function importData() {
 
         const packageDoc = {
           ...packageData,
-          featureIds: featureIds_array,
+          featureIds: featureIdsArray,
         };
 
         const docRef = await addDoc(packagesCol, packageDoc);
         console.log(`  ✓ Added package: ${pkg.name} (${docRef.id})`);
+        importedPackageCount++;
       }
 
-      console.log(`\n✓ Imported ${MOCK_PACKAGES.length} packages\n`);
+      console.log(`\n✓ Imported ${importedPackageCount} packages\n`);
     } else {
       console.log(`⚠️  Packages collection already has ${existingPackages.size} documents. Skipping packages import.\n`);
     }

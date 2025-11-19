@@ -64,8 +64,18 @@ async function importData() {
         const mockFeature = MOCK_FEATURES.find(mf => mf.name === featureData.name);
         if (mockFeature) {
           featureIds[mockFeature.id] = doc.id;
+        } else {
+          console.warn(`  ⚠️  Firestore feature "${featureData.name}" doesn't match any MOCK_FEATURES`);
         }
       });
+    }
+
+    // If features collection was skipped but no matching features found, abort package import
+    if (Object.keys(featureIds).length === 0 && !existingFeatures.empty) {
+      console.error('❌ Error: No matching features found between Firestore and MOCK_FEATURES.');
+      console.error('   Cannot import packages without feature mappings.\n');
+      console.log('✅ Data import complete!\n');
+      return;
     }
 
     // Import Packages (checked independently)
@@ -85,7 +95,12 @@ async function importData() {
         
         for (const f of features) {
           const mockFeatureId = MOCK_FEATURES.find(mf => mf.name === f.name)?.id;
-          if (!mockFeatureId || !featureIds[mockFeatureId]) {
+          if (!mockFeatureId) {
+            missingFeatures.push(f.name);
+            continue;
+          }
+          if (!featureIds[mockFeatureId]) {
+            console.error(`  ❌ Error: Package "${pkg.name}" requires feature "${f.name}" but it wasn't imported to Firestore`);
             missingFeatures.push(f.name);
           } else {
             featureIdsArray.push(featureIds[mockFeatureId]);

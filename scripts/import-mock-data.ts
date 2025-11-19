@@ -12,12 +12,12 @@ import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from '../src/moc
 dotenv.config({ path: '.env.local' });
 
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
+  apiKey: process.env['VITE_FIREBASE_API_KEY'],
+  authDomain: process.env['VITE_FIREBASE_AUTH_DOMAIN'],
+  projectId: process.env['VITE_FIREBASE_PROJECT_ID'],
+  storageBucket: process.env['VITE_FIREBASE_STORAGE_BUCKET'],
+  messagingSenderId: process.env['VITE_FIREBASE_MESSAGING_SENDER_ID'],
+  appId: process.env['VITE_FIREBASE_APP_ID'],
 };
 
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
@@ -40,9 +40,9 @@ async function importData() {
     const featuresCol = collection(db, 'features');
     const existingFeatures = await getDocs(featuresCol);
 
-    if (existingFeatures.empty) {
-      const featureIds: Record<string, string> = {};
+    const featureIds: Record<string, string> = {};
 
+    if (existingFeatures.empty) {
       for (const feature of MOCK_FEATURES) {
         const { id: mockId, ...featureData } = feature;
         const docRef = await addDoc(featuresCol, featureData);
@@ -51,11 +51,25 @@ async function importData() {
       }
 
       console.log(`\n✓ Imported ${MOCK_FEATURES.length} features\n`);
+    } else {
+      console.log(`⚠️  Features collection already has ${existingFeatures.size} documents. Skipping features import.\n`);
 
-      // Import Packages (with correct feature IDs)
-      console.log('📦 Importing packages...');
-      const packagesCol = collection(db, 'packages');
+      // Map existing features to featureIds for package import
+      existingFeatures.forEach(doc => {
+        const data = doc.data();
+        const mockFeature = MOCK_FEATURES.find(mf => mf.name === data['name']);
+        if (mockFeature) {
+          featureIds[mockFeature.id] = doc.id;
+        }
+      });
+    }
 
+    // Import Packages (with correct feature IDs)
+    console.log('📦 Importing packages...');
+    const packagesCol = collection(db, 'packages');
+    const existingPackages = await getDocs(packagesCol);
+
+    if (existingPackages.empty) {
       for (const pkg of MOCK_PACKAGES) {
         const { id: mockId, features, ...packageData } = pkg;
 
@@ -76,7 +90,7 @@ async function importData() {
 
       console.log(`\n✓ Imported ${MOCK_PACKAGES.length} packages\n`);
     } else {
-      console.log(`⚠️  Features collection already has ${existingFeatures.size} documents. Skipping features import.\n`);
+      console.log(`⚠️  Packages collection already has ${existingPackages.size} documents. Skipping packages import.\n`);
     }
 
     // Import A La Carte Options

@@ -20,9 +20,13 @@ const firebaseConfig = {
   appId: process.env.VITE_FIREBASE_APP_ID,
 };
 
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration is missing!');
-  console.error('Make sure .env.local exists with VITE_FIREBASE_* variables.');
+const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'] as const;
+const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+
+if (missingFields.length > 0) {
+  console.error('❌ Firebase configuration is missing required fields:');
+  missingFields.forEach(field => console.error(`  - ${field}`));
+  console.error('Make sure .env.local exists with all VITE_FIREBASE_* variables.');
   process.exit(1);
 }
 
@@ -40,9 +44,9 @@ async function importData() {
     const featuresCol = collection(db, 'features');
     const existingFeatures = await getDocs(featuresCol);
 
-    if (existingFeatures.empty) {
-      const featureIds: Record<string, string> = {};
+    const featureIds: Record<string, string> = {};
 
+    if (existingFeatures.empty) {
       for (const feature of MOCK_FEATURES) {
         const { id: mockId, ...featureData } = feature;
         const docRef = await addDoc(featuresCol, featureData);
@@ -51,19 +55,46 @@ async function importData() {
       }
 
       console.log(`\n✓ Imported ${MOCK_FEATURES.length} features\n`);
+    } else {
+      console.log(`⚠️  Features collection already has ${existingFeatures.size} documents. Skipping features import.\n`);
+      
+      // Build mapping of existing features for package import
+      existingFeatures.forEach((doc) => {
+        const data = doc.data();
+        const mockFeature = MOCK_FEATURES.find(mf => mf.name === data.name);
+        if (mockFeature) {
+          featureIds[mockFeature.id] = doc.id;
+        }
+      });
+    }
 
-      // Import Packages (with correct feature IDs)
-      console.log('📦 Importing packages...');
-      const packagesCol = collection(db, 'packages');
+    // Import Packages (independent of features check)
+    console.log('📦 Importing packages...');
+    const packagesCol = collection(db, 'packages');
+    const existingPackages = await getDocs(packagesCol);
 
+    if (existingPackages.empty) {
       for (const pkg of MOCK_PACKAGES) {
         const { id: mockId, features, ...packageData } = pkg;
 
         // Map feature IDs from mock to actual Firestore IDs
-        const featureIds_array = features.map(f => {
+        const featureIds_array: string[] = [];
+        const missingFeatures: string[] = [];
+        
+        for (const f of features) {
           const mockFeatureId = MOCK_FEATURES.find(mf => mf.name === f.name)?.id;
-          return mockFeatureId ? featureIds[mockFeatureId] : '';
-        }).filter(Boolean);
+          if (!mockFeatureId || !featureIds[mockFeatureId]) {
+            missingFeatures.push(f.name);
+          } else {
+            featureIds_array.push(featureIds[mockFeatureId]);
+          }
+        }
+
+        if (missingFeatures.length > 0) {
+          console.error(`  ❌ Error: Package "${pkg.name}" has features not found in MOCK_FEATURES: ${missingFeatures.join(', ')}`);
+          console.error('  Skipping this package import.\n');
+          continue;
+        }
 
         const packageDoc = {
           ...packageData,
@@ -76,7 +107,7 @@ async function importData() {
 
       console.log(`\n✓ Imported ${MOCK_PACKAGES.length} packages\n`);
     } else {
-      console.log(`⚠️  Features collection already has ${existingFeatures.size} documents. Skipping features import.\n`);
+      console.log(`⚠️  Packages collection already has ${existingPackages.size} documents. Skipping packages import.\n`);
     }
 
     // Import A La Carte Options

@@ -7,6 +7,9 @@ export interface ProductFeature {
   price: number;
   cost: number;
   warranty?: string;
+  imageUrl?: string;      // URL to main product image
+  thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
+  videoUrl?: string;      // URL to product video (optional)
 }
 
 export interface PackageTier {
@@ -30,6 +33,9 @@ export interface AlaCarteOption {
   isNew?: boolean;
   warranty?: string;
   useCases?: string[];
+  imageUrl?: string;      // URL to main product image
+  thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
+  videoUrl?: string;      // URL to product video (optional)
 }
 
 export interface PriceOverrides {

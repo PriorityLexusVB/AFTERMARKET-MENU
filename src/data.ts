@@ -2,6 +2,7 @@ import { collection, getDocs, addDoc } from 'firebase/firestore/lite';
 import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
+import { validateDataArray, ProductFeatureSchema, AlaCarteOptionSchema } from './schemas';
 
 interface FetchDataResult {
     packages: PackageTier[];
@@ -38,8 +39,13 @@ export async function fetchAllData(): Promise<FetchDataResult> {
       getDocs(collection(db, 'packages')),
     ]);
 
-    const features: ProductFeature[] = featuresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductFeature));
-    const alaCarteOptions: AlaCarteOption[] = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlaCarteOption));
+    // Fetch and validate features with Zod
+    const rawFeatures = featuresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const features: ProductFeature[] = validateDataArray(ProductFeatureSchema, rawFeatures, 'features');
+
+    // Fetch and validate a la carte options with Zod
+    const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
     
     const featuresMap = new Map(features.map(f => [f.id, f]));
 

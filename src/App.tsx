@@ -17,6 +17,17 @@ import { MAIN_PAGE_ADDON_IDS } from './constants';
 import { fetchAllData } from './data';
 import { auth, firebaseInitializationError } from './firebase';
 import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from './types';
+import {
+  initializeAnalytics,
+  trackPackageSelect,
+  trackAlaCarteAdd,
+  trackAlaCarteRemove,
+  trackFeatureView,
+  trackQuoteFinalize,
+  trackSettingsOpen,
+  trackAdminPanelAccess,
+  trackUserLogout,
+} from './analytics';
 
 type Page = 'packages' | 'alacarte';
 type View = 'menu' | 'agreement';
@@ -59,6 +70,9 @@ const App: React.FC = () => {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
+    // Initialize Firebase Analytics
+    initializeAnalytics();
+
     if (firebaseInitializationError || !auth) {
       setIsAuthLoading(false);
       setIsDemoMode(true); // Enter demo mode if Firebase isn't configured
@@ -103,6 +117,7 @@ const App: React.FC = () => {
     if (!auth) return;
     try {
       await signOut(auth);
+      trackUserLogout();
       setIsAdminView(false); // Reset to menu view on logout
     } catch (error) {
       console.error("Logout failed:", error);
@@ -114,64 +129,27 @@ const App: React.FC = () => {
       alert("The Admin Panel is disabled in demo mode. Please configure a Firebase backend to use this feature.");
       return;
     }
-    setIsAdminView(prev => !prev);
+    setIsAdminView(prev => {
+      const newValue = !prev;
+      if (newValue) {
+        trackAdminPanelAccess();
+      }
+      return newValue;
+    });
   }, [isDemoMode]);
 
-  const handleOpenSettings = useCallback(() => setIsSettingsOpen(true), []);
+  const handleOpenSettings = useCallback(() => {
+    trackSettingsOpen();
+    setIsSettingsOpen(true);
+  }, []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
   const handleSaveSettings = useCallback((data: { customerInfo: CustomerInfo; priceOverrides: PriceOverrides }) => {
     setCustomerInfo(data.customerInfo);
     setPriceOverrides(data.priceOverrides);
     setIsSettingsOpen(false);
   }, []);
-  
-  const handleShowAgreement = useCallback(() => setCurrentView('agreement'), []);
-  const handleShowMenu = useCallback(() => setCurrentView('menu'), []);
 
-  const handleSelectPackage = useCallback((pkg: PackageTier) => {
-    setSelectedPackage(prev => (prev?.id === pkg.id ? null : pkg));
-  }, []);
-  
-  const handleOpenCompareModal = useCallback(() => setIsCompareModalOpen(true), []);
-  const handleCloseCompareModal = useCallback(() => setIsCompareModalOpen(false), []);
-
-  const handleSelectPackageFromCompare = useCallback((pkg: PackageTier) => {
-    handleSelectPackage(pkg);
-    handleCloseCompareModal();
-  }, [handleSelectPackage, handleCloseCompareModal]);
-
-  const handleToggleAlaCarteItem = useCallback((item: AlaCarteOption) => {
-    setCustomPackageItems(prev => {
-      const isSelected = prev.some(i => i.id === item.id);
-      if (isSelected) {
-        return prev.filter(i => i.id !== item.id);
-      } else {
-        return [...prev, item];
-      }
-    });
-  }, []);
-
-  const handleDropAlaCarte = useCallback((item: AlaCarteOption) => {
-    setCustomPackageItems(prev => {
-      if (prev.find(i => i.id === item.id)) {
-        return prev;
-      }
-      return [...prev, item];
-    });
-  }, []);
-
-  const handleRemoveAlaCarte = useCallback((itemId: string) => {
-    setCustomPackageItems(prev => prev.filter(i => i.id !== itemId));
-  }, []);
-
-  const handleViewDetail = useCallback((item: ProductFeature | AlaCarteOption) => {
-    setViewingDetailItem(item);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setViewingDetailItem(null);
-  }, []);
-
+  // Price calculations and display data (must be before handleShowAgreement)
   const applyOverrides = <T extends { id: string; price: number; cost: number }>(items: T[], overrides: PriceOverrides): T[] => {
     return items.map(item => {
       const override = overrides[item.id];
@@ -187,7 +165,7 @@ const App: React.FC = () => {
   const displayPackages = useMemo(() => applyOverrides(packages, priceOverrides), [packages, priceOverrides]);
   const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
   const displayCustomPackageItems = useMemo(() => applyOverrides(customPackageItems, priceOverrides), [customPackageItems, priceOverrides]);
-  
+
   const { totalPrice, totalCost } = useMemo(() => {
     let price = 0;
     let cost = 0;
@@ -212,7 +190,83 @@ const App: React.FC = () => {
   const availableAlaCarteItems = useMemo(() => {
     return displayAllAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
   }, [customPackageItems, displayAllAlaCarteOptions]);
+
+  const handleShowAgreement = useCallback(() => {
+    // Track quote finalization
+    const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model].filter(Boolean).join(' ');
+    trackQuoteFinalize({
+      selectedPackage,
+      customItems: customPackageItems,
+      totalPrice,
+      customerName: customerInfo.name,
+      vehicleInfo: vehicleString,
+    });
+    setCurrentView('agreement');
+  }, [selectedPackage, customPackageItems, totalPrice, customerInfo]);
+  const handleShowMenu = useCallback(() => setCurrentView('menu'), []);
+
+  const handleSelectPackage = useCallback((pkg: PackageTier) => {
+    setSelectedPackage(prev => {
+      const isSelecting = prev?.id !== pkg.id;
+      if (isSelecting) {
+        trackPackageSelect(pkg);
+      }
+      return prev?.id === pkg.id ? null : pkg;
+    });
+  }, []);
   
+  const handleOpenCompareModal = useCallback(() => setIsCompareModalOpen(true), []);
+  const handleCloseCompareModal = useCallback(() => setIsCompareModalOpen(false), []);
+
+  const handleSelectPackageFromCompare = useCallback((pkg: PackageTier) => {
+    handleSelectPackage(pkg);
+    handleCloseCompareModal();
+  }, [handleSelectPackage, handleCloseCompareModal]);
+
+  const handleToggleAlaCarteItem = useCallback((item: AlaCarteOption) => {
+    setCustomPackageItems(prev => {
+      const isSelected = prev.some(i => i.id === item.id);
+      if (isSelected) {
+        trackAlaCarteRemove(item);
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        trackAlaCarteAdd(item);
+        return [...prev, item];
+      }
+    });
+  }, []);
+
+  const handleDropAlaCarte = useCallback((item: AlaCarteOption) => {
+    setCustomPackageItems(prev => {
+      if (prev.find(i => i.id === item.id)) {
+        return prev;
+      }
+      trackAlaCarteAdd(item);
+      return [...prev, item];
+    });
+  }, []);
+
+  const handleRemoveAlaCarte = useCallback((itemId: string) => {
+    setCustomPackageItems(prev => {
+      const item = prev.find(i => i.id === itemId);
+      if (item) {
+        trackAlaCarteRemove(item);
+      }
+      return prev.filter(i => i.id !== itemId);
+    });
+  }, []);
+
+  const handleViewDetail = useCallback((item: ProductFeature | AlaCarteOption) => {
+    // Determine if it's a package feature or a la carte option
+    const isAlaCarteOption = allAlaCarteOptions.some(opt => opt.id === item.id);
+    trackFeatureView(item.name, isAlaCarteOption ? 'alacarte' : 'package');
+    setViewingDetailItem(item);
+  }, [allAlaCarteOptions]);
+
+  const handleCloseModal = useCallback(() => {
+    setViewingDetailItem(null);
+  }, []);
+
   const NavButton: React.FC<{page: Page, label: string}> = ({ page, label }) => (
     <button
       onClick={() => setCurrentPage(page)}
@@ -242,9 +296,9 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (currentView === 'agreement') {
       return (
-        <AgreementView 
+        <AgreementView
           onBack={handleShowMenu}
-          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) : null}
+          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
           customPackageItems={displayCustomPackageItems}
           totalPrice={totalPrice}
           totalCost={totalCost}
@@ -354,8 +408,8 @@ const App: React.FC = () => {
           </main>
           {currentView === 'menu' && !isLoading && (
             <>
-              <Summary 
-                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) : null}
+              <Summary
+                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
                 customPackageItems={displayCustomPackageItems}
                 totalPrice={totalPrice}
                 customerInfo={customerInfo}

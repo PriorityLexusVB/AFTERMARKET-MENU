@@ -77,7 +77,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     price: 3499,
     cost: 900,
     // All four features included
-    features: [MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2], MOCK_FEATURES[3]],
+    features: [MOCK_FEATURES[0]!, MOCK_FEATURES[1]!, MOCK_FEATURES[2]!, MOCK_FEATURES[3]!],
     tier_color: 'gray-400',
   },
   {
@@ -86,7 +86,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     price: 2899,
     cost: 750,
     // First three features included
-    features: [MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2]],
+    features: [MOCK_FEATURES[0]!, MOCK_FEATURES[1]!, MOCK_FEATURES[2]!],
     is_recommended: true,
     tier_color: 'blue-400',
   },
@@ -97,7 +97,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     cost: 550,
     // RustGuard, and then either ToughGuard OR Interior Protection
     // The UI will show both with an "OR" divider.
-    features: [MOCK_FEATURES[0], MOCK_FEATURES[1], MOCK_FEATURES[2]],
+    features: [MOCK_FEATURES[0]!, MOCK_FEATURES[1]!, MOCK_FEATURES[2]!],
     tier_color: 'yellow-400',
   },
 ];

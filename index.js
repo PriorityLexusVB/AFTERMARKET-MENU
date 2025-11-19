@@ -41,6 +41,51 @@ app.get("/__debug", (_req,res)=>{
   });
 });
 
+// Gemini AI proxy endpoint for secure API key handling
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message, history, systemInstruction } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    if (!apiKey) {
+      console.error("[AI] Gemini API key not configured");
+      return res.status(500).json({
+        error: "AI service not configured. Please contact support."
+      });
+    }
+
+    // Dynamic import of @google/genai to avoid build issues
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Create a new chat instance with system instruction
+    const chat = ai.chats.create({
+      model: 'gemini-2.5-flash',
+      config: systemInstruction ? { systemInstruction } : undefined,
+    });
+
+    // Send message and get response
+    const response = await chat.sendMessage({ message });
+
+    res.json({
+      text: response.text,
+      success: true
+    });
+
+  } catch (error) {
+    console.error("[AI] Error processing chat request:", error);
+    res.status(500).json({
+      error: "An error occurred while processing your request. Please try again.",
+      success: false
+    });
+  }
+});
+
 // SPA fallback
 app.get("*", (_req,res)=> indexExists ? res.sendFile(indexHtml) : res.status(200).send(splashHtml));
 

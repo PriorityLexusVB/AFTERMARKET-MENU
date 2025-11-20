@@ -800,12 +800,131 @@ export const AdminPanelNew: React.FC<AdminPanelNewProps> = ({ onDataUpdate }) =>
 
       case 'settings':
         return (
-          <div className="text-center py-12">
-            <span className="text-6xl mb-4 block">⚙️</span>
-            <h3 className="text-2xl font-teko text-gray-300 mb-2">
-              Settings & Categories
+          <div className="space-y-6">
+            <h3 className="text-2xl font-teko tracking-wider text-white">
+              Settings & Configuration
             </h3>
-            <p className="text-gray-500">Coming soon...</p>
+
+            {/* Categories Section */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h4 className="text-xl font-teko tracking-wider text-white mb-2">
+                    Product Categories
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    These categories are used to organize features and à la carte options
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {['Exterior', 'Interior', 'Protection', 'Technology', 'Other'].map((category) => (
+                  <div
+                    key={category}
+                    className="bg-gray-900/50 border border-gray-600 rounded-md px-4 py-3 text-center"
+                  >
+                    <span className="text-gray-200 font-semibold">{category}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div className="text-sm text-blue-200">
+                    <p className="font-semibold mb-1">Current Implementation</p>
+                    <p className="text-blue-200/80">
+                      Categories are currently built-in to ensure consistency across your menu.
+                      These five categories cover most aftermarket products and services.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Display Preferences Section */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+              <h4 className="text-xl font-teko tracking-wider text-white mb-4">
+                Display Preferences
+              </h4>
+
+              <div className="space-y-4">
+                <div className="flex items-start justify-between p-4 bg-gray-900/50 rounded-md">
+                  <div>
+                    <p className="text-gray-200 font-semibold mb-1">Sale Price Display</p>
+                    <p className="text-xs text-gray-400">
+                      When a sale price is set, it will be shown with the regular price struck through
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-green-600/20 text-green-400 text-xs rounded-full">
+                    Active
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between p-4 bg-gray-900/50 rounded-md">
+                  <div>
+                    <p className="text-gray-200 font-semibold mb-1">Retail Value Display</p>
+                    <p className="text-xs text-gray-400">
+                      Packages can show "Retail value $X, You pay $Y" when enabled
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-green-600/20 text-green-400 text-xs rounded-full">
+                    Active
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between p-4 bg-gray-900/50 rounded-md">
+                  <div>
+                    <p className="text-gray-200 font-semibold mb-1">Column Layout</p>
+                    <p className="text-xs text-gray-400">
+                      Features can be assigned to left, center, or right columns in the customer view
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-green-600/20 text-green-400 text-xs rounded-full">
+                    Active
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between p-4 bg-gray-900/50 rounded-md">
+                  <div>
+                    <p className="text-gray-200 font-semibold mb-1">À La Carte Ordering</p>
+                    <p className="text-xs text-gray-400">
+                      Custom display order for à la carte options using up/down buttons
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-green-600/20 text-green-400 text-xs rounded-full">
+                    Active
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* System Info */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+              <h4 className="text-xl font-teko tracking-wider text-white mb-4">
+                System Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="p-4 bg-gray-900/50 rounded-md">
+                  <p className="text-gray-400 mb-1">Database</p>
+                  <p className="text-white font-semibold">Firebase Firestore</p>
+                </div>
+                <div className="p-4 bg-gray-900/50 rounded-md">
+                  <p className="text-gray-400 mb-1">Collections</p>
+                  <p className="text-white font-semibold">
+                    features, packages, ala_carte_options
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-900/50 rounded-md">
+                  <p className="text-gray-400 mb-1">Status</p>
+                  <p className="text-green-400 font-semibold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                    Connected
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         );
 

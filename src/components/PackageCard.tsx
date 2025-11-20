@@ -73,8 +73,37 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
       </div>
       
       <div className="p-4 space-y-3">
+        {/* Show retail value if enabled */}
+        {packageInfo.showRetailValue && (
+          <div className="text-center mb-2">
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Retail Value</p>
+            <p className="text-2xl font-bold font-teko text-gray-400 line-through">
+              {formatPrice(packageInfo.features.reduce((sum, f) => sum + (f.salePrice ?? f.price), 0))}
+            </p>
+          </div>
+        )}
+
         <div className={`py-2 rounded-lg text-center bg-red-700`}>
-            <p className="text-4xl sm:text-5xl font-bold font-teko text-white text-shadow">{formatPrice(packageInfo.price)}</p>
+            {packageInfo.showRetailValue && (
+              <p className="text-xs text-gray-200 uppercase tracking-wider mb-1">You Pay</p>
+            )}
+            {packageInfo.salePrice ? (
+              <div>
+                <p className="text-2xl sm:text-3xl font-bold font-teko text-gray-300 line-through text-shadow">
+                  {formatPrice(packageInfo.price)}
+                </p>
+                <p className="text-4xl sm:text-5xl font-bold font-teko text-white text-shadow">
+                  {formatPrice(packageInfo.salePrice)}
+                </p>
+                <p className="text-xs text-green-300 font-semibold mt-1">
+                  Save {formatPrice(packageInfo.price - packageInfo.salePrice)}!
+                </p>
+              </div>
+            ) : (
+              <p className="text-4xl sm:text-5xl font-bold font-teko text-white text-shadow">
+                {formatPrice(packageInfo.price)}
+              </p>
+            )}
         </div>
         <button
           onClick={onSelect}

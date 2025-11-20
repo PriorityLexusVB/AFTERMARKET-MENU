@@ -30,7 +30,24 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({ item, onViewItem, on
           {item.name}
         </button>
         {item.warranty && <p className="text-sm font-bold text-yellow-400 mb-2">{item.warranty}</p>}
-        <p className="text-3xl font-bold text-gray-200 font-teko">{formatPrice(item.price)}</p>
+
+        {/* Show sale price if available */}
+        {item.salePrice ? (
+          <div className="flex items-center gap-3">
+            <p className="text-2xl font-bold text-gray-400 font-teko line-through">
+              {formatPrice(item.price)}
+            </p>
+            <p className="text-3xl font-bold text-green-400 font-teko">
+              {formatPrice(item.salePrice)}
+            </p>
+            <span className="px-2 py-0.5 bg-green-600/20 text-green-400 text-xs font-bold rounded-full">
+              SALE
+            </span>
+          </div>
+        ) : (
+          <p className="text-3xl font-bold text-gray-200 font-teko">{formatPrice(item.price)}</p>
+        )}
+
         <p className="text-sm text-gray-400 mt-2 mb-4">{item.description}</p>
         {item.points.length > 0 && (
           <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">

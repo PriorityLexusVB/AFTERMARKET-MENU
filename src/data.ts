@@ -219,3 +219,60 @@ export async function deletePackage(packageId: string): Promise<void> {
     throw new Error("Failed to delete the package. Please check your connection and Firestore rules.");
   }
 }
+
+/**
+ * Adds a new à la carte option document to the 'ala_carte_options' collection in Firestore.
+ * @param optionData - The option data to add, without an 'id'.
+ * @returns A promise that resolves when the document is successfully added.
+ */
+export async function addAlaCarteOption(optionData: Omit<AlaCarteOption, 'id'>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot add à la carte option.");
+  }
+
+  try {
+    await addDoc(collection(db, 'ala_carte_options'), optionData);
+  } catch (error) {
+    console.error("Error adding à la carte option to Firestore:", error);
+    throw new Error("Failed to save the new à la carte option. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Updates an existing à la carte option document in the 'ala_carte_options' collection in Firestore.
+ * @param optionId - The ID of the option to update.
+ * @param optionData - The option data to update (partial update supported).
+ * @returns A promise that resolves when the document is successfully updated.
+ */
+export async function updateAlaCarteOption(optionId: string, optionData: Partial<Omit<AlaCarteOption, 'id'>>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update à la carte option.");
+  }
+
+  try {
+    const optionRef = doc(db, 'ala_carte_options', optionId);
+    await updateDoc(optionRef, optionData);
+  } catch (error) {
+    console.error("Error updating à la carte option in Firestore:", error);
+    throw new Error("Failed to update the à la carte option. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Deletes an à la carte option document from the 'ala_carte_options' collection in Firestore.
+ * @param optionId - The ID of the option to delete.
+ * @returns A promise that resolves when the document is successfully deleted.
+ */
+export async function deleteAlaCarteOption(optionId: string): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot delete à la carte option.");
+  }
+
+  try {
+    const optionRef = doc(db, 'ala_carte_options', optionId);
+    await deleteDoc(optionRef);
+  } catch (error) {
+    console.error("Error deleting à la carte option from Firestore:", error);
+    throw new Error("Failed to delete the à la carte option. Please check your connection and Firestore rules.");
+  }
+}

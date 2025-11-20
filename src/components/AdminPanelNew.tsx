@@ -6,8 +6,9 @@ import { AdminTabs, type AdminTab } from './AdminTabs';
 import { AdminDashboard } from './AdminDashboard';
 import { FeatureForm } from './FeatureForm';
 import { PackageForm } from './PackageForm';
+import { AlaCarteForm } from './AlaCarteForm';
 import { ConfirmDialog } from './ConfirmDialog';
-import { deleteFeature, deletePackage } from '../data';
+import { deleteFeature, deletePackage, deleteAlaCarteOption, updateAlaCarteOption } from '../data';
 import { validateDataArray, ProductFeatureSchema, AlaCarteOptionSchema } from '../schemas';
 
 interface AdminPanelNewProps {
@@ -26,6 +27,7 @@ export const AdminPanelNew: React.FC<AdminPanelNewProps> = ({ onDataUpdate }) =>
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [isPackageFormVisible, setIsPackageFormVisible] = useState(false);
+  const [isAlaCarteFormVisible, setIsAlaCarteFormVisible] = useState(false);
 
   // Data state
   const [features, setFeatures] = useState<ProductFeature[]>([]);
@@ -45,6 +47,11 @@ export const AdminPanelNew: React.FC<AdminPanelNewProps> = ({ onDataUpdate }) =>
   const [editingPackage, setEditingPackage] = useState<PackageTier | null>(null);
   const [packageToDelete, setPackageToDelete] = useState<PackageTier | null>(null);
   const [isDeletingPackage, setIsDeletingPackage] = useState(false);
+
+  // Edit/Delete states - À La Carte
+  const [editingAlaCarteOption, setEditingAlaCarteOption] = useState<AlaCarteOption | null>(null);
+  const [alaCarteOptionToDelete, setAlaCarteOptionToDelete] = useState<AlaCarteOption | null>(null);
+  const [isDeletingAlaCarteOption, setIsDeletingAlaCarteOption] = useState(false);
 
   // Fetch all data
   const fetchAllData = useCallback(async () => {
@@ -195,6 +202,103 @@ export const AdminPanelNew: React.FC<AdminPanelNewProps> = ({ onDataUpdate }) =>
 
   const handleCancelPackageDelete = () => {
     setPackageToDelete(null);
+  };
+
+  // À La Carte handlers
+  const handleAlaCarteSaveSuccess = () => {
+    setIsAlaCarteFormVisible(false);
+    setEditingAlaCarteOption(null);
+    fetchAllData();
+    onDataUpdate();
+  };
+
+  const handleEditAlaCarteOption = (option: AlaCarteOption) => {
+    setEditingAlaCarteOption(option);
+    setIsAlaCarteFormVisible(true);
+    setActiveTab('alacarte');
+  };
+
+  const handleCancelAlaCarteEdit = () => {
+    setEditingAlaCarteOption(null);
+    setIsAlaCarteFormVisible(false);
+  };
+
+  const handleDeleteAlaCarteOptionClick = (option: AlaCarteOption) => {
+    setAlaCarteOptionToDelete(option);
+  };
+
+  const handleConfirmAlaCarteOptionDelete = async () => {
+    if (!alaCarteOptionToDelete) return;
+
+    setIsDeletingAlaCarteOption(true);
+    setError(null);
+
+    try {
+      await deleteAlaCarteOption(alaCarteOptionToDelete.id);
+      setAlaCarteOptionToDelete(null);
+      fetchAllData();
+      onDataUpdate();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete à la carte option');
+    } finally {
+      setIsDeletingAlaCarteOption(false);
+    }
+  };
+
+  const handleCancelAlaCarteOptionDelete = () => {
+    setAlaCarteOptionToDelete(null);
+  };
+
+  // Move option up in display order
+  const handleMoveOptionUp = async (option: AlaCarteOption, currentIndex: number) => {
+    if (currentIndex === 0) return; // Already at top
+
+    const sortedOptions = [...alaCarteOptions].sort((a, b) =>
+      (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+    );
+
+    const newIndex = currentIndex - 1;
+    const temp = sortedOptions[currentIndex];
+    sortedOptions[currentIndex] = sortedOptions[newIndex];
+    sortedOptions[newIndex] = temp;
+
+    // Update display orders in Firestore
+    try {
+      await Promise.all(
+        sortedOptions.map((opt, idx) =>
+          updateAlaCarteOption(opt.id, { displayOrder: idx })
+        )
+      );
+      fetchAllData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reorder options');
+    }
+  };
+
+  // Move option down in display order
+  const handleMoveOptionDown = async (option: AlaCarteOption, currentIndex: number) => {
+    const sortedOptions = [...alaCarteOptions].sort((a, b) =>
+      (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+    );
+
+    if (currentIndex === sortedOptions.length - 1) return; // Already at bottom
+
+    const newIndex = currentIndex + 1;
+    const temp = sortedOptions[currentIndex];
+    sortedOptions[currentIndex] = sortedOptions[newIndex];
+    sortedOptions[newIndex] = temp;
+
+    // Update display orders in Firestore
+    try {
+      await Promise.all(
+        sortedOptions.map((opt, idx) =>
+          updateAlaCarteOption(opt.id, { displayOrder: idx })
+        )
+      );
+      fetchAllData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reorder options');
+    }
   };
 
   // Render tab content
@@ -504,13 +608,193 @@ export const AdminPanelNew: React.FC<AdminPanelNewProps> = ({ onDataUpdate }) =>
         );
 
       case 'alacarte':
+        const sortedAlaCarteOptions = [...alaCarteOptions].sort(
+          (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+        );
+
         return (
-          <div className="text-center py-12">
-            <span className="text-6xl mb-4 block">🛒</span>
-            <h3 className="text-2xl font-teko text-gray-300 mb-2">
-              À La Carte Management
-            </h3>
-            <p className="text-gray-500">Coming soon...</p>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-teko tracking-wider text-white">
+                  Manage À La Carte Options
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Standalone options customers can add individually
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingAlaCarteOption(null);
+                  setIsAlaCarteFormVisible((prev) => !prev);
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                </svg>
+                {isAlaCarteFormVisible ? 'Cancel' : 'Add New Option'}
+              </button>
+            </div>
+
+            {isAlaCarteFormVisible && (
+              <AlaCarteForm
+                onSaveSuccess={handleAlaCarteSaveSuccess}
+                editingOption={editingAlaCarteOption}
+                onCancelEdit={handleCancelAlaCarteEdit}
+              />
+            )}
+
+            <div className="border-t border-gray-700 pt-6">
+              <h4 className="text-xl font-teko tracking-wider text-gray-300 mb-4">
+                Existing Options ({alaCarteOptions.length})
+              </h4>
+              {sortedAlaCarteOptions.length === 0 ? (
+                <p className="text-gray-500">
+                  No à la carte options found. Click "Add New Option" to create one.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {sortedAlaCarteOptions.map((option, index) => {
+                    const effectivePrice = option.salePrice ?? option.price;
+                    const profit = effectivePrice - option.cost;
+                    const margin = effectivePrice > 0 ? (profit / effectivePrice) * 100 : 0;
+
+                    return (
+                      <div
+                        key={option.id}
+                        className="bg-gray-900/50 border border-gray-700 rounded-md p-4 hover:bg-gray-900/70 transition-colors"
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Drag/Reorder Controls */}
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => handleMoveOptionUp(option, index)}
+                              disabled={index === 0}
+                              className="p-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Move up"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M9.47 6.47a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 1 1-1.06 1.06L10 8.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06l4.25-4.25Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleMoveOptionDown(option, index)}
+                              disabled={index === sortedAlaCarteOptions.length - 1}
+                              className="p-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              title="Move down"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10.53 13.53a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 1 1 1.06-1.06L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+
+                          {/* Option Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-3 mb-2">
+                              <span className="font-semibold text-gray-200 text-lg">
+                                {option.name}
+                              </span>
+                              {option.isNew && (
+                                <span className="px-2 py-0.5 bg-green-600/20 text-green-400 text-xs rounded-full">
+                                  ✨ New
+                                </span>
+                              )}
+                              {option.category && (
+                                <span className="px-2 py-0.5 bg-blue-600/20 text-blue-400 text-xs rounded-full">
+                                  {option.category}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                              {option.description.substring(0, 100)}
+                              {option.description.length > 100 ? '...' : ''}
+                            </p>
+                            <div className="flex gap-4 text-xs">
+                              <span className="text-gray-400">
+                                Retail: <span className="font-mono">{formatPrice(option.price)}</span>
+                              </span>
+                              {option.salePrice && (
+                                <span className="text-green-400">
+                                  Sale: <span className="font-mono font-bold">{formatPrice(option.salePrice)}</span>
+                                </span>
+                              )}
+                              <span className="text-gray-400">
+                                Cost: <span className="font-mono">{formatPrice(option.cost)}</span>
+                              </span>
+                              <span className={profit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                Profit: <span className="font-mono font-bold">{formatPrice(profit)}</span> ({margin.toFixed(1)}%)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditAlaCarteOption(option)}
+                              className="p-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-md transition-colors"
+                              title="Edit option"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAlaCarteOptionClick(option)}
+                              className="p-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-md transition-colors"
+                              title="Delete option"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -566,6 +850,17 @@ export const AdminPanelNew: React.FC<AdminPanelNewProps> = ({ onDataUpdate }) =>
         cancelLabel="Cancel"
         onConfirm={handleConfirmPackageDelete}
         onCancel={handleCancelPackageDelete}
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={!!alaCarteOptionToDelete}
+        title="Delete À La Carte Option"
+        message={`Are you sure you want to delete "${alaCarteOptionToDelete?.name}"? This action cannot be undone.`}
+        confirmLabel={isDeletingAlaCarteOption ? 'Deleting...' : 'Delete Option'}
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmAlaCarteOptionDelete}
+        onCancel={handleCancelAlaCarteOptionDelete}
         variant="danger"
       />
     </main>

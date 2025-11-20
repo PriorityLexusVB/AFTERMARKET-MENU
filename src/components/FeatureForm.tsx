@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { addFeature } from '../data';
+import React, { useState, useEffect } from 'react';
+import { addFeature, updateFeature } from '../data';
 import { ImageUploader } from './ImageUploader';
+import type { ProductFeature } from '../types';
 
 interface FeatureFormProps {
   onSaveSuccess: () => void;
+  editingFeature?: ProductFeature | null;
+  onCancelEdit?: () => void;
 }
 
 const initialFormState = {
@@ -19,10 +22,30 @@ const initialFormState = {
   videoUrl: ''
 };
 
-export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
+export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editingFeature, onCancelEdit }) => {
   const [formData, setFormData] = useState(initialFormState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingFeature) {
+      setFormData({
+        name: editingFeature.name,
+        price: editingFeature.price.toString(),
+        cost: editingFeature.cost.toString(),
+        description: editingFeature.description,
+        warranty: editingFeature.warranty || '',
+        points: editingFeature.points.join('\n'),
+        useCases: editingFeature.useCases.join('\n'),
+        imageUrl: editingFeature.imageUrl || '',
+        thumbnailUrl: editingFeature.thumbnailUrl || '',
+        videoUrl: editingFeature.videoUrl || '',
+      });
+    } else {
+      setFormData(initialFormState);
+    }
+  }, [editingFeature]);
 
   const isFormValid = formData.name && formData.price && formData.cost && formData.description;
 
@@ -37,7 +60,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
         setError("Please fill out all required fields.");
         return;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -59,7 +82,14 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
             throw new Error("Price and Cost must be valid numbers.");
         }
 
-        await addFeature(featureData);
+        if (editingFeature) {
+            // Update existing feature
+            await updateFeature(editingFeature.id, featureData);
+        } else {
+            // Create new feature
+            await addFeature(featureData);
+        }
+
         setFormData(initialFormState); // Reset form on success
         onSaveSuccess();
 
@@ -67,6 +97,14 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
         setError(err.message || "An unexpected error occurred.");
     } finally {
         setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData(initialFormState);
+    setError(null);
+    if (onCancelEdit) {
+      onCancelEdit();
     }
   };
   
@@ -85,6 +123,9 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
 
   return (
     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 animate-fade-in">
+        <h3 className="text-xl font-teko tracking-wider text-white mb-4">
+          {editingFeature ? '✏️ Edit Feature' : '➕ Add New Feature'}
+        </h3>
         <form onSubmit={handleSave} className="space-y-4">
             <FormRow>
                 <Label htmlFor="name" text="Feature Name" required />
@@ -247,13 +288,25 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
             <FormRow className="pt-4 border-t border-gray-700/50">
                 <div className="md:col-start-2 md:col-span-2">
                      {error && <p className="text-red-400 text-sm mb-3 bg-red-500/10 p-3 rounded-md border border-red-500/30">{error}</p>}
-                    <button
-                        type="submit"
-                        disabled={isLoading || !isFormValid}
-                        className="w-full bg-green-600 text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? 'Saving...' : 'Save Feature'}
-                    </button>
+                    <div className="flex gap-3">
+                        {editingFeature && (
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                disabled={isLoading}
+                                className="flex-1 bg-gray-600 text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={isLoading || !isFormValid}
+                            className="flex-1 bg-green-600 text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Saving...' : (editingFeature ? 'Update Feature' : 'Save Feature')}
+                        </button>
+                    </div>
                 </div>
             </FormRow>
         </form>

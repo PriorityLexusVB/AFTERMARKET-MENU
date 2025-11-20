@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc } from 'firebase/firestore/lite';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore/lite';
 import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
@@ -94,12 +94,51 @@ export async function addFeature(featureData: Omit<ProductFeature, 'id'>): Promi
   if (!db) {
     throw new Error("Firebase is not initialized. Cannot add feature.");
   }
-  
+
   try {
     await addDoc(collection(db, 'features'), featureData);
   } catch (error) {
     console.error("Error adding feature to Firestore:", error);
     // Re-throw the error to be handled by the calling function
     throw new Error("Failed to save the new feature. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Updates an existing feature document in the 'features' collection in Firestore.
+ * @param featureId - The ID of the feature to update.
+ * @param featureData - The feature data to update (partial update supported).
+ * @returns A promise that resolves when the document is successfully updated.
+ */
+export async function updateFeature(featureId: string, featureData: Partial<Omit<ProductFeature, 'id'>>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update feature.");
+  }
+
+  try {
+    const featureRef = doc(db, 'features', featureId);
+    await updateDoc(featureRef, featureData);
+  } catch (error) {
+    console.error("Error updating feature in Firestore:", error);
+    throw new Error("Failed to update the feature. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Deletes a feature document from the 'features' collection in Firestore.
+ * @param featureId - The ID of the feature to delete.
+ * @returns A promise that resolves when the document is successfully deleted.
+ */
+export async function deleteFeature(featureId: string): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot delete feature.");
+  }
+
+  try {
+    const featureRef = doc(db, 'features', featureId);
+    await deleteDoc(featureRef);
+  } catch (error) {
+    console.error("Error deleting feature from Firestore:", error);
+    throw new Error("Failed to delete the feature. Please check your connection and Firestore rules.");
   }
 }

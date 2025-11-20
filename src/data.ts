@@ -142,3 +142,80 @@ export async function deleteFeature(featureId: string): Promise<void> {
     throw new Error("Failed to delete the feature. Please check your connection and Firestore rules.");
   }
 }
+
+/**
+ * Adds a new package document to the 'packages' collection in Firestore.
+ * @param packageData - The package data to add, without an 'id'.
+ * @returns A promise that resolves when the document is successfully added.
+ */
+export async function addPackage(packageData: {
+  name: string;
+  price: number;
+  salePrice?: number;
+  cost: number;
+  featureIds: string[];
+  is_recommended?: boolean;
+  tier_color: string;
+  showRetailValue?: boolean;
+  displayOrder?: number;
+}): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot add package.");
+  }
+
+  try {
+    await addDoc(collection(db, 'packages'), packageData);
+  } catch (error) {
+    console.error("Error adding package to Firestore:", error);
+    throw new Error("Failed to save the new package. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Updates an existing package document in the 'packages' collection in Firestore.
+ * @param packageId - The ID of the package to update.
+ * @param packageData - The package data to update (partial update supported).
+ * @returns A promise that resolves when the document is successfully updated.
+ */
+export async function updatePackage(packageId: string, packageData: Partial<{
+  name: string;
+  price: number;
+  salePrice?: number;
+  cost: number;
+  featureIds: string[];
+  is_recommended?: boolean;
+  tier_color: string;
+  showRetailValue?: boolean;
+  displayOrder?: number;
+}>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update package.");
+  }
+
+  try {
+    const packageRef = doc(db, 'packages', packageId);
+    await updateDoc(packageRef, packageData);
+  } catch (error) {
+    console.error("Error updating package in Firestore:", error);
+    throw new Error("Failed to update the package. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Deletes a package document from the 'packages' collection in Firestore.
+ * @param packageId - The ID of the package to delete.
+ * @returns A promise that resolves when the document is successfully deleted.
+ */
+export async function deletePackage(packageId: string): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot delete package.");
+  }
+
+  try {
+    const packageRef = doc(db, 'packages', packageId);
+    await deleteDoc(packageRef);
+  } catch (error) {
+    console.error("Error deleting package from Firestore:", error);
+    throw new Error("Failed to delete the package. Please check your connection and Firestore rules.");
+  }
+}

@@ -12,8 +12,11 @@ interface FeatureFormProps {
 const initialFormState = {
   name: '',
   price: '',
+  salePrice: '',
   cost: '',
   description: '',
+  category: '',
+  columnAssignment: 'none' as 'left' | 'center' | 'right' | 'none',
   warranty: '',
   points: '',
   useCases: '',
@@ -21,6 +24,8 @@ const initialFormState = {
   thumbnailUrl: '',
   videoUrl: ''
 };
+
+const CATEGORIES = ['Exterior', 'Interior', 'Protection', 'Technology', 'Other'];
 
 export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editingFeature, onCancelEdit }) => {
   const [formData, setFormData] = useState(initialFormState);
@@ -33,8 +38,11 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
       setFormData({
         name: editingFeature.name,
         price: editingFeature.price.toString(),
+        salePrice: editingFeature.salePrice?.toString() || '',
         cost: editingFeature.cost.toString(),
         description: editingFeature.description,
+        category: editingFeature.category || '',
+        columnAssignment: editingFeature.columnAssignment || 'none',
         warranty: editingFeature.warranty || '',
         points: editingFeature.points.join('\n'),
         useCases: editingFeature.useCases.join('\n'),
@@ -49,7 +57,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
 
   const isFormValid = formData.name && formData.price && formData.cost && formData.description;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -65,7 +73,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
     setError(null);
 
     try {
-        const featureData = {
+        const featureData: any = {
             name: formData.name,
             price: parseFloat(formData.price),
             cost: parseFloat(formData.cost),
@@ -73,13 +81,27 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             warranty: formData.warranty || '',
             points: formData.points.split('\n').filter(line => line.trim() !== ''),
             useCases: formData.useCases.split('\n').filter(line => line.trim() !== ''),
+            ...(formData.category && { category: formData.category }),
+            ...(formData.columnAssignment !== 'none' && { columnAssignment: formData.columnAssignment }),
             ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
         };
 
+        // Add sale price if provided
+        if (formData.salePrice && formData.salePrice.trim() !== '') {
+            const salePrice = parseFloat(formData.salePrice);
+            if (!isNaN(salePrice)) {
+                featureData.salePrice = salePrice;
+            }
+        }
+
         if (isNaN(featureData.price) || isNaN(featureData.cost)) {
             throw new Error("Price and Cost must be valid numbers.");
+        }
+
+        if (featureData.salePrice && featureData.salePrice > featureData.price) {
+            throw new Error("Sale price cannot be higher than regular price.");
         }
 
         if (editingFeature) {
@@ -163,6 +185,56 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                     required
                 />
             </FormRow>
+            <FormRow>
+                <Label htmlFor="salePrice" text="Sale Price ($)" helpText="Optional - overrides retail price" />
+                <input
+                    type="number"
+                    id="salePrice"
+                    name="salePrice"
+                    value={formData.salePrice}
+                    onChange={handleChange}
+                    className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                    placeholder="Leave empty for regular price"
+                />
+            </FormRow>
+
+            {/* Category and Column Assignment */}
+            <div className="pt-4 border-t border-gray-700/50 space-y-4">
+                <h3 className="text-lg font-teko font-semibold text-gray-200 tracking-wider">Organization</h3>
+
+                <FormRow>
+                    <Label htmlFor="category" text="Category" helpText="Optional" />
+                    <select
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                    >
+                        <option value="">-- Select Category --</option>
+                        {CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                    </select>
+                </FormRow>
+
+                <FormRow>
+                    <Label htmlFor="columnAssignment" text="Display Column" helpText="Where to show in menu" />
+                    <select
+                        id="columnAssignment"
+                        name="columnAssignment"
+                        value={formData.columnAssignment}
+                        onChange={handleChange}
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                    >
+                        <option value="none">Not displayed in columns</option>
+                        <option value="left">Left Column</option>
+                        <option value="center">Center Column</option>
+                        <option value="right">Right Column</option>
+                    </select>
+                </FormRow>
+            </div>
+
             <FormRow>
                 <Label htmlFor="description" text="Description" required />
                 <textarea

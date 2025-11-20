@@ -12,8 +12,11 @@ export const ProductFeatureSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   points: z.array(z.string()),
   useCases: z.array(z.string()),
-  price: z.number().nonnegative('Price must be non-negative'), // Allow 0 for features included in packages
+  price: z.number().nonnegative('Price must be non-negative'), // Retail price
+  salePrice: z.number().nonnegative('Sale price must be non-negative').optional(), // Optional sale price
   cost: z.number().nonnegative('Cost must be non-negative'),
+  category: z.string().optional(), // e.g., 'Exterior', 'Interior', 'Protection', 'Technology'
+  columnAssignment: z.enum(['left', 'center', 'right', 'none']).optional(), // Which column to display in
   warranty: z.string().optional(),
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
@@ -26,11 +29,14 @@ export type ProductFeature = z.infer<typeof ProductFeatureSchema>;
 export const AlaCarteOptionSchema = z.object({
   id: z.string().min(1, 'ID is required'),
   name: z.string().min(1, 'Name is required'),
-  price: z.number().nonnegative('Price must be non-negative'),
+  price: z.number().nonnegative('Price must be non-negative'), // Retail price
+  salePrice: z.number().nonnegative('Sale price must be non-negative').optional(), // Optional sale price
   cost: z.number().nonnegative('Cost must be non-negative'),
   description: z.string().min(1, 'Description is required'),
   points: z.array(z.string()),
   isNew: z.boolean().optional(),
+  category: z.string().optional(),
+  displayOrder: z.number().optional(), // For drag-and-drop ordering
   warranty: z.string().optional(),
   useCases: z.array(z.string()).optional(),
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
@@ -44,11 +50,14 @@ export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;
 export const PackageTierSchema = z.object({
   id: z.string().min(1, 'ID is required'),
   name: z.string().min(1, 'Name is required'),
-  price: z.number().nonnegative('Price must be non-negative'),
+  price: z.number().nonnegative('Price must be non-negative'), // Retail/Display price
+  salePrice: z.number().nonnegative('Sale price must be non-negative').optional(), // Optional sale price
   cost: z.number().nonnegative('Cost must be non-negative'),
   features: z.array(ProductFeatureSchema),
   is_recommended: z.boolean().optional(),
   tier_color: z.string().min(1, 'Tier color is required'),
+  showRetailValue: z.boolean().optional(), // Show "Retail value $X, You pay $Y"
+  displayOrder: z.number().optional(), // Order packages are displayed
 });
 
 export type PackageTier = z.infer<typeof PackageTierSchema>;

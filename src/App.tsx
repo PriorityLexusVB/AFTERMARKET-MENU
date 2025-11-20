@@ -11,7 +11,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { AgreementView } from './components/AgreementView';
 import { AIAssistant } from './components/AIAssistant';
 import { Login } from './components/Login';
-import { AdminPanel } from './components/AdminPanel';
+import { AdminPanelNew } from './components/AdminPanelNew';
 import { CompareModal } from './components/CompareModal';
 import { MAIN_PAGE_ADDON_IDS } from './constants';
 import { fetchAllData } from './data';
@@ -394,7 +394,7 @@ const App: React.FC = () => {
       />
       
       {isAdminView && !isDemoMode ? (
-        <AdminPanel onDataUpdate={loadData} />
+        <AdminPanelNew onDataUpdate={loadData} />
       ) : (
         <>
           <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">

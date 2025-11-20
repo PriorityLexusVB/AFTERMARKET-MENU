@@ -12,8 +12,8 @@ export const ProductFeatureSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   points: z.array(z.string()),
   useCases: z.array(z.string()),
-  price: z.number().positive('Price must be positive'),
-  cost: z.number().positive('Cost must be positive'),
+  price: z.number().nonnegative('Price must be non-negative'), // Allow 0 for features included in packages
+  cost: z.number().nonnegative('Cost must be non-negative'),
   warranty: z.string().optional(),
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
@@ -26,8 +26,8 @@ export type ProductFeature = z.infer<typeof ProductFeatureSchema>;
 export const AlaCarteOptionSchema = z.object({
   id: z.string().min(1, 'ID is required'),
   name: z.string().min(1, 'Name is required'),
-  price: z.number().positive('Price must be positive'),
-  cost: z.number().positive('Cost must be positive'),
+  price: z.number().nonnegative('Price must be non-negative'),
+  cost: z.number().nonnegative('Cost must be non-negative'),
   description: z.string().min(1, 'Description is required'),
   points: z.array(z.string()),
   isNew: z.boolean().optional(),
@@ -44,8 +44,8 @@ export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;
 export const PackageTierSchema = z.object({
   id: z.string().min(1, 'ID is required'),
   name: z.string().min(1, 'Name is required'),
-  price: z.number().positive('Price must be positive'),
-  cost: z.number().positive('Cost must be positive'),
+  price: z.number().nonnegative('Price must be non-negative'),
+  cost: z.number().nonnegative('Cost must be non-negative'),
   features: z.array(ProductFeatureSchema),
   is_recommended: z.boolean().optional(),
   tier_color: z.string().min(1, 'Tier color is required'),
@@ -55,8 +55,8 @@ export type PackageTier = z.infer<typeof PackageTierSchema>;
 
 // Price Overrides Schema
 export const PriceOverrideSchema = z.object({
-  price: z.number().positive().optional(),
-  cost: z.number().positive().optional(),
+  price: z.number().nonnegative().optional(),
+  cost: z.number().nonnegative().optional(),
 });
 
 export const PriceOverridesSchema = z.record(z.string(), PriceOverrideSchema);

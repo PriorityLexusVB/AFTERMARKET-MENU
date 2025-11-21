@@ -3,13 +3,13 @@
  * Run with: npx tsx scripts/import-mock-data.ts
  */
 
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore/lite';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from '../src/mock';
 
 // Load environment variables from .env.local
-dotenv.config({ path: '.env.local' });
+config({ path: '.env.local' });
 
 const firebaseConfig = {
   apiKey: process.env['VITE_FIREBASE_API_KEY'],
@@ -20,9 +20,15 @@ const firebaseConfig = {
   appId: process.env['VITE_FIREBASE_APP_ID'],
 };
 
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration is missing!');
-  console.error('Make sure .env.local exists with VITE_FIREBASE_* variables.');
+// Verify all required config values are present
+const missingVars = Object.entries(firebaseConfig)
+  .filter(([key, value]) => key !== 'messagingSenderId' && !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  console.error('❌ Missing required Firebase configuration:');
+  missingVars.forEach(varName => console.error(`   - ${varName}`));
+  console.error('\nMake sure .env.local exists with VITE_FIREBASE_* variables.');
   process.exit(1);
 }
 
@@ -91,24 +97,30 @@ async function importData() {
 
         // Map feature IDs from mock to actual Firestore IDs
         const featureIds_array: string[] = [];
-        const missingFeatures: string[] = [];
+        const missingFeatureNames: string[] = [];
+        const missingImportedFeatures: string[] = [];
 
         for (const f of features) {
           const mockFeatureId = MOCK_FEATURES.find(mf => mf.name === f.name)?.id;
           if (!mockFeatureId) {
-            missingFeatures.push(f.name);
+            missingFeatureNames.push(f.name);
             continue;
           }
           if (!featureIds[mockFeatureId]) {
             console.error(`  ❌ Error: Package "${pkg.name}" requires feature "${f.name}" but it wasn't imported to Firestore`);
-            missingFeatures.push(f.name);
+            missingImportedFeatures.push(f.name);
           } else {
             featureIds_array.push(featureIds[mockFeatureId]);
           }
         }
 
-        if (missingFeatures.length > 0) {
-          console.error(`  ❌ Error: Package "${pkg.name}" has features not found in MOCK_FEATURES: ${missingFeatures.join(', ')}`);
+        if (missingFeatureNames.length > 0) {
+          console.error(`  ❌ Error: Package "${pkg.name}" has features whose names are not found in MOCK_FEATURES: ${missingFeatureNames.join(', ')}`);
+        }
+        if (missingImportedFeatures.length > 0) {
+          console.error(`  ❌ Error: Package "${pkg.name}" has features that exist in MOCK_FEATURES but were not imported to Firestore: ${missingImportedFeatures.join(', ')}`);
+        }
+        if (missingFeatureNames.length > 0 || missingImportedFeatures.length > 0) {
           console.error('  Skipping this package import.\n');
           continue;
         }

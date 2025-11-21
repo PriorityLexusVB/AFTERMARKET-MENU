@@ -1,12 +1,12 @@
 /**
  * Import mock data to Firestore
- * Run with: npm run import-data
+ * Run with: npx tsx scripts/import-mock-data.ts
  */
 
 import dotenv from 'dotenv';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore/lite';
-import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from '../src/mock.js';
+import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from '../src/mock';
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });

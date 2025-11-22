@@ -2,7 +2,7 @@ import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
-// Column assignments for admin organization: 1 = Gold tier, 2 = Elite tier, 3 = Platinum tier, 4 = Add-ons
+// Column assignments for admin organization: 1 = Gold & Platinum tiers, 2 = Elite tier (additional feature), 4 = Add-ons
 export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: 'rustguard-pro',

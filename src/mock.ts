@@ -2,6 +2,7 @@ import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
+// Column assignments for admin organization: 1 = Gold tier, 2 = Elite tier, 3 = Platinum tier, 4 = Add-ons
 export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: 'rustguard-pro',
@@ -19,6 +20,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0, // Price is included in package
     cost: 300,
     warranty: 'Lifetime coverage',
+    column: 1, // Gold tier feature
   },
   {
     id: 'toughguard-premium',
@@ -35,6 +37,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 250,
+    column: 1, // Gold tier feature
   },
   {
     id: 'interior-protection',
@@ -50,6 +53,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 200,
+    column: 1, // Gold tier feature
   },
   {
     id: 'diamond-shield',
@@ -66,6 +70,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 150,
+    column: 2, // Elite tier feature (additional feature beyond Gold)
   },
 ];
 
@@ -103,6 +108,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
 ];
 
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)
+// Column 4 = Popular Add-ons
 export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
   {
     id: 'suntek-complete',
@@ -119,6 +125,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
       'Door Cups',
     ],
     warranty: '10 Year Warranty',
+    column: 4, // Popular add-on
   },
   {
     id: 'suntek-standard',
@@ -128,6 +135,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
     description: 'Essential protection for the front-facing areas of your car.',
     points: ['Protects 18"-24" Hood', 'Fenders', 'Mirrors'],
     warranty: '10 Year Warranty',
+    column: 4, // Popular add-on
   },
   {
     id: 'headlights',
@@ -136,6 +144,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
     cost: 125,
     description: 'A durable film to prevent hazing, yellowing, and cracking of headlight lenses.',
     points: ['Maintains clarity for optimal night visibility.'],
+    column: 4, // Popular add-on
   },
   {
     id: 'doorcups',
@@ -144,6 +153,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
     cost: 75,
     description: 'Invisible film applied behind door handles to prevent scratches from keys and fingernails.',
     points: ['Protects a high-wear area from daily use.'],
+    column: 4, // Popular add-on
   },
   {
     id: 'evernew',
@@ -159,5 +169,6 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
       'We Come to You!',
     ],
     isNew: true,
+    column: 4, // Popular add-on
   },
 ];

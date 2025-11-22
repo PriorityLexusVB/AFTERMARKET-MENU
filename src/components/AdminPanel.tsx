@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
 import { db } from '../firebase';
 import type { ProductFeature } from '../types';
@@ -67,13 +67,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   };
 
   // Organize features by column
-  const featuresByColumn = {
+  const featuresByColumn = useMemo(() => ({
     1: features.filter(f => f.column === 1),
     2: features.filter(f => f.column === 2),
     3: features.filter(f => f.column === 3),
     4: features.filter(f => f.column === 4),
     unassigned: features.filter(f => !f.column),
-  };
+  }), [features]);
 
   return (
     <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">
@@ -136,6 +136,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                                     onClick={() => handleEditFeature(feature)}
                                     className="text-blue-400 hover:text-blue-300 transition-colors"
                                     title="Edit feature"
+                                    aria-label={`Edit ${feature.name}`}
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                                       <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
@@ -166,6 +167,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                                 onClick={() => handleEditFeature(feature)}
                                 className="text-blue-400 hover:text-blue-300 transition-colors"
                                 title="Edit feature"
+                                aria-label={`Edit ${feature.name}`}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                                   <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />

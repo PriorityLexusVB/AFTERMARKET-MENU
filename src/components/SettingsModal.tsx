@@ -72,6 +72,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setInfo(prev => ({ ...prev, [name]: value }));
+    setSaveSuccess(false); // Clear success message on edit
     // Clear validation error for this field when user starts typing
     if (validationErrors[name]) {
       setValidationErrors(prev => {
@@ -125,7 +126,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     
     // Brief success message before closing
     setTimeout(() => {
-      onSave({ customerInfo: info, priceOverrides: overrides });
+      try {
+        onSave({ customerInfo: info, priceOverrides: overrides });
+      } catch (error) {
+        setSaveSuccess(false);
+        console.error("Error saving settings:", error);
+        // Error will be handled by parent component if needed
+      }
     }, 500);
   };
   

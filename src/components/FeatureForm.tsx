@@ -79,7 +79,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
-            ...(formData.column && { column: parseInt(formData.column) }),
+            ...(formData.column && !isNaN(parseInt(formData.column)) && { column: parseInt(formData.column) }),
         };
 
         if (isNaN(featureData.price) || isNaN(featureData.cost)) {
@@ -90,8 +90,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             await updateFeature(editingFeature.id, featureData);
         } else {
             await addFeature(featureData);
+            setFormData(initialFormState); // Only reset for add mode
         }
-        setFormData(initialFormState); // Reset form on success
         onSaveSuccess();
 
     } catch (err: any) {

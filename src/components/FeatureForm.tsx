@@ -79,8 +79,15 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
-            ...(formData.column && !isNaN(parseInt(formData.column)) && { column: parseInt(formData.column) }),
         };
+
+        // Add column if valid
+        if (formData.column) {
+            const parsedColumn = parseInt(formData.column);
+            if (!isNaN(parsedColumn)) {
+                featureData.column = parsedColumn;
+            }
+        }
 
         if (isNaN(featureData.price) || isNaN(featureData.cost)) {
             throw new Error("Price and Cost must be valid numbers.");

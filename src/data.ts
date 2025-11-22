@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc } from 'firebase/firestore/lite';
+import { collection, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore/lite';
 import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
@@ -101,5 +101,25 @@ export async function addFeature(featureData: Omit<ProductFeature, 'id'>): Promi
     console.error("Error adding feature to Firestore:", error);
     // Re-throw the error to be handled by the calling function
     throw new Error("Failed to save the new feature. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Updates an existing feature document in the 'features' collection in Firestore.
+ * @param featureId - The ID of the feature to update.
+ * @param featureData - The feature data to update (partial).
+ * @returns A promise that resolves when the document is successfully updated.
+ */
+export async function updateFeature(featureId: string, featureData: Partial<Omit<ProductFeature, 'id'>>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update feature.");
+  }
+  
+  try {
+    const featureRef = doc(db, 'features', featureId);
+    await updateDoc(featureRef, featureData);
+  } catch (error) {
+    console.error("Error updating feature in Firestore:", error);
+    throw new Error("Failed to update the feature. Please check your connection and Firestore rules.");
   }
 }

@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { addFeature } from '../data';
+import React, { useState, useEffect } from 'react';
+import { addFeature, updateFeature } from '../data';
 import { ImageUploader } from './ImageUploader';
+import type { ProductFeature } from '../types';
 
 interface FeatureFormProps {
   onSaveSuccess: () => void;
+  editingFeature?: ProductFeature | null;
+  onCancelEdit?: () => void;
 }
 
 const initialFormState = {
@@ -16,17 +19,40 @@ const initialFormState = {
   useCases: '',
   imageUrl: '',
   thumbnailUrl: '',
-  videoUrl: ''
+  videoUrl: '',
+  column: '',
 };
 
-export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
+export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editingFeature, onCancelEdit }) => {
   const [formData, setFormData] = useState(initialFormState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isEditMode = !!editingFeature;
   const isFormValid = formData.name && formData.price && formData.cost && formData.description;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Populate form when editing
+  useEffect(() => {
+    if (editingFeature) {
+      setFormData({
+        name: editingFeature.name,
+        price: editingFeature.price.toString(),
+        cost: editingFeature.cost.toString(),
+        description: editingFeature.description,
+        warranty: editingFeature.warranty || '',
+        points: editingFeature.points.join('\n'),
+        useCases: editingFeature.useCases.join('\n'),
+        imageUrl: editingFeature.imageUrl || '',
+        thumbnailUrl: editingFeature.thumbnailUrl || '',
+        videoUrl: editingFeature.videoUrl || '',
+        column: editingFeature.column?.toString() || '',
+      });
+    } else {
+      setFormData(initialFormState);
+    }
+  }, [editingFeature]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -53,13 +79,18 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
             ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
+            ...(formData.column && { column: parseInt(formData.column) }),
         };
 
         if (isNaN(featureData.price) || isNaN(featureData.cost)) {
             throw new Error("Price and Cost must be valid numbers.");
         }
 
-        await addFeature(featureData);
+        if (isEditMode && editingFeature) {
+            await updateFeature(editingFeature.id, featureData);
+        } else {
+            await addFeature(featureData);
+        }
         setFormData(initialFormState); // Reset form on success
         onSaveSuccess();
 
@@ -144,6 +175,22 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
                     onChange={handleChange}
                     className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
                 />
+            </FormRow>
+            <FormRow>
+                <Label htmlFor="column" text="Display Column" helpText="Organization (Optional)" />
+                <select
+                    id="column"
+                    name="column"
+                    value={formData.column}
+                    onChange={handleChange}
+                    className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                >
+                    <option value="">No Column Assignment</option>
+                    <option value="1">Column 1</option>
+                    <option value="2">Column 2</option>
+                    <option value="3">Column 3</option>
+                    <option value="4">Column 4</option>
+                </select>
             </FormRow>
             <FormRow>
                 <Label htmlFor="points" text="Key Features" helpText="One per line" />
@@ -247,13 +294,25 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess }) => {
             <FormRow className="pt-4 border-t border-gray-700/50">
                 <div className="md:col-start-2 md:col-span-2">
                      {error && <p className="text-red-400 text-sm mb-3 bg-red-500/10 p-3 rounded-md border border-red-500/30">{error}</p>}
-                    <button
-                        type="submit"
-                        disabled={isLoading || !isFormValid}
-                        className="w-full bg-green-600 text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? 'Saving...' : 'Save Feature'}
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            type="submit"
+                            disabled={isLoading || !isFormValid}
+                            className="flex-1 bg-green-600 text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Saving...' : (isEditMode ? 'Update Feature' : 'Save Feature')}
+                        </button>
+                        {isEditMode && onCancelEdit && (
+                            <button
+                                type="button"
+                                onClick={onCancelEdit}
+                                disabled={isLoading}
+                                className="px-6 py-2 bg-gray-700 text-white rounded-md font-bold text-sm hover:bg-gray-600 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </div>
                 </div>
             </FormRow>
         </form>

@@ -10,6 +10,7 @@ export interface ProductFeature {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
+  column?: number;        // Column assignment (1-4) for admin organization
 }
 
 export interface PackageTier {
@@ -36,6 +37,7 @@ export interface AlaCarteOption {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
+  column?: number;        // Column assignment (1-4) for admin organization
 }
 
 export interface PriceOverrides {

@@ -18,6 +18,7 @@ export const ProductFeatureSchema = z.object({
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
   videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
+  column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
 });
 
 export type ProductFeature = z.infer<typeof ProductFeatureSchema>;
@@ -36,6 +37,7 @@ export const AlaCarteOptionSchema = z.object({
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
   videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
+  column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
 });
 
 export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;

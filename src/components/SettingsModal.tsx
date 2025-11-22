@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { PackageTier, AlaCarteOption, PriceOverrides } from '../types';
+import { CustomerInfoSchema } from '../schemas';
 
 
 interface CustomerInfo {
@@ -39,12 +40,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [info, setInfo] = useState<CustomerInfo>(currentInfo);
   const [overrides, setOverrides] = useState<PriceOverrides>(currentPriceOverrides);
   const [view, setView] = useState<ModalView>('customer');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setInfo(currentInfo);
       setOverrides(currentPriceOverrides);
       setView('customer'); // Reset to default view every time it opens
+      setValidationErrors({});
+      setSaveSuccess(false);
     }
   }, [currentInfo, currentPriceOverrides, isOpen]);
 
@@ -67,6 +72,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setInfo(prev => ({ ...prev, [name]: value }));
+    setSaveSuccess(false); // Clear success message on edit
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleOverrideChange = (itemId: string, field: 'price' | 'cost', value: string) => {
@@ -92,7 +106,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleSave = () => {
-    onSave({ customerInfo: info, priceOverrides: overrides });
+    // Validate customer info
+    const validation = CustomerInfoSchema.safeParse(info);
+    
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          errors[issue.path[0].toString()] = issue.message;
+        }
+      });
+      setValidationErrors(errors);
+      setView('customer'); // Switch to customer view to show errors
+      return;
+    }
+    
+    setValidationErrors({});
+    setSaveSuccess(true);
+    
+    // Brief success message before closing
+    setTimeout(() => {
+      try {
+        onSave({ customerInfo: info, priceOverrides: overrides });
+      } catch (error) {
+        setSaveSuccess(false);
+        console.error("Error saving settings:", error);
+        // Error will be handled by parent component if needed
+      }
+    }, 500);
   };
   
   if (!isOpen) return null;
@@ -154,26 +195,97 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
         
         <div className="p-6 space-y-8 max-h-[calc(100vh-220px)] overflow-y-auto">
+          {saveSuccess && (
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center gap-3 animate-fade-in">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-green-400">
+                <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+              </svg>
+              <span className="text-green-400 font-semibold">Settings saved successfully!</span>
+            </div>
+          )}
+          
+          {Object.keys(validationErrors).length > 0 && view === 'customer' && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 animate-fade-in">
+              <div className="flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-red-400 mt-0.5">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="text-red-400 font-semibold mb-1">Please fix the following errors:</p>
+                  <ul className="text-sm text-red-300 list-disc list-inside space-y-1">
+                    {Object.entries(validationErrors).map(([field, error]) => (
+                      <li key={field}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {view === 'customer' && (
             <section>
               <h3 className="text-xl font-bold font-teko text-gray-100 tracking-wider mb-3">Customer & Vehicle Information</h3>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">Customer Name</label>
-                  <input type="text" name="name" id="name" value={info.name} onChange={handleInfoChange} className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500" />
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+                    Customer Name {validationErrors['name'] && <span className="text-red-400 text-xs">*</span>}
+                  </label>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    id="name" 
+                    value={info.name} 
+                    onChange={handleInfoChange} 
+                    className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
+                      validationErrors['name'] ? 'border-red-500' : 'border-gray-600'
+                    }`}
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">Vehicle Year</label>
-                    <input type="text" name="year" id="year" value={info.year} onChange={handleInfoChange} className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500" />
+                    <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
+                      Vehicle Year {validationErrors['year'] && <span className="text-red-400 text-xs">*</span>}
+                    </label>
+                    <input 
+                      type="text" 
+                      name="year" 
+                      id="year" 
+                      value={info.year} 
+                      onChange={handleInfoChange} 
+                      className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors['year'] ? 'border-red-500' : 'border-gray-600'
+                      }`}
+                    />
                   </div>
                   <div>
-                    <label htmlFor="make" className="block text-sm font-medium text-gray-300 mb-1">Make</label>
-                    <input type="text" name="make" id="make" value={info.make} onChange={handleInfoChange} className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500" />
+                    <label htmlFor="make" className="block text-sm font-medium text-gray-300 mb-1">
+                      Make {validationErrors['make'] && <span className="text-red-400 text-xs">*</span>}
+                    </label>
+                    <input 
+                      type="text" 
+                      name="make" 
+                      id="make" 
+                      value={info.make} 
+                      onChange={handleInfoChange} 
+                      className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors['make'] ? 'border-red-500' : 'border-gray-600'
+                      }`}
+                    />
                   </div>
                   <div>
-                    <label htmlFor="model" className="block text-sm font-medium text-gray-300 mb-1">Model</label>
-                    <input type="text" name="model" id="model" value={info.model} onChange={handleInfoChange} className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500" />
+                    <label htmlFor="model" className="block text-sm font-medium text-gray-300 mb-1">
+                      Model {validationErrors['model'] && <span className="text-red-400 text-xs">*</span>}
+                    </label>
+                    <input 
+                      type="text" 
+                      name="model" 
+                      id="model" 
+                      value={info.model} 
+                      onChange={handleInfoChange} 
+                      className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors['model'] ? 'border-red-500' : 'border-gray-600'
+                      }`}
+                    />
                   </div>
                 </div>
               </div>

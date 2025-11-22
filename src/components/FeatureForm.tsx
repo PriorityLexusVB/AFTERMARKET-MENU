@@ -68,19 +68,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
     setError(null);
 
     try {
-        const featureData: {
-            name: string;
-            price: number;
-            cost: number;
-            description: string;
-            warranty: string;
-            points: string[];
-            useCases: string[];
-            imageUrl?: string;
-            thumbnailUrl?: string;
-            videoUrl?: string;
-            column?: number;
-        } = {
+        // Build the feature data object with proper typing
+        const featureData: Omit<ProductFeature, 'id'> = {
             name: formData.name,
             price: parseFloat(formData.price),
             cost: parseFloat(formData.cost),

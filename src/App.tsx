@@ -437,10 +437,7 @@ const App: React.FC = () => {
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
         currentInfo={customerInfo}
-        packages={packages}
-        allAlaCarteOptions={allAlaCarteOptions}
         currentPriceOverrides={priceOverrides}
-        totalCost={totalCost}
       />
     </div>
   );

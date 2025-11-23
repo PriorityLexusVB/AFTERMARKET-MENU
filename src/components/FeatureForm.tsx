@@ -68,7 +68,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
     setError(null);
 
     try {
-        const featureData = {
+        // Build the feature data object with proper typing
+        const featureData: Omit<ProductFeature, 'id'> = {
             name: formData.name,
             price: parseFloat(formData.price),
             cost: parseFloat(formData.cost),
@@ -184,7 +185,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                 />
             </FormRow>
             <FormRow>
-                <Label htmlFor="column" text="Display Column" helpText="Organization (Optional)" />
+                <Label htmlFor="column" text="Display Column" helpText="Package tier organization" />
                 <select
                     id="column"
                     name="column"
@@ -193,10 +194,10 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                     className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
                 >
                     <option value="">No Column Assignment</option>
-                    <option value="1">Column 1</option>
-                    <option value="2">Column 2</option>
-                    <option value="3">Column 3</option>
-                    <option value="4">Column 4</option>
+                    <option value="1">Column 1 - Gold Tier</option>
+                    <option value="2">Column 2 - Elite Tier</option>
+                    <option value="3">Column 3 - Platinum Tier</option>
+                    <option value="4">Column 4 - Popular Add-ons</option>
                 </select>
             </FormRow>
             <FormRow>

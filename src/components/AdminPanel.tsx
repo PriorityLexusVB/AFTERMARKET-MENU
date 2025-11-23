@@ -119,16 +119,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map(columnNum => (
-                      <div key={columnNum} className="bg-gray-900/30 p-4 rounded-lg border border-gray-700">
+                    {[
+                      { num: 1, label: 'Gold Tier' },
+                      { num: 2, label: 'Elite Tier' },
+                      { num: 3, label: 'Platinum Tier' },
+                      { num: 4, label: 'Popular Add-ons' }
+                    ].map(({ num, label }) => (
+                      <div key={num} className="bg-gray-900/30 p-4 rounded-lg border border-gray-700">
                         <h5 className="text-lg font-semibold text-blue-400 mb-3 font-teko tracking-wider">
-                          Column {columnNum}
+                          Column {num}: {label}
                         </h5>
                         <div className="space-y-2">
-                          {featuresByColumn[columnNum as 1 | 2 | 3 | 4].length === 0 ? (
+                          {featuresByColumn[num as 1 | 2 | 3 | 4].length === 0 ? (
                             <p className="text-gray-500 text-sm italic">No items</p>
                           ) : (
-                            featuresByColumn[columnNum as 1 | 2 | 3 | 4].map(feature => (
+                            featuresByColumn[num as 1 | 2 | 3 | 4].map(feature => (
                               <div key={feature.id} className="bg-gray-800 p-3 rounded-md">
                                 <div className="flex justify-between items-start mb-2">
                                   <span className="font-semibold text-gray-200 text-sm">{feature.name}</span>

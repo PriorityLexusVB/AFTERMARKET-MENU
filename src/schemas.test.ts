@@ -4,9 +4,27 @@ import {
   AlaCarteOptionSchema,
   PackageTierSchema,
   PriceOverridesSchema,
+  FeatureConnectorSchema,
   validateDataArray,
   safeParseData,
 } from './schemas';
+
+describe('FeatureConnectorSchema', () => {
+  it('should accept "AND" as a valid connector', () => {
+    const result = FeatureConnectorSchema.safeParse('AND');
+    expect(result.success).toBe(true);
+  });
+
+  it('should accept "OR" as a valid connector', () => {
+    const result = FeatureConnectorSchema.safeParse('OR');
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject invalid connector values', () => {
+    const result = FeatureConnectorSchema.safeParse('INVALID');
+    expect(result.success).toBe(false);
+  });
+});
 
 describe('ProductFeatureSchema', () => {
   it('should validate a valid product feature', () => {
@@ -23,6 +41,78 @@ describe('ProductFeatureSchema', () => {
 
     const result = ProductFeatureSchema.safeParse(validFeature);
     expect(result.success).toBe(true);
+  });
+
+  it('should validate a feature with position and connector', () => {
+    const featureWithPositionConnector = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      position: 0,
+      connector: 'AND',
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithPositionConnector);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.position).toBe(0);
+      expect(result.data.connector).toBe('AND');
+    }
+  });
+
+  it('should validate a feature with OR connector', () => {
+    const featureWithOrConnector = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      connector: 'OR',
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithOrConnector);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.connector).toBe('OR');
+    }
+  });
+
+  it('should fail with negative position', () => {
+    const featureWithNegativePosition = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      position: -1,
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithNegativePosition);
+    expect(result.success).toBe(false);
+  });
+
+  it('should fail with invalid connector', () => {
+    const featureWithInvalidConnector = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      connector: 'INVALID',
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithInvalidConnector);
+    expect(result.success).toBe(false);
   });
 
   it('should fail validation with negative price', () => {

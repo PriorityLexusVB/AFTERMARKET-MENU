@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addFeature, updateFeature } from '../data';
 import { ImageUploader } from './ImageUploader';
-import type { ProductFeature } from '../types';
+import type { ProductFeature, FeatureConnector } from '../types';
 
 interface FeatureFormProps {
   onSaveSuccess: () => void;
@@ -21,6 +21,7 @@ const initialFormState = {
   thumbnailUrl: '',
   videoUrl: '',
   column: '',
+  connector: 'AND' as FeatureConnector,
 };
 
 export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editingFeature, onCancelEdit }) => {
@@ -46,6 +47,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         thumbnailUrl: editingFeature.thumbnailUrl || '',
         videoUrl: editingFeature.videoUrl || '',
         column: editingFeature.column?.toString() || '',
+        connector: editingFeature.connector || 'AND',
       });
     } else {
       setFormData(initialFormState);
@@ -77,6 +79,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             warranty: formData.warranty || '',
             points: formData.points.split('\n').filter(line => line.trim() !== ''),
             useCases: formData.useCases.split('\n').filter(line => line.trim() !== ''),
+            connector: formData.connector,
             ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
@@ -102,8 +105,9 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         }
         onSaveSuccess();
 
-    } catch (err: any) {
-        setError(err.message || "An unexpected error occurred.");
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
+        setError(errorMessage);
     } finally {
         setIsLoading(false);
     }
@@ -201,6 +205,44 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                 </select>
             </FormRow>
             <FormRow>
+                <Label htmlFor="connector" text="Feature Connector" helpText="Connector displayed before this feature" />
+                <div className="md:col-span-2">
+                    <div className="flex gap-4">
+                        <label htmlFor="connector-and" className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                id="connector-and"
+                                name="connector"
+                                value="AND"
+                                checked={formData.connector === 'AND'}
+                                onChange={handleChange}
+                                className="w-4 h-4 text-green-500 bg-gray-900 border-gray-600 focus:ring-green-500 focus:ring-offset-gray-800"
+                                aria-label="connector-and"
+                            />
+                            <span className="text-green-400 font-semibold">AND</span>
+                            <span className="text-gray-500 text-sm">(included together)</span>
+                        </label>
+                        <label htmlFor="connector-or" className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                id="connector-or"
+                                name="connector"
+                                value="OR"
+                                checked={formData.connector === 'OR'}
+                                onChange={handleChange}
+                                className="w-4 h-4 text-yellow-500 bg-gray-900 border-gray-600 focus:ring-yellow-500 focus:ring-offset-gray-800"
+                                aria-label="connector-or"
+                            />
+                            <span className="text-yellow-400 font-semibold">OR</span>
+                            <span className="text-gray-500 text-sm">(choose one)</span>
+                        </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        This determines how this feature is displayed relative to the previous feature in packages.
+                    </p>
+                </div>
+            </FormRow>
+            <FormRow>
                 <Label htmlFor="points" text="Key Features" helpText="One per line" />
                 <textarea
                     id="points"
@@ -242,8 +284,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                                     thumbnailUrl: urls.thumbnailUrl,
                                 }));
                             }}
-                            onUploadError={(error) => {
-                                setError(error);
+                            onUploadError={(errorMsg) => {
+                                setError(errorMsg);
                             }}
                             existingImageUrl={formData.imageUrl}
                             maxSizeMB={5}

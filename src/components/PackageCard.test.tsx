@@ -88,19 +88,27 @@ describe('PackageCard', () => {
     expect(dividers).toHaveLength(1); // One divider between two features
   });
 
-  it('should display "OR" divider for Gold package with Interior Protection', () => {
+  it('should display "OR" divider for feature with OR connector', () => {
+    // Create a feature with OR connector
+    const featureWithOrConnector = createMockFeature({
+      id: 'feature-3',
+      name: 'Interior Protection',
+      points: ['Fabric guard', 'Leather treatment'],
+      connector: 'OR', // This feature displays with OR connector
+    });
+
     const goldPackage = createMockPackageTier({
       name: 'Gold',
       price: 3500,
       tier_color: 'yellow-400',
-      features: [mockFeature1, mockFeature2, mockFeature3],
+      features: [mockFeature1, mockFeature2, featureWithOrConnector],
     });
 
     render(
       <PackageCard
         {...defaultProps}
         packageInfo={goldPackage}
-        allFeaturesForDisplay={[mockFeature1, mockFeature2, mockFeature3]}
+        allFeaturesForDisplay={[mockFeature1, mockFeature2, featureWithOrConnector]}
       />
     );
 

@@ -1,3 +1,6 @@
+// FeatureConnector type - matches the FeatureConnectorSchema in schemas.ts
+export type FeatureConnector = 'AND' | 'OR';
+
 export interface ProductFeature {
   id: string;
   name: string;
@@ -11,6 +14,8 @@ export interface ProductFeature {
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
   column?: number;        // Column assignment (1-4) for admin organization
+  position?: number;      // Position within column for ordering (0-indexed)
+  connector?: FeatureConnector; // Connector type ('AND' or 'OR') for display between features
 }
 
 export interface PackageTier {
@@ -38,6 +43,8 @@ export interface AlaCarteOption {
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
   column?: number;        // Column assignment (1-4) for admin organization
+  position?: number;      // Position within column for ordering (0-indexed)
+  connector?: FeatureConnector; // Connector type ('AND' or 'OR') for display between features
 }
 
 export interface PriceOverrides {

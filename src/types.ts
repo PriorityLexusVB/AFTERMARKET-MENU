@@ -1,3 +1,4 @@
+// FeatureConnector type - matches the FeatureConnectorSchema in schemas.ts
 export type FeatureConnector = 'AND' | 'OR';
 
 export interface ProductFeature {

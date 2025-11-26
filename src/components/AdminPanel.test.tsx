@@ -74,4 +74,12 @@ describe('AdminPanel', () => {
     expect(screen.getByLabelText('connector-and')).toBeInTheDocument();
     expect(screen.getByLabelText('connector-or')).toBeInTheDocument();
   });
+
+  it('should display help text for drag-and-drop and connector toggle', async () => {
+    render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+    
+    // The help text should mention cross-column drag and connector toggle
+    expect(screen.getByText(/Drag to reorder or move between columns/)).toBeInTheDocument();
+    expect(screen.getByText(/Click AND\/OR to toggle/)).toBeInTheDocument();
+  });
 });

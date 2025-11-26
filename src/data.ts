@@ -208,7 +208,7 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
         console.error(`Batch update attempt ${attempt + 1} failed for chunk ${chunkIndex + 1}:`, error);
         
         if (attempt < MAX_RETRIES - 1) {
-          await sleep(RETRY_DELAY_MS * (attempt + 1)); // Exponential backoff
+          await sleep(RETRY_DELAY_MS * Math.pow(2, attempt)); // Exponential backoff
         }
       }
     }

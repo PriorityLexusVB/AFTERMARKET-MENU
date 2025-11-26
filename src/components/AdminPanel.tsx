@@ -274,6 +274,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       id: feature.id,
       position: index,
       column: column === 'unassigned' ? undefined : column,
+      connector: feature.connector,
     }));
     
     if (updates.length === 0) return;

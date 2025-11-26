@@ -29,6 +29,7 @@ const BATCH_SIZE = 500; // Firestore limit
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 const DEFAULT_CONNECTOR = 'AND' as const;
+const DIVIDER = '='.repeat(60);
 
 interface FeatureDocument {
   id: string;
@@ -235,7 +236,7 @@ async function executeBatchUpdates(
         console.error(`  ⚠️ Batch ${chunkIndex + 1} attempt ${attempt + 1} failed:`, lastError.message);
         
         if (attempt < MAX_RETRIES - 1) {
-          await sleep(RETRY_DELAY_MS * (attempt + 1));
+          await sleep(RETRY_DELAY_MS * Math.pow(2, attempt)); // Exponential backoff
         }
       }
     }
@@ -252,7 +253,7 @@ async function executeBatchUpdates(
 // Main migration function
 async function runMigration(): Promise<void> {
   console.log('🚀 Starting Feature Position & Connector Migration\n');
-  console.log('=' .repeat(60));
+  console.log(DIVIDER);
   
   const { dryRun, backupDir } = parseArgs();
   
@@ -289,9 +290,9 @@ async function runMigration(): Promise<void> {
     const stats = await executeBatchUpdates(db, updates, dryRun);
     
     // Summary
-    console.log('\n' + '='.repeat(60));
+    console.log('\n' + DIVIDER);
     console.log('📈 Migration Summary');
-    console.log('='.repeat(60));
+    console.log(DIVIDER);
     console.log(`   Total features:   ${features.length}`);
     console.log(`   Updates needed:   ${stats.total}`);
     console.log(`   Updated:          ${stats.updated}`);

@@ -42,6 +42,9 @@ const COLUMNS = [
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
 
+// Column ID prefix for drag-and-drop identification
+const COLUMN_ID_PREFIX = 'column-';
+
 // Sortable Feature Item Component
 interface SortableFeatureItemProps {
   feature: ProductFeature;
@@ -176,7 +179,6 @@ const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({ feature }) => 
 interface DroppableColumnProps {
   columnId: string;
   children: React.ReactNode;
-  isOver?: boolean;
 }
 
 const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
@@ -428,8 +430,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   // Parse column ID from droppable container (e.g., "column-1" -> 1, "column-unassigned" -> "unassigned")
   const parseColumnId = (id: string): number | 'unassigned' | null => {
-    if (!id.startsWith('column-')) return null;
-    const suffix = id.replace('column-', '');
+    if (!id.startsWith(COLUMN_ID_PREFIX)) return null;
+    const suffix = id.slice(COLUMN_ID_PREFIX.length);
     if (suffix === 'unassigned') return 'unassigned';
     const num = parseInt(suffix, 10);
     return isNaN(num) ? null : num;
@@ -601,12 +603,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   // Render a column's sortable list
   const renderColumnFeatures = (columnFeatures: ProductFeature[], columnId: number | 'unassigned') => {
-    const columnIdStr = `column-${columnId}`;
+    const columnIdStr = `${COLUMN_ID_PREFIX}${columnId}`;
     
     return (
       <DroppableColumn columnId={columnIdStr}>
         {columnFeatures.length === 0 ? (
-          <p className="text-gray-500 text-sm italic p-2">Drag items here</p>
+          <p className="text-gray-500 text-sm italic p-2">Drop features here to add to this column</p>
         ) : (
           <SortableContext
             items={columnFeatures.map(f => f.id)}

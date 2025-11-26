@@ -11,7 +11,7 @@ This is an interactive digital menu for customers to explore and select vehicle 
 - 📸 **Image Upload** - Firebase Storage integration for product images
 - 🔒 **Admin Panel** - Secure admin interface for managing products
 - ✅ **Type-Safe** - Full TypeScript with strict mode enabled
-- 🧪 **Tested** - 99 unit tests with Vitest
+- 🧪 **Tested** - Comprehensive test coverage with Vitest
 - 📱 **Responsive** - Mobile-friendly design with Tailwind CSS
 
 ## Local Development Setup

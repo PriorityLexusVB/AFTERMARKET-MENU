@@ -11,7 +11,7 @@ This is an interactive digital menu for customers to explore and select vehicle 
 - 📸 **Image Upload** - Firebase Storage integration for product images
 - 🔒 **Admin Panel** - Secure admin interface for managing products
 - ✅ **Type-Safe** - Full TypeScript with strict mode enabled
-- 🧪 **Tested** - 72 unit tests with Vitest
+- 🧪 **Tested** - 99 unit tests with Vitest
 - 📱 **Responsive** - Mobile-friendly design with Tailwind CSS
 
 ## Local Development Setup
@@ -331,6 +331,48 @@ The application includes comprehensive **Firebase Analytics** tracking:
 1. Go to the [Firebase Console](https://console.firebase.google.com/)
 2. Navigate to **Analytics > Dashboard**
 3. View real-time user activity and custom events
+
+## Admin Panel
+
+The Admin Panel provides a comprehensive interface for managing product features. Access it by clicking the "Admin" button in the header (requires authentication).
+
+### Feature Management
+
+The admin editor supports full drag-and-drop functionality for organizing features:
+
+#### Drag and Drop
+- **Within Column**: Drag features up/down to reorder within the same column
+- **Between Columns**: Drag features to different columns (Gold, Elite, Platinum, Popular Add-ons)
+- **Keyboard Navigation**: Use up/down arrow buttons for accessibility
+
+#### AND/OR Connector Toggle
+Each feature has a connector setting that controls how it displays relative to other features in packages:
+- **AND** (green) - Feature is included together with adjacent features
+- **OR** (yellow) - Customer chooses one option from a group
+
+Click the AND/OR badge on any feature to toggle its connector type. Changes are saved immediately.
+
+#### Adding/Editing Features
+1. Click "Add New Feature" to create a new feature
+2. Fill in required fields: Name, Retail Price, Internal Cost, Description
+3. Select a Display Column to assign the feature to a tier
+4. Choose the Feature Connector (AND or OR)
+5. Add optional media (images, videos) and key points
+6. Click "Save Feature" to persist changes
+
+### Column Organization
+Features are organized into columns representing package tiers:
+- **Column 1**: Gold Tier features
+- **Column 2**: Elite Tier features (additional beyond Gold)
+- **Column 3**: Platinum Tier features
+- **Column 4**: Popular Add-ons (a la carte options)
+- **Unassigned**: Features not yet assigned to a column
+
+### Guest View Rendering
+Changes made in the Admin Panel are immediately reflected in the guest view:
+- Features appear in their assigned column order
+- AND/OR connectors render as dividers between features in packages
+- Position determines the display order within each package tier
 
 ## Architecture
 

@@ -11,6 +11,7 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -21,7 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { db } from '../firebase';
-import type { ProductFeature } from '../types';
+import type { ProductFeature, FeatureConnector } from '../types';
 import { FeatureForm } from './FeatureForm';
 import { batchUpdateFeaturesPositions, FeaturePositionUpdate } from '../data';
 
@@ -45,6 +46,7 @@ const COLUMNS = [
 interface SortableFeatureItemProps {
   feature: ProductFeature;
   onEdit: (feature: ProductFeature) => void;
+  onToggleConnector: (featureId: string) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   isFirst: boolean;
@@ -54,6 +56,7 @@ interface SortableFeatureItemProps {
 const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({ 
   feature, 
   onEdit, 
+  onToggleConnector,
   onMoveUp, 
   onMoveDown,
   isFirst,
@@ -74,6 +77,8 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const currentConnector = feature.connector || 'AND';
+
   return (
     <div
       ref={setNodeRef}
@@ -87,8 +92,8 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
             {...attributes}
             {...listeners}
             className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1 -ml-1"
-            title="Drag to reorder"
-            aria-label={`Drag ${feature.name} to reorder`}
+            title="Drag to reorder or move between columns"
+            aria-label={`Drag ${feature.name} to reorder or move between columns`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clipRule="evenodd" />
@@ -135,13 +140,18 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
       </div>
       <div className="flex items-center gap-2">
         <span className="text-gray-400 font-mono text-xs">{formatPrice(feature.price)}</span>
-        {feature.connector && (
-          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-            feature.connector === 'OR' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'
-          }`}>
-            {feature.connector}
-          </span>
-        )}
+        {/* AND/OR Toggle Button */}
+        <button
+          onClick={() => onToggleConnector(feature.id)}
+          className={`text-xs font-semibold px-1.5 py-0.5 rounded cursor-pointer transition-colors hover:opacity-80 ${
+            currentConnector === 'OR' ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+          }`}
+          title={`Click to change to ${currentConnector === 'AND' ? 'OR' : 'AND'}`}
+          aria-label={`Toggle connector for ${feature.name} from ${currentConnector} to ${currentConnector === 'AND' ? 'OR' : 'AND'}`}
+          data-testid={`connector-toggle-${feature.id}`}
+        >
+          {currentConnector}
+        </button>
         {feature.position !== undefined && (
           <span className="text-xs text-gray-500">#{feature.position + 1}</span>
         )}
@@ -161,6 +171,30 @@ const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({ feature }) => 
     </div>
   </div>
 );
+
+// Droppable Column Component for cross-column drag
+interface DroppableColumnProps {
+  columnId: string;
+  children: React.ReactNode;
+  isOver?: boolean;
+}
+
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnId,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[100px] transition-colors duration-200 ${
+        isOver ? 'bg-blue-500/10 border-blue-500/50' : ''
+      }`}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -293,6 +327,93 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     }
   }, [featuresBackup, onDataUpdate]);
 
+  // Persist changes to multiple columns (for cross-column moves)
+  const persistMultiColumnChanges = useCallback(async (
+    updatedFeatures: ProductFeature[], 
+    sourceColumn: number | 'unassigned',
+    targetColumn: number | 'unassigned'
+  ) => {
+    // Build position updates for source column
+    const sourceColumnFeatures = updatedFeatures.filter(f => 
+      sourceColumn === 'unassigned' ? !f.column : f.column === sourceColumn
+    );
+    
+    // Build position updates for target column
+    const targetColumnFeatures = updatedFeatures.filter(f => 
+      targetColumn === 'unassigned' ? !f.column : f.column === targetColumn
+    );
+    
+    const updates: FeaturePositionUpdate[] = [
+      ...sourceColumnFeatures.map((feature, index) => ({
+        id: feature.id,
+        position: index,
+        column: sourceColumn === 'unassigned' ? undefined : sourceColumn,
+        connector: feature.connector,
+      })),
+      ...targetColumnFeatures.map((feature, index) => ({
+        id: feature.id,
+        position: index,
+        column: targetColumn === 'unassigned' ? undefined : targetColumn,
+        connector: feature.connector,
+      })),
+    ];
+    
+    if (updates.length === 0) return;
+    
+    setIsSaving(true);
+    try {
+      await batchUpdateFeaturesPositions(updates);
+      onDataUpdate(); // Trigger app-wide refresh
+    } catch (err) {
+      console.error("Error saving position changes:", err);
+      // Rollback to backup
+      setFeatures(featuresBackup);
+      setError("Failed to save position changes. Changes have been rolled back.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [featuresBackup, onDataUpdate]);
+
+  // Handle connector toggle (AND/OR)
+  const handleConnectorToggle = useCallback(async (featureId: string) => {
+    const feature = features.find(f => f.id === featureId);
+    if (!feature) return;
+    
+    // Store backup for rollback
+    setFeaturesBackup([...features]);
+    
+    const currentConnector = feature.connector || 'AND';
+    const newConnector: FeatureConnector = currentConnector === 'AND' ? 'OR' : 'AND';
+    
+    // Optimistic UI update
+    const updatedFeatures = features.map(f => 
+      f.id === featureId ? { ...f, connector: newConnector } : f
+    );
+    setFeatures(updatedFeatures);
+    
+    // Find which column this feature belongs to
+    const column = feature.column || 'unassigned';
+    
+    // Persist to Firestore
+    setIsSaving(true);
+    try {
+      const update: FeaturePositionUpdate = {
+        id: featureId,
+        position: feature.position ?? 0,
+        column: typeof column === 'number' ? column : undefined,
+        connector: newConnector,
+      };
+      await batchUpdateFeaturesPositions([update]);
+      onDataUpdate(); // Trigger app-wide refresh
+    } catch (err) {
+      console.error("Error saving connector change:", err);
+      setFeatures(featuresBackup);
+      setError("Failed to save connector change. Changes have been rolled back.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [features, featuresBackup, onDataUpdate]);
+
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -300,60 +421,145 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     setFeaturesBackup([...features]);
   };
 
-  // Handle drag over (for moving between columns - future enhancement)
+  // Handle drag over - no-op for now, but needed for the DndContext
   const handleDragOver = (_event: DragOverEvent) => {
-    // Currently supporting same-column reordering only
-    // Cross-column drag could be implemented here
+    // Visual feedback handled by DroppableColumn
   };
 
-  // Handle drag end
+  // Parse column ID from droppable container (e.g., "column-1" -> 1, "column-unassigned" -> "unassigned")
+  const parseColumnId = (id: string): number | 'unassigned' | null => {
+    if (!id.startsWith('column-')) return null;
+    const suffix = id.replace('column-', '');
+    if (suffix === 'unassigned') return 'unassigned';
+    const num = parseInt(suffix, 10);
+    return isNaN(num) ? null : num;
+  };
+
+  // Handle drag end - supports both same-column reorder and cross-column moves
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
     
-    if (!over || active.id === over.id) {
-      return;
+    if (!over) return;
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    // If dropped on itself, do nothing
+    if (activeId === overId) return;
+    
+    const activeColumn = findColumnForFeature(activeId);
+    if (activeColumn === null) return;
+    
+    // Check if we're dropping on a column container (cross-column move)
+    const targetColumnFromContainer = parseColumnId(overId);
+    
+    // Check if we're dropping on another feature
+    const overColumn = findColumnForFeature(overId);
+    
+    // Determine the target column
+    let targetColumn: number | 'unassigned';
+    if (targetColumnFromContainer !== null) {
+      // Dropped on column container
+      targetColumn = targetColumnFromContainer;
+    } else if (overColumn !== null) {
+      // Dropped on another feature
+      targetColumn = overColumn;
+    } else {
+      return; // Invalid drop target
     }
     
-    const activeColumn = findColumnForFeature(active.id as string);
-    const overColumn = findColumnForFeature(over.id as string);
+    // Get the active feature
+    const activeFeature = features.find(f => f.id === activeId);
+    if (!activeFeature) return;
     
-    // Only allow reordering within the same column for now
-    if (activeColumn !== overColumn || activeColumn === null) {
-      return;
+    // Same column reorder
+    if (activeColumn === targetColumn) {
+      // Get features in the column
+      const columnFeatures = [...(activeColumn === 'unassigned' 
+        ? featuresByColumn.unassigned 
+        : featuresByColumn[activeColumn as 1 | 2 | 3 | 4])];
+      
+      const oldIndex = columnFeatures.findIndex(f => f.id === activeId);
+      const newIndex = columnFeatures.findIndex(f => f.id === overId);
+      
+      if (oldIndex === -1 || newIndex === -1) return;
+      
+      // Reorder the column features
+      const reorderedColumnFeatures = arrayMove(columnFeatures, oldIndex, newIndex);
+      
+      // Update positions in the reordered array
+      const updatedColumnFeatures = reorderedColumnFeatures.map((feature, index) => ({
+        ...feature,
+        position: index,
+      }));
+      
+      // Optimistic UI update
+      const updatedFeatures = features.map(f => {
+        const updated = updatedColumnFeatures.find(uf => uf.id === f.id);
+        return updated || f;
+      });
+      
+      setFeatures(updatedFeatures);
+      
+      // Persist to Firestore
+      await persistPositionChanges(updatedFeatures, activeColumn);
+    } else {
+      // Cross-column move
+      // Remove from source column
+      const sourceColumnFeatures = activeColumn === 'unassigned'
+        ? featuresByColumn.unassigned.filter(f => f.id !== activeId)
+        : featuresByColumn[activeColumn as 1 | 2 | 3 | 4].filter(f => f.id !== activeId);
+      
+      // Add to target column at the end (or at position of drop target if dropped on a feature)
+      const targetColumnFeatures = targetColumn === 'unassigned'
+        ? [...featuresByColumn.unassigned]
+        : [...featuresByColumn[targetColumn as 1 | 2 | 3 | 4]];
+      
+      // Update the feature's column
+      const movedFeature: ProductFeature = {
+        ...activeFeature,
+        column: targetColumn === 'unassigned' ? undefined : targetColumn,
+      };
+      
+      // Find insertion index
+      let insertIndex = targetColumnFeatures.length; // Default: append to end
+      if (overColumn !== null) {
+        // If dropped on a feature, insert at that position
+        const dropTargetIndex = targetColumnFeatures.findIndex(f => f.id === overId);
+        if (dropTargetIndex !== -1) {
+          insertIndex = dropTargetIndex;
+        }
+      }
+      
+      targetColumnFeatures.splice(insertIndex, 0, movedFeature);
+      
+      // Update positions for both columns
+      const updatedSourceColumnFeatures = sourceColumnFeatures.map((f, index) => ({
+        ...f,
+        position: index,
+      }));
+      
+      const updatedTargetColumnFeatures = targetColumnFeatures.map((f, index) => ({
+        ...f,
+        position: index,
+        column: targetColumn === 'unassigned' ? undefined : targetColumn,
+      }));
+      
+      // Merge all updates
+      const updatedFeatures = features.map(f => {
+        const fromSource = updatedSourceColumnFeatures.find(sf => sf.id === f.id);
+        if (fromSource) return fromSource;
+        const fromTarget = updatedTargetColumnFeatures.find(tf => tf.id === f.id);
+        if (fromTarget) return fromTarget;
+        return f;
+      });
+      
+      setFeatures(updatedFeatures);
+      
+      // Persist changes to both columns
+      await persistMultiColumnChanges(updatedFeatures, activeColumn, targetColumn);
     }
-    
-    // Get features in the column
-    const columnFeatures = [...(activeColumn === 'unassigned' 
-      ? featuresByColumn.unassigned 
-      : featuresByColumn[activeColumn as 1 | 2 | 3 | 4])];
-    
-    const oldIndex = columnFeatures.findIndex(f => f.id === active.id);
-    const newIndex = columnFeatures.findIndex(f => f.id === over.id);
-    
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
-    
-    // Reorder the column features
-    const reorderedColumnFeatures = arrayMove(columnFeatures, oldIndex, newIndex);
-    
-    // Update positions in the reordered array
-    const updatedColumnFeatures = reorderedColumnFeatures.map((feature, index) => ({
-      ...feature,
-      position: index,
-    }));
-    
-    // Optimistic UI update
-    const updatedFeatures = features.map(f => {
-      const updated = updatedColumnFeatures.find(uf => uf.id === f.id);
-      return updated || f;
-    });
-    
-    setFeatures(updatedFeatures);
-    
-    // Persist to Firestore
-    await persistPositionChanges(updatedFeatures, activeColumn);
   };
 
   // Handle keyboard reorder (up/down buttons)
@@ -394,30 +600,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   };
 
   // Render a column's sortable list
-  const renderColumnFeatures = (columnFeatures: ProductFeature[], _columnId: number | 'unassigned') => {
-    if (columnFeatures.length === 0) {
-      return <p className="text-gray-500 text-sm italic">No items</p>;
-    }
+  const renderColumnFeatures = (columnFeatures: ProductFeature[], columnId: number | 'unassigned') => {
+    const columnIdStr = `column-${columnId}`;
     
     return (
-      <SortableContext
-        items={columnFeatures.map(f => f.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="space-y-2">
-          {columnFeatures.map((feature, index) => (
-            <SortableFeatureItem
-              key={feature.id}
-              feature={feature}
-              onEdit={handleEditFeature}
-              onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
-              onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
-              isFirst={index === 0}
-              isLast={index === columnFeatures.length - 1}
-            />
-          ))}
-        </div>
-      </SortableContext>
+      <DroppableColumn columnId={columnIdStr}>
+        {columnFeatures.length === 0 ? (
+          <p className="text-gray-500 text-sm italic p-2">Drag items here</p>
+        ) : (
+          <SortableContext
+            items={columnFeatures.map(f => f.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {columnFeatures.map((feature, index) => (
+                <SortableFeatureItem
+                  key={feature.id}
+                  feature={feature}
+                  onEdit={handleEditFeature}
+                  onToggleConnector={handleConnectorToggle}
+                  onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
+                  onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
+                  isFirst={index === 0}
+                  isLast={index === columnFeatures.length - 1}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        )}
+      </DroppableColumn>
     );
   };
 
@@ -468,7 +679,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         <div className="border-t border-gray-700 pt-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-xl font-teko tracking-wider text-gray-300">Features by Column</h4>
-            <p className="text-sm text-gray-500">Drag to reorder or use arrow buttons</p>
+            <p className="text-sm text-gray-500">Drag between columns • Click AND/OR to toggle • Use arrow buttons to reorder</p>
           </div>
           {isLoading && <p className="text-gray-400">Loading features...</p>}
           {error && <p className="text-red-400 bg-red-500/10 p-3 rounded-md border border-red-500/30 mb-4">{error}</p>}

@@ -35,6 +35,8 @@ const formatPrice = (price: number) => {
 };
 
 // Column configuration
+const MIN_COLUMN = 1;
+const MAX_COLUMN = 4;
 const COLUMNS = [
   { num: 1, label: 'Gold Tier' },
   { num: 2, label: 'Elite Tier' },
@@ -341,7 +343,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const columnPart = id.replace('column-', '');
       if (columnPart === 'unassigned') return 'unassigned';
       const num = parseInt(columnPart);
-      if (!isNaN(num) && num >= 1 && num <= 4) return num;
+      if (!isNaN(num) && num >= MIN_COLUMN && num <= MAX_COLUMN) return num;
     }
     return null;
   };
@@ -366,13 +368,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     // Check if dropped on a column zone (cross-column move)
     const targetColumn = parseColumnFromDroppableId(over.id as string);
     
-    if (targetColumn !== null) {
-      // Cross-column move: move feature to a different column
-      if (targetColumn === activeColumn) {
-        // Dropped on the same column zone - no action needed
-        return;
-      }
-      
+    // If dropped on a column zone and it's a different column, perform cross-column move
+    if (targetColumn !== null && targetColumn !== activeColumn) {
       // Move feature to the new column
       const movedFeature = features.find(f => f.id === active.id);
       if (!movedFeature) return;
@@ -562,7 +559,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     return (
       <DroppableColumn columnId={columnId}>
         {columnFeatures.length === 0 ? (
-          <p className="text-gray-500 text-sm italic p-2">Drop items here or click empty area</p>
+          <p className="text-gray-500 text-sm italic p-2">Drop items here to add to this column</p>
         ) : (
           <SortableContext
             items={columnFeatures.map(f => f.id)}

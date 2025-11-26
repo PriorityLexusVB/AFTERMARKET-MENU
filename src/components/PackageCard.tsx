@@ -24,9 +24,20 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
   };
   
   // Create a list of only the features included in this package, maintaining the display order
-  const includedPackageFeatures = allFeaturesForDisplay.filter(feature => 
-    packageInfo.features.some(pkgFeature => pkgFeature.id === feature.id)
-  );
+  // Sort by position if available, then by the order in allFeaturesForDisplay
+  const includedPackageFeatures = allFeaturesForDisplay
+    .filter(feature => packageInfo.features.some(pkgFeature => pkgFeature.id === feature.id))
+    .sort((a, b) => {
+      // First sort by column
+      const colA = a.column ?? 999;
+      const colB = b.column ?? 999;
+      if (colA !== colB) return colA - colB;
+      
+      // Then by position within column
+      const posA = a.position ?? 999;
+      const posB = b.position ?? 999;
+      return posA - posB;
+    });
 
   return (
     <div className={`
@@ -46,10 +57,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
           let divider = null;
           // Add a divider before every feature except the first one
           if (index > 0) {
-            const isGold = packageInfo.name.toLowerCase() === 'gold';
-            // The special "OR" case for the Gold package's third item
-            const isInteriorFeatureForGold = feature.name.toLowerCase().includes('interior');
-            divider = <Divider text={isGold && isInteriorFeatureForGold ? 'OR' : 'AND'} />;
+            // Use the connector from the current feature (it indicates how this feature connects to the previous one)
+            // Default to 'AND' if not specified
+            const connector = feature.connector || 'AND';
+            divider = <Divider text={connector} />;
           }
 
           return (

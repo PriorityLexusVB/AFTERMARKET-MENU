@@ -5,6 +5,10 @@ import { z } from 'zod';
  * These schemas ensure that data fetched from Firestore matches our expected types.
  */
 
+// Connector Schema
+export const FeatureConnectorSchema = z.enum(['AND', 'OR']);
+export type FeatureConnector = z.infer<typeof FeatureConnectorSchema>;
+
 // Product Feature Schema
 export const ProductFeatureSchema = z.object({
   id: z.string().min(1, 'ID is required'),
@@ -19,6 +23,8 @@ export const ProductFeatureSchema = z.object({
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
   videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
+  position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
+  connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
 });
 
 export type ProductFeature = z.infer<typeof ProductFeatureSchema>;
@@ -38,6 +44,8 @@ export const AlaCarteOptionSchema = z.object({
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
   videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
+  position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
+  connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
 });
 
 export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;

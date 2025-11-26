@@ -232,23 +232,34 @@ service firebase.storage {
 
 ## Testing
 
-This project uses **Vitest** for unit testing with **React Testing Library** for component tests.
+This project uses **Vitest** for unit testing with **React Testing Library** for component tests, and **Playwright** for end-to-end (E2E) testing.
 
-### Running Tests
+### Running Unit Tests
 ```bash
 npm test              # Run tests in watch mode
 npm run test:ui       # Open interactive test UI
+npm run test:run      # Run all tests once (CI mode)
 npm run test:coverage # Generate coverage report
 ```
 
+### Running E2E Tests
+```bash
+npm run test:e2e              # Run Playwright E2E tests
+npm run test:e2e:update       # Update visual snapshots
+```
+
+Note: E2E tests require a built application. The Playwright configuration will automatically start the preview server.
+
 ### Test Coverage
-- **72 tests** across 5 test files
+- **90+ tests** across unit and integration test files
 - Comprehensive coverage of core components and utilities
 - Mock data factories for consistent test data
 - Type-safe test utilities
+- E2E tests for critical user flows
 
 ### Writing Tests
-Tests are located in `src/` alongside their source files with `.test.tsx` or `.test.ts` extensions.
+Unit tests are located in `src/` alongside their source files with `.test.tsx` or `.test.ts` extensions.
+E2E tests are located in the `e2e/` directory.
 
 Example:
 ```typescript
@@ -264,6 +275,44 @@ describe('MyComponent', () => {
   });
 });
 ```
+
+## Feature Position & Connector Migration
+
+The application supports feature ordering and connector configuration (AND/OR) between features in packages. This requires a one-time migration for existing data.
+
+### Running the Migration
+
+1. **Set up credentials**: Export the path to your Firebase Admin SDK service account JSON file:
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+   ```
+
+2. **Run dry-run first** (recommended): This will show what changes would be made without actually modifying data:
+   ```bash
+   npm run migrate:feature-positions -- --dry-run
+   ```
+
+3. **Run the migration**:
+   ```bash
+   npm run migrate:feature-positions
+   ```
+
+### Migration Details
+- Creates a backup JSON file before making any changes (stored in `./backup/`)
+- Assigns sequential positions (0-indexed) to features within each column
+- Sets `connector='AND'` for all features that don't have a connector set
+- Idempotent: Safe to run multiple times
+- Uses chunked batch writes (max 500 per batch) with retry logic
+
+### Required Secrets for CI
+For the CI pipeline to run E2E tests with Firebase, you'll need to configure these secrets in your repository:
+- `FIREBASE_SERVICE_ACCOUNT_JSON` - Service account JSON for Firebase Admin SDK
+- `TEST_FIRESTORE_PROJECT_ID` - Firebase project ID for testing
+- `FIREBASE_API_KEY` - Firebase Web API key
+- `FIREBASE_AUTH_DOMAIN` - Firebase Auth domain
+- `FIREBASE_STORAGE_BUCKET` - Firebase Storage bucket
+- `FIREBASE_MESSAGING_SENDER_ID` - Firebase Messaging sender ID
+- `FIREBASE_APP_ID` - Firebase App ID
 
 ## Analytics
 
@@ -289,9 +338,10 @@ The application includes comprehensive **Firebase Analytics** tracking:
 - **Frontend**: React 18.2.0 with TypeScript 5.2.2
 - **Build Tool**: Vite 5.2.0
 - **Styling**: Tailwind CSS 3.4.3
-- **Backend**: Firebase 10.14.1 (Firestore, Auth, Analytics, Storage)
+- **Backend**: Firebase 12.6.0 (Firestore, Auth, Analytics, Storage)
 - **AI**: Google Gemini AI
-- **Testing**: Vitest 4.0.10 + React Testing Library
+- **Testing**: Vitest 4.0.10 + React Testing Library + Playwright
+- **Drag & Drop**: @dnd-kit/core + @dnd-kit/sortable
 - **Validation**: Zod 4.1.12
 - **Deployment**: Google Cloud Run (containerized Express.js server)
 

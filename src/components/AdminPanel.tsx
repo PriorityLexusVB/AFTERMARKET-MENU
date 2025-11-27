@@ -540,6 +540,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const updatedSourceColumnFeatures = sourceColumnFeatures.map((f, index) => ({
         ...f,
         position: index,
+        column: activeColumn === 'unassigned' ? undefined : activeColumn,
       }));
       
       const updatedTargetColumnFeatures = targetColumnFeatures.map((f, index) => ({

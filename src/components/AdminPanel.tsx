@@ -35,8 +35,6 @@ const formatPrice = (price: number) => {
 };
 
 // Column configuration
-const MIN_COLUMN = 1;
-const MAX_COLUMN = 4;
 const COLUMNS = [
   { num: 1, label: 'Gold Tier' },
   { num: 2, label: 'Elite Tier' },
@@ -179,7 +177,6 @@ const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({ feature }) => 
 interface DroppableColumnProps {
   columnId: number | 'unassigned';
   children: React.ReactNode;
-  isOver?: boolean;
 }
 
 const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
@@ -339,11 +336,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   // Helper to parse column ID from droppable zone
   const parseColumnFromDroppableId = (id: string): number | 'unassigned' | null => {
+    const allowedColumns = [1, 2, 3, 4];
     if (typeof id === 'string' && id.startsWith('column-')) {
       const columnPart = id.replace('column-', '');
       if (columnPart === 'unassigned') return 'unassigned';
-      const num = parseInt(columnPart);
-      if (!isNaN(num) && num >= MIN_COLUMN && num <= MAX_COLUMN) return num;
+      const num = parseInt(columnPart, 10);
+      if (!isNaN(num) && allowedColumns.includes(num)) return num;
     }
     return null;
   };
@@ -380,6 +378,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         : featuresByColumn[targetColumn as 1 | 2 | 3 | 4];
       
       // Add at the end of the target column
+      // If the target column is empty, targetColumnFeatures.length will be 0,
+      // so the new feature will be placed at position 0 (the expected behavior).
       const newPosition = targetColumnFeatures.length;
       
       // Update the feature's column and position
@@ -398,6 +398,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         ...f,
         position: idx,
       }));
+      
+      // Store backup immediately before optimistic update for consistent rollback state
+      setFeaturesBackup([...features]);
       
       // Optimistic UI update
       const updatedFeatures = features.map(f => {

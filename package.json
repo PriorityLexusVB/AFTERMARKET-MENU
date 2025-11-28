@@ -22,7 +22,8 @@
     "test:e2e:update": "playwright test --update-snapshots",
     "typecheck": "tsc --noEmit",
     "import-data": "tsx scripts/import-mock-data.ts",
-    "migrate:feature-positions": "tsx scripts/migrate/add-feature-position-connector.ts"
+    "migrate:feature-positions": "tsx scripts/migrate/add-feature-position-connector.ts",
+    "seed:emulator": "tsx tools/seed-emulator.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

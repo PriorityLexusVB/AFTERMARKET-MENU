@@ -374,6 +374,63 @@ Changes made in the Admin Panel are immediately reflected in the guest view:
 - AND/OR connectors render as dividers between features in packages
 - Position determines the display order within each package tier
 
+## Firebase Emulator Setup (Local Development)
+
+For local development without connecting to production Firebase, you can use the Firebase Emulator Suite with seed data.
+
+### Prerequisites
+1. Install the Firebase CLI: `npm install -g firebase-tools`
+2. Initialize Firebase in your project: `firebase init emulators`
+3. Select Firestore emulator when prompted
+
+### Starting the Emulator
+```bash
+# Start Firebase emulators (from project root)
+firebase emulators:start
+
+# The Firestore emulator will run at http://localhost:8080
+```
+
+### Seeding the Emulator with Test Data
+The project includes seed data for all features, packages, and a la carte options with their correct column assignments and ordering.
+
+1. Start the Firebase emulator (see above)
+2. In a new terminal, run:
+```bash
+# Set the emulator host and run the seed script
+FIRESTORE_EMULATOR_HOST=localhost:8080 npm run seed:emulator
+```
+
+### Seed Data Structure
+The seed data in `tools/firestore-seed.json` includes:
+
+**Features (with column/position/connector):**
+- RustGuard Pro (Column 1, Position 0)
+- ToughGuard Premium (Column 1, Position 1)
+- Interior Leather & Fabric Protection (Column 1, Position 2, connector: OR)
+- Diamond Shield Windshield Protection (Column 2, Position 0)
+
+**Packages:**
+- Elite ($3,499) - All 4 features
+- Platinum ($2,899) - 3 core features (recommended)
+- Gold ($2,399) - 3 core features
+
+**A La Carte Options (Column 4):**
+- Suntek Pro Complete/Standard Packages
+- Headlights Protection
+- Door Cups Only
+- EverNew Appearance Protection
+
+### Running the App with Emulator
+After seeding, run the development server pointing to the emulator project:
+```bash
+# Create .env.local for emulator
+echo "VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu" > .env.local
+
+# Start the dev server
+npm run dev
+```
+
 ## Architecture
 
 ### Technology Stack

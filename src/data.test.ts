@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sortFeaturesByPosition } from './data';
+import { sortFeaturesByPosition, groupFeaturesByColumn } from './data';
 import type { ProductFeature } from './types';
 
 // Mock firebase
@@ -135,5 +135,99 @@ describe('sortFeaturesByPosition', () => {
       'Col2-Pos1',
       'NoCol',
     ]);
+  });
+});
+
+describe('groupFeaturesByColumn', () => {
+  const createFeature = (overrides: Partial<ProductFeature>): ProductFeature => ({
+    id: 'test-id',
+    name: 'Test Feature',
+    description: 'Test description',
+    points: [],
+    useCases: [],
+    price: 100,
+    cost: 50,
+    ...overrides,
+  });
+
+  it('should group features by column number', () => {
+    const features: ProductFeature[] = [
+      createFeature({ id: '1', name: 'Col1-Feature', column: 1, position: 0 }),
+      createFeature({ id: '2', name: 'Col2-Feature', column: 2, position: 0 }),
+      createFeature({ id: '3', name: 'Col1-Feature2', column: 1, position: 1 }),
+    ];
+
+    const grouped = groupFeaturesByColumn(features);
+
+    expect(grouped[1]).toHaveLength(2);
+    expect(grouped[2]).toHaveLength(1);
+    expect(grouped[3]).toHaveLength(0);
+    expect(grouped[4]).toHaveLength(0);
+  });
+
+  it('should sort features by position within each column', () => {
+    const features: ProductFeature[] = [
+      createFeature({ id: '1', name: 'Col1-Pos2', column: 1, position: 2 }),
+      createFeature({ id: '2', name: 'Col1-Pos0', column: 1, position: 0 }),
+      createFeature({ id: '3', name: 'Col1-Pos1', column: 1, position: 1 }),
+    ];
+
+    const grouped = groupFeaturesByColumn(features);
+
+    expect(grouped[1]?.[0]?.name).toBe('Col1-Pos0');
+    expect(grouped[1]?.[1]?.name).toBe('Col1-Pos1');
+    expect(grouped[1]?.[2]?.name).toBe('Col1-Pos2');
+  });
+
+  it('should place unassigned features in the unassigned group', () => {
+    const features: ProductFeature[] = [
+      createFeature({ id: '1', name: 'Assigned', column: 1, position: 0 }),
+      createFeature({ id: '2', name: 'Unassigned', column: undefined }),
+    ];
+
+    const grouped = groupFeaturesByColumn(features);
+
+    expect(grouped[1]).toHaveLength(1);
+    expect(grouped.unassigned).toHaveLength(1);
+    expect(grouped.unassigned?.[0]?.name).toBe('Unassigned');
+  });
+
+  it('should preserve connector information when grouping', () => {
+    const features: ProductFeature[] = [
+      createFeature({ id: '1', name: 'Feature1', column: 1, position: 0, connector: 'AND' }),
+      createFeature({ id: '2', name: 'Feature2', column: 1, position: 1, connector: 'OR' }),
+    ];
+
+    const grouped = groupFeaturesByColumn(features);
+
+    expect(grouped[1]?.[0]?.connector).toBe('AND');
+    expect(grouped[1]?.[1]?.connector).toBe('OR');
+  });
+
+  it('should handle empty array', () => {
+    const features: ProductFeature[] = [];
+    const grouped = groupFeaturesByColumn(features);
+
+    expect(grouped[1]).toHaveLength(0);
+    expect(grouped[2]).toHaveLength(0);
+    expect(grouped[3]).toHaveLength(0);
+    expect(grouped[4]).toHaveLength(0);
+    expect(grouped.unassigned).toHaveLength(0);
+  });
+
+  it('should return features grouped by all four columns', () => {
+    const features: ProductFeature[] = [
+      createFeature({ id: '1', name: 'Col1', column: 1, position: 0 }),
+      createFeature({ id: '2', name: 'Col2', column: 2, position: 0 }),
+      createFeature({ id: '3', name: 'Col3', column: 3, position: 0 }),
+      createFeature({ id: '4', name: 'Col4', column: 4, position: 0 }),
+    ];
+
+    const grouped = groupFeaturesByColumn(features);
+
+    expect(grouped[1]?.[0]?.name).toBe('Col1');
+    expect(grouped[2]?.[0]?.name).toBe('Col2');
+    expect(grouped[3]?.[0]?.name).toBe('Col3');
+    expect(grouped[4]?.[0]?.name).toBe('Col4');
   });
 });

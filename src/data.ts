@@ -238,3 +238,32 @@ export function sortFeaturesByPosition(features: ProductFeature[]): ProductFeatu
     return posA - posB;
   });
 }
+
+/**
+ * Groups features by column number and sorts them by position within each column.
+ * @param features - Array of features to group
+ * @returns Object with columns 1-4 and unassigned features, each sorted by position
+ */
+export interface GroupedFeatures {
+  1: ProductFeature[];
+  2: ProductFeature[];
+  3: ProductFeature[];
+  4: ProductFeature[];
+  unassigned: ProductFeature[];
+}
+
+export function groupFeaturesByColumn(features: ProductFeature[]): GroupedFeatures {
+  const sortByPosition = (a: ProductFeature, b: ProductFeature) => {
+    const posA = a.position ?? 999;
+    const posB = b.position ?? 999;
+    return posA - posB;
+  };
+
+  return {
+    1: features.filter(f => f.column === 1).sort(sortByPosition),
+    2: features.filter(f => f.column === 2).sort(sortByPosition),
+    3: features.filter(f => f.column === 3).sort(sortByPosition),
+    4: features.filter(f => f.column === 4).sort(sortByPosition),
+    unassigned: features.filter(f => !f.column).sort(sortByPosition),
+  };
+}

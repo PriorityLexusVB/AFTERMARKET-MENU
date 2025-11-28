@@ -252,7 +252,11 @@ describe('AdminPanel', () => {
       const calls = vi.mocked(updateFeature).mock.calls;
       expect(calls.length).toBeGreaterThanOrEqual(1);
       // The first call should have connector: 'OR' (toggling from AND)
-      expect(calls[0][1]).toHaveProperty('connector');
+      const firstCall = calls[0];
+      expect(firstCall).toBeDefined();
+      if (firstCall) {
+        expect(firstCall[1]).toHaveProperty('connector');
+      }
     });
   });
 });

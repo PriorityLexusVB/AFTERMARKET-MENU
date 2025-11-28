@@ -227,5 +227,32 @@ describe('AdminPanel', () => {
       expect(positionOne.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('#2')).toBeInTheDocument();
     });
+
+    it('should call updateFeature when connector toggle is clicked', async () => {
+      const { updateFeature } = await import('../data');
+      vi.mocked(updateFeature).mockClear();
+      const user = userEvent.setup();
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Test Feature 1')).toBeInTheDocument();
+      });
+      
+      // Find the AND connector button for feature 1 and click it
+      const andButton = screen.getByRole('button', { name: /Toggle connector for Test Feature 1.*AND/i });
+      await user.click(andButton);
+      
+      // Verify updateFeature was called (the toggle function changes AND to OR)
+      await waitFor(() => {
+        expect(updateFeature).toHaveBeenCalled();
+      });
+      
+      // Check that it was called with a connector change
+      const calls = vi.mocked(updateFeature).mock.calls;
+      expect(calls.length).toBeGreaterThanOrEqual(1);
+      // The first call should have connector: 'OR' (toggling from AND)
+      expect(calls[0][1]).toHaveProperty('connector');
+    });
   });
 });

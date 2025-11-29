@@ -14,11 +14,10 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator, collection, doc, setDoc } from 'firebase/firestore/lite';
 import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Get directory name using URL for ES modules
+const __dirname = new URL('.', import.meta.url).pathname;
 
 interface SeedDocument {
   [key: string]: unknown;
@@ -57,9 +56,12 @@ async function seedEmulator(): Promise<void> {
   const [host, portStr] = emulatorHost.split(':');
   const port = parseInt(portStr || '8080', 10);
   
-  if (host) {
-    connectFirestoreEmulator(db, host, port);
+  if (!host) {
+    console.error('❌ Error: Invalid FIRESTORE_EMULATOR_HOST format. Expected format: host:port');
+    process.exit(1);
   }
+  
+  connectFirestoreEmulator(db, host, port);
 
   // Read seed data
   const seedPath = join(__dirname, 'firestore-seed.json');

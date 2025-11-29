@@ -264,6 +264,6 @@ export function groupFeaturesByColumn(features: ProductFeature[]): GroupedFeatur
     2: features.filter(f => f.column === 2).sort(sortByPosition),
     3: features.filter(f => f.column === 3).sort(sortByPosition),
     4: features.filter(f => f.column === 4).sort(sortByPosition),
-    unassigned: features.filter(f => !f.column).sort(sortByPosition),
+    unassigned: features.filter(f => f.column === undefined).sort(sortByPosition),
   };
 }

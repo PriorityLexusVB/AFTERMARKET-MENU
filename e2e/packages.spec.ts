@@ -87,4 +87,48 @@ test.describe('Feature Rendering Order', () => {
     const andCount = await andConnectors.count();
     expect(andCount).toBeGreaterThanOrEqual(0);
   });
+
+  test('features display in admin-defined order within packages', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('text=Protection Packages', { timeout: 10000 });
+    
+    // Find a package card (e.g., Gold) and check feature order
+    const goldCard = page.locator('[class*="bg-gray-800"]').filter({
+      hasText: /gold/i
+    }).filter({
+      hasText: /select plan/i
+    }).first();
+    
+    await expect(goldCard).toBeVisible();
+    
+    // Get features in this card in DOM order
+    const featuresInCard = goldCard.locator('button.underline');
+    const featureNames = await featuresInCard.allTextContents();
+    
+    // Verify features are present (order depends on admin-defined position)
+    // The mock data has: RustGuard Pro (pos 0), ToughGuard Premium (pos 1), Interior Protection (pos 2)
+    expect(featureNames.length).toBeGreaterThan(0);
+    
+    // Verify the expected order when using seed/mock data
+    if (featureNames.length >= 3) {
+      expect(featureNames[0]).toContain('RustGuard Pro');
+      expect(featureNames[1]).toContain('ToughGuard Premium');
+      expect(featureNames[2]).toContain('Interior');
+    }
+  });
+
+  test('OR connector should be visible between features configured with OR', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('text=Protection Packages', { timeout: 10000 });
+    
+    // The mock data has Interior Protection with connector: 'OR'
+    // Check if OR connector is visible somewhere in packages
+    const orConnectors = page.locator('span.text-yellow-400:has-text("OR")');
+    
+    // Count OR connectors - should have at least one if mock data is loaded
+    const orCount = await orConnectors.count();
+    // Mock data has Interior Protection with connector: 'OR', so expect at least one OR connector
+    // This validates that the OR connector configuration is working correctly
+    expect(orCount).toBeGreaterThan(0);
+  });
 });

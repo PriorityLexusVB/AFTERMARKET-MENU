@@ -189,4 +189,20 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
     position: 4,
     connector: 'AND',
   },
+  {
+    id: 'screen-defender',
+    name: 'Screen Defender',
+    price: 149,
+    cost: 50,
+    description: 'Premium protection film for your vehicle\'s touchscreen display.',
+    points: [
+      'Anti-glare coating',
+      'Scratch resistant',
+      'Easy installation',
+      'Crystal clear visibility',
+    ],
+    column: 4, // Popular add-on
+    position: 5,
+    connector: 'AND',
+  },
 ];

@@ -108,6 +108,13 @@ test.describe('Feature Rendering Order', () => {
     // Verify features are present (order depends on admin-defined position)
     // The mock data has: RustGuard Pro (pos 0), ToughGuard Premium (pos 1), Interior Protection (pos 2)
     expect(featureNames.length).toBeGreaterThan(0);
+    
+    // Verify the expected order when using seed/mock data
+    if (featureNames.length >= 3) {
+      expect(featureNames[0]).toContain('RustGuard Pro');
+      expect(featureNames[1]).toContain('ToughGuard Premium');
+      expect(featureNames[2]).toContain('Interior');
+    }
   });
 
   test('OR connector should be visible between features configured with OR', async ({ page }) => {
@@ -120,7 +127,8 @@ test.describe('Feature Rendering Order', () => {
     
     // Count OR connectors - should have at least one if mock data is loaded
     const orCount = await orConnectors.count();
-    // This may be 0 if running without seed data, which is acceptable
-    expect(orCount).toBeGreaterThanOrEqual(0);
+    // Mock data has Interior Protection with connector: 'OR', so expect at least one OR connector
+    // This validates that the OR connector configuration is working correctly
+    expect(orCount).toBeGreaterThan(0);
   });
 });

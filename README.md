@@ -388,7 +388,9 @@ For local development without connecting to production Firebase, you can use the
 # Start Firebase emulators (from project root)
 firebase emulators:start
 
-# The Firestore emulator will run at http://localhost:8080
+# The Firestore emulator typically runs at localhost:8081
+# The Emulator UI will be available at http://localhost:4000
+# Check your firebase.json for actual port configuration
 ```
 
 ### Seeding the Emulator with Test Data
@@ -398,7 +400,8 @@ The project includes seed data for all features, packages, and a la carte option
 2. In a new terminal, run:
 ```bash
 # Set the emulator host and run the seed script
-FIRESTORE_EMULATOR_HOST=localhost:8080 npm run seed:emulator
+# Use the port configured in your firebase.json (typically 8081 for Firestore)
+FIRESTORE_EMULATOR_HOST=localhost:8081 npm run seed:emulator
 ```
 
 ### Seed Data Structure
@@ -424,8 +427,12 @@ The seed data in `tools/firestore-seed.json` includes:
 ### Running the App with Emulator
 After seeding, run the development server pointing to the emulator project:
 ```bash
-# Create .env.local for emulator
-echo "VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu" > .env.local
+# Add emulator project ID to .env.local (preserves existing content)
+# If you don't have a .env.local file, create one first
+echo "VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu" >> .env.local
+
+# Alternatively, manually add the following line to your .env.local file:
+# VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu
 
 # Start the dev server
 npm run dev

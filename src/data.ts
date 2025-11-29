@@ -253,17 +253,11 @@ export interface GroupedFeatures {
 }
 
 export function groupFeaturesByColumn(features: ProductFeature[]): GroupedFeatures {
-  const sortByPosition = (a: ProductFeature, b: ProductFeature) => {
-    const posA = a.position ?? 999;
-    const posB = b.position ?? 999;
-    return posA - posB;
-  };
-
   return {
-    1: features.filter(f => f.column === 1).sort(sortByPosition),
-    2: features.filter(f => f.column === 2).sort(sortByPosition),
-    3: features.filter(f => f.column === 3).sort(sortByPosition),
-    4: features.filter(f => f.column === 4).sort(sortByPosition),
-    unassigned: features.filter(f => f.column === undefined).sort(sortByPosition),
+    1: sortFeaturesByPosition(features.filter(f => f.column === 1)),
+    2: sortFeaturesByPosition(features.filter(f => f.column === 2)),
+    3: sortFeaturesByPosition(features.filter(f => f.column === 3)),
+    4: sortFeaturesByPosition(features.filter(f => f.column === 4)),
+    unassigned: sortFeaturesByPosition(features.filter(f => f.column === undefined)),
   };
 }

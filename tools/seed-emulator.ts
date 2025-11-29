@@ -5,19 +5,21 @@
  * 
  * Prerequisites:
  * - Firebase emulator must be running: firebase emulators:start
- * - Environment variable FIRESTORE_EMULATOR_HOST must be set (e.g., localhost:8080)
+ * - Environment variable FIRESTORE_EMULATOR_HOST must be set (e.g., localhost:8081)
+ *   Note: Check your firebase.json for the actual Firestore emulator port (typically 8081)
  * 
  * Usage:
- *   FIRESTORE_EMULATOR_HOST=localhost:8080 npx tsx tools/seed-emulator.ts
+ *   FIRESTORE_EMULATOR_HOST=localhost:8081 npx tsx tools/seed-emulator.ts
  */
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator, collection, doc, setDoc } from 'firebase/firestore/lite';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-// Get directory name using URL for ES modules
-const __dirname = new URL('.', import.meta.url).pathname;
+// Get directory name using recommended ES module approach for cross-platform compatibility
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 interface SeedDocument {
   [key: string]: unknown;

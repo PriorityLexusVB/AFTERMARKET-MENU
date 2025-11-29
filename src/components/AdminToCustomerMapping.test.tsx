@@ -243,8 +243,9 @@ describe('Admin to Customer Menu Mapping', () => {
       // Simulate features as they would be organized in admin:
       // Column 1 (Gold base): RustGuard, ToughGuard, Interior
       // Column 2 (Elite extra): Diamond Shield
+      // Note: IDs follow the same kebab-case pattern as production mock data
       const rustGuard = createMockFeature({
-        id: 'rustguard',
+        id: 'rustguard-pro',
         name: 'RustGuard Pro',
         column: 1,
         position: 0,
@@ -252,7 +253,7 @@ describe('Admin to Customer Menu Mapping', () => {
         points: ['Underbody protection'],
       });
       const toughGuard = createMockFeature({
-        id: 'toughguard',
+        id: 'toughguard-premium',
         name: 'ToughGuard Premium',
         column: 1,
         position: 1,
@@ -260,7 +261,7 @@ describe('Admin to Customer Menu Mapping', () => {
         points: ['Paint sealant'],
       });
       const interiorProtection = createMockFeature({
-        id: 'interior',
+        id: 'interior-protection',
         name: 'Interior Leather & Fabric Protection',
         column: 1,
         position: 2,
@@ -268,7 +269,7 @@ describe('Admin to Customer Menu Mapping', () => {
         points: ['Stain protection'],
       });
       const diamondShield = createMockFeature({
-        id: 'diamond',
+        id: 'diamond-shield',
         name: 'Diamond Shield Windshield Protection',
         column: 2,
         position: 0,
@@ -371,14 +372,14 @@ describe('Admin to Customer Menu Mapping', () => {
   describe('PackageSelector Integration', () => {
     it('should render multiple packages with correct feature ordering', () => {
       const rustGuard = createMockFeature({
-        id: 'rustguard',
+        id: 'rustguard-pro',
         name: 'RustGuard Pro',
         column: 1,
         position: 0,
         points: ['Protection'],
       });
       const diamondShield = createMockFeature({
-        id: 'diamond',
+        id: 'diamond-shield',
         name: 'Diamond Shield',
         column: 2,
         position: 0,

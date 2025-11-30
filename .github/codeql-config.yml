@@ -1,0 +1,35 @@
+# CodeQL Configuration File
+# This file configures CodeQL code scanning for the repository.
+#
+# To customize:
+# - Add custom queries by uncommenting the 'queries' section below
+# - Exclude specific paths using the 'paths-ignore' section
+# - Include only specific paths using the 'paths' section
+#
+# For more information, see:
+# https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning
+
+name: "CodeQL config"
+
+# Use default queries (security-extended suite)
+# Uncomment to add additional query packs:
+# queries:
+#   - uses: security-extended
+#   - uses: security-and-quality
+
+# Disable deprecated queries that may produce noise
+disable-default-queries: false
+query-filters:
+  - exclude:
+      tags contain: deprecated
+
+# Uncomment to exclude specific paths from analysis:
+# paths-ignore:
+#   - '**/test/**'
+#   - '**/tests/**'
+#   - '**/*.test.ts'
+#   - '**/*.spec.ts'
+
+# Uncomment to include only specific paths in analysis:
+# paths:
+#   - src

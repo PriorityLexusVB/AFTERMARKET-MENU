@@ -1,0 +1,69 @@
+# CodeQL Code Scanning Workflow
+# This workflow performs CodeQL analysis to identify security vulnerabilities
+# and code quality issues in your repository.
+#
+# For more information, see:
+# https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Sunday at midnight UTC to catch new vulnerabilities
+    - cron: '0 0 * * 0'
+
+# Set minimal permissions for the GITHUB_TOKEN
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      # Required for CodeQL
+      security-events: write
+      # Required for private repositories
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # CodeQL supports: 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
+        # This repository primarily uses JavaScript/TypeScript
+        # Adjust this list if different languages are primarily used
+        language: ['javascript-typescript']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Initializes the CodeQL tools for scanning
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Use our custom config file
+          config-file: ./.github/codeql-config.yml
+          # If you wish to specify custom queries, you can do so here
+          # queries: security-extended,security-and-quality
+
+      # Autobuild attempts to build any compiled languages
+      # For JavaScript/TypeScript, this step can be skipped but is included
+      # for compatibility if compiled languages are added later
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      # Performs CodeQL Analysis and uploads results
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          # Upload results to the Security tab
+          upload: true

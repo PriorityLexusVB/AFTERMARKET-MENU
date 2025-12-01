@@ -226,8 +226,8 @@ jobs:
             echo "applied=false" >> $GITHUB_OUTPUT
           fi
           
-          # Check if any commits were made
-          if git log --oneline HEAD~1..HEAD | grep -q "automated fixes"; then
+          # Check if any commits were made with our commit message pattern
+          if git log --oneline HEAD~1..HEAD | grep -q "chore(deps): automated fixes"; then
             echo "committed=true" >> $GITHUB_OUTPUT
           else
             echo "committed=false" >> $GITHUB_OUTPUT
@@ -265,16 +265,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Run all checks
-        id: checks
+      - name: Run TypeScript type checking
+        id: typecheck
         continue-on-error: true
-        run: |
-          npm run typecheck && npm run test:run && npm run build
+        run: npm run typecheck
+      
+      - name: Run unit tests
+        id: tests
+        continue-on-error: true
+        run: npm run test:run
+      
+      - name: Build application
+        id: build
+        continue-on-error: true
+        run: npm run build
       
       - name: Summarize results
         id: summary
         run: |
-          if [[ "${{ steps.checks.outcome }}" == "success" ]]; then
+          TYPECHECK="${{ steps.typecheck.outcome }}"
+          TESTS="${{ steps.tests.outcome }}"
+          BUILD="${{ steps.build.outcome }}"
+          
+          echo "TypeScript: $TYPECHECK, Tests: $TESTS, Build: $BUILD"
+          
+          if [[ "$TYPECHECK" == "success" && "$TESTS" == "success" && "$BUILD" == "success" ]]; then
             echo "all-passed=true" >> $GITHUB_OUTPUT
           else
             echo "all-passed=false" >> $GITHUB_OUTPUT
@@ -332,34 +347,44 @@ jobs:
         with:
           script: |
             const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            const maxAttempts = 6;
+            const baseDelay = 5000; // 5 seconds
             
-            // Wait a bit for other checks to complete
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            
-            // Get check runs for the PR
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-            
-            const { data: checkRuns } = await github.rest.checks.listForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: pr.head.sha
-            });
-            
-            console.log('Check runs:', checkRuns.check_runs.map(c => `${c.name}: ${c.conclusion}`));
-            
-            // Check if any required checks are failing
-            const failingChecks = checkRuns.check_runs.filter(
-              c => c.conclusion && c.conclusion !== 'success' && c.conclusion !== 'skipped' && c.conclusion !== 'neutral'
-            );
-            
-            if (failingChecks.length > 0) {
-              console.log('Some checks are still failing:', failingChecks.map(c => c.name));
-              // Don't fail - we'll try to merge anyway and let GitHub enforce protections
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+              // Get PR details
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              
+              // Get check runs for the PR
+              const { data: checkRuns } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha
+              });
+              
+              // Count completed and pending checks
+              const completed = checkRuns.check_runs.filter(c => c.status === 'completed');
+              const pending = checkRuns.check_runs.filter(c => c.status !== 'completed');
+              
+              console.log(`Attempt ${attempt + 1}: ${completed.length} completed, ${pending.length} pending`);
+              console.log('Check runs:', checkRuns.check_runs.map(c => `${c.name}: ${c.status}/${c.conclusion}`));
+              
+              // If all checks are completed, we can proceed
+              if (pending.length === 0) {
+                console.log('All checks completed');
+                break;
+              }
+              
+              // Wait with exponential backoff before next attempt
+              const delay = baseDelay * Math.pow(2, attempt);
+              console.log(`Waiting ${delay}ms before next check...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
             }
+            
+            // Final check - let GitHub's merge protections handle any remaining timing issues
       
       - name: Merge PR
         id: merge

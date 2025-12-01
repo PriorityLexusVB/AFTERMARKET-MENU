@@ -1,52 +1,65 @@
-# Dependabot configuration for Priority Lexus Aftermarket Menu
-# Automatically checks for dependency updates
-
 version: 2
 updates:
-  # npm ecosystem for JavaScript/TypeScript dependencies
-  - package-ecosystem: "npm"
+  - package-ecosystem: "npm_and_yarn"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/New_York"
+      interval: "daily"
     open-pull-requests-limit: 10
-    groups:
-      # Group all production dependency updates
-      production-dependencies:
-        dependency-type: "production"
-        update-types:
-          - "minor"
-          - "patch"
-      # Group all development dependency updates
-      development-dependencies:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
+    rebase-strategy: "auto"
+    automerge:
+      enabled: true
+      merge-method: "squash"
     labels:
       - "dependencies"
-
-  # GitHub Actions ecosystem for workflow updates
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/New_York"
-    open-pull-requests-limit: 5
     groups:
-      # Group all GitHub Actions updates
-      actions:
+      react-and-types:
+        patterns:
+          - "^react$"
+          - "^react-dom$"
+          - "^@types/react$"
+          - "^@types/react-dom$"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+      ci-actions:
+        patterns:
+          - "actions/*"
+          - "^github/*"
+          - "^@actions/*"
+      dev-dependencies:
+        patterns:
+          - "vitest"
+          - "^@vitest/"
+          - "playwright"
+          - "^@playwright/"
+          - "tsx"
+          - "firebase-admin"
+          - "eslint"
+          - "prettier"
+      production-dependencies:
+        patterns:
+          - "vite"
+          - "^@vitejs/"
+          - "tailwindcss"
+          - "express"
+          - "zod"
+          - "^@google/"
+      misc:
         patterns:
           - "*"
-    commit-message:
-      prefix: "ci"
-    labels:
-      - "dependencies"
-      - "github-actions"
+        exclude:
+          - "^react$"
+          - "^react-dom$"
+          - "^@types/react$"
+          - "^@types/react-dom$"
+          - "actions/*"
+          - "^@vitest/"
+          - "vitest"
+          - "playwright"
+          - "tsx"
+          - "vite"
+          - "tailwindcss"
+          - "express"
+          - "zod"
+          - "^@google/"

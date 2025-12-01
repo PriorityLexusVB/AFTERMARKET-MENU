@@ -1,0 +1,299 @@
+name: Dependabot Major Version Automation
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  dependabot-automation:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    
+    strategy:
+      matrix:
+        node-version: [20, 24]
+      fail-fast: false
+    
+    steps:
+      - name: Check opt-out labels
+        id: check-labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const labels = pr.labels.map(l => l.name);
+            const doNotAutofix = labels.includes('do-not-autofix');
+            const doNotMerge = labels.includes('do-not-merge');
+            
+            core.setOutput('do-not-autofix', doNotAutofix);
+            core.setOutput('do-not-merge', doNotMerge);
+            core.setOutput('pr-branch', pr.head.ref);
+            
+            console.log(`Labels: ${labels.join(', ')}`);
+            console.log(`Do not autofix: ${doNotAutofix}`);
+            console.log(`Do not merge: ${doNotMerge}`);
+            console.log(`PR branch: ${pr.head.ref}`);
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.AUTOMERGE_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        id: install
+        run: npm ci
+        continue-on-error: true
+
+      - name: Check for scripts in package.json
+        id: check-scripts
+        run: |
+          if [ -f "package.json" ]; then
+            HAS_BUILD=$(node -e "const pkg=require('./package.json'); console.log(pkg.scripts && pkg.scripts.build ? 'true' : 'false')")
+            HAS_TEST=$(node -e "const pkg=require('./package.json'); console.log(pkg.scripts && (pkg.scripts.test || pkg.scripts['test:run']) ? 'true' : 'false')")
+            HAS_LINT=$(node -e "const pkg=require('./package.json'); console.log(pkg.scripts && pkg.scripts.lint ? 'true' : 'false')")
+            HAS_TYPECHECK=$(node -e "const pkg=require('./package.json'); console.log(pkg.scripts && pkg.scripts.typecheck ? 'true' : 'false')")
+            
+            echo "has-build=$HAS_BUILD" >> $GITHUB_OUTPUT
+            echo "has-test=$HAS_TEST" >> $GITHUB_OUTPUT
+            echo "has-lint=$HAS_LINT" >> $GITHUB_OUTPUT
+            echo "has-typecheck=$HAS_TYPECHECK" >> $GITHUB_OUTPUT
+            
+            echo "Build script: $HAS_BUILD"
+            echo "Test script: $HAS_TEST"
+            echo "Lint script: $HAS_LINT"
+            echo "Typecheck script: $HAS_TYPECHECK"
+          fi
+
+      - name: Run build
+        id: build
+        if: steps.install.outcome == 'success' && steps.check-scripts.outputs.has-build == 'true'
+        run: npm run build
+        continue-on-error: true
+
+      - name: Run tests
+        id: test
+        if: steps.install.outcome == 'success' && steps.check-scripts.outputs.has-test == 'true'
+        run: npm run test:run 2>/dev/null || npm test -- --run 2>/dev/null || npm test
+        continue-on-error: true
+
+      - name: Run lint
+        id: lint
+        if: steps.install.outcome == 'success' && steps.check-scripts.outputs.has-lint == 'true'
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run TypeScript check
+        id: typecheck
+        if: steps.install.outcome == 'success'
+        run: |
+          if [ -f "tsconfig.json" ]; then
+            if [ "${{ steps.check-scripts.outputs.has-typecheck }}" == "true" ]; then
+              npm run typecheck
+            else
+              npx tsc --noEmit
+            fi
+          else
+            echo "No tsconfig.json found, skipping TypeScript check"
+          fi
+        continue-on-error: true
+
+      - name: Determine if fixes needed
+        id: needs-fix
+        run: |
+          NEEDS_FIX="false"
+          if [ "${{ steps.install.outcome }}" != "success" ] || \
+             [ "${{ steps.build.outcome }}" == "failure" ] || \
+             [ "${{ steps.test.outcome }}" == "failure" ] || \
+             [ "${{ steps.lint.outcome }}" == "failure" ] || \
+             [ "${{ steps.typecheck.outcome }}" == "failure" ]; then
+            NEEDS_FIX="true"
+          fi
+          echo "needs-fix=$NEEDS_FIX" >> $GITHUB_OUTPUT
+          echo "Needs fix: $NEEDS_FIX"
+
+      - name: Attempt automated fixes
+        id: autofix
+        if: steps.needs-fix.outputs.needs-fix == 'true' && steps.check-labels.outputs.do-not-autofix != 'true'
+        run: |
+          chmod +x .github/scripts/attempt-dependabot-fixes.sh
+          .github/scripts/attempt-dependabot-fixes.sh
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTOMERGE_PAT || secrets.GITHUB_TOKEN }}
+          PR_BRANCH: ${{ steps.check-labels.outputs.pr-branch }}
+
+      - name: Re-run tests after fixes
+        id: retest
+        if: steps.autofix.outcome == 'success'
+        run: |
+          npm ci
+          if [ "${{ steps.check-scripts.outputs.has-build }}" == "true" ]; then
+            npm run build
+          fi
+          if [ "${{ steps.check-scripts.outputs.has-test }}" == "true" ]; then
+            npm run test:run 2>/dev/null || npm test -- --run 2>/dev/null || npm test
+          fi
+          if [ "${{ steps.check-scripts.outputs.has-lint }}" == "true" ]; then
+            npm run lint
+          fi
+          if [ -f "tsconfig.json" ]; then
+            if [ "${{ steps.check-scripts.outputs.has-typecheck }}" == "true" ]; then
+              npm run typecheck
+            else
+              npx tsc --noEmit
+            fi
+          fi
+        continue-on-error: true
+
+      - name: Determine final status
+        id: final-status
+        run: |
+          # Determine if all checks passed
+          ALL_PASSED="true"
+          
+          # If we needed fixes and they were attempted
+          if [ "${{ steps.needs-fix.outputs.needs-fix }}" == "true" ]; then
+            if [ "${{ steps.autofix.outcome }}" != "success" ] || [ "${{ steps.retest.outcome }}" != "success" ]; then
+              ALL_PASSED="false"
+            fi
+          else
+            # No fixes needed, check original results
+            if [ "${{ steps.install.outcome }}" != "success" ] || \
+               [ "${{ steps.build.outcome }}" == "failure" ] || \
+               [ "${{ steps.test.outcome }}" == "failure" ] || \
+               [ "${{ steps.lint.outcome }}" == "failure" ] || \
+               [ "${{ steps.typecheck.outcome }}" == "failure" ]; then
+              ALL_PASSED="false"
+            fi
+          fi
+          
+          echo "all-passed=$ALL_PASSED" >> $GITHUB_OUTPUT
+          echo "All checks passed: $ALL_PASSED"
+
+      - name: Attempt auto-merge
+        id: merge
+        if: steps.final-status.outputs.all-passed == 'true' && steps.check-labels.outputs.do-not-merge != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.AUTOMERGE_PAT || secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              const result = await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                merge_method: 'squash'
+              });
+              
+              console.log('PR merged successfully!');
+              core.setOutput('merged', 'true');
+              return result;
+            } catch (error) {
+              console.log(`Failed to merge: ${error.message}`);
+              
+              if (error.status === 403 || error.message.includes('permission') || error.message.includes('protected')) {
+                core.setOutput('needs-pat', 'true');
+                core.setOutput('merge-error', error.message);
+              }
+              
+              core.setOutput('merged', 'false');
+              throw error;
+            }
+        continue-on-error: true
+
+      - name: Post summary comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const nodeVersion = '${{ matrix.node-version }}';
+            const installOutcome = '${{ steps.install.outcome }}';
+            const buildOutcome = '${{ steps.build.outcome }}';
+            const testOutcome = '${{ steps.test.outcome }}';
+            const lintOutcome = '${{ steps.lint.outcome }}';
+            const typecheckOutcome = '${{ steps.typecheck.outcome }}';
+            const needsFix = '${{ steps.needs-fix.outputs.needs-fix }}';
+            const autofixOutcome = '${{ steps.autofix.outcome }}';
+            const retestOutcome = '${{ steps.retest.outcome }}';
+            const allPassed = '${{ steps.final-status.outputs.all-passed }}';
+            const mergeOutcome = '${{ steps.merge.outcome }}';
+            const doNotAutofix = '${{ steps.check-labels.outputs.do-not-autofix }}';
+            const doNotMerge = '${{ steps.check-labels.outputs.do-not-merge }}';
+            
+            const statusIcon = (outcome) => {
+              if (outcome === 'success') return '✅';
+              if (outcome === 'failure') return '❌';
+              if (outcome === 'skipped') return '⏭️';
+              return '⚪';
+            };
+            
+            let body = `## 🤖 Dependabot Automation Report (Node ${nodeVersion})\n\n`;
+            
+            body += `### Initial Checks\n`;
+            body += `| Step | Status |\n`;
+            body += `|------|--------|\n`;
+            body += `| Install | ${statusIcon(installOutcome)} ${installOutcome} |\n`;
+            body += `| Build | ${statusIcon(buildOutcome)} ${buildOutcome || 'skipped'} |\n`;
+            body += `| Tests | ${statusIcon(testOutcome)} ${testOutcome || 'skipped'} |\n`;
+            body += `| Lint | ${statusIcon(lintOutcome)} ${lintOutcome || 'skipped'} |\n`;
+            body += `| TypeScript | ${statusIcon(typecheckOutcome)} ${typecheckOutcome || 'skipped'} |\n\n`;
+            
+            if (needsFix === 'true') {
+              body += `### Auto-fix Attempt\n`;
+              if (doNotAutofix === 'true') {
+                body += `⚠️ Auto-fix skipped due to \`do-not-autofix\` label.\n\n`;
+              } else {
+                body += `| Step | Status |\n`;
+                body += `|------|--------|\n`;
+                body += `| Fix Script | ${statusIcon(autofixOutcome)} ${autofixOutcome} |\n`;
+                body += `| Re-test | ${statusIcon(retestOutcome)} ${retestOutcome || 'skipped'} |\n\n`;
+              }
+            }
+            
+            body += `### Final Result\n`;
+            body += `- All checks passed: ${allPassed === 'true' ? '✅ Yes' : '❌ No'}\n`;
+            
+            if (doNotMerge === 'true') {
+              body += `- Auto-merge: ⚠️ Skipped due to \`do-not-merge\` label\n`;
+            } else if (allPassed === 'true') {
+              body += `- Auto-merge: ${mergeOutcome === 'success' ? '✅ Merged' : '❌ Failed'}\n`;
+            }
+            
+            if (mergeOutcome !== 'success' && allPassed === 'true' && doNotMerge !== 'true') {
+              body += `\n### ⚠️ Merge Failed\n`;
+              body += `The workflow could not merge this PR automatically. This is likely due to insufficient permissions.\n\n`;
+              body += `**To enable auto-merge:**\n`;
+              body += `1. Create a Personal Access Token (PAT) with \`repo\` scope\n`;
+              body += `2. Add it as a repository secret named \`AUTOMERGE_PAT\`\n`;
+              body += `3. Re-run this workflow\n\n`;
+              body += `Alternatively, merge this PR manually if all checks have passed.\n`;
+            }
+            
+            body += `\n---\n`;
+            body += `📋 [View workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

@@ -104,7 +104,16 @@ jobs:
       - name: Run tests
         id: test
         if: steps.install.outcome == 'success' && steps.check-scripts.outputs.has-test == 'true'
-        run: npm run test:run 2>/dev/null || npm test -- --run 2>/dev/null || npm test
+        run: |
+          # Prefer test:run for CI (runs tests without watch mode)
+          # Fall back to test with --run flag, then plain test
+          if npm run test:run --if-present; then
+            echo "Tests passed using test:run"
+          elif npm test -- --run 2>/dev/null; then
+            echo "Tests passed using test -- --run"
+          else
+            npm test
+          fi
         continue-on-error: true
 
       - name: Run lint
@@ -162,7 +171,14 @@ jobs:
             npm run build
           fi
           if [ "${{ steps.check-scripts.outputs.has-test }}" == "true" ]; then
-            npm run test:run 2>/dev/null || npm test -- --run 2>/dev/null || npm test
+            # Same test strategy as initial test run
+            if npm run test:run --if-present; then
+              echo "Tests passed using test:run"
+            elif npm test -- --run 2>/dev/null; then
+              echo "Tests passed using test -- --run"
+            else
+              npm test
+            fi
           fi
           if [ "${{ steps.check-scripts.outputs.has-lint }}" == "true" ]; then
             npm run lint

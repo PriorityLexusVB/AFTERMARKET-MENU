@@ -58,14 +58,18 @@ updates:
           - "minor"
           - "patch"
       # Miscellaneous - catch-all for remaining packages
+      # NOTE: exclude-patterns must list all patterns from other groups to prevent overlap
+      # This is a Dependabot limitation - there's no "everything else" without explicit excludes
       misc:
         patterns:
           - "*"
         exclude-patterns:
+          # react-and-types group
           - "^react$"
           - "^react-dom$"
           - "^@types/react$"
           - "^@types/react-dom$"
+          # dev-dependencies group
           - "vitest"
           - "@vitest/*"
           - "playwright"
@@ -74,6 +78,7 @@ updates:
           - "firebase-admin"
           - "eslint"
           - "prettier"
+          # production-dependencies group
           - "vite"
           - "@vitejs/*"
           - "tailwindcss"

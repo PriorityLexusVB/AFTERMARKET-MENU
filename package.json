@@ -30,7 +30,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@google/genai": "^0.12.0",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.19",
     "express": "^4.19.2",
     "firebase": "^12.6.0",

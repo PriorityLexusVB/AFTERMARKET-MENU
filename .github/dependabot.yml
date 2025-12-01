@@ -1,124 +1,67 @@
 # Dependabot configuration for Priority Lexus Aftermarket Menu
-# Automatically checks for dependency updates with intelligent grouping
-#
-# Features:
-# - Daily checks for npm dependencies
-# - Named groups for related packages to minimize PR noise
-# - Auto rebase strategy to keep branches up-to-date
-# - Automated workflow for major version bumps (see dependabot-major-automation.yml)
+# Grouped updates, no semver-major bumps, minimal PR noise.
 
 version: 2
 updates:
-  # npm ecosystem for JavaScript/TypeScript dependencies
+  # Root npm / pnpm dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
-      time: "06:00"
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
       timezone: "America/New_York"
-    open-pull-requests-limit: 10
-    rebase-strategy: "auto"
-    labels:
-      - "dependencies"
+
+    # Limit how many PRs can be open at once
+    open-pull-requests-limit: 3
+
     groups:
-      # React and TypeScript types - often need coordinated updates
-      react-and-types:
-        patterns:
-          - "^react$"
-          - "^react-dom$"
-          - "^@types/react$"
-          - "^@types/react-dom$"
-        update-types:
-          - "minor"
-          - "patch"
-      # Development tooling - testing and build tools
-      dev-dependencies:
-        patterns:
-          - "vitest"
-          - "@vitest/*"
-          - "playwright"
-          - "@playwright/*"
-          - "tsx"
-          - "firebase-admin"
-          - "eslint"
-          - "prettier"
-        update-types:
-          - "minor"
-          - "patch"
-      # Production build and runtime dependencies
-      production-dependencies:
-        patterns:
-          - "vite"
-          - "@vitejs/*"
-          - "tailwindcss"
-          - "express"
-          - "zod"
-          - "@google/*"
-        update-types:
-          - "minor"
-          - "patch"
-      # Miscellaneous - catch-all for remaining packages
-      # NOTE: exclude-patterns must list all patterns from other groups to prevent overlap
-      # This is a Dependabot limitation - there's no "everything else" without explicit excludes
-      misc:
+      # One PR for ALL security updates
+      npm-security:
+        applies-to: "security-updates"
         patterns:
           - "*"
-        exclude-patterns:
-          # react-and-types group
-          - "^react$"
-          - "^react-dom$"
-          - "^@types/react$"
-          - "^@types/react-dom$"
-          # dev-dependencies group
-          - "vitest"
-          - "@vitest/*"
-          - "playwright"
-          - "@playwright/*"
-          - "tsx"
-          - "firebase-admin"
-          - "eslint"
-          - "prettier"
-          # production-dependencies group
-          - "vite"
-          - "@vitejs/*"
-          - "tailwindcss"
-          - "express"
-          - "zod"
-          - "@google/*"
+
+      # One PR for ALL minor/patch version updates (prod + dev)
+      npm-minor-patch:
+        applies-to: "version-updates"
         update-types:
           - "minor"
           - "patch"
+        patterns:
+          - "*"
+
+    # Ignore all semver-major version updates (security fixes still apply)
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
     commit-message:
       prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-    reviewers:
-      - "PriorityLexusVB"
 
-  # GitHub Actions ecosystem for workflow updates
+  # GitHub Actions workflow updates
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
-      time: "06:00"
+      interval: "monthly"
+      day: "monday"
+      time: "09:00"
       timezone: "America/New_York"
-    open-pull-requests-limit: 5
-    rebase-strategy: "auto"
+
+    # At most one Actions PR at a time
+    open-pull-requests-limit: 1
+
     groups:
-      # CI-related GitHub Actions
-      ci-actions:
+      actions-all:
         patterns:
-          - "actions/*"
-          - "github/*"
-          - "@actions/*"
+          - "*"
+
+    # Ignore major version bumps for actions too
+    ignore:
+      - dependency-name: "*"
         update-types:
-          - "minor"
-          - "patch"
+          - "version-update:semver-major"
+
     commit-message:
       prefix: "ci"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
-    reviewers:
-      - "PriorityLexusVB"

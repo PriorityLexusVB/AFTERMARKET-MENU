@@ -162,15 +162,19 @@ You may need to manually intervene when:
 
 ## Dependabot Groups
 
-The `dependabot.yml` configuration groups related dependencies:
+The `dependabot.yml` configuration uses a simplified grouping strategy:
 
-| Group | Packages |
-|-------|----------|
-| `react-and-types` | React, React DOM, and their type definitions |
-| `ci-actions` | GitHub Actions and related packages |
-| `dev-dependencies` | Testing tools (Vitest, Playwright), ESLint, Prettier |
-| `production-dependencies` | Vite, Tailwind, Express, Zod, Google packages |
-| `misc` | All other packages not in the above groups |
+| Group | Description |
+|-------|-------------|
+| `npm-security` | All security updates grouped into one PR |
+| `npm-minor-patch` | All minor/patch version updates grouped into one PR |
+| `actions-all` | All GitHub Actions updates grouped into one PR |
+
+**Key Settings:**
+- Weekly npm updates (Monday 9 AM EST)
+- Monthly GitHub Actions updates
+- Major version bumps are **ignored** (security fixes still apply)
+- Max 3 npm PRs + 1 Actions PR open at once
 
 ## Related Files
 

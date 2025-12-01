@@ -21,7 +21,6 @@ echo "=== Starting automated fix attempts ==="
 # Function to check if there are uncommitted changes
 check_changes() {
   git diff --quiet && git diff --cached --quiet
-  return $?
 }
 
 # Function to commit changes if any exist
@@ -63,7 +62,12 @@ npm audit fix --no-fund 2>/dev/null || true
 
 # Check if package.json or package-lock.json changed
 if ! check_changes; then
-  git add package.json package-lock.json 2>/dev/null || true
+  FILES_TO_ADD=()
+  [ -f package.json ] && FILES_TO_ADD+=("package.json")
+  [ -f package-lock.json ] && FILES_TO_ADD+=("package-lock.json")
+  if [ ${#FILES_TO_ADD[@]} -gt 0 ]; then
+    git add "${FILES_TO_ADD[@]}"
+  fi
   if ! git diff --cached --quiet; then
     git commit -m "chore(deps): automated fix — npm audit fix"
     CHANGES_MADE=true

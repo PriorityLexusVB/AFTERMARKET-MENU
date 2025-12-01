@@ -106,10 +106,11 @@ jobs:
         if: steps.install.outcome == 'success' && steps.check-scripts.outputs.has-test == 'true'
         run: |
           # Prefer test:run for CI (runs tests without watch mode)
-          # Fall back to test with --run flag, then plain test
-          if npm run test:run --if-present; then
+          # Check if test:run script exists first to avoid silent failures
+          if node -e "const pkg=require('./package.json'); process.exit(pkg.scripts && pkg.scripts['test:run'] ? 0 : 1)"; then
+            npm run test:run
             echo "Tests passed using test:run"
-          elif npm test -- --run 2>/dev/null; then
+          elif npm test -- --run; then
             echo "Tests passed using test -- --run"
           else
             npm test
@@ -153,6 +154,7 @@ jobs:
 
       - name: Attempt automated fixes
         id: autofix
+        # Note: GitHub Actions outputs are always strings ('true'/'false'), not booleans.
         if: steps.needs-fix.outputs.needs-fix == 'true' && steps.check-labels.outputs.do-not-autofix != 'true'
         run: |
           chmod +x .github/scripts/attempt-dependabot-fixes.sh
@@ -171,10 +173,11 @@ jobs:
             npm run build
           fi
           if [ "${{ steps.check-scripts.outputs.has-test }}" == "true" ]; then
-            # Same test strategy as initial test run
-            if npm run test:run --if-present; then
+            # Same test strategy as initial test run - check for test:run script explicitly
+            if node -e "const pkg=require('./package.json'); process.exit(pkg.scripts && pkg.scripts['test:run'] ? 0 : 1)"; then
+              npm run test:run
               echo "Tests passed using test:run"
-            elif npm test -- --run 2>/dev/null; then
+            elif npm test -- --run; then
               echo "Tests passed using test -- --run"
             else
               npm test
@@ -196,6 +199,8 @@ jobs:
         id: final-status
         run: |
           # Determine if all checks passed
+          # Note: Steps that didn't run will have empty outcome, not 'success' or 'failure'
+          # We only consider a step failed if it explicitly has outcome == 'failure'
           ALL_PASSED="true"
           
           # If we needed fixes and they were attempted
@@ -205,8 +210,12 @@ jobs:
             fi
           else
             # No fixes needed, check original results
-            if [ "${{ steps.install.outcome }}" != "success" ] || \
-               [ "${{ steps.build.outcome }}" == "failure" ] || \
+            # Install must succeed; other steps fail only if they ran and failed
+            if [ "${{ steps.install.outcome }}" != "success" ]; then
+              ALL_PASSED="false"
+            fi
+            # Only check build/test/lint/typecheck if they actually ran (outcome is 'failure' means it ran and failed)
+            if [ "${{ steps.build.outcome }}" == "failure" ] || \
                [ "${{ steps.test.outcome }}" == "failure" ] || \
                [ "${{ steps.lint.outcome }}" == "failure" ] || \
                [ "${{ steps.typecheck.outcome }}" == "failure" ]; then
@@ -238,7 +247,8 @@ jobs:
             } catch (error) {
               console.log(`Failed to merge: ${error.message}`);
               
-              if (error.status === 403 || error.message.includes('permission') || error.message.includes('protected')) {
+              // Check for permission-related errors using status codes (more robust than string matching)
+              if ([401, 403, 404, 405].includes(error.status)) {
                 core.setOutput('needs-pat', 'true');
                 core.setOutput('merge-error', error.message);
               }

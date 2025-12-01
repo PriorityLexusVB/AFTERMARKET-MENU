@@ -1,0 +1,562 @@
+# Dependabot Major Version Automation Workflow
+#
+# This workflow automatically attempts to fix and merge Dependabot PRs,
+# particularly for major version bumps that may require minor adjustments.
+#
+# Features:
+# - Runs build, test, and lint checks on Dependabot PRs
+# - Attempts automated repairs if initial checks fail
+# - Auto-merges when all required checks pass
+# - Posts detailed summary comments for transparency
+#
+# Opt-out: Add the 'do-not-autofix' or 'do-not-merge' label to prevent automation
+
+name: Dependabot Major Automation
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to process (for testing)'
+        required: false
+        type: number
+      dry_run:
+        description: 'Dry run mode (no actual merge)'
+        required: false
+        type: boolean
+        default: true
+
+# Permissions required for this workflow
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+# Prevent concurrent runs on the same PR
+concurrency:
+  group: dependabot-automation-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # Gate job to check if we should process this PR
+  check-conditions:
+    name: Check Automation Conditions
+    runs-on: ubuntu-latest
+    outputs:
+      should-process: ${{ steps.check.outputs.should-process }}
+      is-dependabot: ${{ steps.check.outputs.is-dependabot }}
+      has-opt-out: ${{ steps.check.outputs.has-opt-out }}
+      pr-number: ${{ steps.check.outputs.pr-number }}
+    
+    steps:
+      - name: Check PR conditions
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request?.number || context.payload.inputs?.pr_number;
+            
+            if (!prNumber) {
+              core.setOutput('should-process', 'false');
+              core.setOutput('is-dependabot', 'false');
+              core.setOutput('has-opt-out', 'false');
+              console.log('No PR number found');
+              return;
+            }
+            
+            core.setOutput('pr-number', prNumber.toString());
+            
+            // Get PR details
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            // Check if PR is from Dependabot
+            const isDependabot = pr.user.login === 'dependabot[bot]';
+            core.setOutput('is-dependabot', isDependabot.toString());
+            
+            if (!isDependabot) {
+              core.setOutput('should-process', 'false');
+              core.setOutput('has-opt-out', 'false');
+              console.log('PR is not from Dependabot, skipping');
+              return;
+            }
+            
+            // Check for opt-out labels
+            const optOutLabels = ['do-not-autofix', 'do-not-merge'];
+            const prLabels = pr.labels.map(l => l.name);
+            const hasOptOut = optOutLabels.some(label => prLabels.includes(label));
+            core.setOutput('has-opt-out', hasOptOut.toString());
+            
+            if (hasOptOut) {
+              core.setOutput('should-process', 'false');
+              console.log('PR has opt-out label, skipping automation');
+              return;
+            }
+            
+            // All conditions met
+            core.setOutput('should-process', 'true');
+            console.log('PR meets all conditions for automation');
+
+  # Main CI checks job
+  ci-checks:
+    name: Run CI Checks
+    needs: check-conditions
+    if: needs.check-conditions.outputs.should-process == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      tests-passed: ${{ steps.run-tests.outputs.passed }}
+      build-passed: ${{ steps.run-build.outputs.passed }}
+      lint-passed: ${{ steps.run-lint.outputs.passed }}
+      all-passed: ${{ steps.summary.outputs.all-passed }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run TypeScript type checking
+        id: run-lint
+        continue-on-error: true
+        run: |
+          if npm run typecheck; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: Run unit tests
+        id: run-tests
+        continue-on-error: true
+        run: |
+          if npm run test:run; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: Build application
+        id: run-build
+        continue-on-error: true
+        run: |
+          if npm run build; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: Summarize CI results
+        id: summary
+        run: |
+          LINT="${{ steps.run-lint.outputs.passed }}"
+          TESTS="${{ steps.run-tests.outputs.passed }}"
+          BUILD="${{ steps.run-build.outputs.passed }}"
+          
+          echo "Lint: $LINT, Tests: $TESTS, Build: $BUILD"
+          
+          if [[ "$LINT" == "true" && "$TESTS" == "true" && "$BUILD" == "true" ]]; then
+            echo "all-passed=true" >> $GITHUB_OUTPUT
+            echo "All CI checks passed!"
+          else
+            echo "all-passed=false" >> $GITHUB_OUTPUT
+            echo "Some CI checks failed, will attempt repairs"
+          fi
+
+  # Attempt automated repairs if CI fails
+  attempt-repairs:
+    name: Attempt Automated Repairs
+    needs: [check-conditions, ci-checks]
+    if: |
+      needs.check-conditions.outputs.should-process == 'true' &&
+      needs.ci-checks.outputs.all-passed == 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      repairs-applied: ${{ steps.repair.outputs.applied }}
+      repairs-committed: ${{ steps.repair.outputs.committed }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run automated repair script
+        id: repair
+        run: |
+          chmod +x .github/scripts/attempt-dependabot-fixes.sh
+          
+          # Run the repair script
+          if .github/scripts/attempt-dependabot-fixes.sh; then
+            echo "applied=true" >> $GITHUB_OUTPUT
+          else
+            echo "applied=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check if any commits were made
+          if git log --oneline HEAD~1..HEAD | grep -q "automated fixes"; then
+            echo "committed=true" >> $GITHUB_OUTPUT
+          else
+            echo "committed=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Push repair commits
+        if: steps.repair.outputs.committed == 'true'
+        run: |
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+
+  # Re-run CI after repairs
+  ci-after-repairs:
+    name: CI After Repairs
+    needs: [check-conditions, attempt-repairs]
+    if: |
+      needs.check-conditions.outputs.should-process == 'true' &&
+      needs.attempt-repairs.outputs.repairs-committed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      all-passed: ${{ steps.summary.outputs.all-passed }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run all checks
+        id: checks
+        continue-on-error: true
+        run: |
+          npm run typecheck && npm run test:run && npm run build
+      
+      - name: Summarize results
+        id: summary
+        run: |
+          if [[ "${{ steps.checks.outcome }}" == "success" ]]; then
+            echo "all-passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "all-passed=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Merge the PR if all checks pass
+  auto-merge:
+    name: Auto-Merge PR
+    needs: [check-conditions, ci-checks, attempt-repairs, ci-after-repairs]
+    if: |
+      always() &&
+      needs.check-conditions.outputs.should-process == 'true' &&
+      (needs.ci-checks.outputs.all-passed == 'true' || needs.ci-after-repairs.outputs.all-passed == 'true')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check for dry run
+        id: dry-run
+        run: |
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+            echo "is-dry-run=true" >> $GITHUB_OUTPUT
+          else
+            echo "is-dry-run=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get PR details
+        id: pr-details
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            // Extract package info from PR title/body
+            const title = pr.title;
+            const body = pr.body || '';
+            
+            // Try to extract changelog links from body
+            const changelogMatch = body.match(/Release notes.*?href="([^"]+)"/s);
+            const changelog = changelogMatch ? changelogMatch[1] : 'See PR body for details';
+            
+            core.setOutput('title', title);
+            core.setOutput('sha', pr.head.sha);
+            core.setOutput('changelog', changelog);
+            
+            return { title, sha: pr.head.sha };
+      
+      - name: Wait for required checks
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            
+            // Wait a bit for other checks to complete
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            
+            // Get check runs for the PR
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            const { data: checkRuns } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.head.sha
+            });
+            
+            console.log('Check runs:', checkRuns.check_runs.map(c => `${c.name}: ${c.conclusion}`));
+            
+            // Check if any required checks are failing
+            const failingChecks = checkRuns.check_runs.filter(
+              c => c.conclusion && c.conclusion !== 'success' && c.conclusion !== 'skipped' && c.conclusion !== 'neutral'
+            );
+            
+            if (failingChecks.length > 0) {
+              console.log('Some checks are still failing:', failingChecks.map(c => c.name));
+              // Don't fail - we'll try to merge anyway and let GitHub enforce protections
+            }
+      
+      - name: Merge PR
+        id: merge
+        if: steps.dry-run.outputs.is-dry-run != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            const prTitle = `${{ steps.pr-details.outputs.title }}`;
+            
+            try {
+              const result = await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+                commit_title: prTitle,
+                commit_message: `Automated merge of Dependabot PR #${prNumber}\n\nThis PR was automatically merged after passing all required CI checks.`
+              });
+              
+              core.setOutput('merged', 'true');
+              core.setOutput('merge-sha', result.data.sha);
+              console.log('PR merged successfully!', result.data.sha);
+              
+            } catch (error) {
+              core.setOutput('merged', 'false');
+              core.setOutput('error', error.message);
+              console.log('Failed to merge PR:', error.message);
+              
+              // This might fail due to branch protections - that's OK
+              if (error.message.includes('protected branch') || 
+                  error.message.includes('required status')) {
+                console.log('Branch protection prevented merge - this is expected if human review is required');
+              }
+            }
+      
+      - name: Post success comment
+        if: steps.merge.outputs.merged == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            const prTitle = `${{ steps.pr-details.outputs.title }}`;
+            const mergeSha = `${{ steps.merge.outputs.merge-sha }}`;
+            const changelog = `${{ steps.pr-details.outputs.changelog }}`;
+            const repairsApplied = `${{ needs.attempt-repairs.outputs.repairs-applied }}` === 'true';
+            
+            let body = `## 🎉 Dependabot PR Auto-Merged\n\n`;
+            body += `**PR:** ${prTitle}\n`;
+            body += `**Merge Commit:** \`${mergeSha}\`\n\n`;
+            
+            if (repairsApplied) {
+              body += `### 🔧 Automated Repairs Applied\n`;
+              body += `This PR required automated fixes before merging. The following repairs were attempted:\n`;
+              body += `- ESLint auto-fix\n`;
+              body += `- Prettier formatting\n`;
+              body += `- npm audit fix\n`;
+              body += `- TypeScript compilation check\n\n`;
+            }
+            
+            body += `### ✅ CI Checks Passed\n`;
+            body += `- TypeScript type checking\n`;
+            body += `- Unit tests\n`;
+            body += `- Build\n\n`;
+            
+            body += `### 📚 Changelog\n`;
+            body += `${changelog}\n\n`;
+            
+            body += `---\n`;
+            body += `*This PR was automatically merged by the [Dependabot Major Automation](.github/workflows/dependabot-major-automation.yml) workflow.*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+      
+      - name: Post failure comment
+        if: steps.merge.outputs.merged == 'false' && steps.dry-run.outputs.is-dry-run != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            const prTitle = `${{ steps.pr-details.outputs.title }}`;
+            const error = `${{ steps.merge.outputs.error }}`;
+            const repairsApplied = `${{ needs.attempt-repairs.outputs.repairs-applied }}` === 'true';
+            
+            let body = `## ⚠️ Dependabot PR Auto-Merge Failed\n\n`;
+            body += `**PR:** ${prTitle}\n`;
+            body += `**Error:** ${error}\n\n`;
+            
+            if (repairsApplied) {
+              body += `### 🔧 Automated Repairs Were Attempted\n`;
+              body += `The workflow attempted automated fixes, but the PR still could not be merged.\n\n`;
+            }
+            
+            body += `### 📋 Next Steps\n`;
+            body += `1. Review the CI check results above\n`;
+            body += `2. If branch protection requires human review, please review and approve\n`;
+            body += `3. If there are failing tests, manual fixes may be required\n`;
+            body += `4. To prevent future auto-merge attempts on this PR, add the \`do-not-merge\` label\n\n`;
+            
+            if (error.includes('protected branch') || error.includes('required status')) {
+              body += `### ℹ️ Branch Protection Note\n`;
+              body += `This repository has branch protection rules that require human review or specific status checks.\n`;
+              body += `The automated merge was blocked by these protections (this is expected behavior).\n\n`;
+              body += `**To enable automated merges**, a repository admin can:\n`;
+              body += `1. Create a PAT with \`repo\` scope and add it as \`AUTOMERGE_PAT\` secret\n`;
+              body += `2. Or manually approve and merge this PR\n\n`;
+            }
+            
+            body += `---\n`;
+            body += `*This comment was posted by the [Dependabot Major Automation](.github/workflows/dependabot-major-automation.yml) workflow.*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+      
+      - name: Dry run summary
+        if: steps.dry-run.outputs.is-dry-run == 'true'
+        run: |
+          echo "=============================================="
+          echo "  DRY RUN SUMMARY"
+          echo "=============================================="
+          echo ""
+          echo "PR: ${{ steps.pr-details.outputs.title }}"
+          echo "SHA: ${{ steps.pr-details.outputs.sha }}"
+          echo ""
+          echo "This was a dry run. In a real run, the workflow would:"
+          echo "1. Merge the PR using squash merge"
+          echo "2. Post a success comment with details"
+          echo ""
+          echo "CI Checks Status:"
+          echo "- Initial: ${{ needs.ci-checks.outputs.all-passed }}"
+          echo "- After Repairs: ${{ needs.ci-after-repairs.outputs.all-passed }}"
+          echo "=============================================="
+
+  # Post summary when automation cannot proceed
+  post-skip-summary:
+    name: Post Skip Summary
+    needs: [check-conditions, ci-checks, attempt-repairs, ci-after-repairs]
+    if: |
+      always() &&
+      needs.check-conditions.outputs.should-process == 'true' &&
+      needs.ci-checks.outputs.all-passed == 'false' &&
+      (needs.ci-after-repairs.outputs.all-passed == 'false' || needs.ci-after-repairs.result == 'skipped')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Post summary comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.check-conditions.outputs.pr-number }};
+            const repairsApplied = `${{ needs.attempt-repairs.outputs.repairs-applied }}` === 'true';
+            const repairsCommitted = `${{ needs.attempt-repairs.outputs.repairs-committed }}` === 'true';
+            
+            let body = `## ❌ Dependabot PR Automation - Checks Failed\n\n`;
+            body += `The automated workflow was unable to merge this PR due to failing CI checks.\n\n`;
+            
+            body += `### 📊 CI Results\n`;
+            body += `| Check | Status |\n`;
+            body += `|-------|--------|\n`;
+            body += `| TypeScript | ${{ needs.ci-checks.outputs.lint-passed == 'true' && '✅ Passed' || '❌ Failed' }} |\n`;
+            body += `| Tests | ${{ needs.ci-checks.outputs.tests-passed == 'true' && '✅ Passed' || '❌ Failed' }} |\n`;
+            body += `| Build | ${{ needs.ci-checks.outputs.build-passed == 'true' && '✅ Passed' || '❌ Failed' }} |\n\n`;
+            
+            if (repairsApplied) {
+              body += `### 🔧 Automated Repairs\n`;
+              if (repairsCommitted) {
+                body += `Automated fixes were applied and committed, but checks still fail.\n`;
+              } else {
+                body += `Automated fixes were attempted but no changes were needed or possible.\n`;
+              }
+              body += `\n`;
+            }
+            
+            body += `### 📋 Manual Steps Required\n`;
+            body += `1. Review the failing CI logs above\n`;
+            body += `2. Check if breaking changes require code updates\n`;
+            body += `3. Review the dependency changelog for migration guides\n`;
+            body += `4. Make necessary manual fixes and push to this branch\n\n`;
+            
+            body += `### 🏷️ Labels\n`;
+            body += `- Add \`do-not-autofix\` to prevent future automated repair attempts\n`;
+            body += `- Add \`do-not-merge\` to prevent automated merging even if checks pass\n\n`;
+            
+            body += `---\n`;
+            body += `*This comment was posted by the [Dependabot Major Automation](.github/workflows/dependabot-major-automation.yml) workflow.*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });

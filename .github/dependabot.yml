@@ -1,5 +1,5 @@
 # Dependabot configuration for Priority Lexus Aftermarket Menu
-# Automatically checks for dependency updates
+# Aggressively groups updates so you don't get spammed with PRs.
 
 version: 2
 updates:
@@ -11,23 +11,36 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/New_York"
-    open-pull-requests-limit: 10
+
+    # Keep this low so Dependabot can't flood you
+    open-pull-requests-limit: 3
+
     groups:
-      # Group all production dependency updates
-      production-dependencies:
-        dependency-type: "production"
+      # 1) Group ALL security updates into a single PR
+      npm-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+
+      # 2) Group ALL minor/patch version bumps (prod + dev) into one PR
+      npm-minor-patch:
+        applies-to: "version-updates"
         update-types:
           - "minor"
           - "patch"
-      # Group all development dependency updates
-      development-dependencies:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
+        patterns:
+          - "*"
+
+      # (Optional) If you ever want majors, you can add a separate group:
+      # npm-majors:
+      #   applies-to: "version-updates"
+      #   update-types:
+      #     - "major"
+      #   patterns:
+      #     - "*"
+
     commit-message:
       prefix: "deps"
-      prefix-development: "deps-dev"
     labels:
       - "dependencies"
 
@@ -39,12 +52,16 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/New_York"
-    open-pull-requests-limit: 5
+
+    # At most one Actions PR at a time
+    open-pull-requests-limit: 1
+
     groups:
       # Group all GitHub Actions updates
-      actions:
+      actions-all:
         patterns:
           - "*"
+
     commit-message:
       prefix: "ci"
     labels:

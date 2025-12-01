@@ -1,9 +1,9 @@
 # Dependabot configuration for Priority Lexus Aftermarket Menu
-# Aggressively groups updates so you don't get spammed with PRs.
+# Grouped updates, no semver-major bumps, minimal PR noise.
 
 version: 2
 updates:
-  # npm ecosystem for JavaScript/TypeScript dependencies
+  # Root npm / pnpm dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -12,17 +12,17 @@ updates:
       time: "09:00"
       timezone: "America/New_York"
 
-    # Keep this low so Dependabot can't flood you
+    # Limit how many PRs can be open at once
     open-pull-requests-limit: 3
 
     groups:
-      # 1) Group ALL security updates into a single PR
+      # One PR for ALL security updates
       npm-security:
         applies-to: "security-updates"
         patterns:
           - "*"
 
-      # 2) Group ALL minor/patch version bumps (prod + dev) into one PR
+      # One PR for ALL minor/patch version updates (prod + dev)
       npm-minor-patch:
         applies-to: "version-updates"
         update-types:
@@ -31,20 +31,16 @@ updates:
         patterns:
           - "*"
 
-      # (Optional) If you ever want majors, you can add a separate group:
-      # npm-majors:
-      #   applies-to: "version-updates"
-      #   update-types:
-      #     - "major"
-      #   patterns:
-      #     - "*"
+    # Ignore all semver-major version updates (security fixes still apply)
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
 
     commit-message:
       prefix: "deps"
-    labels:
-      - "dependencies"
 
-  # GitHub Actions ecosystem for workflow updates
+  # GitHub Actions workflow updates
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -57,13 +53,15 @@ updates:
     open-pull-requests-limit: 1
 
     groups:
-      # Group all GitHub Actions updates
       actions-all:
         patterns:
           - "*"
 
+    # Ignore major version bumps for actions too
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
     commit-message:
       prefix: "ci"
-    labels:
-      - "dependencies"
-      - "github-actions"

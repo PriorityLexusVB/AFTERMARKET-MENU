@@ -6,12 +6,12 @@ on:
   pull_request:
     branches: ["main"]
   schedule:
-    # Run weekly on Monday at 5:00 AM UTC
+    # Weekly on Monday at 05:00 UTC
     - cron: "0 5 * * 1"
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
 
     permissions:
@@ -22,21 +22,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript-typescript"]
+        # For your repos, these are the only useful CodeQL languages
+        language: ["javascript-typescript", "actions"]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
+      # For JS/TS, let CodeQL figure out the build; for 'actions' there is no build.
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        if: matrix.language != 'actions'
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"

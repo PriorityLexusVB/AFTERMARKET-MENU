@@ -224,40 +224,14 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
  * Features without position are sorted to the end within their column.
  * @param features - Array of features to sort
  * @returns Sorted array of features
+ * @deprecated Use sortFeatures from '../utils/featureOrdering' instead
  */
-export function sortFeaturesByPosition(features: ProductFeature[]): ProductFeature[] {
-  return [...features].sort((a, b) => {
-    // First sort by column
-    const colA = a.column ?? 999;
-    const colB = b.column ?? 999;
-    if (colA !== colB) return colA - colB;
-    
-    // Then by position within column
-    const posA = a.position ?? 999;
-    const posB = b.position ?? 999;
-    return posA - posB;
-  });
-}
+export { sortFeatures as sortFeaturesByPosition } from './utils/featureOrdering';
 
 /**
  * Groups features by column number and sorts them by position within each column.
  * @param features - Array of features to group
  * @returns Object with columns 1-4 and unassigned features, each sorted by position
+ * @deprecated Use groupFeaturesByColumn from '../utils/featureOrdering' instead
  */
-export interface GroupedFeatures {
-  1: ProductFeature[];
-  2: ProductFeature[];
-  3: ProductFeature[];
-  4: ProductFeature[];
-  unassigned: ProductFeature[];
-}
-
-export function groupFeaturesByColumn(features: ProductFeature[]): GroupedFeatures {
-  return {
-    1: sortFeaturesByPosition(features.filter(f => f.column === 1)),
-    2: sortFeaturesByPosition(features.filter(f => f.column === 2)),
-    3: sortFeaturesByPosition(features.filter(f => f.column === 3)),
-    4: sortFeaturesByPosition(features.filter(f => f.column === 4)),
-    unassigned: sortFeaturesByPosition(features.filter(f => f.column === undefined)),
-  };
-}
+export { groupFeaturesByColumn, type GroupedFeaturesByColumn as GroupedFeatures } from './utils/featureOrdering';

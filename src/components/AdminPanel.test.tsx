@@ -4,6 +4,7 @@ import { AdminPanel } from './AdminPanel';
 import userEvent from '@testing-library/user-event';
 import { getDocs } from 'firebase/firestore/lite';
 import type { ProductFeature } from '../types';
+import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
 
 // Mock Firebase
 vi.mock('../firebase', () => ({
@@ -257,6 +258,113 @@ describe('AdminPanel', () => {
       if (firstCall) {
         expect(firstCall[1]).toHaveProperty('connector');
       }
+    });
+  });
+
+  describe('Position Normalization Logic', () => {
+    // Create local test features with guaranteed types
+    const testFeature1: ProductFeature = {
+      id: 'test-1',
+      name: 'Test Feature 1',
+      description: 'Description 1',
+      points: ['Point 1'],
+      useCases: ['Use case 1'],
+      price: 100,
+      cost: 50,
+      column: 1,
+      position: 0,
+      connector: 'AND',
+    };
+    const testFeature2: ProductFeature = {
+      id: 'test-2',
+      name: 'Test Feature 2',
+      description: 'Description 2',
+      points: ['Point 2'],
+      useCases: ['Use case 2'],
+      price: 200,
+      cost: 100,
+      column: 1,
+      position: 1,
+      connector: 'OR',
+    };
+    const testFeature3: ProductFeature = {
+      id: 'test-3',
+      name: 'Test Feature 3',
+      description: 'Description 3',
+      points: ['Point 3'],
+      useCases: ['Use case 3'],
+      price: 300,
+      cost: 150,
+      column: 2,
+      position: 0,
+      connector: 'AND',
+    };
+
+    it('should use groupFeaturesByColumn for organizing features', () => {
+      const testFeatures: ProductFeature[] = [testFeature1, testFeature2, testFeature3];
+
+      const grouped = groupFeaturesByColumn(testFeatures);
+
+      expect(grouped[1]).toHaveLength(2);
+      expect(grouped[2]).toHaveLength(1);
+      expect(grouped[3]).toHaveLength(0);
+      expect(grouped[4]).toHaveLength(0);
+      expect(grouped.unassigned).toHaveLength(0);
+    });
+
+    it('should use sortFeatures for consistent ordering', () => {
+      // Create features deliberately out of order
+      const unsortedFeatures: ProductFeature[] = [
+        testFeature3, // column 2
+        testFeature1, // column 1, position 0
+        testFeature2, // column 1, position 1
+      ];
+
+      const sorted = sortFeatures(unsortedFeatures);
+
+      // Column 1 features should come first, then column 2
+      expect(sorted[0]?.id).toBe(testFeature1.id);
+      expect(sorted[1]?.id).toBe(testFeature2.id);
+      expect(sorted[2]?.id).toBe(testFeature3.id);
+    });
+
+    it('should normalize positions to be sequential (0..n-1)', () => {
+      const featuresWithGaps: ProductFeature[] = [
+        { ...testFeature1, position: 0 },
+        { ...testFeature2, position: 5 },
+        { ...testFeature3, position: 10 },
+      ];
+
+      const normalized = normalizePositions(featuresWithGaps);
+
+      expect(normalized[0]?.position).toBe(0);
+      expect(normalized[1]?.position).toBe(1);
+      expect(normalized[2]?.position).toBe(2);
+    });
+
+    it('should preserve connector values during normalization', () => {
+      const featuresWithConnectors: ProductFeature[] = [
+        { ...testFeature1, position: 0, connector: 'AND' },
+        { ...testFeature2, position: 5, connector: 'OR' },
+      ];
+
+      const normalized = normalizePositions(featuresWithConnectors);
+
+      expect(normalized[0]?.connector).toBe('AND');
+      expect(normalized[1]?.connector).toBe('OR');
+    });
+
+    it('should group features with undefined column as unassigned', () => {
+      const mixedFeatures: ProductFeature[] = [
+        { ...testFeature1, column: 1, position: 0 },
+        { ...testFeature2, column: undefined, position: 0 },
+      ];
+
+      const grouped = groupFeaturesByColumn(mixedFeatures);
+
+      expect(grouped[1]).toHaveLength(1);
+      expect(grouped.unassigned).toHaveLength(1);
+      expect(grouped.unassigned[0]?.id).toBe(testFeature2.id);
     });
   });
 });

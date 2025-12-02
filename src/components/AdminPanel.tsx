@@ -25,6 +25,7 @@ import { db } from '../firebase';
 import type { ProductFeature, FeatureConnector } from '../types';
 import { FeatureForm } from './FeatureForm';
 import { batchUpdateFeaturesPositions, FeaturePositionUpdate, updateFeature } from '../data';
+import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
 
 interface AdminPanelProps {
   onDataUpdate: () => void;
@@ -266,21 +267,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     setIsFormVisible(true);
   };
 
-  // Organize features by column and sort by position
+  // Organize features by column and sort by position using centralized utility
   const featuresByColumn = useMemo(() => {
-    const sortByPosition = (a: ProductFeature, b: ProductFeature) => {
-      const posA = a.position ?? 999;
-      const posB = b.position ?? 999;
-      return posA - posB;
-    };
-    
-    return {
-      1: features.filter(f => f.column === 1).sort(sortByPosition),
-      2: features.filter(f => f.column === 2).sort(sortByPosition),
-      3: features.filter(f => f.column === 3).sort(sortByPosition),
-      4: features.filter(f => f.column === 4).sort(sortByPosition),
-      unassigned: features.filter(f => !f.column).sort(sortByPosition),
-    };
+    return groupFeaturesByColumn(features);
   }, [features]);
 
   // Get the active feature being dragged
@@ -296,17 +285,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     return feature.column || 'unassigned';
   }, [features]);
 
-  // Persist position changes to Firestore
+  // Persist position changes to Firestore with normalization
   const persistPositionChanges = useCallback(async (updatedFeatures: ProductFeature[], column: number | 'unassigned') => {
-    // Filter features in the affected column
-    const columnFeatures = updatedFeatures.filter(f => 
-      column === 'unassigned' ? !f.column : f.column === column
+    // Filter features in the affected column and sort by position
+    const columnFeatures = sortFeatures(
+      updatedFeatures.filter(f => column === 'unassigned' ? !f.column : f.column === column)
     );
     
-    // Build position updates
-    const updates: FeaturePositionUpdate[] = columnFeatures.map((feature, index) => ({
+    // Normalize positions (0..n-1) to ensure deterministic ordering
+    const normalizedFeatures = normalizePositions(columnFeatures);
+    
+    // Build position updates with normalized positions
+    const updates: FeaturePositionUpdate[] = normalizedFeatures.map((feature) => ({
       id: feature.id,
-      position: index,
+      position: feature.position!, // position is guaranteed by normalizePositions
       column: column === 'unassigned' ? undefined : column,
       connector: feature.connector,
     }));

@@ -3,6 +3,7 @@ import { render, screen } from '../test/test-utils';
 import { PackageCard } from './PackageCard';
 import { PackageSelector } from './PackageSelector';
 import { createMockPackageTier, createMockFeature } from '../test/test-utils';
+import { sortFeatures, compareFeatures, normalizePositions } from '../utils/featureOrdering';
 
 /**
  * Test suite verifying that admin column/position assignments are correctly
@@ -421,6 +422,116 @@ describe('Admin to Customer Menu Mapping', () => {
 
       const diamondShieldElements = screen.getAllByText('Diamond Shield');
       expect(diamondShieldElements).toHaveLength(1); // Only in Elite
+    });
+  });
+
+  describe('Centralized Ordering Utility Integration', () => {
+    it('should use sortFeatures utility to match admin panel ordering', () => {
+      // Simulate features in a shuffled order as they might come from Firestore
+      const shuffledFeatures = [
+        createMockFeature({ id: 'f3', name: 'Column 2 Pos 0', column: 2, position: 0 }),
+        createMockFeature({ id: 'f5', name: 'Unassigned', points: ['Point'] }),
+        createMockFeature({ id: 'f1', name: 'Column 1 Pos 0', column: 1, position: 0 }),
+        createMockFeature({ id: 'f4', name: 'Column 1 Pos 2', column: 1, position: 2 }),
+        createMockFeature({ id: 'f2', name: 'Column 1 Pos 1', column: 1, position: 1 }),
+      ];
+
+      // Apply sortFeatures (same utility used by PackageCard)
+      const sortedFeatures = sortFeatures(shuffledFeatures);
+
+      // Verify the order matches what admin panel would display
+      expect(sortedFeatures.map(f => f.name)).toEqual([
+        'Column 1 Pos 0',
+        'Column 1 Pos 1',
+        'Column 1 Pos 2',
+        'Column 2 Pos 0',
+        'Unassigned',
+      ]);
+    });
+
+    it('should use compareFeatures to determine feature order', () => {
+      const featureA = createMockFeature({ id: 'a', column: 1, position: 0 });
+      const featureB = createMockFeature({ id: 'b', column: 1, position: 1 });
+      const featureC = createMockFeature({ id: 'c', column: 2, position: 0 });
+
+      // A comes before B (same column, lower position)
+      expect(compareFeatures(featureA, featureB)).toBeLessThan(0);
+      // B comes before C (lower column)
+      expect(compareFeatures(featureB, featureC)).toBeLessThan(0);
+      // A comes before C (lower column)
+      expect(compareFeatures(featureA, featureC)).toBeLessThan(0);
+    });
+
+    it('should normalize positions for deterministic ordering', () => {
+      // Features with gaps in positions (e.g., after deletion)
+      const featuresWithGaps = [
+        createMockFeature({ id: 'f1', column: 1, position: 0, connector: 'AND' }),
+        createMockFeature({ id: 'f2', column: 1, position: 5, connector: 'OR' }),
+        createMockFeature({ id: 'f3', column: 1, position: 10, connector: 'AND' }),
+      ];
+
+      const normalized = normalizePositions(featuresWithGaps);
+
+      // Positions should be sequential
+      expect(normalized.map(f => f.position)).toEqual([0, 1, 2]);
+      // Connector values should be preserved
+      expect(normalized.map(f => f.connector)).toEqual(['AND', 'OR', 'AND']);
+    });
+
+    it('should render features in same order that sortFeatures produces', () => {
+      // Create features deliberately out of order
+      const features = [
+        createMockFeature({
+          id: 'f3',
+          name: 'Third Feature',
+          column: 2,
+          position: 0,
+          points: ['Point'],
+        }),
+        createMockFeature({
+          id: 'f1',
+          name: 'First Feature',
+          column: 1,
+          position: 0,
+          points: ['Point'],
+        }),
+        createMockFeature({
+          id: 'f2',
+          name: 'Second Feature',
+          column: 1,
+          position: 1,
+          points: ['Point'],
+        }),
+      ];
+
+      // Sort with utility
+      const sortedByUtility = sortFeatures(features);
+      const expectedOrder = sortedByUtility.map(f => f.name);
+
+      // Create a package with all features
+      const pkg = createMockPackageTier({
+        name: 'Test Package',
+        price: 1000,
+        features: features,
+      });
+
+      // Render the package card
+      const { container } = render(
+        <PackageCard
+          packageInfo={pkg}
+          allFeaturesForDisplay={features}
+          isSelected={false}
+          onSelect={vi.fn()}
+          onViewFeature={vi.fn()}
+        />
+      );
+
+      // Get rendered order
+      const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
+      const renderedOrder = Array.from(featureButtons).map(btn => btn.textContent);
+
+      // Rendered order should match sortFeatures output
+      expect(renderedOrder).toEqual(expectedOrder);
     });
   });
 });

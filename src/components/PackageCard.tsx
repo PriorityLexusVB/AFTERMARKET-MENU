@@ -33,7 +33,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
   );
 
   return (
-    <div className={`
+    <div 
+      data-testid="package-card"
+      className={`
       bg-gray-800 rounded-xl shadow-2xl grid grid-rows-[auto_1fr_auto] transition-all duration-300 h-full
       ${isSelected ? 'transform scale-105 ring-4 ring-offset-4 ring-offset-gray-900 ring-blue-500' : 'hover:scale-102'}
       ${packageInfo.is_recommended ? 'border-4 border-blue-500' : `border-2 border-${packageInfo.tier_color} border-opacity-70`}
@@ -64,6 +66,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
                     onClick={() => onViewFeature(feature)}
                     className="font-semibold text-lg hover:text-blue-400 transition-colors text-shadow text-gray-200 underline"
                     aria-label={`Learn more about ${feature.name}`}
+                    data-testid="package-feature"
                   >
                     {feature.name}
                   </button>

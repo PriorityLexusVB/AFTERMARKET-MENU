@@ -47,6 +47,35 @@ test.describe('Package Selection', () => {
   });
 
   test('visual: package cards layout', async ({ page }) => {
+    // Wait for network to be idle to ensure all data is loaded
+    await page.waitForLoadState('networkidle');
+    
+    // Wait for fonts to be loaded to ensure consistent rendering
+    await page.evaluate(() => document.fonts.ready);
+    
+    // Wait for all package cards to be fully rendered (each has a Select Plan button)
+    const selectButtons = page.locator('button:has-text("Select Plan")');
+    await expect(selectButtons).toHaveCount(3);
+    
+    // CRITICAL: Verify each package card individually has features loaded
+    // This prevents race conditions where screenshot is taken before features load
+    const packageCards = page.locator('[data-testid="package-card"]');
+    await expect(packageCards).toHaveCount(3, { timeout: 10000 });
+    
+    // Verify each individual package card has at least 2 feature buttons
+    const packageCardCount = await packageCards.count();
+    for (let i = 0; i < packageCardCount; i++) {
+      const card = packageCards.nth(i);
+      const featureButtons = card.locator('[data-testid="package-feature"]');
+      // Each package should have at least 2 features (e.g., RustGuard Pro + ToughGuard Premium)
+      await expect(featureButtons.first()).toBeVisible({ timeout: 10000 });
+      const featureCount = await featureButtons.count();
+      expect(featureCount).toBeGreaterThanOrEqual(2);
+    }
+    
+    // Ensure the Popular Add-Ons section is also loaded
+    await expect(page.locator('text=Popular Add-Ons')).toBeVisible();
+    
     // Take a screenshot of the package section
     const packageSection = page.locator('main').first();
     await expect(packageSection).toBeVisible();

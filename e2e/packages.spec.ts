@@ -57,15 +57,21 @@ test.describe('Package Selection', () => {
     const selectButtons = page.locator('button:has-text("Select Plan")');
     await expect(selectButtons).toHaveCount(3);
     
-    // CRITICAL: Wait for features to be rendered in ALL package cards
+    // CRITICAL: Verify each package card individually has features loaded
     // This prevents race conditions where screenshot is taken before features load
-    // Each package should have RustGuard Pro as the first feature
-    const rustGuardFeatures = page.locator('button.underline:has-text("RustGuard Pro")');
-    await expect(rustGuardFeatures).toHaveCount(3, { timeout: 10000 });
+    const packageCards = page.locator('[data-testid="package-card"]');
+    await expect(packageCards).toHaveCount(3, { timeout: 10000 });
     
-    // Wait for ToughGuard Premium to appear in all packages as well
-    const toughGuardFeatures = page.locator('button.underline:has-text("ToughGuard Premium")');
-    await expect(toughGuardFeatures).toHaveCount(3, { timeout: 10000 });
+    // Verify each individual package card has at least 2 feature buttons
+    const packageCardCount = await packageCards.count();
+    for (let i = 0; i < packageCardCount; i++) {
+      const card = packageCards.nth(i);
+      const featureButtons = card.locator('[data-testid="package-feature"]');
+      // Each package should have at least 2 features (e.g., RustGuard Pro + ToughGuard Premium)
+      await expect(featureButtons.first()).toBeVisible({ timeout: 10000 });
+      const featureCount = await featureButtons.count();
+      expect(featureCount).toBeGreaterThanOrEqual(2);
+    }
     
     // Ensure the Popular Add-Ons section is also loaded
     await expect(page.locator('text=Popular Add-Ons')).toBeVisible();

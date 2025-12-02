@@ -3,11 +3,16 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
-// Column assignments for admin organization:
-// - Column 1 = Gold Tier (base features included in all tiers)
-// - Column 2 = Elite Tier (additional features for Elite and higher)
-// - Column 3 = Platinum Tier (additional features for Platinum only)
-// - Column 4 = Popular Add-ons
+// Column assignments for admin organization (direct 1:1 mapping):
+// - Column 1 = Gold Tier features ONLY
+// - Column 2 = Elite Tier features ONLY (empty = Elite package is empty)
+// - Column 3 = Platinum Tier features ONLY (empty = Platinum package is empty)
+// - Column 4 = Popular Add-ons (separate from tier packages)
+//
+// This mock data simulates the user's admin configuration where:
+// - Gold has 3 features
+// - Elite and Platinum columns are empty
+// - Diamond Shield is in Popular Add-ons
 export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: 'rustguard-pro',
@@ -81,23 +86,23 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 150,
-    column: 2, // Elite tier feature (additional feature beyond Gold)
-    position: 0, // First position in column 2
+    column: 4, // Popular Add-on (NOT a tier feature)
+    position: 0, // First position in column 4
     connector: 'AND', // Default connector
   },
 ];
 
 // MOCK PACKAGES (these would be in the 'packages' table)
 // Features are derived from column assignments using deriveTierFeatures
-// This ensures mock data matches the production behavior where admin column
-// configuration is the single source of truth for package composition
+// Each tier gets ONLY features from its corresponding column (1:1 mapping)
+// This ensures admin column configuration is the single source of truth
 export const MOCK_PACKAGES: PackageTier[] = [
   {
     id: 'package-elite',
     name: 'Elite',
     price: 3499,
     cost: 900,
-    // Elite = Column 1 + Column 2 features
+    // Elite = Column 2 features ONLY (empty in this mock = empty package)
     features: deriveTierFeatures('Elite', MOCK_FEATURES),
     tier_color: 'gray-400',
   },
@@ -106,7 +111,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Platinum',
     price: 2899,
     cost: 750,
-    // Platinum = Column 1 + Column 2 + Column 3 features
+    // Platinum = Column 3 features ONLY (empty in this mock = empty package)
     features: deriveTierFeatures('Platinum', MOCK_FEATURES),
     is_recommended: true,
     tier_color: 'blue-400',
@@ -116,7 +121,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Gold',
     price: 2399,
     cost: 550,
-    // Gold = Column 1 features only
+    // Gold = Column 1 features ONLY
     features: deriveTierFeatures('Gold', MOCK_FEATURES),
     tier_color: 'yellow-400',
   },

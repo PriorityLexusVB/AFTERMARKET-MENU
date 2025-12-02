@@ -119,39 +119,47 @@ export function normalizeGroupedPositions(
 }
 
 /**
- * Column-to-package tier mapping:
- * - Column 1 (Gold Tier): Base features included in all tiers
- * - Column 2 (Elite Tier): Additional features added to Elite and higher tiers
- * - Column 3 (Platinum Tier): Additional features added to Platinum tier
+ * Column-to-package tier mapping (1:1 direct mapping):
+ * - Column 1 (Gold Tier): Features that appear ONLY in the Gold package
+ * - Column 2 (Elite Tier): Features that appear ONLY in the Elite package
+ * - Column 3 (Platinum Tier): Features that appear ONLY in the Platinum package
  * - Column 4 (Popular Add-ons): Standalone add-ons, not part of tier packages
  * 
- * Package composition:
- * - Gold = Column 1 only
- * - Elite = Column 1 + Column 2
- * - Platinum = Column 1 + Column 2 + Column 3
+ * Each column directly controls what appears in that tier's package.
+ * If a column is empty in admin, that package will be empty on customer view.
+ * There is NO hierarchy or inheritance between tiers.
  */
 
 /**
- * Maps a package tier name to the column numbers whose features should be included.
- * This implements the tier hierarchy where higher tiers include features from lower tiers.
+ * Maps a package tier name to its corresponding column number.
+ * This is a direct 1:1 mapping where each tier gets ONLY features from its own column.
  * 
  * @param tierName - The package tier name (case-insensitive)
- * @returns Array of column numbers whose features should be included in this tier
+ * @returns The column number for this tier, or null if unknown
  */
-export function getTierColumns(tierName: string): number[] {
+export function getTierColumn(tierName: string): number | null {
   const normalizedName = tierName.toLowerCase();
   
   switch (normalizedName) {
     case 'gold':
-      return [1]; // Gold includes only Column 1 features
+      return 1; // Gold = Column 1 ONLY
     case 'elite':
-      return [1, 2]; // Elite includes Column 1 + Column 2 features
+      return 2; // Elite = Column 2 ONLY
     case 'platinum':
-      return [1, 2, 3]; // Platinum includes Column 1 + Column 2 + Column 3 features
+      return 3; // Platinum = Column 3 ONLY
     default:
-      // For unknown tier names, return empty array (features will be empty)
-      return [];
+      // For unknown tier names, return null (features will be empty)
+      return null;
   }
+}
+
+/**
+ * @deprecated Use getTierColumn instead. This function implemented incorrect hierarchy logic.
+ * Kept for backwards compatibility with existing tests.
+ */
+export function getTierColumns(tierName: string): number[] {
+  const column = getTierColumn(tierName);
+  return column !== null ? [column] : [];
 }
 
 /**
@@ -159,26 +167,31 @@ export function getTierColumns(tierName: string): number[] {
  * This is the single source of truth for package composition, ensuring
  * admin column assignments directly control customer-facing package content.
  * 
+ * Each tier gets ONLY the features from its corresponding column:
+ * - Gold → Column 1 only
+ * - Elite → Column 2 only
+ * - Platinum → Column 3 only
+ * 
+ * If a column is empty in admin, the corresponding package will have no features.
+ * 
  * @param tierName - The package tier name (e.g., 'Gold', 'Elite', 'Platinum')
  * @param features - All features with column assignments
- * @returns Array of features that should be in this package, sorted by column and position
+ * @returns Array of features that should be in this package, sorted by position
  */
 export function deriveTierFeatures(
   tierName: string,
   features: ProductFeature[]
 ): ProductFeature[] {
-  const columns = getTierColumns(tierName);
+  const column = getTierColumn(tierName);
   
-  if (columns.length === 0) {
+  if (column === null) {
     return [];
   }
   
-  // Filter features that belong to any of the tier's columns
-  const tierFeatures = features.filter(
-    f => f.column !== undefined && columns.includes(f.column)
-  );
+  // Filter features that belong to this tier's column ONLY
+  const tierFeatures = features.filter(f => f.column === column);
   
-  // Sort by column and position for consistent ordering
+  // Sort by position for consistent ordering within the column
   return sortFeatures(tierFeatures);
 }
 

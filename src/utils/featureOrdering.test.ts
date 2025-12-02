@@ -5,6 +5,7 @@ import {
   normalizePositions,
   groupFeaturesByColumn,
   normalizeGroupedPositions,
+  getTierColumn,
   getTierColumns,
   deriveTierFeatures,
   getPopularAddons,
@@ -317,21 +318,43 @@ describe('featureOrdering utility', () => {
     });
   });
 
-  describe('getTierColumns', () => {
+  describe('getTierColumn', () => {
+    it('should return 1 for Gold tier', () => {
+      expect(getTierColumn('Gold')).toBe(1);
+      expect(getTierColumn('gold')).toBe(1);
+      expect(getTierColumn('GOLD')).toBe(1);
+    });
+
+    it('should return 2 for Elite tier', () => {
+      expect(getTierColumn('Elite')).toBe(2);
+      expect(getTierColumn('elite')).toBe(2);
+    });
+
+    it('should return 3 for Platinum tier', () => {
+      expect(getTierColumn('Platinum')).toBe(3);
+      expect(getTierColumn('platinum')).toBe(3);
+    });
+
+    it('should return null for unknown tier', () => {
+      expect(getTierColumn('Unknown')).toBeNull();
+      expect(getTierColumn('')).toBeNull();
+    });
+  });
+
+  describe('getTierColumns (deprecated)', () => {
     it('should return [1] for Gold tier', () => {
       expect(getTierColumns('Gold')).toEqual([1]);
       expect(getTierColumns('gold')).toEqual([1]);
-      expect(getTierColumns('GOLD')).toEqual([1]);
     });
 
-    it('should return [1, 2] for Elite tier', () => {
-      expect(getTierColumns('Elite')).toEqual([1, 2]);
-      expect(getTierColumns('elite')).toEqual([1, 2]);
+    it('should return [2] for Elite tier (1:1 mapping)', () => {
+      expect(getTierColumns('Elite')).toEqual([2]);
+      expect(getTierColumns('elite')).toEqual([2]);
     });
 
-    it('should return [1, 2, 3] for Platinum tier', () => {
-      expect(getTierColumns('Platinum')).toEqual([1, 2, 3]);
-      expect(getTierColumns('platinum')).toEqual([1, 2, 3]);
+    it('should return [3] for Platinum tier (1:1 mapping)', () => {
+      expect(getTierColumns('Platinum')).toEqual([3]);
+      expect(getTierColumns('platinum')).toEqual([3]);
     });
 
     it('should return empty array for unknown tier', () => {
@@ -354,7 +377,7 @@ describe('featureOrdering utility', () => {
       expect(goldFeatures.map(f => f.name)).toEqual(['Gold Feature 1', 'Gold Feature 2']);
     });
 
-    it('should derive Elite tier features from columns 1 and 2', () => {
+    it('should derive Elite tier features from column 2 only (1:1 mapping)', () => {
       const features = [
         createTestFeature({ id: 'f1', name: 'Gold Feature', column: 1, position: 0 }),
         createTestFeature({ id: 'f2', name: 'Elite Feature', column: 2, position: 0 }),
@@ -364,10 +387,11 @@ describe('featureOrdering utility', () => {
 
       const eliteFeatures = deriveTierFeatures('Elite', features);
 
-      expect(eliteFeatures.map(f => f.name)).toEqual(['Gold Feature', 'Elite Feature']);
+      // Elite gets ONLY column 2 features, not column 1
+      expect(eliteFeatures.map(f => f.name)).toEqual(['Elite Feature']);
     });
 
-    it('should derive Platinum tier features from columns 1, 2, and 3', () => {
+    it('should derive Platinum tier features from column 3 only (1:1 mapping)', () => {
       const features = [
         createTestFeature({ id: 'f1', name: 'Gold Feature', column: 1, position: 0 }),
         createTestFeature({ id: 'f2', name: 'Elite Feature', column: 2, position: 0 }),
@@ -377,11 +401,21 @@ describe('featureOrdering utility', () => {
 
       const platinumFeatures = deriveTierFeatures('Platinum', features);
 
-      expect(platinumFeatures.map(f => f.name)).toEqual([
-        'Gold Feature',
-        'Elite Feature',
-        'Platinum Feature',
-      ]);
+      // Platinum gets ONLY column 3 features, not columns 1 and 2
+      expect(platinumFeatures.map(f => f.name)).toEqual(['Platinum Feature']);
+    });
+
+    it('should return empty array when tier column is empty', () => {
+      const features = [
+        createTestFeature({ id: 'f1', name: 'Gold Feature', column: 1, position: 0 }),
+        // Column 2 is empty (no Elite features)
+        createTestFeature({ id: 'f3', name: 'Add-on', column: 4, position: 0 }),
+      ];
+
+      const eliteFeatures = deriveTierFeatures('Elite', features);
+
+      // Elite should be empty because column 2 has no features
+      expect(eliteFeatures).toEqual([]);
     });
 
     it('should return empty array for unknown tier', () => {
@@ -400,21 +434,20 @@ describe('featureOrdering utility', () => {
       expect(deriveTierFeatures('Gold', features)).toEqual([]);
     });
 
-    it('should sort features by column and position', () => {
+    it('should sort features by position within the tier column', () => {
       const features = [
-        createTestFeature({ id: 'f3', name: 'Elite Pos 1', column: 2, position: 1 }),
-        createTestFeature({ id: 'f1', name: 'Gold Pos 0', column: 1, position: 0 }),
-        createTestFeature({ id: 'f4', name: 'Elite Pos 0', column: 2, position: 0 }),
-        createTestFeature({ id: 'f2', name: 'Gold Pos 1', column: 1, position: 1 }),
+        createTestFeature({ id: 'f3', name: 'Elite Pos 2', column: 2, position: 2 }),
+        createTestFeature({ id: 'f1', name: 'Elite Pos 0', column: 2, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Elite Pos 1', column: 2, position: 1 }),
+        createTestFeature({ id: 'f4', name: 'Gold Feature', column: 1, position: 0 }),
       ];
 
       const eliteFeatures = deriveTierFeatures('Elite', features);
 
       expect(eliteFeatures.map(f => f.name)).toEqual([
-        'Gold Pos 0',
-        'Gold Pos 1',
         'Elite Pos 0',
         'Elite Pos 1',
+        'Elite Pos 2',
       ]);
     });
 

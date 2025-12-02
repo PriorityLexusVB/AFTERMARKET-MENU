@@ -534,4 +534,80 @@ describe('Admin to Customer Menu Mapping', () => {
       expect(renderedOrder).toEqual(expectedOrder);
     });
   });
+
+  describe('Empty Admin Columns', () => {
+    it('should show empty package when admin column is empty', () => {
+      // Simulate features only in Column 1 (Gold Tier)
+      const goldFeature = createMockFeature({
+        id: 'gold-feature',
+        name: 'Gold Feature',
+        column: 1,
+        position: 0,
+        points: ['Point 1'],
+      });
+
+      // Elite package with no features (column 2 is empty in admin)
+      const elitePackage = createMockPackageTier({
+        name: 'Elite',
+        price: 3499,
+        tier_color: 'gray-400',
+        features: [], // Empty because Elite column (2) has no features
+      });
+
+      const { container } = render(
+        <PackageCard
+          packageInfo={elitePackage}
+          allFeaturesForDisplay={[goldFeature]}
+          isSelected={false}
+          onSelect={vi.fn()}
+          onViewFeature={vi.fn()}
+        />
+      );
+
+      // Should not show Gold Feature in Elite package
+      const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
+      expect(featureButtons).toHaveLength(0);
+    });
+
+    it('should not auto-populate from other columns', () => {
+      // Features in columns 1 and 4, but not in 2 or 3
+      const goldFeature = createMockFeature({
+        id: 'gold-feature',
+        name: 'Gold Feature',
+        column: 1,
+        position: 0,
+        points: ['Point'],
+      });
+      const addonFeature = createMockFeature({
+        id: 'addon-feature',
+        name: 'Add-on Feature',
+        column: 4,
+        position: 0,
+        points: ['Point'],
+      });
+
+      // Gold package should only have Column 1 features
+      const goldPackage = createMockPackageTier({
+        name: 'Gold',
+        price: 2399,
+        tier_color: 'yellow-400',
+        features: [goldFeature], // Only Gold column features
+      });
+
+      const { container } = render(
+        <PackageCard
+          packageInfo={goldPackage}
+          allFeaturesForDisplay={[goldFeature, addonFeature]}
+          isSelected={false}
+          onSelect={vi.fn()}
+          onViewFeature={vi.fn()}
+        />
+      );
+
+      // Should only show Gold Feature, not Add-on Feature
+      const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
+      expect(featureButtons).toHaveLength(1);
+      expect(featureButtons[0]?.textContent).toBe('Gold Feature');
+    });
+  });
 });

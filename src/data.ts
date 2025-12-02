@@ -3,6 +3,7 @@ import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
 import { validateDataArray, ProductFeatureSchema, AlaCarteOptionSchema } from './schemas';
+import { deriveTierFeatures } from './utils/featureOrdering';
 
 // Maximum batch size for Firestore (limit is 500)
 const FIRESTORE_BATCH_LIMIT = 500;
@@ -55,11 +56,12 @@ export async function fetchAllData(): Promise<FetchDataResult> {
     // Fetch and validate a la carte options with Zod
     const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
-    
-    const featuresMap = new Map(features.map(f => [f.id, f]));
 
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;
+        // Derive features from column assignments based on tier name
+        // This makes admin column configuration the single source of truth
+        const derivedFeatures = deriveTierFeatures(data.name, features);
         const pkg: PackageTier = {
             id: doc.id,
             name: data.name,
@@ -67,7 +69,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
             cost: data.cost,
             is_recommended: data.is_recommended,
             tier_color: data.tier_color,
-            features: (data.featureIds || []).map(id => featuresMap.get(id)).filter((f): f is ProductFeature => !!f)
+            features: derivedFeatures
         };
         return pkg;
     });

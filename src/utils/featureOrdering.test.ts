@@ -5,6 +5,9 @@ import {
   normalizePositions,
   groupFeaturesByColumn,
   normalizeGroupedPositions,
+  getTierColumns,
+  deriveTierFeatures,
+  getPopularAddons,
 } from './featureOrdering';
 import type { ProductFeature } from '../types';
 
@@ -311,6 +314,154 @@ describe('featureOrdering utility', () => {
 
       // After normalization, positions should be sequential
       expect(normalized[1].map(f => f.position)).toEqual([0, 1, 2]);
+    });
+  });
+
+  describe('getTierColumns', () => {
+    it('should return [1] for Gold tier', () => {
+      expect(getTierColumns('Gold')).toEqual([1]);
+      expect(getTierColumns('gold')).toEqual([1]);
+      expect(getTierColumns('GOLD')).toEqual([1]);
+    });
+
+    it('should return [1, 2] for Elite tier', () => {
+      expect(getTierColumns('Elite')).toEqual([1, 2]);
+      expect(getTierColumns('elite')).toEqual([1, 2]);
+    });
+
+    it('should return [1, 2, 3] for Platinum tier', () => {
+      expect(getTierColumns('Platinum')).toEqual([1, 2, 3]);
+      expect(getTierColumns('platinum')).toEqual([1, 2, 3]);
+    });
+
+    it('should return empty array for unknown tier', () => {
+      expect(getTierColumns('Unknown')).toEqual([]);
+      expect(getTierColumns('')).toEqual([]);
+    });
+  });
+
+  describe('deriveTierFeatures', () => {
+    it('should derive Gold tier features from column 1 only', () => {
+      const features = [
+        createTestFeature({ id: 'f1', name: 'Gold Feature 1', column: 1, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Gold Feature 2', column: 1, position: 1 }),
+        createTestFeature({ id: 'f3', name: 'Elite Feature', column: 2, position: 0 }),
+        createTestFeature({ id: 'f4', name: 'Add-on', column: 4, position: 0 }),
+      ];
+
+      const goldFeatures = deriveTierFeatures('Gold', features);
+
+      expect(goldFeatures.map(f => f.name)).toEqual(['Gold Feature 1', 'Gold Feature 2']);
+    });
+
+    it('should derive Elite tier features from columns 1 and 2', () => {
+      const features = [
+        createTestFeature({ id: 'f1', name: 'Gold Feature', column: 1, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Elite Feature', column: 2, position: 0 }),
+        createTestFeature({ id: 'f3', name: 'Platinum Feature', column: 3, position: 0 }),
+        createTestFeature({ id: 'f4', name: 'Add-on', column: 4, position: 0 }),
+      ];
+
+      const eliteFeatures = deriveTierFeatures('Elite', features);
+
+      expect(eliteFeatures.map(f => f.name)).toEqual(['Gold Feature', 'Elite Feature']);
+    });
+
+    it('should derive Platinum tier features from columns 1, 2, and 3', () => {
+      const features = [
+        createTestFeature({ id: 'f1', name: 'Gold Feature', column: 1, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Elite Feature', column: 2, position: 0 }),
+        createTestFeature({ id: 'f3', name: 'Platinum Feature', column: 3, position: 0 }),
+        createTestFeature({ id: 'f4', name: 'Add-on', column: 4, position: 0 }),
+      ];
+
+      const platinumFeatures = deriveTierFeatures('Platinum', features);
+
+      expect(platinumFeatures.map(f => f.name)).toEqual([
+        'Gold Feature',
+        'Elite Feature',
+        'Platinum Feature',
+      ]);
+    });
+
+    it('should return empty array for unknown tier', () => {
+      const features = [
+        createTestFeature({ id: 'f1', column: 1, position: 0 }),
+      ];
+
+      expect(deriveTierFeatures('Unknown', features)).toEqual([]);
+    });
+
+    it('should return empty array when no features in relevant columns', () => {
+      const features = [
+        createTestFeature({ id: 'f1', column: 4, position: 0 }), // Add-on only
+      ];
+
+      expect(deriveTierFeatures('Gold', features)).toEqual([]);
+    });
+
+    it('should sort features by column and position', () => {
+      const features = [
+        createTestFeature({ id: 'f3', name: 'Elite Pos 1', column: 2, position: 1 }),
+        createTestFeature({ id: 'f1', name: 'Gold Pos 0', column: 1, position: 0 }),
+        createTestFeature({ id: 'f4', name: 'Elite Pos 0', column: 2, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Gold Pos 1', column: 1, position: 1 }),
+      ];
+
+      const eliteFeatures = deriveTierFeatures('Elite', features);
+
+      expect(eliteFeatures.map(f => f.name)).toEqual([
+        'Gold Pos 0',
+        'Gold Pos 1',
+        'Elite Pos 0',
+        'Elite Pos 1',
+      ]);
+    });
+
+    it('should exclude features without column assignment', () => {
+      const features = [
+        createTestFeature({ id: 'f1', name: 'Assigned', column: 1, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Unassigned' }), // No column
+      ];
+
+      const goldFeatures = deriveTierFeatures('Gold', features);
+
+      expect(goldFeatures.map(f => f.name)).toEqual(['Assigned']);
+    });
+  });
+
+  describe('getPopularAddons', () => {
+    it('should return only column 4 features', () => {
+      const features = [
+        createTestFeature({ id: 'f1', name: 'Gold Feature', column: 1, position: 0 }),
+        createTestFeature({ id: 'f2', name: 'Add-on 1', column: 4, position: 0 }),
+        createTestFeature({ id: 'f3', name: 'Add-on 2', column: 4, position: 1 }),
+      ];
+
+      const addons = getPopularAddons(features);
+
+      expect(addons.map(f => f.name)).toEqual(['Add-on 1', 'Add-on 2']);
+    });
+
+    it('should return empty array when no add-ons exist', () => {
+      const features = [
+        createTestFeature({ id: 'f1', column: 1, position: 0 }),
+        createTestFeature({ id: 'f2', column: 2, position: 0 }),
+      ];
+
+      expect(getPopularAddons(features)).toEqual([]);
+    });
+
+    it('should sort add-ons by position', () => {
+      const features = [
+        createTestFeature({ id: 'f2', name: 'Second', column: 4, position: 1 }),
+        createTestFeature({ id: 'f1', name: 'First', column: 4, position: 0 }),
+        createTestFeature({ id: 'f3', name: 'Third', column: 4, position: 2 }),
+      ];
+
+      const addons = getPopularAddons(features);
+
+      expect(addons.map(f => f.name)).toEqual(['First', 'Second', 'Third']);
     });
   });
 });

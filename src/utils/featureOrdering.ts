@@ -117,3 +117,79 @@ export function normalizeGroupedPositions(
     unassigned: normalizePositions(grouped.unassigned),
   };
 }
+
+/**
+ * Column-to-package tier mapping:
+ * - Column 1 (Gold Tier): Base features included in all tiers
+ * - Column 2 (Elite Tier): Additional features added to Elite and higher tiers
+ * - Column 3 (Platinum Tier): Additional features added to Platinum tier
+ * - Column 4 (Popular Add-ons): Standalone add-ons, not part of tier packages
+ * 
+ * Package composition:
+ * - Gold = Column 1 only
+ * - Elite = Column 1 + Column 2
+ * - Platinum = Column 1 + Column 2 + Column 3
+ */
+
+/**
+ * Maps a package tier name to the column numbers whose features should be included.
+ * This implements the tier hierarchy where higher tiers include features from lower tiers.
+ * 
+ * @param tierName - The package tier name (case-insensitive)
+ * @returns Array of column numbers whose features should be included in this tier
+ */
+export function getTierColumns(tierName: string): number[] {
+  const normalizedName = tierName.toLowerCase();
+  
+  switch (normalizedName) {
+    case 'gold':
+      return [1]; // Gold includes only Column 1 features
+    case 'elite':
+      return [1, 2]; // Elite includes Column 1 + Column 2 features
+    case 'platinum':
+      return [1, 2, 3]; // Platinum includes Column 1 + Column 2 + Column 3 features
+    default:
+      // For unknown tier names, return empty array (features will be empty)
+      return [];
+  }
+}
+
+/**
+ * Derives package features from column assignments.
+ * This is the single source of truth for package composition, ensuring
+ * admin column assignments directly control customer-facing package content.
+ * 
+ * @param tierName - The package tier name (e.g., 'Gold', 'Elite', 'Platinum')
+ * @param features - All features with column assignments
+ * @returns Array of features that should be in this package, sorted by column and position
+ */
+export function deriveTierFeatures(
+  tierName: string,
+  features: ProductFeature[]
+): ProductFeature[] {
+  const columns = getTierColumns(tierName);
+  
+  if (columns.length === 0) {
+    return [];
+  }
+  
+  // Filter features that belong to any of the tier's columns
+  const tierFeatures = features.filter(
+    f => f.column !== undefined && columns.includes(f.column)
+  );
+  
+  // Sort by column and position for consistent ordering
+  return sortFeatures(tierFeatures);
+}
+
+/**
+ * Gets features for the Popular Add-ons section.
+ * These are features assigned to Column 4 in the admin panel.
+ * 
+ * @param features - All features with column assignments
+ * @returns Array of features in the Popular Add-ons column, sorted by position
+ */
+export function getPopularAddons(features: ProductFeature[]): ProductFeature[] {
+  const addons = features.filter(f => f.column === 4);
+  return sortFeatures(addons);
+}

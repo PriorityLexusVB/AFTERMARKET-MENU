@@ -1,8 +1,13 @@
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
+import { deriveTierFeatures } from './utils/featureOrdering';
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
-// Column assignments for admin organization: 1 = Gold & Platinum tiers, 2 = Elite tier (additional feature), 4 = Add-ons
+// Column assignments for admin organization:
+// - Column 1 = Gold Tier (base features included in all tiers)
+// - Column 2 = Elite Tier (additional features for Elite and higher)
+// - Column 3 = Platinum Tier (additional features for Platinum only)
+// - Column 4 = Popular Add-ons
 export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: 'rustguard-pro',
@@ -83,14 +88,17 @@ export const MOCK_FEATURES: ProductFeature[] = [
 ];
 
 // MOCK PACKAGES (these would be in the 'packages' table)
+// Features are derived from column assignments using deriveTierFeatures
+// This ensures mock data matches the production behavior where admin column
+// configuration is the single source of truth for package composition
 export const MOCK_PACKAGES: PackageTier[] = [
   {
     id: 'package-elite',
     name: 'Elite',
     price: 3499,
     cost: 900,
-    // All four features included
-    features: [MOCK_FEATURES[0]!, MOCK_FEATURES[1]!, MOCK_FEATURES[2]!, MOCK_FEATURES[3]!],
+    // Elite = Column 1 + Column 2 features
+    features: deriveTierFeatures('Elite', MOCK_FEATURES),
     tier_color: 'gray-400',
   },
   {
@@ -98,8 +106,8 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Platinum',
     price: 2899,
     cost: 750,
-    // First three features included
-    features: [MOCK_FEATURES[0]!, MOCK_FEATURES[1]!, MOCK_FEATURES[2]!],
+    // Platinum = Column 1 + Column 2 + Column 3 features
+    features: deriveTierFeatures('Platinum', MOCK_FEATURES),
     is_recommended: true,
     tier_color: 'blue-400',
   },
@@ -108,9 +116,8 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Gold',
     price: 2399,
     cost: 550,
-    // RustGuard, and then either ToughGuard OR Interior Protection
-    // The UI will show both with an "OR" divider.
-    features: [MOCK_FEATURES[0]!, MOCK_FEATURES[1]!, MOCK_FEATURES[2]!],
+    // Gold = Column 1 features only
+    features: deriveTierFeatures('Gold', MOCK_FEATURES),
     tier_color: 'yellow-400',
   },
 ];

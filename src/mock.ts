@@ -86,6 +86,9 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 150,
+    // NOTE: This feature is placed in Column 4 (Popular Add-ons) to match the user's
+    // admin configuration. Previously it was in Column 2 (Elite tier), but the user's
+    // actual setup has Diamond Shield under Popular Add-ons, not as part of tier packages.
     column: 4, // Popular Add-on (NOT a tier feature)
     position: 0, // First position in column 4
     connector: 'AND', // Default connector

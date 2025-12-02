@@ -154,8 +154,9 @@ export function getTierColumn(tierName: string): number | null {
 }
 
 /**
- * @deprecated Use getTierColumn instead. This function implemented incorrect hierarchy logic.
- * Kept for backwards compatibility with existing tests.
+ * @deprecated Use getTierColumn instead for the correct 1:1 column-to-tier mapping.
+ * This wrapper function is kept for API backwards compatibility but now uses the
+ * correct single-column mapping internally.
  */
 export function getTierColumns(tierName: string): number[] {
   const column = getTierColumn(tierName);

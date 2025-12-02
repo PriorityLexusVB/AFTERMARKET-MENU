@@ -123,9 +123,11 @@ export function normalizeGroupedPositions(
  * - Column 1 (Gold Tier): Features that appear ONLY in the Gold package
  * - Column 2 (Elite Tier): Features that appear ONLY in the Elite package
  * - Column 3 (Platinum Tier): Features that appear ONLY in the Platinum package
- * - Column 4 (Popular Add-ons): Standalone add-ons, not part of tier packages
+ * - Column 4 (Popular Add-ons): For admin organization of standalone add-ons, not part of tier packages.
+ *   Note: Column 4 does NOT directly control what appears in the customer's "Popular Add-ons" section.
+ *   The customer-facing "Popular Add-ons" section is populated from `alaCarteOptions` filtered by `MAIN_PAGE_ADDON_IDS` (see `App.tsx`).
  * 
- * Each column directly controls what appears in that tier's package.
+ * Each column directly controls what appears in that tier's package (except column 4, which is for admin organization only).
  * If a column is empty in admin, that package will be empty on customer view.
  * There is NO hierarchy or inheritance between tiers.
  */
@@ -197,11 +199,14 @@ export function deriveTierFeatures(
 }
 
 /**
- * Gets features for the Popular Add-ons section.
- * These are features assigned to Column 4 in the admin panel.
+ * Gets features assigned to Column 4 in the admin panel.
+ * 
+ * Note: Column 4 is used for organizing features in the admin panel,
+ * but does NOT directly control the customer-facing "Popular Add-ons" section.
+ * The "Popular Add-ons" section is populated from alaCarteOptions filtered by MAIN_PAGE_ADDON_IDS.
  * 
  * @param features - All features with column assignments
- * @returns Array of features in the Popular Add-ons column, sorted by position
+ * @returns Array of features in Column 4, sorted by position
  */
 export function getPopularAddons(features: ProductFeature[]): ProductFeature[] {
   const addons = features.filter(f => f.column === 4);

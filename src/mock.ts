@@ -7,12 +7,15 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // - Column 1 = Gold Tier features ONLY
 // - Column 2 = Elite Tier features ONLY (empty = Elite package is empty)
 // - Column 3 = Platinum Tier features ONLY (empty = Platinum package is empty)
-// - Column 4 = Popular Add-ons (separate from tier packages)
+// - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
+//
+// Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
+// filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
 //
 // This mock data simulates the user's admin configuration where:
 // - Gold has 3 features
 // - Elite and Platinum columns are empty
-// - Diamond Shield is in Popular Add-ons
+// - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: 'rustguard-pro',
@@ -86,10 +89,11 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 150,
-    // NOTE: This feature is placed in Column 4 (Popular Add-ons) to match the user's
-    // admin configuration. Previously it was in Column 2 (Elite tier), but the user's
-    // actual setup has Diamond Shield under Popular Add-ons, not as part of tier packages.
-    column: 4, // Popular Add-on (NOT a tier feature)
+    // NOTE: This feature is placed in Column 4 for admin organization purposes only.
+    // Column 4 does NOT control the customer-facing "Popular Add-ons" section.
+    // Diamond Shield is a ProductFeature, not an AlaCarteOption, and is not in MAIN_PAGE_ADDON_IDS,
+    // so it will NOT appear in the customer's "Popular Add-ons" section.
+    column: 4, // Admin organization column (NOT displayed in customer Popular Add-ons)
     position: 0, // First position in column 4
     connector: 'AND', // Default connector
   },

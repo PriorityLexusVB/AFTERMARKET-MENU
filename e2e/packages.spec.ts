@@ -57,6 +57,16 @@ test.describe('Package Selection', () => {
     const selectButtons = page.locator('button:has-text("Select Plan")');
     await expect(selectButtons).toHaveCount(3);
     
+    // CRITICAL: Wait for features to be rendered in ALL package cards
+    // This prevents race conditions where screenshot is taken before features load
+    // Each package should have RustGuard Pro as the first feature
+    const rustGuardFeatures = page.locator('button.underline:has-text("RustGuard Pro")');
+    await expect(rustGuardFeatures).toHaveCount(3, { timeout: 10000 });
+    
+    // Wait for ToughGuard Premium to appear in all packages as well
+    const toughGuardFeatures = page.locator('button.underline:has-text("ToughGuard Premium")');
+    await expect(toughGuardFeatures).toHaveCount(3, { timeout: 10000 });
+    
     // Ensure the Popular Add-Ons section is also loaded
     await expect(page.locator('text=Popular Add-Ons')).toBeVisible();
     

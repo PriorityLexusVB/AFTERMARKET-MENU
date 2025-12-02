@@ -47,6 +47,22 @@ test.describe('Package Selection', () => {
   });
 
   test('visual: package cards layout', async ({ page }) => {
+    // Wait for network to be idle to ensure all data is loaded
+    await page.waitForLoadState('networkidle');
+    
+    // Wait for fonts to be loaded to ensure consistent rendering
+    await page.evaluate(() => document.fonts.ready);
+    
+    // Wait for all package cards to be fully rendered
+    await expect(page.locator('text=Elite')).toBeVisible();
+    await expect(page.locator('text=Platinum')).toBeVisible();
+    await expect(page.locator('text=Gold')).toBeVisible();
+    
+    // Wait for package prices to be visible (indicates data is loaded)
+    await expect(page.locator('text=$3,499')).toBeVisible();
+    await expect(page.locator('text=$2,899')).toBeVisible();
+    await expect(page.locator('text=$2,399')).toBeVisible();
+    
     // Take a screenshot of the package section
     const packageSection = page.locator('main').first();
     await expect(packageSection).toBeVisible();

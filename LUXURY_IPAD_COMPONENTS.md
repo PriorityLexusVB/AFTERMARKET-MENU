@@ -113,6 +113,9 @@ export const LuxuryPackageCard: React.FC<LuxuryPackageCardProps> = ({
           ? 'border-2 border-blue-500' 
           : `border border-gray-700/50 ${tierClass.split(' ')[1]}`}
       `}
+      role="option"
+      aria-selected={isSelected}
+      tabIndex={0}
     >
       {/* Recommended Badge */}
       {packageInfo.is_recommended && (

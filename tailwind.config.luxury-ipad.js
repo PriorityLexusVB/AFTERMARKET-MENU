@@ -4,6 +4,12 @@
  * Enhanced Tailwind CSS configuration optimized for iPad displays
  * with premium visual effects, animations, and touch-first design.
  * 
+ * Font Loading Strategy:
+ * The custom fonts (Roboto, Teko) are loaded via Google Fonts in index.html
+ * with font-display: swap for optimal loading. System fonts are provided
+ * as fallbacks to prevent layout shifts during font loading.
+ * 
+ * @see index.html for font preconnect and stylesheet links
  * @type {import('tailwindcss').Config}
  */
 export default {
@@ -15,6 +21,9 @@ export default {
     extend: {
       // ========================================
       // TYPOGRAPHY
+      // Font Loading: Fonts are loaded via Google Fonts with
+      // font-display: swap to prevent invisible text during load.
+      // System-ui fallbacks prevent layout shifts.
       // ========================================
       fontFamily: {
         'sans': ['Roboto', 'system-ui', 'sans-serif'],

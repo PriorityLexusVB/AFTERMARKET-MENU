@@ -18,6 +18,12 @@
 
 /* ========================================
    CSS CUSTOM PROPERTIES (VARIABLES)
+   
+   Note: These CSS variables provide a runtime theming API that can be
+   dynamically changed via JavaScript. The Tailwind config contains
+   equivalent values for build-time optimization. Both systems work
+   together: Tailwind classes for static styling, CSS variables for
+   dynamic theming and JavaScript interoperability.
    ======================================== */
 :root {
   /* Color Palette */
@@ -132,15 +138,12 @@ h1, h2, h3, h4, .font-teko {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
   overscroll-behavior-y: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .luxury-scroll::-webkit-scrollbar {
   display: none;
-}
-
-.luxury-scroll {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 /* ========================================
@@ -710,9 +713,8 @@ h1, h2, h3, h4, .font-teko {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }

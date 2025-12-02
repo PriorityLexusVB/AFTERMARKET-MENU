@@ -1,0 +1,682 @@
+/**
+ * LUXURY IPAD OPTIMIZED STYLES
+ * Priority Lexus Aftermarket Menu
+ *
+ * This stylesheet extends Tailwind with:
+ * - Premium typography
+ * - Luxury animations
+ * - Touch-optimized interactions
+ * - iPad-specific enhancements
+ * - Glass morphism effects
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   TYPOGRAPHY - Luxury Font Setup
+   ======================================== */
+
+/* Import premium fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Teko:wght@400;500;600;700&display=swap');
+
+/* Optional premium alternatives (uncomment to use):
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
+*/
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
+  font-family: 'Teko', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Enhanced text shadow for luxury feel */
+.text-shadow {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.text-shadow-sm {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 20px rgba(0, 102, 255, 0.6);
+}
+
+/* ========================================
+   CUSTOM PROPERTIES - Design Tokens
+   ======================================== */
+
+:root {
+  /* Luxury Colors */
+  --color-luxury-black: #0A0A0A;
+  --color-luxury-charcoal: #1A1A1A;
+  --color-luxury-slate: #2A2A2A;
+  --color-luxury-silver: #E8E8E8;
+  --color-luxury-platinum: #F5F5F5;
+
+  /* Easing curves */
+  --ease-luxury: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Durations */
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-luxe: 600ms;
+
+  /* Spacing */
+  --touch-target-min: 44px;
+  --touch-target-comfortable: 48px;
+  --touch-target-luxury: 56px;
+}
+
+/* ========================================
+   BASE LAYER - Global Styles
+   ======================================== */
+
+@layer base {
+  /* Disable user selection on UI elements */
+  button, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Disable callout on touch and hold */
+  button, a {
+    -webkit-touch-callout: none;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  @media screen and (max-width: 1024px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Better tap highlight color */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 102, 255, 0.2);
+  }
+}
+
+/* ========================================
+   COMPONENTS - Reusable UI Elements
+   ======================================== */
+
+@layer components {
+  /* Container utilities for iPad */
+  .container-ipad {
+    max-width: 100%;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-ipad {
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-ipad {
+      max-width: 1400px;
+      padding-left: 4rem;
+      padding-right: 4rem;
+    }
+  }
+
+  /* Touch target utilities */
+  .touch-target-min {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: 0.75rem 1rem;
+  }
+
+  .touch-target-comfortable {
+    min-width: var(--touch-target-comfortable);
+    min-height: var(--touch-target-comfortable);
+    padding: 0.875rem 1.25rem;
+  }
+
+  .touch-target-luxury {
+    min-width: var(--touch-target-luxury);
+    min-height: var(--touch-target-luxury);
+    padding: 1rem 1.5rem;
+  }
+
+  /* Luxury backgrounds */
+  .luxury-bg-dark {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+  }
+
+  .luxury-bg-card {
+    background: rgba(42, 42, 42, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .luxury-bg-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .luxury-bg-glass-dark {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Gradient overlays */
+  .gradient-overlay-dark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0) 0%, rgba(10, 10, 10, 0.8) 100%);
+    pointer-events: none;
+  }
+
+  /* Luxury transitions */
+  .transition-luxury {
+    transition-duration: var(--duration-luxe);
+    transition-timing-function: var(--ease-luxury);
+  }
+
+  .transition-smooth {
+    transition-duration: var(--duration-normal);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  /* Touch feedback */
+  .touch-feedback {
+    transition: all var(--duration-fast) var(--ease-smooth);
+  }
+
+  .touch-feedback:active {
+    transform: scale(0.96);
+    opacity: 0.9;
+  }
+
+  /* Grid layouts for iPad */
+  .packages-grid-ipad {
+    display: grid;
+    gap: 2rem;
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+    .packages-grid-ipad {
+      grid-template-columns: 1fr;
+      max-width: 600px;
+      margin: 0 auto;
+      gap: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .packages-grid-ipad {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1366px) {
+    .packages-grid-ipad {
+      gap: 3rem;
+    }
+  }
+
+  /* Stagger animation for children */
+  .stagger-children > * {
+    animation: card-entrance 0.6s var(--ease-luxury) backwards;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 100ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 200ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 400ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 500ms; }
+
+  /* Button styles */
+  .btn-luxury-primary {
+    @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
+    @apply text-white font-bold uppercase tracking-wider;
+    @apply rounded-2xl shadow-luxury-lg;
+    @apply transition-all duration-300;
+    @apply active:scale-95;
+    @apply min-h-touch px-8 py-4;
+  }
+
+  .btn-luxury-secondary {
+    @apply bg-white/10 text-luxury-silver;
+    @apply border-2 border-white/20;
+    @apply font-semibold uppercase tracking-wide;
+    @apply rounded-2xl;
+    @apply transition-all duration-300;
+    @apply hover:bg-white/20 hover:border-white/30;
+    @apply active:scale-95;
+    @apply min-h-touch px-8 py-4;
+  }
+
+  .btn-luxury-success {
+    @apply bg-gradient-to-r from-luxury-green-600 to-luxury-green-500;
+    @apply text-white font-bold uppercase tracking-wider;
+    @apply rounded-2xl shadow-luxury-lg;
+    @apply transition-all duration-300;
+    @apply active:scale-95;
+    @apply min-h-touch px-8 py-4;
+  }
+}
+
+/* ========================================
+   UTILITIES - Helper Classes
+   ======================================== */
+
+@layer utilities {
+  /* Remove hover states on touch devices */
+  @media (hover: none) {
+    .hover\:scale-102:hover,
+    .hover\:scale-105:hover {
+      transform: none;
+    }
+
+    .hover\:bg-gray-600:hover,
+    .hover\:bg-blue-500:hover,
+    .hover\:bg-white:hover {
+      background-color: inherit;
+    }
+
+    .hover\:text-white:hover,
+    .hover\:text-blue-400:hover {
+      color: inherit;
+    }
+  }
+
+  /* Scroll indicators */
+  .scroll-indicator {
+    position: relative;
+  }
+
+  .scroll-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse-scroll 2s infinite;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Luxury scrollbar */
+  .scrollbar-luxury {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Orientation-specific utilities */
+  @media (orientation: portrait) {
+    .portrait\:hidden {
+      display: none;
+    }
+  }
+
+  @media (orientation: landscape) {
+    .landscape\:hidden {
+      display: none;
+    }
+  }
+}
+
+/* ========================================
+   ANIMATIONS - Keyframes & Effects
+   ======================================== */
+
+/* Card entrance animation */
+@keyframes card-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-entrance {
+  animation: card-entrance 0.6s var(--ease-luxury) forwards;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Slide up */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Slide up fast (for modals on mobile) */
+@keyframes slide-up-fast {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 640px) {
+  @keyframes slide-up-fast {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+.animate-slide-up-fast {
+  animation: slide-up-fast 0.3s ease-out forwards;
+}
+
+/* Icon pop in */
+@keyframes icon-pop-in {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-icon-pop-in {
+  animation: icon-pop-in 0.3s ease-out forwards;
+}
+
+/* Summary item in */
+@keyframes summary-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-summary-item-in {
+  animation: summary-item-in 0.4s ease-out forwards;
+}
+
+/* Modal animations */
+@keyframes modal-backdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-content {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modal-backdrop 0.3s ease-out forwards;
+}
+
+.animate-modal-content {
+  animation: modal-content 0.4s var(--ease-luxury) forwards;
+}
+
+/* Pulse scroll indicator */
+@keyframes pulse-scroll {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-8px);
+  }
+}
+
+.animate-pulse-scroll {
+  animation: pulse-scroll 2s infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Glow effect */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 102, 255, 0.6);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ========================================
+   PRINT STYLES - Agreement Printing
+   ======================================== */
+
+.print-mount {
+  display: none;
+}
+
+@media print {
+  body > *:not(.print-mount) {
+    display: none !important;
+  }
+
+  .print-mount {
+    display: block !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  /* Force light theme for print */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/* Focus visible for keyboard navigation */
+.focus-visible-luxury:focus-visible {
+  outline: 2px solid #0066FF;
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .luxury-bg-glass,
+  .luxury-bg-card {
+    background: rgba(26, 26, 26, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: 0.5rem;
+}
+
+/* Loading spinner */
+.spinner-luxury {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #0066FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY UTILITIES
+   ======================================== */
+
+/* iPad portrait optimized text */
+@media (min-width: 768px) {
+  .ipad-p\:text-responsive-sm { font-size: 1rem; }
+  .ipad-p\:text-responsive-base { font-size: 1.125rem; }
+  .ipad-p\:text-responsive-lg { font-size: 1.25rem; }
+  .ipad-p\:text-responsive-xl { font-size: 1.5rem; }
+  .ipad-p\:text-responsive-2xl { font-size: 2rem; }
+  .ipad-p\:text-responsive-3xl { font-size: 2.5rem; }
+  .ipad-p\:text-responsive-4xl { font-size: 3rem; }
+}
+
+/* iPad landscape optimized text */
+@media (min-width: 1024px) {
+  .ipad-l\:text-responsive-sm { font-size: 1rem; }
+  .ipad-l\:text-responsive-base { font-size: 1.125rem; }
+  .ipad-l\:text-responsive-lg { font-size: 1.375rem; }
+  .ipad-l\:text-responsive-xl { font-size: 1.75rem; }
+  .ipad-l\:text-responsive-2xl { font-size: 2.25rem; }
+  .ipad-l\:text-responsive-3xl { font-size: 3rem; }
+  .ipad-l\:text-responsive-4xl { font-size: 3.5rem; }
+}

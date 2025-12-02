@@ -224,7 +224,7 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
  * Features without position are sorted to the end within their column.
  * @param features - Array of features to sort
  * @returns Sorted array of features
- * @deprecated Use sortFeatures from '../utils/featureOrdering' instead
+ * @deprecated Use sortFeatures from './utils/featureOrdering' instead
  */
 export { sortFeatures as sortFeaturesByPosition } from './utils/featureOrdering';
 
@@ -232,6 +232,6 @@ export { sortFeatures as sortFeaturesByPosition } from './utils/featureOrdering'
  * Groups features by column number and sorts them by position within each column.
  * @param features - Array of features to group
  * @returns Object with columns 1-4 and unassigned features, each sorted by position
- * @deprecated Use groupFeaturesByColumn from '../utils/featureOrdering' instead
+ * @deprecated Use groupFeaturesByColumn from './utils/featureOrdering' instead
  */
 export { groupFeaturesByColumn, type GroupedFeaturesByColumn as GroupedFeatures } from './utils/featureOrdering';

@@ -195,7 +195,7 @@ export default {
         'shimmer': 'shimmer 2s linear infinite',
         
         // Selection animation
-        'select': 'select 0.3s ease-out forwards',
+        'luxury-select': 'luxury-select 0.3s ease-out forwards',
       },
       
       keyframes: {
@@ -268,7 +268,7 @@ export default {
         },
         
         // Selection keyframe
-        'select': {
+        'luxury-select': {
           '0%': { transform: 'scale(1)', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' },
           '50%': { transform: 'scale(1.02)' },
           '100%': { transform: 'scale(1.05)', boxShadow: '0 8px 32px rgba(59, 130, 246, 0.4)' },
@@ -377,14 +377,14 @@ export default {
           'text-shadow': '0 1px 3px rgba(0, 0, 0, 0.4)',
         },
         
-        // Glass morphism
-        '.glass': {
+        // Glass morphism (luxury- prefix for consistency with CSS classes)
+        '.luxury-glass': {
           'background': 'rgba(17, 24, 39, 0.8)',
           'backdrop-filter': 'blur(20px)',
           '-webkit-backdrop-filter': 'blur(20px)',
           'border': '1px solid rgba(255, 255, 255, 0.1)',
         },
-        '.glass-dark': {
+        '.luxury-glass-dark': {
           'background': 'rgba(0, 0, 0, 0.8)',
           'backdrop-filter': 'blur(20px)',
           '-webkit-backdrop-filter': 'blur(20px)',

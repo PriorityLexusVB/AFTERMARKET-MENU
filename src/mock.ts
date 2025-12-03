@@ -5,18 +5,20 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // These are the individual services that make up the packages.
 // Column assignments for admin organization (direct 1:1 mapping):
 // - Column 1 = Gold Tier features ONLY
-// - Column 2 = Elite Tier features ONLY (empty = Elite package is empty)
-// - Column 3 = Platinum Tier features ONLY (empty = Platinum package is empty)
+// - Column 2 = Elite Tier features ONLY
+// - Column 3 = Platinum Tier features ONLY
 // - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
 //
 // Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
 //
-// This mock data simulates the user's admin configuration where:
-// - Gold has 3 features
-// - Elite and Platinum columns are empty
+// This mock data provides features for all three tiers:
+// - Gold (Column 1): 3 features
+// - Elite (Column 2): 3 features
+// - Platinum (Column 3): 3 features
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
+  // ===== GOLD TIER (Column 1) =====
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -74,6 +76,126 @@ export const MOCK_FEATURES: ProductFeature[] = [
     position: 2, // Third position in column
     connector: 'OR', // Special connector for Gold package display
   },
+  // ===== ELITE TIER (Column 2) =====
+  {
+    id: 'elite-ceramic-coating',
+    name: 'Elite Ceramic Coating',
+    description: 'Advanced ceramic protection with superior durability and shine.',
+    points: [
+      '9H hardness rating',
+      'Hydrophobic water repellency',
+      'UV protection for paint longevity',
+    ],
+    useCases: [
+      'Provides showroom-quality shine for years.',
+      'Reduces need for frequent washing and waxing.',
+    ],
+    price: 0, // Price is included in package
+    cost: 500,
+    warranty: '5 Year Warranty',
+    column: 2, // Elite tier feature
+    position: 0, // First position in column
+    connector: 'AND', // Default connector
+  },
+  {
+    id: 'elite-paint-correction',
+    name: 'Elite Paint Correction',
+    description: 'Professional-grade paint restoration and polishing.',
+    points: [
+      'Removes swirl marks and scratches',
+      'Restores original paint clarity',
+      'Multi-stage polishing process',
+    ],
+    useCases: [
+      'Eliminates imperfections from daily driving.',
+      'Prepares surface for maximum coating adhesion.',
+    ],
+    price: 0, // Price is included in package
+    cost: 400,
+    column: 2, // Elite tier feature
+    position: 1, // Second position in column
+    connector: 'AND', // Default connector
+  },
+  {
+    id: 'elite-interior-detail',
+    name: 'Elite Interior Detailing',
+    description: 'Comprehensive interior cleaning and protection treatment.',
+    points: [
+      'Deep cleaning of all surfaces',
+      'Leather conditioning and protection',
+      'Fabric stain guard application',
+    ],
+    useCases: [
+      'Restores interior to like-new condition.',
+      'Extends life of leather and fabric surfaces.',
+    ],
+    price: 0, // Price is included in package
+    cost: 300,
+    column: 2, // Elite tier feature
+    position: 2, // Third position in column
+    connector: 'AND', // Default connector
+  },
+  // ===== PLATINUM TIER (Column 3) =====
+  {
+    id: 'platinum-ppf-full',
+    name: 'Platinum Full PPF Coverage',
+    description: 'Complete paint protection film coverage for maximum protection.',
+    points: [
+      'Full body PPF installation',
+      'Self-healing technology',
+      'Invisible protection barrier',
+    ],
+    useCases: [
+      'Ultimate protection against rock chips and debris.',
+      'Maintains resale value with pristine paint condition.',
+    ],
+    price: 0, // Price is included in package
+    cost: 800,
+    warranty: '10 Year Warranty',
+    column: 3, // Platinum tier feature
+    position: 0, // First position in column
+    connector: 'AND', // Default connector
+  },
+  {
+    id: 'platinum-graphene-coating',
+    name: 'Platinum Graphene Coating',
+    description: 'Next-generation graphene-infused ceramic coating.',
+    points: [
+      'Superior hardness and durability',
+      'Anti-static dust repellency',
+      'Enhanced heat dissipation',
+    ],
+    useCases: [
+      'Top-tier protection for luxury vehicles.',
+      'Lasts longer than traditional ceramic coatings.',
+    ],
+    price: 0, // Price is included in package
+    cost: 600,
+    warranty: '7 Year Warranty',
+    column: 3, // Platinum tier feature
+    position: 1, // Second position in column
+    connector: 'AND', // Default connector
+  },
+  {
+    id: 'platinum-wheel-coating',
+    name: 'Platinum Wheel & Caliper Coating',
+    description: 'Protective coating for wheels and brake calipers.',
+    points: [
+      'Heat-resistant ceramic coating',
+      'Repels brake dust and contaminants',
+      'Easy cleaning and maintenance',
+    ],
+    useCases: [
+      'Keeps wheels looking clean longer.',
+      'Protects against corrosion and oxidation.',
+    ],
+    price: 0, // Price is included in package
+    cost: 350,
+    column: 3, // Platinum tier feature
+    position: 2, // Third position in column
+    connector: 'AND', // Default connector
+  },
+  // ===== ADMIN ORGANIZATION (Column 4) =====
   {
     id: 'diamond-shield',
     name: 'Diamond Shield Windshield Protection',

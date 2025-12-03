@@ -208,7 +208,8 @@ describe('Summary', () => {
       <Summary {...defaultProps} selectedPackage={mockPackage} totalPrice={2500} />
     );
 
-    const packageBadge = container.querySelector('.bg-blue-600');
+    // The package badge now uses a gradient background instead of bg-blue-600
+    const packageBadge = container.querySelector('.from-blue-600');
     expect(packageBadge).toHaveClass('animate-summary-item-in');
   });
 
@@ -217,7 +218,8 @@ describe('Summary', () => {
       <Summary {...defaultProps} customPackageItems={[mockAlaCarteOptions[0]!]} totalPrice={300} />
     );
 
-    const itemBadge = container.querySelector('.bg-gray-700');
+    // The item badge now uses bg-white/10 instead of bg-gray-700
+    const itemBadge = container.querySelector('.bg-white\\/10');
     expect(itemBadge).toHaveClass('animate-summary-item-in');
   });
 });

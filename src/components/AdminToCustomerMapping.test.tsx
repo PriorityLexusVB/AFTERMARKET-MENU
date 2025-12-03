@@ -337,8 +337,8 @@ describe('Admin to Customer Menu Mapping', () => {
       // Price should be displayed
       expect(container.textContent).toContain('$2,399');
 
-      // Price badge should have red background
-      const priceBadge = container.querySelector('.bg-red-700');
+      // Price badge should have red gradient background (updated from bg-red-700)
+      const priceBadge = container.querySelector('.from-red-600');
       expect(priceBadge).toBeInTheDocument();
     });
 

@@ -14,152 +14,43 @@
 
 ## Phase 1: Configuration Integration
 
-### Step 1.1: Update tailwind.config.js
+### Step 1.1: Replace tailwind.config.js
 
-Add the following extensions to `tailwind.config.js`:
+**Option A (Recommended):** Replace the entire config with the luxury version:
 
-```javascript
-// ADD TO theme.extend:
-
-// Colors - Luxury Palette
-colors: {
-  luxury: {
-    'bg-primary': '#111827',
-    'bg-secondary': '#1f2937', 
-    'accent-blue': '#3b82f6',
-    'accent-gold': '#fbbf24',
-    'accent-green': '#22c55e',
-    'accent-red': '#ef4444',
-    'text-primary': '#f9fafb',
-    'text-secondary': '#d1d5db',
-    'text-muted': '#9ca3af',
-  },
-},
-
-// Touch-friendly spacing
-spacing: {
-  'touch': '44px',
-  'touch-lg': '56px',
-},
-
-minHeight: {
-  'touch': '44px',
-  'touch-lg': '56px',
-},
-
-minWidth: {
-  'touch': '44px', 
-  'touch-lg': '56px',
-},
-
-// Extended scale transforms  
-scale: {
-  '97': '0.97',
-  '98': '0.98',
-  '102': '1.02',
-  '103': '1.03',
-  '105': '1.05',
-},
-
-// Luxury shadows
-boxShadow: {
-  'luxury': '0 4px 8px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1), 0 16px 32px rgba(0,0,0,0.15)',
-  'luxury-lg': '0 8px 16px rgba(0,0,0,0.1), 0 16px 32px rgba(0,0,0,0.15), 0 32px 64px rgba(0,0,0,0.1)',
-  'glow-blue': '0 0 20px rgba(59,130,246,0.5), 0 0 40px rgba(59,130,246,0.3)',
-  'footer': '0 -10px 40px rgba(0,0,0,0.5)',
-},
-
-// Border radius
-borderRadius: {
-  'luxury': '1rem',
-  'luxury-lg': '1.5rem',
-  'luxury-xl': '2rem',
-},
-
-// Backdrop blur
-backdropBlur: {
-  'luxury': '20px',
-  'luxury-lg': '32px',
-},
+```bash
+cp tailwind.config.luxury-ipad.js tailwind.config.js
 ```
+
+**Option B (Gradual):** Merge specific extensions. The `tailwind.config.luxury-ipad.js` file already contains:
+- Full luxury color palette (`lexus-blue`, `luxury-gold`, `luxury-green`, `luxury-red`)
+- Touch-friendly spacing (`touch: 44px`, `touch-lg: 56px`, `touch-xl: 64px`)
+- Extended scale transforms (`97`, `98`, `102`, `103`, `105`)
+- Luxury shadows and glow effects
+- Premium border radius options
+- All animation keyframes
 
 **Status:** [ ] Not Started | [ ] In Progress | [ ] Complete
 
 ---
 
-### Step 1.2: Update src/index.css
+### Step 1.2: Replace src/index.css
 
-Add these utility classes to `src/index.css`:
+**Option A (Recommended):** Replace with the luxury version:
 
-```css
-/* ========== CSS CUSTOM PROPERTIES ========== */
-:root {
-  --luxury-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --luxury-ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --luxury-duration-fast: 150ms;
-  --luxury-duration-normal: 200ms;
-  --luxury-duration-slow: 300ms;
-}
-
-/* ========== GLASSMORPHISM ========== */
-.luxury-glass {
-  background: rgba(17, 24, 39, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.luxury-glass-dark {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* ========== TOUCH OPTIMIZATION ========== */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-.touch-target-lg {
-  min-height: 56px;
-  min-width: 56px;
-}
-
-/* ========== TEXT SHADOWS ========== */
-.text-shadow-luxury {
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* ========== ADDITIONAL ANIMATIONS ========== */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s ease-in-out infinite;
-}
-
-@keyframes fade-in-scale {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.animate-fade-in-scale {
-  animation: fade-in-scale 0.3s ease-out forwards;
-}
-
-/* ========== REDUCED MOTION SUPPORT ========== */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
+```bash
+cp src/index.luxury-ipad.css src/index.css
 ```
+
+**Option B (Gradual):** The `src/index.luxury-ipad.css` file already contains:
+- CSS custom properties (design tokens)
+- Glassmorphism utility classes
+- Touch optimization utilities
+- All animation keyframes (compatible with existing)
+- Reduced motion support
+- iPad-specific media queries
+
+**Note:** The luxury CSS file preserves all existing animations (`icon-pop-in`, `summary-item-in`, `fade-in`, `slide-up`, `slide-up-fast`) and adds new ones.
 
 **Status:** [ ] Not Started | [ ] In Progress | [ ] Complete
 
@@ -290,9 +181,16 @@ className="bg-black/40 backdrop-blur-xl py-5 border-b border-white/10 shadow-xl"
 Add staggered entrance for package cards:
 
 ```tsx
-// In PackageCard or parent container
-className="animate-fade-in-up"
-style={{ animationDelay: `${index * 100}ms` }}
+// In parent component that maps over packages
+{packages.map((pkg, index) => (
+  <PackageCard
+    key={pkg.id}
+    packageInfo={pkg}
+    className="animate-fade-in-up"
+    style={{ animationDelay: `${index * 100}ms` }}
+    // ... other props
+  />
+))}
 ```
 
 **Status:** [ ] Not Started | [ ] In Progress | [ ] Complete
@@ -372,10 +270,10 @@ In Chrome DevTools:
 
 ---
 
-## 🔗 Reference Files
+## 🔗 Reference Files (Already in Repository)
 
-- `tailwind.config.luxury-ipad.js` - Full luxury Tailwind config
-- `src/index.luxury-ipad.css` - Full luxury CSS
+- `tailwind.config.luxury-ipad.js` - Full luxury Tailwind config (ready to use)
+- `src/index.luxury-ipad.css` - Full luxury CSS (ready to use)
 - `LUXURY_IPAD_COMPONENTS.md` - Component code examples
 - `LUXURY_IPAD_OPTIMIZATION.md` - Design guidelines
 

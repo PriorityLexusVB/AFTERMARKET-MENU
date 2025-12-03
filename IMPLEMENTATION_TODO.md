@@ -93,7 +93,7 @@ Add `active:scale-95` to all buttons for touch press feedback:
 // Before
 className="... transition-all duration-200"
 
-// After  
+// After
 className="... transition-all duration-200 active:scale-95"
 ```
 
@@ -186,7 +186,7 @@ Add staggered entrance for package cards:
   <PackageCard
     key={pkg.id}
     packageInfo={pkg}
-    className="animate-fade-in-up"
+    className="animate-card-entrance"
     style={{ animationDelay: `${index * 100}ms` }}
     // ... other props
   />
@@ -202,7 +202,7 @@ Add staggered entrance for package cards:
 Add subtle pulse to "Most Popular" badge:
 
 ```tsx
-className="... animate-pulse-subtle"
+className="... animate-glow-pulse"
 ```
 
 **Status:** [ ] Not Started | [ ] In Progress | [ ] Complete
@@ -243,7 +243,7 @@ npm run test
 ### Step 5.3: iPad Viewport Testing
 
 In Chrome DevTools:
-1. Toggle device toolbar (Ctrl+Shift+M)
+1. Toggle device toolbar (Cmd+Shift+M on Mac, Ctrl+Shift+M on Windows/Linux)
 2. Select "iPad Pro" preset
 3. Test both portrait and landscape
 

@@ -4,19 +4,15 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
 // Column assignments for admin organization (direct 1:1 mapping):
-// - Column 1 = Gold Tier features ONLY
-// - Column 2 = Elite Tier features ONLY (empty = Elite package is empty)
-// - Column 3 = Platinum Tier features ONLY (empty = Platinum package is empty)
+// - Column 1 = Gold Tier features
+// - Column 2 = Elite Tier features
+// - Column 3 = Platinum Tier features
 // - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
 //
 // Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
-//
-// This mock data simulates the user's admin configuration where:
-// - Gold has 3 features
-// - Elite and Platinum columns are empty
-// - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
+  // === GOLD TIER FEATURES (Column 1) ===
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -30,12 +26,12 @@ export const MOCK_FEATURES: ProductFeature[] = [
       'Protects against road salt in winter.',
       'Prevents rust from forming on the chassis.',
     ],
-    price: 0, // Price is included in package
+    price: 0,
     cost: 300,
     warranty: 'Lifetime coverage',
     column: 1, // Gold tier feature
-    position: 0, // First position in column
-    connector: 'AND', // Default connector
+    position: 0,
+    connector: 'AND',
   },
   {
     id: 'toughguard-premium',
@@ -50,11 +46,11 @@ export const MOCK_FEATURES: ProductFeature[] = [
       'Keeps your car looking glossy and new.',
       'Makes washing easier as dirt and grime slide off.',
     ],
-    price: 0, // Price is included in package
+    price: 0,
     cost: 250,
     column: 1, // Gold tier feature
-    position: 1, // Second position in column
-    connector: 'AND', // Default connector
+    position: 1,
+    connector: 'AND',
   },
   {
     id: 'interior-protection',
@@ -68,12 +64,139 @@ export const MOCK_FEATURES: ProductFeature[] = [
       'Ideal for families with children or pets.',
       'Maintains the value and appearance of your interior.',
     ],
-    price: 0, // Price is included in package
+    price: 0,
     cost: 200,
     column: 1, // Gold tier feature
-    position: 2, // Third position in column
-    connector: 'OR', // Special connector for Gold package display
+    position: 2,
+    connector: 'OR',
   },
+
+  // === ELITE TIER FEATURES (Column 2) ===
+  {
+    id: 'elite-ceramic-coating',
+    name: 'Elite Ceramic Coating',
+    description: 'Premium 9H ceramic coating for ultimate paint protection.',
+    points: [
+      '9H hardness rating',
+      'Hydrophobic properties',
+      'UV protection',
+      '5-year durability',
+    ],
+    useCases: [
+      'Maximum paint protection for luxury vehicles.',
+      'Long-lasting shine without regular waxing.',
+    ],
+    price: 0,
+    cost: 800,
+    warranty: '5 Year Warranty',
+    column: 2, // Elite tier feature
+    position: 0,
+    connector: 'AND',
+  },
+  {
+    id: 'elite-ppf-full',
+    name: 'Full Body Paint Protection Film',
+    description: 'Complete paint protection film coverage for your entire vehicle.',
+    points: [
+      'Self-healing technology',
+      'Full body coverage',
+      'Stone chip protection',
+      'Swirl mark resistant',
+    ],
+    useCases: [
+      'Ultimate protection for high-value vehicles.',
+      'Preserve factory paint condition.',
+    ],
+    price: 0,
+    cost: 1200,
+    warranty: '10 Year Warranty',
+    column: 2, // Elite tier feature
+    position: 1,
+    connector: 'AND',
+  },
+  {
+    id: 'elite-interior-premium',
+    name: 'Premium Interior Protection',
+    description: 'Comprehensive interior protection package.',
+    points: [
+      'Leather conditioning treatment',
+      'Fabric protection coating',
+      'Dashboard UV protection',
+      'Odor elimination',
+    ],
+    useCases: [
+      'Keep interior looking showroom new.',
+      'Protect against daily wear and tear.',
+    ],
+    price: 0,
+    cost: 400,
+    column: 2, // Elite tier feature
+    position: 2,
+    connector: 'AND',
+  },
+
+  // === PLATINUM TIER FEATURES (Column 3) ===
+  {
+    id: 'platinum-ceramic-pro',
+    name: 'Ceramic Pro Gold Package',
+    description: 'Professional-grade ceramic coating with lifetime warranty.',
+    points: [
+      'Lifetime ceramic protection',
+      'Multiple layer application',
+      'Extreme hydrophobic effect',
+    ],
+    useCases: [
+      'Best-in-class protection for enthusiasts.',
+      'Certified installation with warranty.',
+    ],
+    price: 0,
+    cost: 600,
+    warranty: 'Lifetime Warranty',
+    column: 3, // Platinum tier feature
+    position: 0,
+    connector: 'AND',
+  },
+  {
+    id: 'platinum-ppf-partial',
+    name: 'Partial Paint Protection Film',
+    description: 'Strategic PPF coverage for high-impact areas.',
+    points: [
+      'Hood & fender protection',
+      'Mirror & door edge coverage',
+      'Rocker panel protection',
+    ],
+    useCases: [
+      'Cost-effective protection for vulnerable areas.',
+      'Great balance of coverage and value.',
+    ],
+    price: 0,
+    cost: 700,
+    warranty: '7 Year Warranty',
+    column: 3, // Platinum tier feature
+    position: 1,
+    connector: 'AND',
+  },
+  {
+    id: 'platinum-interior-standard',
+    name: 'Interior Shield Package',
+    description: 'Standard interior protection for seats and surfaces.',
+    points: [
+      'Seat fabric/leather protection',
+      'Carpet stain guard',
+      'Console & trim coating',
+    ],
+    useCases: [
+      'Essential protection for daily drivers.',
+      'Easy maintenance and cleaning.',
+    ],
+    price: 0,
+    cost: 300,
+    column: 3, // Platinum tier feature
+    position: 2,
+    connector: 'AND',
+  },
+
+  // === COLUMN 4 (Admin organization) ===
   {
     id: 'diamond-shield',
     name: 'Diamond Shield Windshield Protection',
@@ -87,29 +210,27 @@ export const MOCK_FEATURES: ProductFeature[] = [
       'Safer driving in bad weather conditions.',
       'Prevents minor chips from turning into large cracks.',
     ],
-    price: 0, // Price is included in package
+    price: 0,
     cost: 150,
-    // NOTE: This feature is placed in Column 4 for admin organization purposes only.
-    // Column 4 does NOT control the customer-facing "Popular Add-ons" section.
-    // Diamond Shield is a ProductFeature, not an AlaCarteOption, and is not in MAIN_PAGE_ADDON_IDS,
-    // so it will NOT appear in the customer's "Popular Add-ons" section.
     column: 4, // Admin organization column (NOT displayed in customer Popular Add-ons)
-    position: 0, // First position in column 4
-    connector: 'AND', // Default connector
+    position: 0,
+    connector: 'AND',
   },
 ];
 
 // MOCK PACKAGES (these would be in the 'packages' table)
 // Features are derived from column assignments using deriveTierFeatures
-// Each tier gets ONLY features from its corresponding column (1:1 mapping)
-// This ensures admin column configuration is the single source of truth
+// Each tier gets features from its corresponding column:
+// - Elite = Column 2 features
+// - Platinum = Column 3 features
+// - Gold = Column 1 features
 export const MOCK_PACKAGES: PackageTier[] = [
   {
     id: 'package-elite',
     name: 'Elite',
     price: 3499,
     cost: 900,
-    // Elite = Column 2 features ONLY (empty in this mock = empty package)
+    // Elite = Column 2 features
     features: deriveTierFeatures('Elite', MOCK_FEATURES),
     tier_color: 'gray-400',
   },
@@ -118,7 +239,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Platinum',
     price: 2899,
     cost: 750,
-    // Platinum = Column 3 features ONLY (empty in this mock = empty package)
+    // Platinum = Column 3 features
     features: deriveTierFeatures('Platinum', MOCK_FEATURES),
     is_recommended: true,
     tier_color: 'blue-400',
@@ -128,7 +249,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Gold',
     price: 2399,
     cost: 550,
-    // Gold = Column 1 features ONLY
+    // Gold = Column 1 features
     features: deriveTierFeatures('Gold', MOCK_FEATURES),
     tier_color: 'yellow-400',
   },

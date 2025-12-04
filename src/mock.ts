@@ -13,12 +13,12 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
 //
 // This mock data provides features for all three tiers:
-// - Gold (Column 1): 3 features
-// - Elite (Column 2): 3 features
-// - Platinum (Column 3): 3 features
+// - Gold has 3 features (Column 1)
+// - Elite has 3 features (Column 2)
+// - Platinum has 3 features (Column 3)
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
-  // ===== GOLD TIER (Column 1) =====
+  // Gold tier features (Column 1)
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -76,126 +76,124 @@ export const MOCK_FEATURES: ProductFeature[] = [
     position: 2, // Third position in column
     connector: 'OR', // Special connector for Gold package display
   },
-  // ===== ELITE TIER (Column 2) =====
+  // Elite tier features (Column 2)
   {
-    id: 'elite-ceramic-coating',
-    name: 'Elite Ceramic Coating',
-    description: 'Advanced ceramic protection with superior durability and shine.',
+    id: 'elite-rustguard',
+    name: 'RustGuard Pro',
+    description: 'Underbody protection to prevent corrosion and structural damage.',
     points: [
-      '9H hardness rating',
-      'Hydrophobic water repellency',
-      'UV protection for paint longevity',
+      'Prolongs the life of vehicle',
+      'Reduce repair/replacement costs',
+      'Prevent structural weakness',
     ],
     useCases: [
-      'Provides showroom-quality shine for years.',
-      'Reduces need for frequent washing and waxing.',
+      'Protects against road salt in winter.',
+      'Prevents rust from forming on the chassis.',
     ],
-    price: 0, // Price is included in package
-    cost: 500,
-    warranty: '5 Year Warranty',
-    column: 2, // Elite tier feature
-    position: 0, // First position in column
-    connector: 'AND', // Default connector
-  },
-  {
-    id: 'elite-paint-correction',
-    name: 'Elite Paint Correction',
-    description: 'Professional-grade paint restoration and polishing.',
-    points: [
-      'Removes swirl marks and scratches',
-      'Restores original paint clarity',
-      'Multi-stage polishing process',
-    ],
-    useCases: [
-      'Eliminates imperfections from daily driving.',
-      'Prepares surface for maximum coating adhesion.',
-    ],
-    price: 0, // Price is included in package
-    cost: 400,
-    column: 2, // Elite tier feature
-    position: 1, // Second position in column
-    connector: 'AND', // Default connector
-  },
-  {
-    id: 'elite-interior-detail',
-    name: 'Elite Interior Detailing',
-    description: 'Comprehensive interior cleaning and protection treatment.',
-    points: [
-      'Deep cleaning of all surfaces',
-      'Leather conditioning and protection',
-      'Fabric stain guard application',
-    ],
-    useCases: [
-      'Restores interior to like-new condition.',
-      'Extends life of leather and fabric surfaces.',
-    ],
-    price: 0, // Price is included in package
+    price: 0,
     cost: 300,
+    warranty: 'Lifetime coverage',
     column: 2, // Elite tier feature
-    position: 2, // Third position in column
-    connector: 'AND', // Default connector
-  },
-  // ===== PLATINUM TIER (Column 3) =====
-  {
-    id: 'platinum-ppf-full',
-    name: 'Platinum Full PPF Coverage',
-    description: 'Complete paint protection film coverage for maximum protection.',
-    points: [
-      'Full body PPF installation',
-      'Self-healing technology',
-      'Invisible protection barrier',
-    ],
-    useCases: [
-      'Ultimate protection against rock chips and debris.',
-      'Maintains resale value with pristine paint condition.',
-    ],
-    price: 0, // Price is included in package
-    cost: 800,
-    warranty: '10 Year Warranty',
-    column: 3, // Platinum tier feature
-    position: 0, // First position in column
-    connector: 'AND', // Default connector
+    position: 0,
+    connector: 'AND',
   },
   {
-    id: 'platinum-graphene-coating',
-    name: 'Platinum Graphene Coating',
-    description: 'Next-generation graphene-infused ceramic coating.',
+    id: 'elite-toughguard',
+    name: 'ToughGuard Premium',
+    description: 'A premium paint sealant that protects against environmental damage.',
     points: [
-      'Superior hardness and durability',
-      'Anti-static dust repellency',
-      'Enhanced heat dissipation',
+      'One Time Application',
+      'Eliminates waxing',
+      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
     ],
     useCases: [
-      'Top-tier protection for luxury vehicles.',
-      'Lasts longer than traditional ceramic coatings.',
+      'Keeps your car looking glossy and new.',
+      'Makes washing easier as dirt and grime slide off.',
     ],
-    price: 0, // Price is included in package
-    cost: 600,
-    warranty: '7 Year Warranty',
-    column: 3, // Platinum tier feature
-    position: 1, // Second position in column
-    connector: 'AND', // Default connector
+    price: 0,
+    cost: 250,
+    column: 2, // Elite tier feature
+    position: 1,
+    connector: 'AND',
   },
   {
-    id: 'platinum-wheel-coating',
-    name: 'Platinum Wheel & Caliper Coating',
-    description: 'Protective coating for wheels and brake calipers.',
+    id: 'elite-diamond-shield',
+    name: 'Diamond Shield Windshield Protection',
+    description: 'A treatment that improves visibility and protects your windshield.',
     points: [
-      'Heat-resistant ceramic coating',
-      'Repels brake dust and contaminants',
-      'Easy cleaning and maintenance',
+      'Increase visibility in rain',
+      'Protects against night glare',
+      'Help against chipping, cracking, clouding, sand, salt',
     ],
     useCases: [
-      'Keeps wheels looking clean longer.',
-      'Protects against corrosion and oxidation.',
+      'Safer driving in bad weather conditions.',
+      'Prevents minor chips from turning into large cracks.',
     ],
-    price: 0, // Price is included in package
-    cost: 350,
-    column: 3, // Platinum tier feature
-    position: 2, // Third position in column
-    connector: 'AND', // Default connector
+    price: 0,
+    cost: 150,
+    column: 2, // Elite tier feature
+    position: 2,
+    connector: 'AND',
   },
-  // ===== ADMIN ORGANIZATION (Column 4) =====
+  // Platinum tier features (Column 3)
+  {
+    id: 'platinum-rustguard',
+    name: 'RustGuard Pro',
+    description: 'Underbody protection to prevent corrosion and structural damage.',
+    points: [
+      'Prolongs the life of vehicle',
+      'Reduce repair/replacement costs',
+      'Prevent structural weakness',
+    ],
+    useCases: [
+      'Protects against road salt in winter.',
+      'Prevents rust from forming on the chassis.',
+    ],
+    price: 0,
+    cost: 300,
+    warranty: 'Lifetime coverage',
+    column: 3, // Platinum tier feature
+    position: 0,
+    connector: 'AND',
+  },
+  {
+    id: 'platinum-toughguard',
+    name: 'ToughGuard Premium',
+    description: 'A premium paint sealant that protects against environmental damage.',
+    points: [
+      'One Time Application',
+      'Eliminates waxing',
+      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+    ],
+    useCases: [
+      'Keeps your car looking glossy and new.',
+      'Makes washing easier as dirt and grime slide off.',
+    ],
+    price: 0,
+    cost: 250,
+    column: 3, // Platinum tier feature
+    position: 1,
+    connector: 'AND',
+  },
+  {
+    id: 'platinum-interior',
+    name: 'Interior Leather & Fabric Protection',
+    description: 'A complete interior treatment to protect against stains and damage.',
+    points: [
+      'Protects against stains such as: coffee, juices, crayons, chocolate, gum',
+      'Prevents cracking, covers rips, tears & burns',
+    ],
+    useCases: [
+      'Ideal for families with children or pets.',
+      'Maintains the value and appearance of your interior.',
+    ],
+    price: 0,
+    cost: 200,
+    column: 3, // Platinum tier feature
+    position: 2,
+    connector: 'OR',
+  },
+  // Column 4 (admin organization)
   {
     id: 'diamond-shield',
     name: 'Diamond Shield Windshield Protection',

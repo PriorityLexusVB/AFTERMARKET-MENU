@@ -5,18 +5,20 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // These are the individual services that make up the packages.
 // Column assignments for admin organization (direct 1:1 mapping):
 // - Column 1 = Gold Tier features ONLY
-// - Column 2 = Elite Tier features ONLY (empty = Elite package is empty)
-// - Column 3 = Platinum Tier features ONLY (empty = Platinum package is empty)
+// - Column 2 = Elite Tier features ONLY
+// - Column 3 = Platinum Tier features ONLY
 // - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
 //
 // Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
 //
-// This mock data simulates the user's admin configuration where:
-// - Gold has 3 features
-// - Elite and Platinum columns are empty
+// This mock data provides features for all three tiers:
+// - Gold has 3 features (Column 1)
+// - Elite has 3 features (Column 2)
+// - Platinum has 3 features (Column 3)
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
+  // Gold tier features (Column 1)
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -74,6 +76,124 @@ export const MOCK_FEATURES: ProductFeature[] = [
     position: 2, // Third position in column
     connector: 'OR', // Special connector for Gold package display
   },
+  // Elite tier features (Column 2)
+  {
+    id: 'elite-rustguard',
+    name: 'RustGuard Pro',
+    description: 'Underbody protection to prevent corrosion and structural damage.',
+    points: [
+      'Prolongs the life of vehicle',
+      'Reduce repair/replacement costs',
+      'Prevent structural weakness',
+    ],
+    useCases: [
+      'Protects against road salt in winter.',
+      'Prevents rust from forming on the chassis.',
+    ],
+    price: 0,
+    cost: 300,
+    warranty: 'Lifetime coverage',
+    column: 2, // Elite tier feature
+    position: 0,
+    connector: 'AND',
+  },
+  {
+    id: 'elite-toughguard',
+    name: 'ToughGuard Premium',
+    description: 'A premium paint sealant that protects against environmental damage.',
+    points: [
+      'One Time Application',
+      'Eliminates waxing',
+      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+    ],
+    useCases: [
+      'Keeps your car looking glossy and new.',
+      'Makes washing easier as dirt and grime slide off.',
+    ],
+    price: 0,
+    cost: 250,
+    column: 2, // Elite tier feature
+    position: 1,
+    connector: 'AND',
+  },
+  {
+    id: 'elite-diamond-shield',
+    name: 'Diamond Shield Windshield Protection',
+    description: 'A treatment that improves visibility and protects your windshield.',
+    points: [
+      'Increase visibility in rain',
+      'Protects against night glare',
+      'Help against chipping, cracking, clouding, sand, salt',
+    ],
+    useCases: [
+      'Safer driving in bad weather conditions.',
+      'Prevents minor chips from turning into large cracks.',
+    ],
+    price: 0,
+    cost: 150,
+    column: 2, // Elite tier feature
+    position: 2,
+    connector: 'AND',
+  },
+  // Platinum tier features (Column 3)
+  {
+    id: 'platinum-rustguard',
+    name: 'RustGuard Pro',
+    description: 'Underbody protection to prevent corrosion and structural damage.',
+    points: [
+      'Prolongs the life of vehicle',
+      'Reduce repair/replacement costs',
+      'Prevent structural weakness',
+    ],
+    useCases: [
+      'Protects against road salt in winter.',
+      'Prevents rust from forming on the chassis.',
+    ],
+    price: 0,
+    cost: 300,
+    warranty: 'Lifetime coverage',
+    column: 3, // Platinum tier feature
+    position: 0,
+    connector: 'AND',
+  },
+  {
+    id: 'platinum-toughguard',
+    name: 'ToughGuard Premium',
+    description: 'A premium paint sealant that protects against environmental damage.',
+    points: [
+      'One Time Application',
+      'Eliminates waxing',
+      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+    ],
+    useCases: [
+      'Keeps your car looking glossy and new.',
+      'Makes washing easier as dirt and grime slide off.',
+    ],
+    price: 0,
+    cost: 250,
+    column: 3, // Platinum tier feature
+    position: 1,
+    connector: 'AND',
+  },
+  {
+    id: 'platinum-interior',
+    name: 'Interior Leather & Fabric Protection',
+    description: 'A complete interior treatment to protect against stains and damage.',
+    points: [
+      'Protects against stains such as: coffee, juices, crayons, chocolate, gum',
+      'Prevents cracking, covers rips, tears & burns',
+    ],
+    useCases: [
+      'Ideal for families with children or pets.',
+      'Maintains the value and appearance of your interior.',
+    ],
+    price: 0,
+    cost: 200,
+    column: 3, // Platinum tier feature
+    position: 2,
+    connector: 'OR',
+  },
+  // Column 4 (admin organization)
   {
     id: 'diamond-shield',
     name: 'Diamond Shield Windshield Protection',

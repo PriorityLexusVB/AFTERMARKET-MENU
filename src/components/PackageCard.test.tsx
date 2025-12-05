@@ -125,7 +125,7 @@ describe('PackageCard', () => {
   it('should show "Selected" button when selected', () => {
     render(<PackageCard {...defaultProps} isSelected={true} />);
 
-    expect(screen.getByText('✓ Selected')).toBeInTheDocument();
+    expect(screen.getByText('Selected')).toBeInTheDocument();
   });
 
   it('should call onSelect when Select Plan button is clicked', async () => {

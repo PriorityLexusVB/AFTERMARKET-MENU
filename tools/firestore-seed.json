@@ -55,117 +55,6 @@
         "position": 2,
         "connector": "OR"
       },
-      "elite-ceramic-coating": {
-        "name": "Elite Ceramic Coating",
-        "description": "Advanced ceramic protection with superior durability and shine.",
-        "points": [
-          "9H hardness rating",
-          "Hydrophobic water repellency",
-          "UV protection for paint longevity"
-        ],
-        "useCases": [
-          "Provides showroom-quality shine for years.",
-          "Reduces need for frequent washing and waxing."
-        ],
-        "price": 0,
-        "cost": 500,
-        "warranty": "5 Year Warranty",
-        "column": 2,
-        "position": 0,
-        "connector": "AND"
-      },
-      "elite-paint-correction": {
-        "name": "Elite Paint Correction",
-        "description": "Professional-grade paint restoration and polishing.",
-        "points": [
-          "Removes swirl marks and scratches",
-          "Restores original paint clarity",
-          "Multi-stage polishing process"
-        ],
-        "useCases": [
-          "Eliminates imperfections from daily driving.",
-          "Prepares surface for maximum coating adhesion."
-        ],
-        "price": 0,
-        "cost": 400,
-        "column": 2,
-        "position": 1,
-        "connector": "AND"
-      },
-      "elite-interior-detail": {
-        "name": "Elite Interior Detailing",
-        "description": "Comprehensive interior cleaning and protection treatment.",
-        "points": [
-          "Deep cleaning of all surfaces",
-          "Leather conditioning and protection",
-          "Fabric stain guard application"
-        ],
-        "useCases": [
-          "Restores interior to like-new condition.",
-          "Extends life of leather and fabric surfaces."
-        ],
-        "price": 0,
-        "cost": 300,
-        "column": 2,
-        "position": 2,
-        "connector": "AND"
-      },
-      "platinum-ppf-full": {
-        "name": "Platinum Full PPF Coverage",
-        "description": "Complete paint protection film coverage for maximum protection.",
-        "points": [
-          "Full body PPF installation",
-          "Self-healing technology",
-          "Invisible protection barrier"
-        ],
-        "useCases": [
-          "Ultimate protection against rock chips and debris.",
-          "Maintains resale value with pristine paint condition."
-        ],
-        "price": 0,
-        "cost": 800,
-        "warranty": "10 Year Warranty",
-        "column": 3,
-        "position": 0,
-        "connector": "AND"
-      },
-      "platinum-graphene-coating": {
-        "name": "Platinum Graphene Coating",
-        "description": "Next-generation graphene-infused ceramic coating.",
-        "points": [
-          "Superior hardness and durability",
-          "Anti-static dust repellency",
-          "Enhanced heat dissipation"
-        ],
-        "useCases": [
-          "Top-tier protection for luxury vehicles.",
-          "Lasts longer than traditional ceramic coatings."
-        ],
-        "price": 0,
-        "cost": 600,
-        "warranty": "7 Year Warranty",
-        "column": 3,
-        "position": 1,
-        "connector": "AND"
-      },
-      "platinum-wheel-coating": {
-        "name": "Platinum Wheel & Caliper Coating",
-        "description": "Protective coating for wheels and brake calipers.",
-        "points": [
-          "Heat-resistant ceramic coating",
-          "Repels brake dust and contaminants",
-          "Easy cleaning and maintenance"
-        ],
-        "useCases": [
-          "Keeps wheels looking clean longer.",
-          "Protects against corrosion and oxidation."
-        ],
-        "price": 0,
-        "cost": 350,
-        "column": 3,
-        "position": 2,
-        "connector": "AND"
-      },
       "diamond-shield": {
         "name": "Diamond Shield Windshield Protection",
         "description": "A treatment that improves visibility and protects your windshield.",
@@ -180,7 +69,7 @@
         ],
         "price": 0,
         "cost": 150,
-        "column": 4,
+        "column": 2,
         "position": 0,
         "connector": "AND"
       }
@@ -190,14 +79,14 @@
         "name": "Elite",
         "price": 3499,
         "cost": 900,
-        "featureIds": ["elite-ceramic-coating", "elite-paint-correction", "elite-interior-detail"],
+        "featureIds": ["rustguard-pro", "toughguard-premium", "interior-protection", "diamond-shield"],
         "tier_color": "gray-400"
       },
       "package-platinum": {
         "name": "Platinum",
         "price": 2899,
         "cost": 750,
-        "featureIds": ["platinum-ppf-full", "platinum-graphene-coating", "platinum-wheel-coating"],
+        "featureIds": ["rustguard-pro", "toughguard-premium", "interior-protection"],
         "is_recommended": true,
         "tier_color": "blue-400"
       },

@@ -61,7 +61,7 @@ export const Summary: React.FC<SummaryProps> = ({ selectedPackage, customPackage
                 aria-label="Finalize and Print"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 12.75 2.25 2.25 4.5-4.5m4.5 2.25-2.25 2.25-4.5-4.5m-4.5 4.5L6.75 12m12.75 3H3.25" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                 </svg>
                 <span className="hidden sm:inline">Finalize Agreement</span>
             </button>

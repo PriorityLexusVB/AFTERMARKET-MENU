@@ -28,12 +28,14 @@
 
 | Branch | Ahead/Behind vs main | Last Updated | Short Purpose | Status Category | Recommendation |
 |--------|---------------------|--------------|---------------|-----------------|----------------|
-| `claude/optimize-luxury-ipad-ui-01K5rV2FgT4NXYB9hxNgUedU` | 82+ ahead | 2025-12-02 | Luxury iPad UI optimization with implementation plans and TODO checklist | ACTIVE / IN USE | Continue development; merge related PRs when tests pass |
-| `copilot/add-dependabot-grouping-workflow` | 71+ ahead | 2025-12-01 | Add Dependabot grouping configuration and automation workflow | STALE / LIKELY SAFE TO DELETE | Appears superseded by `copilot/update-dependencies-from-dependabot`; confirm before deleting |
-| `copilot/analyze-branch-health` | 2 ahead, 0 behind | 2025-12-05 | This branch - branch health analysis report | READY TO MERGE | Current PR #67; merge after review |
-| `copilot/enhance-backend-menu-editor` | 68+ ahead | 2025-11-27 | Add cross-column drag-and-drop and inline AND/OR toggle to AdminPanel | STALE / LIKELY SAFE TO DELETE | Last updated 8+ days ago; complex admin panel changes may be superseded |
-| `copilot/sub-pr-23` | 71+ ahead | 2025-11-22 | Comprehensive package management system, settings tab, pricing updates | ALREADY MERGED / REDUNDANT | Very old (13+ days); features likely merged via other PRs |
-| `copilot/update-dependencies-from-dependabot` | 77+ ahead | 2025-12-02 | Update npm-minor-patch dependencies from Dependabot | ACTIVE / IN USE | Active dependency management work |
+| `claude/optimize-luxury-ipad-ui-01K5rV2FgT4NXYB9hxNgUedU` | ~82 ahead | 2025-12-02 | Luxury iPad UI optimization with implementation plans and TODO checklist | ACTIVE / IN USE | Continue development; merge related PRs when tests pass |
+| `copilot/add-dependabot-grouping-workflow` | ~71 ahead | 2025-12-01 | Add Dependabot grouping configuration and automation workflow | STALE / LIKELY SAFE TO DELETE | Appears superseded by `copilot/update-dependencies-from-dependabot`; confirm before deleting |
+| `copilot/analyze-branch-health` | 3 ahead | 2025-12-05 | This branch - branch health analysis report | READY TO MERGE | Current PR #67; merge after review |
+| `copilot/enhance-backend-menu-editor` | ~68 ahead | 2025-11-27 | Add cross-column drag-and-drop and inline AND/OR toggle to AdminPanel | STALE / LIKELY SAFE TO DELETE | Last updated 8+ days ago; complex admin panel changes may be superseded |
+| `copilot/sub-pr-23` | ~71 ahead | 2025-11-22 | Comprehensive package management system, settings tab, pricing updates | ALREADY MERGED / REDUNDANT | Very old (13+ days); features likely merged via other PRs |
+| `copilot/update-dependencies-from-dependabot` | ~77 ahead | 2025-12-02 | Update npm-minor-patch dependencies from Dependabot | ACTIVE / IN USE | Active dependency management work |
+
+*Note: Values marked with ~ are estimates due to shallow clone limitations*
 
 ---
 

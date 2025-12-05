@@ -1,692 +1,574 @@
 /**
- * Luxury iPad Stylesheet
- * 
- * Premium CSS styles and animations optimized for iPad displays.
- * Import this file alongside or instead of index.css for luxury iPad mode.
- * 
- * @usage
- * In src/index.tsx:
- * import './index.luxury-ipad.css';
+ * LUXURY IPAD OPTIMIZED STYLES
+ * Priority Lexus Aftermarket Menu
+ *
+ * This stylesheet extends Tailwind with:
+ * - Premium typography
+ * - Luxury animations
+ * - Touch-optimized interactions
+ * - iPad-specific enhancements
+ * - Glass morphism effects
  */
 
-/* ========================================
-   TAILWIND DIRECTIVES
-   ======================================== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ========================================
-   CSS CUSTOM PROPERTIES (VARIABLES)
-   
-   Note: These CSS variables provide a runtime theming API that can be
-   dynamically changed via JavaScript. The Tailwind config contains
-   equivalent values for build-time optimization. Both systems work
-   together: Tailwind classes for static styling, CSS variables for
-   dynamic theming and JavaScript interoperability.
+   TYPOGRAPHY - Luxury Font Setup
    ======================================== */
-:root {
-  /* Color Palette */
-  --luxury-bg-primary: #111827;
-  --luxury-bg-secondary: #1f2937;
-  --luxury-bg-tertiary: #374151;
-  
-  --luxury-accent-blue: #3b82f6;
-  --luxury-accent-gold: #fbbf24;
-  --luxury-accent-green: #22c55e;
-  --luxury-accent-red: #ef4444;
-  --luxury-accent-purple: #a855f7;
-  
-  --luxury-text-primary: #f9fafb;
-  --luxury-text-secondary: #d1d5db;
-  --luxury-text-muted: #9ca3af;
-  
-  /* Tier Colors */
-  --luxury-tier-gold: #fbbf24;
-  --luxury-tier-elite: #a855f7;
-  --luxury-tier-platinum: #3b82f6;
-  
-  /* Animation Timing */
-  --luxury-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --luxury-ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --luxury-ease-in: cubic-bezier(0.4, 0, 1, 1);
-  --luxury-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  
-  /* Animation Durations */
-  --luxury-duration-micro: 100ms;
-  --luxury-duration-fast: 150ms;
-  --luxury-duration-normal: 200ms;
-  --luxury-duration-slow: 300ms;
-  --luxury-duration-slower: 400ms;
-  
-  /* Spacing */
-  --luxury-touch-target: 44px;
-  --luxury-touch-target-lg: 56px;
-  
-  /* Border Radius */
-  --luxury-radius: 1rem;
-  --luxury-radius-lg: 1.5rem;
-  --luxury-radius-xl: 2rem;
-  
-  /* Shadows */
-  --luxury-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1), 0 16px 32px rgba(0, 0, 0, 0.15);
-  --luxury-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1), 0 16px 32px rgba(0, 0, 0, 0.15), 0 32px 64px rgba(0, 0, 0, 0.1);
-  --luxury-glow-blue: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
-}
 
-/* ========================================
-   BASE STYLES
-   ======================================== */
+/* Import premium fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Teko:wght@400;500;600;700&display=swap');
+
+/* Optional premium alternatives (uncomment to use):
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
+*/
+
 body {
-  font-family: 'Roboto', system-ui, sans-serif;
-  background-color: var(--luxury-bg-primary);
-  color: var(--luxury-text-primary);
-  
-  /* Optimize for touch */
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  
-  /* Smooth text rendering */
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
-/* Heading fonts */
-h1, h2, h3, h4, .font-teko {
-  font-family: 'Teko', system-ui, sans-serif;
+h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
+  font-family: 'Teko', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.05em;
 }
 
-/* ========================================
-   UTILITY CLASSES - TEXT
-   ======================================== */
+/* Enhanced text shadow for luxury feel */
 .text-shadow {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-.text-shadow-luxury {
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+.text-shadow-sm {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .text-shadow-glow {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
+  text-shadow: 0 0 20px rgba(0, 102, 255, 0.6);
 }
 
 /* ========================================
-   UTILITY CLASSES - TOUCH
+   CUSTOM PROPERTIES - Design Tokens
    ======================================== */
-.touch-target {
-  min-height: var(--luxury-touch-target);
-  min-width: var(--luxury-touch-target);
-}
 
-.touch-target-lg {
-  min-height: var(--luxury-touch-target-lg);
-  min-width: var(--luxury-touch-target-lg);
-}
+:root {
+  /* Luxury Colors */
+  --color-luxury-black: #0A0A0A;
+  --color-luxury-charcoal: #1A1A1A;
+  --color-luxury-slate: #2A2A2A;
+  --color-luxury-silver: #E8E8E8;
+  --color-luxury-platinum: #F5F5F5;
 
-.no-select {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
+  /* Easing curves */
+  --ease-luxury: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Durations */
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-luxe: 600ms;
+
+  /* Spacing */
+  --touch-target-min: 44px;
+  --touch-target-comfortable: 48px;
+  --touch-target-luxury: 56px;
 }
 
 /* ========================================
-   UTILITY CLASSES - SCROLL
+   BASE LAYER - Global Styles
    ======================================== */
-.luxury-scroll {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
 
-.luxury-scroll::-webkit-scrollbar {
-  display: none;
+@layer base {
+  /* Disable user selection on UI elements */
+  button, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Disable callout on touch and hold */
+  button, a {
+    -webkit-touch-callout: none;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  @media screen and (max-width: 1024px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Better tap highlight color */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 102, 255, 0.2);
+  }
 }
 
 /* ========================================
-   UTILITY CLASSES - GPU ACCELERATION
+   COMPONENTS - Reusable UI Elements
    ======================================== */
-.gpu-accelerated {
-  transform: translateZ(0);
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+
+@layer components {
+  /* Container utilities for iPad */
+  .container-ipad {
+    max-width: 100%;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-ipad {
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-ipad {
+      max-width: 1400px;
+      padding-left: 4rem;
+      padding-right: 4rem;
+    }
+  }
+
+  /* Touch target utilities */
+  .touch-target-min {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: 0.75rem 1rem;
+  }
+
+  .touch-target-comfortable {
+    min-width: var(--touch-target-comfortable);
+    min-height: var(--touch-target-comfortable);
+    padding: 0.875rem 1.25rem;
+  }
+
+  .touch-target-luxury {
+    min-width: var(--touch-target-luxury);
+    min-height: var(--touch-target-luxury);
+    padding: 1rem 1.5rem;
+  }
+
+  /* Luxury backgrounds */
+  .luxury-bg-dark {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+  }
+
+  .luxury-bg-card {
+    background: rgba(42, 42, 42, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .luxury-bg-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .luxury-bg-glass-dark {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Gradient overlays */
+  .gradient-overlay-dark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0) 0%, rgba(10, 10, 10, 0.8) 100%);
+    pointer-events: none;
+  }
+
+  /* Luxury transitions */
+  .transition-luxury {
+    transition-duration: var(--duration-luxe);
+    transition-timing-function: var(--ease-luxury);
+  }
+
+  .transition-smooth {
+    transition-duration: var(--duration-normal);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  /* Touch feedback */
+  .touch-feedback {
+    transition: all var(--duration-fast) var(--ease-smooth);
+  }
+
+  .touch-feedback:active {
+    transform: scale(0.96);
+    opacity: 0.9;
+  }
+
+  /* Grid layouts for iPad */
+  .packages-grid-ipad {
+    display: grid;
+    gap: 2rem;
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+    .packages-grid-ipad {
+      grid-template-columns: 1fr;
+      max-width: 600px;
+      margin: 0 auto;
+      gap: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .packages-grid-ipad {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1366px) {
+    .packages-grid-ipad {
+      gap: 3rem;
+    }
+  }
+
+  /* Stagger animation for children */
+  .stagger-children > * {
+    animation: card-entrance 0.6s var(--ease-luxury) backwards;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 100ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 200ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 400ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 500ms; }
+
+  /* Button styles */
+  .btn-luxury-primary {
+    @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
+    @apply text-white font-bold uppercase tracking-wider;
+    @apply rounded-2xl shadow-luxury-lg;
+    @apply transition-all duration-300;
+    @apply active:scale-95;
+    @apply min-h-touch px-8 py-4;
+  }
+
+  .btn-luxury-secondary {
+    @apply bg-white/10 text-luxury-silver;
+    @apply border-2 border-white/20;
+    @apply font-semibold uppercase tracking-wide;
+    @apply rounded-2xl;
+    @apply transition-all duration-300;
+    @apply hover:bg-white/20 hover:border-white/30;
+    @apply active:scale-95;
+    @apply min-h-touch px-8 py-4;
+  }
+
+  .btn-luxury-success {
+    @apply bg-gradient-to-r from-luxury-green-600 to-luxury-green-500;
+    @apply text-white font-bold uppercase tracking-wider;
+    @apply rounded-2xl shadow-luxury-lg;
+    @apply transition-all duration-300;
+    @apply active:scale-95;
+    @apply min-h-touch px-8 py-4;
+  }
 }
 
 /* ========================================
-   GLASSMORPHISM EFFECTS
+   UTILITIES - Helper Classes
    ======================================== */
-.luxury-glass {
-  background: rgba(17, 24, 39, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
 
-.luxury-glass-dark {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
+@layer utilities {
+  /* Remove hover states on touch devices */
+  @media (hover: none) {
+    .hover\:scale-102:hover,
+    .hover\:scale-105:hover {
+      transform: none;
+    }
 
-.luxury-glass-light {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+    .hover\:bg-gray-600:hover,
+    .hover\:bg-blue-500:hover,
+    .hover\:bg-white:hover {
+      background-color: inherit;
+    }
+
+    .hover\:text-white:hover,
+    .hover\:text-blue-400:hover {
+      color: inherit;
+    }
+  }
+
+  /* Scroll indicators */
+  .scroll-indicator {
+    position: relative;
+  }
+
+  .scroll-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse-scroll 2s infinite;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Luxury scrollbar */
+  .scrollbar-luxury {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  .scrollbar-luxury::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Orientation-specific utilities */
+  @media (orientation: portrait) {
+    .portrait\:hidden {
+      display: none;
+    }
+  }
+
+  @media (orientation: landscape) {
+    .landscape\:hidden {
+      display: none;
+    }
+  }
 }
 
 /* ========================================
-   LUXURY SHADOWS
-   ======================================== */
-.luxury-shadow {
-  box-shadow: var(--luxury-shadow);
-}
-
-.luxury-shadow-lg {
-  box-shadow: var(--luxury-shadow-lg);
-}
-
-.luxury-glow {
-  box-shadow: var(--luxury-glow-blue);
-}
-
-.luxury-glow-gold {
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.3);
-}
-
-.luxury-glow-green {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 40px rgba(34, 197, 94, 0.3);
-}
-
-.luxury-glow-red {
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.3);
-}
-
-/* ========================================
-   KEYFRAME ANIMATIONS
+   ANIMATIONS - Keyframes & Effects
    ======================================== */
 
-/* Fade Animations */
+/* Card entrance animation */
+@keyframes card-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-entrance {
+  animation: card-entrance 0.6s var(--ease-luxury) forwards;
+}
+
+/* Fade in */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }
 
-/* Slide Animations */
+/* Slide up */
 @keyframes slide-up {
-  from { 
-    transform: translateY(20px) scale(0.98); 
-    opacity: 0; 
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
   }
-  to { 
-    transform: translateY(0) scale(1); 
-    opacity: 1; 
-  }
-}
-
-@keyframes slide-down {
-  from { 
-    transform: translateY(-20px) scale(0.98); 
-    opacity: 0; 
-  }
-  to { 
-    transform: translateY(0) scale(1); 
-    opacity: 1; 
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Slide up fast (for modals on mobile) */
 @keyframes slide-up-fast {
-  from { 
-    transform: translateY(100%); 
-    opacity: 0; 
+  from {
+    opacity: 0;
+    transform: translateY(100%);
   }
-  to { 
-    transform: translateY(0); 
-    opacity: 1; 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Responsive slide-up-fast for larger screens */
 @media (min-width: 640px) {
   @keyframes slide-up-fast {
-    from { 
-      transform: translateY(20px) scale(0.98); 
-      opacity: 0; 
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
     }
-    to { 
-      transform: translateY(0) scale(1); 
-      opacity: 1; 
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 }
 
-/* Scale Animations */
-@keyframes scale-in {
-  from { 
-    transform: scale(0.95); 
-    opacity: 0; 
-  }
-  to { 
-    transform: scale(1); 
-    opacity: 1; 
-  }
+.animate-slide-up-fast {
+  animation: slide-up-fast 0.3s ease-out forwards;
 }
 
-@keyframes scale-out {
-  from { 
-    transform: scale(1); 
-    opacity: 1; 
-  }
-  to { 
-    transform: scale(0.95); 
-    opacity: 0; 
-  }
-}
-
-/* Combined Animations */
-@keyframes fade-in-up {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-@keyframes fade-in-scale {
-  from { 
-    opacity: 0; 
-    transform: scale(0.95); 
-  }
-  to { 
-    opacity: 1; 
-    transform: scale(1); 
-  }
-}
-
-/* Icon Pop-in Animation */
+/* Icon pop in */
 @keyframes icon-pop-in {
-  from { 
-    transform: scale(0.5); 
-    opacity: 0; 
-  }
-  to { 
-    transform: scale(1); 
-    opacity: 1; 
-  }
-}
-
-/* Summary Item Animation */
-@keyframes summary-item-in {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-/* Pulse Animations */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); 
-  }
-  50% { 
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); 
-  }
-}
-
-@keyframes pulse-glow-gold {
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); 
-  }
-  50% { 
-    box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); 
-  }
-}
-
-/* Shimmer Animation */
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-/* Selection Animation */
-@keyframes luxury-select {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1.05);
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
-  }
-}
-
-/* Bounce-in Animation */
-@keyframes bounce-in {
-  0% {
-    transform: scale(0.8);
+  from {
+    transform: scale(0.5);
     opacity: 0;
   }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
+  to {
     transform: scale(1);
     opacity: 1;
   }
 }
 
-/* Shake Animation (for errors) */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-8px); }
-  40% { transform: translateX(8px); }
-  60% { transform: translateX(-8px); }
-  80% { transform: translateX(8px); }
-}
-
-/* ========================================
-   ANIMATION UTILITY CLASSES
-   ======================================== */
-.animate-fade-in {
-  animation: fade-in 0.3s var(--luxury-ease-out) forwards;
-}
-
-.animate-fade-out {
-  animation: fade-out 0.3s var(--luxury-ease-in) forwards;
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s var(--luxury-ease-out) forwards;
-}
-
-.animate-slide-down {
-  animation: slide-down 0.3s var(--luxury-ease-out) forwards;
-}
-
-.animate-slide-up-fast {
-  animation: slide-up-fast 0.3s var(--luxury-ease-out) forwards;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.2s var(--luxury-ease-out) forwards;
-}
-
-.animate-scale-out {
-  animation: scale-out 0.2s var(--luxury-ease-in) forwards;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.4s var(--luxury-ease-out) forwards;
-}
-
-.animate-fade-in-scale {
-  animation: fade-in-scale 0.3s var(--luxury-ease-out) forwards;
-}
-
 .animate-icon-pop-in {
-  animation: icon-pop-in 0.3s var(--luxury-ease-out) forwards;
+  animation: icon-pop-in 0.3s ease-out forwards;
+}
+
+/* Summary item in */
+@keyframes summary-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-summary-item-in {
-  animation: summary-item-in 0.4s var(--luxury-ease-out) forwards;
+  animation: summary-item-in 0.4s ease-out forwards;
 }
 
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s ease-in-out infinite;
+/* Modal animations */
+@keyframes modal-backdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+@keyframes modal-content {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.animate-pulse-glow-gold {
-  animation: pulse-glow-gold 2s ease-in-out infinite;
+.animate-modal-backdrop {
+  animation: modal-backdrop 0.3s ease-out forwards;
+}
+
+.animate-modal-content {
+  animation: modal-content 0.4s var(--ease-luxury) forwards;
+}
+
+/* Pulse scroll indicator */
+@keyframes pulse-scroll {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-8px);
+  }
+}
+
+.animate-pulse-scroll {
+  animation: pulse-scroll 2s infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 .animate-shimmer {
-  animation: shimmer 2s linear infinite;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-  background-size: 200% 100%;
-}
-
-.animate-luxury-select {
-  animation: luxury-select 0.3s var(--luxury-ease-out) forwards;
-}
-
-.animate-bounce-in {
-  animation: bounce-in 0.4s var(--luxury-spring) forwards;
-}
-
-.animate-shake {
-  animation: shake 0.5s var(--luxury-ease) forwards;
-}
-
-/* ========================================
-   STAGGERED ANIMATION DELAYS
-   ======================================== */
-.animate-delay-75 { animation-delay: 75ms; }
-.animate-delay-100 { animation-delay: 100ms; }
-.animate-delay-150 { animation-delay: 150ms; }
-.animate-delay-200 { animation-delay: 200ms; }
-.animate-delay-300 { animation-delay: 300ms; }
-.animate-delay-400 { animation-delay: 400ms; }
-.animate-delay-500 { animation-delay: 500ms; }
-
-/* ========================================
-   LUXURY BUTTON STYLES
-   ======================================== */
-.luxury-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  min-height: var(--luxury-touch-target);
-  border-radius: var(--luxury-radius);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.2s var(--luxury-ease);
-  cursor: pointer;
-}
-
-.luxury-button:active {
-  transform: scale(0.97);
-}
-
-.luxury-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.luxury-button-primary {
-  background: var(--luxury-accent-blue);
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.luxury-button-primary:hover:not(:disabled) {
-  background: #2563eb;
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-}
-
-.luxury-button-secondary {
-  background: rgba(55, 65, 81, 0.8);
-  color: var(--luxury-text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.luxury-button-secondary:hover:not(:disabled) {
-  background: var(--luxury-accent-blue);
-  color: white;
-}
-
-.luxury-button-success {
-  background: linear-gradient(135deg, var(--luxury-accent-green), #059669);
-  color: white;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-}
-
-.luxury-button-success:hover:not(:disabled) {
-  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
-}
-
-/* ========================================
-   LUXURY CARD STYLES
-   ======================================== */
-.luxury-card {
-  background: linear-gradient(to bottom, rgba(31, 41, 55, 0.9), rgba(17, 24, 39, 0.9));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--luxury-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--luxury-shadow);
-  transition: all 0.3s var(--luxury-ease);
-}
-
-.luxury-card:hover {
-  transform: scale(1.02);
-  box-shadow: var(--luxury-shadow-lg);
-}
-
-.luxury-card.selected {
-  transform: scale(1.05);
-  box-shadow: var(--luxury-glow-blue);
-  border-color: var(--luxury-accent-blue);
-}
-
-/* ========================================
-   LUXURY HEADER STYLES
-   ======================================== */
-.luxury-header {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* ========================================
-   LUXURY FOOTER STYLES
-   ======================================== */
-.luxury-footer {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-}
-
-/* ========================================
-   LUXURY MODAL STYLES
-   ======================================== */
-.luxury-modal-overlay {
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.luxury-modal {
-  background: linear-gradient(to bottom, rgba(31, 41, 55, 1), rgba(17, 24, 39, 1));
-  border-radius: var(--luxury-radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* ========================================
-   LUXURY BADGE STYLES
-   ======================================== */
-.luxury-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: 9999px;
-}
-
-.luxury-badge-blue {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.luxury-badge-gold {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fcd34d;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-}
-
-.luxury-badge-green {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.luxury-badge-red {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-/* ========================================
-   LUXURY DIVIDER STYLES
-   ======================================== */
-.luxury-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.luxury-divider::before,
-.luxury-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
   background: linear-gradient(
-    to right,
-    transparent,
-    rgba(156, 163, 175, 0.5),
-    transparent
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
   );
+  background-size: 1000px 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Glow effect */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 102, 255, 0.6);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
 }
 
 /* ========================================
-   PRINT STYLES
+   PRINT STYLES - Agreement Printing
    ======================================== */
+
 .print-mount {
   display: none;
 }
@@ -695,20 +577,36 @@ h1, h2, h3, h4, .font-teko {
   body > *:not(.print-mount) {
     display: none !important;
   }
-  
+
   .print-mount {
     display: block !important;
   }
-  
+
   @page {
     size: A4;
     margin: 1cm;
   }
+
+  /* Force light theme for print */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
 }
 
 /* ========================================
-   REDUCED MOTION SUPPORT
+   ACCESSIBILITY ENHANCEMENTS
    ======================================== */
+
+/* Focus visible for keyboard navigation */
+.focus-visible-luxury:focus-visible {
+  outline: 2px solid #0066FF;
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+}
+
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -720,78 +618,65 @@ h1, h2, h3, h4, .font-teko {
   }
 }
 
-/* ========================================
-   IPAD-SPECIFIC MEDIA QUERIES
-   ======================================== */
-
-/* iPad Portrait */
-@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-  .luxury-card {
-    padding: 1.5rem;
-  }
-  
-  .luxury-button {
-    min-height: 52px;
-    padding: 1rem 1.5rem;
-    font-size: 1.125rem;
-  }
-}
-
-/* iPad Landscape */
-@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
-  .luxury-card {
-    padding: 1.25rem;
-  }
-  
-  .luxury-button {
-    min-height: 48px;
-    padding: 0.875rem 1.25rem;
-  }
-}
-
-/* iPad Pro 12.9" */
-@media screen and (min-width: 1024px) and (min-height: 1366px) {
-  :root {
-    --luxury-touch-target: 52px;
-    --luxury-touch-target-lg: 64px;
-  }
-  
-  body {
-    font-size: 18px;
-  }
-  
-  .luxury-card {
-    padding: 2rem;
-    border-radius: var(--luxury-radius-xl);
-  }
-  
-  .luxury-button {
-    font-size: 1.25rem;
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .luxury-bg-glass,
+  .luxury-bg-card {
+    background: rgba(26, 26, 26, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.3);
   }
 }
 
 /* ========================================
-   HOVER EFFECTS (disabled on touch devices)
+   LOADING STATES
    ======================================== */
-@media (hover: hover) and (pointer: fine) {
-  .luxury-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-  }
-  
-  .luxury-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-  }
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: 0.5rem;
 }
 
-/* Touch-only interactions */
-@media (hover: none) and (pointer: coarse) {
-  .luxury-button:active:not(:disabled) {
-    transform: scale(0.97);
-    transition-duration: 100ms;
-  }
-  
-  .luxury-card:active {
-    transform: scale(0.98);
-    transition-duration: 100ms;
-  }
+/* Loading spinner */
+.spinner-luxury {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #0066FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY UTILITIES
+   ======================================== */
+
+/* iPad portrait optimized text */
+@media (min-width: 768px) {
+  .ipad-p\:text-responsive-sm { font-size: 1rem; }
+  .ipad-p\:text-responsive-base { font-size: 1.125rem; }
+  .ipad-p\:text-responsive-lg { font-size: 1.25rem; }
+  .ipad-p\:text-responsive-xl { font-size: 1.5rem; }
+  .ipad-p\:text-responsive-2xl { font-size: 2rem; }
+  .ipad-p\:text-responsive-3xl { font-size: 2.5rem; }
+  .ipad-p\:text-responsive-4xl { font-size: 3rem; }
+}
+
+/* iPad landscape optimized text */
+@media (min-width: 1024px) {
+  .ipad-l\:text-responsive-sm { font-size: 1rem; }
+  .ipad-l\:text-responsive-base { font-size: 1.125rem; }
+  .ipad-l\:text-responsive-lg { font-size: 1.375rem; }
+  .ipad-l\:text-responsive-xl { font-size: 1.75rem; }
+  .ipad-l\:text-responsive-2xl { font-size: 2.25rem; }
+  .ipad-l\:text-responsive-3xl { font-size: 3rem; }
+  .ipad-l\:text-responsive-4xl { font-size: 3.5rem; }
 }

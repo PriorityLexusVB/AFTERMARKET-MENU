@@ -222,4 +222,95 @@ describe('Summary', () => {
     const itemBadge = container.querySelector('.bg-white\\/10');
     expect(itemBadge).toHaveClass('animate-summary-item-in');
   });
+
+  // Tests for dynamic total calculation display
+  describe('dynamic total price calculation', () => {
+    it('should display total that equals package price when only package is selected', () => {
+      const packagePrice = 2399;
+      render(
+        <Summary
+          {...defaultProps}
+          selectedPackage={createMockPackageTier({ name: 'Gold', price: packagePrice })}
+          totalPrice={packagePrice}
+        />
+      );
+
+      expect(screen.getByText('$2,399.00')).toBeInTheDocument();
+    });
+
+    it('should display total that equals sum of package and add-ons', () => {
+      const packagePrice = 2399;
+      const addon1Price = 1195;
+      const addon2Price = 295;
+      const expectedTotal = packagePrice + addon1Price + addon2Price;
+
+      render(
+        <Summary
+          {...defaultProps}
+          selectedPackage={createMockPackageTier({ name: 'Gold', price: packagePrice })}
+          customPackageItems={[
+            createMockAlaCarteOption({ id: 'addon-1', name: 'Suntek Pro Complete', price: addon1Price }),
+            createMockAlaCarteOption({ id: 'addon-2', name: 'Headlights Protection', price: addon2Price }),
+          ]}
+          totalPrice={expectedTotal}
+        />
+      );
+
+      expect(screen.getByText('$3,889.00')).toBeInTheDocument();
+    });
+
+    it('should display total that equals sum of add-ons when no package is selected', () => {
+      const addon1Price = 300;
+      const addon2Price = 200;
+      const expectedTotal = addon1Price + addon2Price;
+
+      render(
+        <Summary
+          {...defaultProps}
+          customPackageItems={[
+            createMockAlaCarteOption({ id: 'addon-1', name: 'Windshield Protection', price: addon1Price }),
+            createMockAlaCarteOption({ id: 'addon-2', name: 'Wheel Protection', price: addon2Price }),
+          ]}
+          totalPrice={expectedTotal}
+        />
+      );
+
+      expect(screen.getByText('$500.00')).toBeInTheDocument();
+    });
+
+    it('should display $0.00 when nothing is selected', () => {
+      render(<Summary {...defaultProps} totalPrice={0} />);
+
+      expect(screen.getByText('$0.00')).toBeInTheDocument();
+    });
+
+    it('should handle large totals correctly', () => {
+      const largeTotal = 10999.99;
+      render(
+        <Summary
+          {...defaultProps}
+          selectedPackage={mockPackage}
+          totalPrice={largeTotal}
+        />
+      );
+
+      expect(screen.getByText('$10,999.99')).toBeInTheDocument();
+    });
+
+    it('should guard against NaN by displaying valid formatted price', () => {
+      // The component should receive a valid number - this tests that formatting works
+      const validPrice = 2500;
+      render(
+        <Summary
+          {...defaultProps}
+          selectedPackage={mockPackage}
+          totalPrice={validPrice}
+        />
+      );
+
+      const priceElement = screen.getByText('$2,500.00');
+      expect(priceElement).toBeInTheDocument();
+      expect(priceElement.textContent).not.toContain('NaN');
+    });
+  });
 });

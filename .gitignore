@@ -32,3 +32,6 @@ coverage/
 
 # Migration backups
 backup/
+
+# Branch health reports (generated)
+branch-health-reports/

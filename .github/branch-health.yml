@@ -1,0 +1,56 @@
+# Branch Health Configuration
+# This file configures the branch health automation workflow.
+# See docs/branch-health.md for detailed documentation.
+
+# Default branch (uses repository default if not specified)
+# defaultBranch: main
+
+# Staleness thresholds in days
+staleness:
+  warning: 30   # Days before a branch is considered stale (warning)
+  stale: 60     # Days before a branch is considered definitely stale
+  critical: 90  # Days before a branch is considered critically stale
+
+# Branches and patterns to always ignore (never delete or report as stale)
+ignoreBranches:
+  - main
+  - master
+  - develop
+  - release/*
+  - hotfix/*
+
+# Auto-merge settings
+autoMerge:
+  # Enable/disable auto-merge for branches that are ahead of default
+  enabled: false
+  # Only auto-merge if all status checks pass
+  requireStatusChecks: true
+  # Only auto-merge if there are no conflicts
+  requireNoConflicts: true
+  # Only fast-forward merge (no merge commits)
+  fastForwardOnly: true
+
+# Auto-delete settings
+autoDelete:
+  # Enable/disable auto-delete for old branches
+  enabled: false
+  # Only delete branches that are fully merged
+  requireMerged: true
+  # Additional patterns that are safe to delete (in addition to merged branches)
+  safeToDeletePatterns:
+    - temp/*
+    - experiment/*
+  # Minimum age in days before considering deletion (even if merged)
+  minAgeDays: 7
+
+# Dry-run mode (report only, no modifications)
+dryRun: true
+
+# Reporting settings
+reporting:
+  # Post report as comment on this issue number (optional)
+  # issueNumber: 1
+  # Generate JSON report
+  json: true
+  # Generate Markdown report
+  markdown: true

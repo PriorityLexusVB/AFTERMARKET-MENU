@@ -1,0 +1,182 @@
+# Branch Health Automation Workflow
+#
+# This workflow analyzes repository branches and provides recommendations
+# for cleanup, merging, and maintenance.
+#
+# Features:
+# - Branch discovery & classification (stale, behind, merged/unmerged)
+# - Ahead/behind analysis relative to default branch
+# - Safe merge/delete operations with dry-run support
+# - JSON and Markdown report generation
+# - Optional posting to designated issue
+#
+# Triggers:
+# - Manual dispatch (workflow_dispatch)
+# - Weekly schedule (Mondays at 06:00 UTC)
+
+name: Branch Health
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Operation mode"
+        required: true
+        type: choice
+        options:
+          - dry-run
+          - apply
+        default: dry-run
+      verbose:
+        description: "Enable verbose logging"
+        required: false
+        type: boolean
+        default: false
+      post_to_issue:
+        description: "Issue number to post report (optional)"
+        required: false
+        type: string
+        default: ""
+
+  schedule:
+    # Weekly on Mondays at 06:00 UTC
+    - cron: "0 6 * * 1"
+
+# Permissions required for branch operations and issue comments
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  analyze-branches:
+    name: Analyze Branch Health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for accurate branch analysis
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch all remote branches
+        run: git fetch --all --prune
+
+      - name: Determine operation mode
+        id: mode
+        run: |
+          # For scheduled runs, always use dry-run
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "mode=dry-run" >> $GITHUB_OUTPUT
+            echo "verbose=false" >> $GITHUB_OUTPUT
+          else
+            echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
+            echo "verbose=${{ inputs.verbose }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run branch health analysis
+        id: analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS="--output ./branch-health-reports"
+          
+          if [ "${{ steps.mode.outputs.mode }}" == "apply" ]; then
+            ARGS="$ARGS --apply"
+          else
+            ARGS="$ARGS --dry-run"
+          fi
+          
+          if [ "${{ steps.mode.outputs.verbose }}" == "true" ]; then
+            ARGS="$ARGS --verbose"
+          fi
+          
+          echo "Running: npx tsx scripts/branch-health.ts $ARGS"
+          npx tsx scripts/branch-health.ts $ARGS
+
+      - name: Upload JSON report
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-health-json
+          path: branch-health-reports/branch-health-report.json
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload Markdown report
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-health-markdown
+          path: branch-health-reports/branch-health-report.md
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Post report to issue
+        if: inputs.post_to_issue != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const reportPath = path.join(process.cwd(), 'branch-health-reports', 'branch-health-report.md');
+            
+            if (!fs.existsSync(reportPath)) {
+              console.log('Report file not found, skipping issue comment');
+              return;
+            }
+            
+            const report = fs.readFileSync(reportPath, 'utf-8');
+            const issueNumber = parseInt('${{ inputs.post_to_issue }}', 10);
+            
+            if (isNaN(issueNumber) || issueNumber <= 0) {
+              console.log('Invalid issue number, skipping');
+              return;
+            }
+            
+            try {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: report
+              });
+              console.log(`Report posted to issue #${issueNumber}`);
+            } catch (error) {
+              console.error(`Failed to post to issue: ${error.message}`);
+            }
+
+      - name: Generate summary
+        run: |
+          if [ -f "branch-health-reports/branch-health-report.md" ]; then
+            echo "## 🌿 Branch Health Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat branch-health-reports/branch-health-report.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⚠️ No report generated" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The branch health analysis did not produce a report." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Display report in logs
+        run: |
+          echo "=========================================="
+          echo "Branch Health Report (Markdown)"
+          echo "=========================================="
+          if [ -f "branch-health-reports/branch-health-report.md" ]; then
+            cat branch-health-reports/branch-health-report.md
+          else
+            echo "No report generated"
+          fi

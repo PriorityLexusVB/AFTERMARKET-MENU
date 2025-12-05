@@ -88,6 +88,11 @@ interface BranchHealthReport {
   repository: string;
   defaultBranch: string;
   mode: "dry-run" | "apply";
+  stalenessThresholds: {
+    warning: number;
+    stale: number;
+    critical: number;
+  };
   summary: {
     totalBranches: number;
     activeBranches: number;
@@ -231,7 +236,9 @@ function postProcessYaml(content: string): Record<string, unknown> {
   
   const stack: StackItem[] = [{ indent: -1, obj: result, currentArrayKey: null }];
 
-  for (const rawLine of lines) {
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const rawLine = lines[lineIndex];
+    if (!rawLine) continue;
     const line = rawLine.replace(/\r$/, "");
 
     // Skip comments and empty lines
@@ -267,12 +274,16 @@ function postProcessYaml(content: string): Record<string, unknown> {
     const match = line.match(/^(\s*)([^:]+):\s*(.*)$/);
     if (match && match[2] !== undefined && match[3] !== undefined) {
       const key = match[2].trim();
-      const value = match[3].trim();
+      // Strip inline comments (anything after #)
+      let value = match[3].trim();
+      const commentIndex = value.indexOf("#");
+      if (commentIndex !== -1) {
+        value = value.substring(0, commentIndex).trim();
+      }
       const currentObj = parent.obj;
 
       if (value === "") {
         // Check if next line is a list item
-        const lineIndex = lines.indexOf(rawLine);
         const nextNonEmpty = lines.slice(lineIndex + 1).find(l => l.trim() && !l.trim().startsWith("#"));
         const isArray = nextNonEmpty?.trim().startsWith("-") || false;
         
@@ -298,7 +309,7 @@ function parseValue(value: string): string | number | boolean {
   if (value === "true") return true;
   if (value === "false") return false;
   const num = Number(value);
-  if (!isNaN(num) && value !== "") return num;
+  if (Number.isFinite(num) && String(num) === value.trim()) return num;
   return value;
 }
 
@@ -460,6 +471,8 @@ function getGitHubContext(): GitHubContext | null {
   if (!token || !repository) return null;
 
   const parts = repository.split("/");
+  if (parts.length !== 2) return null;
+  
   const owner = parts[0];
   const repo = parts[1];
   if (!owner || !repo) return null;
@@ -477,7 +490,7 @@ async function githubApi<T>(
     const response = await fetch(`https://api.github.com${endpoint}`, {
       method,
       headers: {
-        Authorization: `token ${ctx.token}`,
+        Authorization: `Bearer ${ctx.token}`,
         Accept: "application/vnd.github.v3+json",
         "Content-Type": "application/json",
       },
@@ -546,7 +559,7 @@ async function deleteBranch(ctx: GitHubContext, branch: string): Promise<boolean
       {
         method: "DELETE",
         headers: {
-          Authorization: `token ${ctx.token}`,
+          Authorization: `Bearer ${ctx.token}`,
           Accept: "application/vnd.github.v3+json",
         },
       }
@@ -865,7 +878,7 @@ async function applyActions(
 function generateReport(
   branches: BranchInfo[],
   actions: ActionResult[],
-  _config: BranchHealthConfig,
+  config: BranchHealthConfig,
   defaultBranch: string,
   dryRun: boolean
 ): BranchHealthReport {
@@ -877,6 +890,11 @@ function generateReport(
     repository,
     defaultBranch,
     mode: dryRun ? "dry-run" : "apply",
+    stalenessThresholds: {
+      warning: config.staleness.warning,
+      stale: config.staleness.stale,
+      critical: config.staleness.critical,
+    },
     summary: {
       totalBranches: branches.length,
       activeBranches: branches.filter((b) => b.stalenessLevel === "active").length,
@@ -912,8 +930,8 @@ function generateMarkdownReport(report: BranchHealthReport): string {
   lines.push("| Metric | Count |");
   lines.push("|--------|-------|");
   lines.push(`| Total Branches | ${report.summary.totalBranches} |`);
-  lines.push(`| Active (< ${30} days) | ${report.summary.activeBranches} |`);
-  lines.push(`| Stale (> ${60} days) | ${report.summary.staleBranches} |`);
+  lines.push(`| Active (< ${report.stalenessThresholds.warning} days) | ${report.summary.activeBranches} |`);
+  lines.push(`| Stale (> ${report.stalenessThresholds.stale} days) | ${report.summary.staleBranches} |`);
   lines.push(`| Fully Merged | ${report.summary.mergedBranches} |`);
   lines.push(`| Ahead of Default | ${report.summary.aheadBranches} |`);
   lines.push(`| Behind Only | ${report.summary.behindBranches} |`);

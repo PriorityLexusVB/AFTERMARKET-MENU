@@ -100,6 +100,10 @@ function validateDistDirectory() {
   return true;
 }
 
+// Constants
+const BYTES_PER_MB = 1024 * 1024;
+const LARGE_FILE_THRESHOLD_MB = 1;
+
 /**
  * Checks the size of build artifacts
  */
@@ -119,20 +123,20 @@ function checkBuildSize() {
       const stats = fs.statSync(filePath);
       totalSize += stats.size;
       
-      // Flag files larger than 1MB
-      if (stats.size > 1024 * 1024) {
+      // Flag files larger than threshold
+      if (stats.size > LARGE_FILE_THRESHOLD_MB * BYTES_PER_MB) {
         largeFiles.push({
           name: file,
-          size: (stats.size / 1024 / 1024).toFixed(2) + ' MB'
+          size: (stats.size / BYTES_PER_MB).toFixed(2) + ' MB'
         });
       }
     });
     
-    const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+    const totalSizeMB = (totalSize / BYTES_PER_MB).toFixed(2);
     logInfo(`Total build size: ${totalSizeMB} MB`);
     
     if (largeFiles.length > 0) {
-      logWarning('Large files detected (>1MB):');
+      logWarning(`Large files detected (>${LARGE_FILE_THRESHOLD_MB}MB):`);
       largeFiles.forEach(file => {
         logWarning(`  - ${file.name}: ${file.size}`);
       });

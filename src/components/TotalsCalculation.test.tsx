@@ -111,7 +111,7 @@ describe('Totals Calculation', () => {
         }),
       ];
 
-      const totalPrice = 1195 + 295; // 1490
+      const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
 
       render(
         <Summary
@@ -142,7 +142,7 @@ describe('Totals Calculation', () => {
         cost: 125,
       });
 
-      const totalPrice = 2899 + 295; // 3194
+      const totalPrice = platinumPackage.price + alaCarteItem.price;
 
       render(
         <Summary
@@ -185,7 +185,7 @@ describe('Totals Calculation', () => {
         }),
       ];
 
-      const totalPrice = 2399 + 795 + 195 + 149; // 3538
+      const totalPrice = goldPackage.price + items.reduce((sum, item) => sum + item.price, 0);
 
       render(
         <Summary
@@ -250,7 +250,7 @@ describe('Totals Calculation', () => {
         cost: 2500,
       });
 
-      const totalPrice = 9999 + 5001; // 15000
+      const totalPrice = expensivePackage.price + expensiveItem.price;
 
       render(
         <Summary

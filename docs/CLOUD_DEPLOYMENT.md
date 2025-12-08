@@ -35,42 +35,42 @@ gcloud run deploy YOUR_SERVICE_NAME \
   --source . \
   --region YOUR_REGION \
   --allow-unauthenticated \
-  --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=YOUR_APP_ID,VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY"
+  --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=YOUR_APP_ID,VITE_USE_AI_PROXY=true" \
+  --set-env-vars="GEMINI_API_KEY=YOUR_GEMINI_API_KEY"
 ```
 
 **Important flags explained:**
 - `--source .` - Deploy from local source code
-- `--set-build-env-vars` - Sets environment variables **during the build process** (critical!)
+- `--set-build-env-vars` - Sets environment variables **during the build process** (critical for Vite!)
+- `--set-env-vars` - Sets runtime-only environment variables (for server-side secrets)
 - `--allow-unauthenticated` - Makes the service publicly accessible
 
 **Replace these values:**
 - `YOUR_SERVICE_NAME` - Name for your Cloud Run service (e.g., `aftermarket-menu`)
 - `YOUR_REGION` - GCP region (e.g., `us-west1`, `us-central1`)
 - `YOUR_API_KEY`, etc. - Your actual Firebase configuration values
+- `YOUR_GEMINI_API_KEY` - Your Gemini API key (kept server-side only)
 
-### Option 2: Use cloudbuild.yaml for CI/CD (For GitHub Actions, etc.)
+### Option 2: Use Cloud Build Trigger with Build-Time Substitutions (For CI/CD)
 
-Create a `cloudbuild.yaml` file in your repository root:
+For automated CI/CD deployments, configure environment variables directly in the Cloud Build trigger, not in cloudbuild.yaml:
+
+1. **Create a Cloud Build trigger** in the GCP Console
+2. **Configure substitution variables** in the trigger settings:
+   - `_VITE_FIREBASE_API_KEY`
+   - `_VITE_FIREBASE_AUTH_DOMAIN`
+   - `_VITE_FIREBASE_PROJECT_ID`
+   - `_VITE_FIREBASE_STORAGE_BUCKET`
+   - `_VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `_VITE_FIREBASE_APP_ID`
+   - `_GEMINI_API_KEY` (server-side only, no VITE_ prefix)
+   - `_VITE_USE_AI_PROXY=true` (forces use of backend proxy)
+
+3. **Use this cloudbuild.yaml**:
 
 ```yaml
 steps:
-  # Install dependencies
-  - name: 'gcr.io/cloud-builders/npm'
-    args: ['install']
-    
-  # Build with environment variables available
-  - name: 'gcr.io/cloud-builders/npm'
-    args: ['run', 'build']
-    env:
-      - 'VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY}'
-      - 'VITE_FIREBASE_AUTH_DOMAIN=${_VITE_FIREBASE_AUTH_DOMAIN}'
-      - 'VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID}'
-      - 'VITE_FIREBASE_STORAGE_BUCKET=${_VITE_FIREBASE_STORAGE_BUCKET}'
-      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${_VITE_FIREBASE_MESSAGING_SENDER_ID}'
-      - 'VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID}'
-      - 'VITE_GEMINI_API_KEY=${_VITE_GEMINI_API_KEY}'
-  
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run with build-time environment variables
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
@@ -80,15 +80,17 @@ steps:
       - '--region=us-west1'
       - '--allow-unauthenticated'
       - '--platform=managed'
+      - '--set-build-env-vars=VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY},VITE_FIREBASE_AUTH_DOMAIN=${_VITE_FIREBASE_AUTH_DOMAIN},VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID},VITE_FIREBASE_STORAGE_BUCKET=${_VITE_FIREBASE_STORAGE_BUCKET},VITE_FIREBASE_MESSAGING_SENDER_ID=${_VITE_FIREBASE_MESSAGING_SENDER_ID},VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID},VITE_USE_AI_PROXY=true'
+      - '--set-env-vars=GEMINI_API_KEY=${_GEMINI_API_KEY}'
 
 substitutions:
-  _VITE_FIREBASE_API_KEY: 'will-be-provided-by-trigger'
-  _VITE_FIREBASE_AUTH_DOMAIN: 'will-be-provided-by-trigger'
-  _VITE_FIREBASE_PROJECT_ID: 'will-be-provided-by-trigger'
-  _VITE_FIREBASE_STORAGE_BUCKET: 'will-be-provided-by-trigger'
-  _VITE_FIREBASE_MESSAGING_SENDER_ID: 'will-be-provided-by-trigger'
-  _VITE_FIREBASE_APP_ID: 'will-be-provided-by-trigger'
-  _VITE_GEMINI_API_KEY: 'will-be-provided-by-trigger'
+  _VITE_FIREBASE_API_KEY: 'set-in-trigger'
+  _VITE_FIREBASE_AUTH_DOMAIN: 'set-in-trigger'
+  _VITE_FIREBASE_PROJECT_ID: 'set-in-trigger'
+  _VITE_FIREBASE_STORAGE_BUCKET: 'set-in-trigger'
+  _VITE_FIREBASE_MESSAGING_SENDER_ID: 'set-in-trigger'
+  _VITE_FIREBASE_APP_ID: 'set-in-trigger'
+  _GEMINI_API_KEY: 'set-in-trigger'
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -96,6 +98,8 @@ options:
 
 timeout: '1200s'
 ```
+
+**Important:** This approach passes environment variables to the buildpack build process via `--set-build-env-vars`, ensuring Vite has access to them during compilation. Runtime-only variables like `GEMINI_API_KEY` use `--set-env-vars` instead.
 
 Then create a Cloud Build trigger with the substitution variables set.
 
@@ -141,7 +145,8 @@ Then create a Cloud Build trigger with the substitution variables set.
      --source . \
      --region us-west1 \
      --allow-unauthenticated \
-     --set-build-env-vars="VITE_FIREBASE_API_KEY=AIza...,VITE_FIREBASE_AUTH_DOMAIN=your-app.firebaseapp.com,VITE_FIREBASE_PROJECT_ID=your-project-id,VITE_FIREBASE_STORAGE_BUCKET=your-app.appspot.com,VITE_FIREBASE_MESSAGING_SENDER_ID=123456789,VITE_FIREBASE_APP_ID=1:123456789:web:abc123,VITE_GEMINI_API_KEY=AIza..."
+     --set-build-env-vars="VITE_FIREBASE_API_KEY=AIza...,VITE_FIREBASE_AUTH_DOMAIN=your-app.firebaseapp.com,VITE_FIREBASE_PROJECT_ID=your-project-id,VITE_FIREBASE_STORAGE_BUCKET=your-app.appspot.com,VITE_FIREBASE_MESSAGING_SENDER_ID=123456789,VITE_FIREBASE_APP_ID=1:123456789:web:abc123,VITE_USE_AI_PROXY=true" \
+     --set-env-vars="GEMINI_API_KEY=AIza..."
    ```
 
 4. **Wait for deployment to complete**
@@ -240,10 +245,14 @@ All environment variables must be prefixed with `VITE_` to be available in the c
 | `VITE_FIREBASE_STORAGE_BUCKET` | Yes | Firebase storage bucket |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes | Firebase Cloud Messaging sender ID |
 | `VITE_FIREBASE_APP_ID` | Yes | Firebase app ID |
-| `VITE_GEMINI_API_KEY` | Optional | Google Gemini AI API key (for AI assistant) |
-| `GEMINI_API_KEY` | Optional | Server-side Gemini API key (used by backend proxy) |
+| `VITE_USE_AI_PROXY` | **Recommended** | Set to `'true'` to use backend proxy for AI (prevents API key exposure) |
+| `GEMINI_API_KEY` | Required for AI | Server-side Gemini API key (used by backend proxy endpoint `/api/chat`) |
 
-**Note:** The server-side `GEMINI_API_KEY` (without `VITE_` prefix) should be set as a runtime environment variable in Cloud Run for the backend API proxy endpoint.
+**Security Note:** 
+- **DO NOT** set `VITE_GEMINI_API_KEY` at build time for production deployments, as it exposes your API key in the client bundle where anyone can extract and abuse it.
+- **ALWAYS** use `VITE_USE_AI_PROXY='true'` in production to route AI requests through the backend proxy endpoint (`/api/chat`).
+- Set only `GEMINI_API_KEY` (without `VITE_` prefix) as a **runtime** environment variable in Cloud Run using `--set-env-vars`.
+- The backend proxy (`index.js`) securely handles API key authentication without exposing it to clients.
 
 ## Continuous Deployment with GitHub Actions
 
@@ -285,12 +294,14 @@ jobs:
             --source . \
             --region ${{ env.REGION }} \
             --allow-unauthenticated \
-            --set-build-env-vars="VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }},VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }},VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }},VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }},VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }},VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }},VITE_GEMINI_API_KEY=${{ secrets.VITE_GEMINI_API_KEY }}"
+            --set-build-env-vars="VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }},VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }},VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }},VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }},VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }},VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }},VITE_USE_AI_PROXY=true" \
+            --set-env-vars="GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"
 ```
 
 2. Set up GitHub Secrets:
    - `GCP_SA_KEY` - Service account JSON key
-   - `VITE_FIREBASE_API_KEY` through `VITE_GEMINI_API_KEY` - Your Firebase/Gemini credentials
+   - `VITE_FIREBASE_API_KEY` through `VITE_FIREBASE_APP_ID` - Your Firebase credentials
+   - `GEMINI_API_KEY` - Your Gemini API key (server-side only, no VITE_ prefix)
 
 ## Additional Resources
 

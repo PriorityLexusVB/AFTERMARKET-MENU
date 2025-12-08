@@ -76,6 +76,7 @@ backup/
 
 # Migration scripts (optional - remove if needed in production)
 scripts/migrate/**
+scripts/import-mock-data.ts
 tools/
 
 # Pull request metadata

@@ -94,7 +94,7 @@ describe('AdminPanel', () => {
   it('should render the manage features section', async () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
-    expect(screen.getByText('Manage Features')).toBeInTheDocument();
+    expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
   });
 
   it('should show the feature form when "Add New Feature" is clicked', async () => {

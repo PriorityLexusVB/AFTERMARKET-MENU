@@ -68,58 +68,58 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
-        setError("Please fill out all required fields.");
-        return;
+      setError("Please fill out all required fields.");
+      return;
     }
     
     setIsLoading(true);
     setError(null);
 
     try {
-        // Build the option data object with proper typing
-        const optionData: Omit<AlaCarteOption, 'id'> = {
-            name: formData.name,
-            price: parseFloat(formData.price),
-            cost: parseFloat(formData.cost),
-            description: formData.description,
-            points: formData.points.split('\n').filter(line => line.trim() !== ''),
-            connector: formData.connector,
-            ...(formData.warranty && { warranty: formData.warranty }),
-            ...(formData.useCases && { useCases: formData.useCases.split('\n').filter(line => line.trim() !== '') }),
-            ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
-            ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
-            ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
-            ...(formData.isNew && { isNew: formData.isNew }),
-        };
+      // Build the option data object with proper typing
+      const optionData: Omit<AlaCarteOption, 'id'> = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        cost: parseFloat(formData.cost),
+        description: formData.description,
+        points: formData.points.split('\n').filter(line => line.trim() !== ''),
+        connector: formData.connector,
+        ...(formData.warranty && { warranty: formData.warranty }),
+        ...(formData.useCases && { useCases: formData.useCases.split('\n').filter(line => line.trim() !== '') }),
+        ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
+        ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
+        ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
+        ...(formData.isNew && { isNew: formData.isNew }),
+      };
 
-        // Add column if valid
-        if (formData.column) {
-            const parsedColumn = parseInt(formData.column);
-            if (!isNaN(parsedColumn)) {
-                optionData.column = parsedColumn;
-            }
+      // Add column if valid
+      if (formData.column) {
+        const parsedColumn = parseInt(formData.column);
+        if (!isNaN(parsedColumn)) {
+          optionData.column = parsedColumn;
         }
+      }
 
-        if (isNaN(optionData.price) || isNaN(optionData.cost)) {
-            throw new Error("Price and Cost must be valid numbers.");
-        }
+      if (isNaN(optionData.price) || isNaN(optionData.cost)) {
+        throw new Error("Price and Cost must be valid numbers.");
+      }
 
-        if (isEditMode && editingOption) {
-            // Update existing option
-            await updateAlaCarteOption(editingOption.id, optionData);
-        } else {
-            // Add new option (position will be auto-assigned)
-            await addAlaCarteOption(optionData);
-        }
+      if (isEditMode && editingOption) {
+        // Update existing option
+        await updateAlaCarteOption(editingOption.id, optionData);
+      } else {
+        // Add new option (position will be auto-assigned)
+        await addAlaCarteOption(optionData);
+      }
 
-        // Reset form and notify parent
-        setFormData(initialFormState);
-        onSaveSuccess();
+      // Reset form and notify parent
+      setFormData(initialFormState);
+      onSaveSuccess();
     } catch (error) {
-        console.error("Error saving A La Carte option:", error);
-        setError(error instanceof Error ? error.message : "An error occurred while saving.");
+      console.error("Error saving A La Carte option:", error);
+      setError(error instanceof Error ? error.message : "An error occurred while saving.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 

@@ -1,7 +1,15 @@
 // FeatureConnector type - matches the FeatureConnectorSchema in schemas.ts
 export type FeatureConnector = 'AND' | 'OR';
 
-export interface ProductFeature {
+// Base interface for items that can be ordered in columns
+export interface OrderableItem {
+  id: string;
+  column?: number;
+  position?: number;
+  connector?: FeatureConnector;
+}
+
+export interface ProductFeature extends OrderableItem {
   id: string;
   name: string;
   description: string;
@@ -13,9 +21,6 @@ export interface ProductFeature {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
-  column?: number;        // Column assignment (1-4) for admin organization
-  position?: number;      // Position within column for ordering (0-indexed)
-  connector?: FeatureConnector; // Connector type ('AND' or 'OR') for display between features
 }
 
 export interface PackageTier {
@@ -29,7 +34,7 @@ export interface PackageTier {
   tier_color: string;
 }
 
-export interface AlaCarteOption {
+export interface AlaCarteOption extends OrderableItem {
   id: string;
   name: string;
   price: number;
@@ -42,9 +47,6 @@ export interface AlaCarteOption {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
-  column?: number;        // Column assignment (1-4) for admin organization
-  position?: number;      // Position within column for ordering (0-indexed)
-  connector?: FeatureConnector; // Connector type ('AND' or 'OR') for display between features
 }
 
 export interface PriceOverrides {

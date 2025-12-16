@@ -187,17 +187,11 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
         
         for (const feature of chunk) {
           const featureRef = doc(db, 'features', feature.id);
-          const updateData: Record<string, number | string | undefined> = {
+          const updateData = {
             position: feature.position,
+            ...(feature.column !== undefined && { column: feature.column }),
+            ...(feature.connector !== undefined && { connector: feature.connector }),
           };
-          
-          if (feature.column !== undefined) {
-            updateData['column'] = feature.column;
-          }
-          
-          if (feature.connector !== undefined) {
-            updateData['connector'] = feature.connector;
-          }
           
           batch.update(featureRef, updateData);
         }
@@ -304,17 +298,11 @@ export async function batchUpdateAlaCartePositions(options: AlaCartePositionUpda
         
         for (const option of chunk) {
           const optionRef = doc(db, 'ala_carte_options', option.id);
-          const updateData: Record<string, number | string | undefined> = {
+          const updateData = {
             position: option.position,
+            ...(option.column !== undefined && { column: option.column }),
+            ...(option.connector !== undefined && { connector: option.connector }),
           };
-          
-          if (option.column !== undefined) {
-            updateData['column'] = option.column;
-          }
-          
-          if (option.connector !== undefined) {
-            updateData['connector'] = option.connector;
-          }
           
           batch.update(optionRef, updateData);
         }

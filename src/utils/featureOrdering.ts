@@ -1,25 +1,25 @@
 /**
  * Centralized feature ordering utility.
- * Provides canonical sorting behavior for features used across the application:
+ * Provides canonical sorting behavior for orderable items used across the application:
  * - AdminPanel (for featuresByColumn derivation and optimistic updates)
  * - Customer rendering (PackageCard, PackageSelector)
  *
  * Sort order: column (ascending), then position (ascending).
- * Features with undefined column/position are sorted last.
+ * Items with undefined column/position are sorted last.
  */
 
-import type { ProductFeature } from '../types';
+import type { ProductFeature, OrderableItem } from '../types';
 
 /**
- * Compares two features for sorting purposes.
+ * Compares two orderable items for sorting purposes.
  * Sort order: column (ascending), then position (ascending).
- * Features without column/position are placed at the end.
+ * Items without column/position are placed at the end.
  *
- * @param a - First feature to compare
- * @param b - Second feature to compare
+ * @param a - First item to compare
+ * @param b - Second item to compare
  * @returns Negative if a < b, positive if a > b, zero if equal
  */
-export function compareFeatures(a: ProductFeature, b: ProductFeature): number {
+export function compareOrderableItems<T extends OrderableItem>(a: T, b: T): number {
   // First sort by column (undefined columns go last)
   const colA = a.column ?? Number.MAX_SAFE_INTEGER;
   const colB = b.column ?? Number.MAX_SAFE_INTEGER;
@@ -32,6 +32,24 @@ export function compareFeatures(a: ProductFeature, b: ProductFeature): number {
 }
 
 /**
+ * Legacy comparison function for ProductFeature (maintained for backwards compatibility)
+ */
+export function compareFeatures(a: ProductFeature, b: ProductFeature): number {
+  return compareOrderableItems(a, b);
+}
+
+/**
+ * Sorts an array of orderable items by column and position.
+ * Returns a new sorted array (does not mutate the input).
+ *
+ * @param items - Array of orderable items to sort
+ * @returns New array of items sorted by column and position
+ */
+export function sortOrderableItems<T extends OrderableItem>(items: T[]): T[] {
+  return [...items].sort(compareOrderableItems);
+}
+
+/**
  * Sorts an array of features by column and position.
  * Returns a new sorted array (does not mutate the input).
  *
@@ -39,21 +57,64 @@ export function compareFeatures(a: ProductFeature, b: ProductFeature): number {
  * @returns New array of features sorted by column and position
  */
 export function sortFeatures(features: ProductFeature[]): ProductFeature[] {
-  return [...features].sort(compareFeatures);
+  return sortOrderableItems(features);
 }
 
 /**
- * Normalizes positions for all features in a column to be sequential (0..n-1).
+ * Normalizes positions for all orderable items in a column to be sequential (0..n-1).
  * Preserves the existing order and keeps all other properties unchanged.
  *
- * @param features - Array of features (should be pre-sorted by position within the column)
+ * @param items - Array of orderable items (should be pre-sorted by position within the column)
  * @returns New array with normalized positions (0, 1, 2, ...)
  */
-export function normalizePositions(features: ProductFeature[]): ProductFeature[] {
-  return features.map((feature, index) => ({
-    ...feature,
+export function normalizePositions<T extends OrderableItem>(items: T[]): T[] {
+  return items.map((item, index) => ({
+    ...item,
     position: index,
   }));
+}
+
+/**
+ * Groups orderable items by column and sorts each group by position.
+ * Items without a column are placed in the 'unassigned' group.
+ *
+ * @param items - Array of orderable items to group
+ * @returns Object with columns 1-4 and unassigned, each sorted by position
+ */
+export interface GroupedItemsByColumn<T extends OrderableItem> {
+  1: T[];
+  2: T[];
+  3: T[];
+  4: T[];
+  unassigned: T[];
+}
+
+export function groupItemsByColumn<T extends OrderableItem>(items: T[]): GroupedItemsByColumn<T> {
+  const grouped: GroupedItemsByColumn<T> = {
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    unassigned: [],
+  };
+
+  for (const item of items) {
+    const column = item.column;
+    if (column === 1 || column === 2 || column === 3 || column === 4) {
+      grouped[column].push(item);
+    } else {
+      grouped.unassigned.push(item);
+    }
+  }
+
+  // Sort each group by position
+  grouped[1] = sortOrderableItems(grouped[1]);
+  grouped[2] = sortOrderableItems(grouped[2]);
+  grouped[3] = sortOrderableItems(grouped[3]);
+  grouped[4] = sortOrderableItems(grouped[4]);
+  grouped.unassigned = sortOrderableItems(grouped.unassigned);
+
+  return grouped;
 }
 
 /**
@@ -72,43 +133,19 @@ export interface GroupedFeaturesByColumn {
 }
 
 export function groupFeaturesByColumn(features: ProductFeature[]): GroupedFeaturesByColumn {
-  const grouped: GroupedFeaturesByColumn = {
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-    unassigned: [],
-  };
-
-  for (const feature of features) {
-    const column = feature.column;
-    if (column === 1 || column === 2 || column === 3 || column === 4) {
-      grouped[column].push(feature);
-    } else {
-      grouped.unassigned.push(feature);
-    }
-  }
-
-  // Sort each group by position
-  grouped[1] = sortFeatures(grouped[1]);
-  grouped[2] = sortFeatures(grouped[2]);
-  grouped[3] = sortFeatures(grouped[3]);
-  grouped[4] = sortFeatures(grouped[4]);
-  grouped.unassigned = sortFeatures(grouped.unassigned);
-
-  return grouped;
+  return groupItemsByColumn(features) as GroupedFeaturesByColumn;
 }
 
 /**
- * Normalizes all positions within each column of a grouped features object.
+ * Normalizes all positions within each column of a grouped items object.
  * Returns a new object with normalized positions in each group.
  *
- * @param grouped - Grouped features object from groupFeaturesByColumn
- * @returns New grouped features object with normalized positions
+ * @param grouped - Grouped items object from groupItemsByColumn
+ * @returns New grouped items object with normalized positions
  */
-export function normalizeGroupedPositions(
-  grouped: GroupedFeaturesByColumn
-): GroupedFeaturesByColumn {
+export function normalizeGroupedPositions<T extends OrderableItem>(
+  grouped: GroupedItemsByColumn<T>
+): GroupedItemsByColumn<T> {
   return {
     1: normalizePositions(grouped[1]),
     2: normalizePositions(grouped[2]),

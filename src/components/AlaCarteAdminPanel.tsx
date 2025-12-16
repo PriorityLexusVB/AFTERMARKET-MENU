@@ -25,7 +25,7 @@ import { db } from '../firebase';
 import type { AlaCarteOption, FeatureConnector } from '../types';
 import { AlaCarteForm } from './AlaCarteForm';
 import { batchUpdateAlaCartePositions, AlaCartePositionUpdate, updateAlaCarteOption } from '../data';
-import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
+import { groupItemsByColumn, normalizePositions, sortOrderableItems } from '../utils/featureOrdering';
 
 interface AlaCarteAdminPanelProps {
   onDataUpdate: () => void;
@@ -271,9 +271,8 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   };
 
   // Organize options by column and sort by position using centralized utility
-  // Cast AlaCarteOption[] to ProductFeature[] for compatibility with utility functions
   const optionsByColumn = useMemo(() => {
-    return groupFeaturesByColumn(options as any);
+    return groupItemsByColumn(options);
   }, [options]);
 
   // Get the active option being dragged
@@ -292,12 +291,12 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   // Persist position changes to Firestore with normalization
   const persistPositionChanges = useCallback(async (updatedOptions: AlaCarteOption[], column: number | 'unassigned') => {
     // Filter options in the affected column and sort by position
-    const columnOptions = sortFeatures(
-      updatedOptions.filter(o => column === 'unassigned' ? !o.column : o.column === column) as any
-    ) as AlaCarteOption[];
+    const columnOptions = sortOrderableItems(
+      updatedOptions.filter(o => column === 'unassigned' ? !o.column : o.column === column)
+    );
     
     // Normalize positions (0..n-1) to ensure deterministic ordering
-    const normalizedOptions = normalizePositions(columnOptions as any) as AlaCarteOption[];
+    const normalizedOptions = normalizePositions(columnOptions);
     
     // Build position updates with normalized positions
     const updates: AlaCartePositionUpdate[] = normalizedOptions.map((option) => ({

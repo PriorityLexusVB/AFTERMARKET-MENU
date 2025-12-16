@@ -222,6 +222,123 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
 }
 
 /**
+ * Adds a new A La Carte option document to the 'ala_carte_options' collection in Firestore.
+ * @param optionData - The A La Carte option data to add, without an 'id'.
+ * @returns A promise that resolves when the document is successfully added.
+ */
+export async function addAlaCarteOption(optionData: Omit<AlaCarteOption, 'id'>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot add A La Carte option.");
+  }
+  
+  try {
+    await addDoc(collection(db, 'ala_carte_options'), optionData);
+  } catch (error) {
+    console.error("Error adding A La Carte option to Firestore:", error);
+    throw new Error("Failed to save the new A La Carte option. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Updates an existing A La Carte option document in the 'ala_carte_options' collection in Firestore.
+ * @param optionId - The ID of the A La Carte option to update.
+ * @param optionData - The A La Carte option data to update (partial).
+ * @returns A promise that resolves when the document is successfully updated.
+ */
+export async function updateAlaCarteOption(optionId: string, optionData: Partial<Omit<AlaCarteOption, 'id'>>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update A La Carte option.");
+  }
+  
+  try {
+    const optionRef = doc(db, 'ala_carte_options', optionId);
+    await updateDoc(optionRef, optionData);
+  } catch (error) {
+    console.error("Error updating A La Carte option in Firestore:", error);
+    throw new Error("Failed to update the A La Carte option. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Interface for A La Carte option position update
+ */
+export interface AlaCartePositionUpdate {
+  id: string;
+  position: number;
+  column?: number;
+  connector?: 'AND' | 'OR';
+}
+
+/**
+ * Batch updates A La Carte option positions in Firestore with chunked writes and retry logic.
+ * Handles Firestore's 500 operation limit per batch.
+ * @param options - Array of A La Carte option position updates
+ * @returns A promise that resolves when all updates are complete
+ * @throws Error if any batch fails after all retries
+ */
+export async function batchUpdateAlaCartePositions(options: AlaCartePositionUpdate[]): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot batch update A La Carte options.");
+  }
+
+  if (options.length === 0) {
+    return;
+  }
+
+  // Split options into chunks of FIRESTORE_BATCH_LIMIT
+  const chunks: AlaCartePositionUpdate[][] = [];
+  for (let i = 0; i < options.length; i += FIRESTORE_BATCH_LIMIT) {
+    chunks.push(options.slice(i, i + FIRESTORE_BATCH_LIMIT));
+  }
+
+  // Process each chunk with retry logic
+  for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+    const chunk = chunks[chunkIndex];
+    if (!chunk) continue;
+    
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const batch = writeBatch(db);
+        
+        for (const option of chunk) {
+          const optionRef = doc(db, 'ala_carte_options', option.id);
+          const updateData: Record<string, number | string | undefined> = {
+            position: option.position,
+          };
+          
+          if (option.column !== undefined) {
+            updateData['column'] = option.column;
+          }
+          
+          if (option.connector !== undefined) {
+            updateData['connector'] = option.connector;
+          }
+          
+          batch.update(optionRef, updateData);
+        }
+        
+        await batch.commit();
+        lastError = null;
+        break; // Success, exit retry loop
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.error(`Batch update attempt ${attempt + 1} failed for chunk ${chunkIndex + 1}:`, error);
+        
+        if (attempt < MAX_RETRIES - 1) {
+          await sleep(RETRY_DELAY_MS * Math.pow(2, attempt)); // Exponential backoff
+        }
+      }
+    }
+    
+    if (lastError) {
+      throw new Error(`Failed to update A La Carte option positions after ${MAX_RETRIES} attempts. Please check your connection and Firestore rules.`);
+    }
+  }
+}
+
+/**
  * Sorts features by column and position for display.
  * Features without position are sorted to the end within their column.
  * @param features - Array of features to sort

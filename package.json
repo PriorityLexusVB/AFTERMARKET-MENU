@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prebuild": "node scripts/validate-env-vars.js",
     "postbuild": "node scripts/validate-build.js",
     "preview": "vite preview",
     "start": "node index.js",
@@ -16,6 +17,7 @@
     "gcp-build": "npm run build",
     "prestart": "npm run build",
     "validate-build": "node scripts/validate-build.js",
+    "validate-env": "node scripts/validate-env-vars.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",

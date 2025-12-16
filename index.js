@@ -6,6 +6,20 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Validate PORT environment variable early
+const port = process.env.PORT || 8080;
+const portNum = parseInt(port, 10);
+if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+  console.error(`[BOOT ERROR] Invalid PORT value: "${port}"`);
+  console.error('[BOOT ERROR] PORT must be a number between 1 and 65535');
+  process.exit(1);
+}
+
+// Log environment info for debugging
+console.log("[BOOT] Node version:", process.version);
+console.log("[BOOT] PORT:", port);
+console.log("[BOOT] Working directory:", process.cwd());
+
 const app = express();
 app.use(express.json());
 
@@ -16,6 +30,15 @@ const indexExists = fs.existsSync(indexHtml);
 
 console.log("[BOOT] distDir:", distDir, "exists?", distExists);
 console.log("[BOOT] indexHtml:", indexHtml, "exists?", indexExists);
+
+// Warn if dist directory is missing or empty
+if (!distExists || !indexExists) {
+  console.warn("[BOOT WARNING] Build artifacts missing - app will show splash page");
+  console.warn("[BOOT WARNING] This may indicate:");
+  console.warn("[BOOT WARNING]   1. Build step was skipped or failed");
+  console.warn("[BOOT WARNING]   2. GCS volume mount overwrote /app/dist");
+  console.warn("[BOOT WARNING]   3. Incorrect working directory");
+}
 
 const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Aftermarket Menu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/></head>
@@ -89,5 +112,41 @@ app.post("/api/chat", async (req, res) => {
 // SPA fallback
 app.get("*", (_req,res)=> indexExists ? res.sendFile(indexHtml) : res.status(200).send(splashHtml));
 
-const port = process.env.PORT || 8080;
-app.listen(port, ()=>console.log(`[BOOT] Aftermarket Menu listening on :${port}`));
+// Start server with proper error handling
+const server = app.listen(portNum, () => {
+  console.log(`[BOOT] ✓ Aftermarket Menu listening on :${portNum}`);
+  console.log(`[BOOT] ✓ Health check available at /health-check`);
+  console.log(`[BOOT] ✓ Debug info available at /__debug`);
+  console.log(`[BOOT] ✓ Server ready to accept connections`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`[BOOT ERROR] Port ${portNum} is already in use`);
+    console.error('[BOOT ERROR] Please use a different PORT or stop the conflicting process');
+  } else if (error.code === 'EACCES') {
+    console.error(`[BOOT ERROR] Permission denied to bind to port ${portNum}`);
+    console.error('[BOOT ERROR] Ports below 1024 require root privileges');
+  } else {
+    console.error('[BOOT ERROR] Server failed to start:', error.message);
+  }
+  process.exit(1);
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('[SHUTDOWN] SIGTERM received, closing server gracefully...');
+  server.close(() => {
+    console.log('[SHUTDOWN] Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('[SHUTDOWN] SIGINT received, closing server gracefully...');
+  server.close(() => {
+    console.log('[SHUTDOWN] Server closed');
+    process.exit(0);
+  });
+});

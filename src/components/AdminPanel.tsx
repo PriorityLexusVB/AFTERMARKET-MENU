@@ -24,12 +24,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { db } from '../firebase';
 import type { ProductFeature, FeatureConnector } from '../types';
 import { FeatureForm } from './FeatureForm';
+import { AlaCarteAdminPanel } from './AlaCarteAdminPanel';
 import { batchUpdateFeaturesPositions, FeaturePositionUpdate, updateFeature } from '../data';
 import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
 
 interface AdminPanelProps {
   onDataUpdate: () => void;
 }
+
+type AdminTab = 'features' | 'alacarte';
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
@@ -198,6 +201,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children })
 };
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
+  const [activeTab, setActiveTab] = useState<AdminTab>('features');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [features, setFeatures] = useState<ProductFeature[]>([]);
   const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(null);
@@ -587,8 +591,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       </div>
       
       <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 md:p-8 flex-grow">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-teko tracking-wider text-white">Manage Features</h3>
+        {/* Tab Navigation */}
+        <div className="mb-6 border-b border-gray-700">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab('features')}
+              className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
+                activeTab === 'features'
+                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              Package Features
+            </button>
+            <button
+              onClick={() => setActiveTab('alacarte')}
+              className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
+                activeTab === 'alacarte'
+                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              A La Carte Options
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'alacarte' ? (
+          <AlaCarteAdminPanel onDataUpdate={onDataUpdate} />
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-teko tracking-wider text-white">Manage Package Features</h3>
           <div className="flex items-center gap-3">
             {isSaving && (
               <span className="text-blue-400 text-sm flex items-center gap-2">
@@ -673,7 +708,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </DndContext>
           )}
         </div>
-
+          </>
+        )}
       </div>
     </main>
   );

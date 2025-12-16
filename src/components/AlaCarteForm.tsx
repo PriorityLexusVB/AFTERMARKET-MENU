@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { addAlaCarteOption, updateAlaCarteOption } from '../data';
-import { ImageUploader } from './ImageUploader';
 import type { AlaCarteOption, FeatureConnector } from '../types';
 
 interface AlaCarteFormProps {
@@ -303,14 +302,50 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
           </label>
         </div>
 
-        <ImageUploader
-          currentImageUrl={formData.imageUrl}
-          currentThumbnailUrl={formData.thumbnailUrl}
-          currentVideoUrl={formData.videoUrl}
-          onImageUrlChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-          onThumbnailUrlChange={(url) => setFormData(prev => ({ ...prev, thumbnailUrl: url }))}
-          onVideoUrlChange={(url) => setFormData(prev => ({ ...prev, videoUrl: url }))}
-        />
+        <div>
+          <label htmlFor="imageUrl" className="block text-sm font-semibold text-gray-300 mb-1">
+            Image URL
+          </label>
+          <input
+            type="url"
+            id="imageUrl"
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            placeholder="https://example.com/image.jpg"
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="thumbnailUrl" className="block text-sm font-semibold text-gray-300 mb-1">
+            Thumbnail URL (optional)
+          </label>
+          <input
+            type="url"
+            id="thumbnailUrl"
+            name="thumbnailUrl"
+            value={formData.thumbnailUrl}
+            onChange={handleChange}
+            placeholder="https://example.com/thumbnail.jpg"
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="videoUrl" className="block text-sm font-semibold text-gray-300 mb-1">
+            Video URL (optional)
+          </label>
+          <input
+            type="url"
+            id="videoUrl"
+            name="videoUrl"
+            value={formData.videoUrl}
+            onChange={handleChange}
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
+          />
+        </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
           {onCancelEdit && (

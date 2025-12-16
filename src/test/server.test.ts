@@ -32,7 +32,7 @@ describe('Server PORT validation', () => {
   });
 
   it('should default to 8080 when PORT is not set', () => {
-    const port = process.env.PORT || 8080;
+    const port = process.env['PORT'] || 8080;
     const portType = typeof port;
     expect(['string', 'number'].includes(portType)).toBe(true);
     

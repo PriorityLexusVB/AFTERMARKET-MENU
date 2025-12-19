@@ -234,7 +234,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     try {
       const optionsQuery = query(collection(db, 'ala_carte_options'), orderBy('name'));
       const querySnapshot = await getDocs(optionsQuery);
-      const optionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlaCarteOption));
+      const optionsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AlaCarteOption));
       setOptions(optionsData);
     } catch (err) {
       console.error("Error fetching A La Carte options:", err);

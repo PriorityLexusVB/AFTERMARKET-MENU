@@ -185,9 +185,9 @@ describe('AdminPanel', () => {
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+4/)).toBeInTheDocument();
-    expect(screen.getByText(/Gold Tier/)).toBeInTheDocument();
-    expect(screen.getByText(/Elite Tier/)).toBeInTheDocument();
-    expect(screen.getByText(/Platinum Tier/)).toBeInTheDocument();
+    expect(screen.getByText(/Gold Base \(All Packages\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Elite Additions/)).toBeInTheDocument();
+    expect(screen.getByText(/Platinum Additions/)).toBeInTheDocument();
     expect(screen.getByText(/Popular Add-ons/)).toBeInTheDocument();
   });
 

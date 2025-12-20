@@ -346,4 +346,4 @@ export { sortFeatures as sortFeaturesByPosition } from './utils/featureOrdering'
  * @returns Object with columns 1-4 and unassigned features, each sorted by position
  * @deprecated Use groupFeaturesByColumn from './utils/featureOrdering' instead
  */
-export { groupFeaturesByColumn, type GroupedFeaturesByColumn as GroupedFeatures } from './utils/featureOrdering';
+export { groupFeaturesByColumn, type GroupedFeatures } from './utils/featureOrdering';

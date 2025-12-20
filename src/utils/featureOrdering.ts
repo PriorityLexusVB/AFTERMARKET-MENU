@@ -45,9 +45,10 @@ export function sortFeatures(features: ProductFeature[]): ProductFeature[] {
 
 /**
  * Normalize positions to sequential 0, 1, 2, ... (non-mutating).
+ * Generic version that works with any type that has a position field.
  */
-export function normalizePositions(features: ProductFeature[]): ProductFeature[] {
-  return features.map((f, index) => ({ ...f, position: index }));
+export function normalizePositions<T extends { position?: number }>(items: T[]): T[] {
+  return items.map((item, index) => ({ ...item, position: index }));
 }
 
 /**
@@ -115,11 +116,11 @@ export function groupFeaturesByColumn(features: ProductFeature[]): GroupedFeatur
  */
 export function normalizeGroupedItems<T extends OrderableItem>(grouped: GroupedItems<T>): GroupedItems<T> {
   return {
-    1: normalizePositions(grouped[1]) as T[],
-    2: normalizePositions(grouped[2]) as T[],
-    3: normalizePositions(grouped[3]) as T[],
-    4: normalizePositions(grouped[4]) as T[],
-    unassigned: normalizePositions(grouped.unassigned) as T[],
+    1: normalizePositions(grouped[1]),
+    2: normalizePositions(grouped[2]),
+    3: normalizePositions(grouped[3]),
+    4: normalizePositions(grouped[4]),
+    unassigned: normalizePositions(grouped.unassigned),
   };
 }
 

@@ -14,6 +14,12 @@
  *   1 - Validation failed
  */
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+
 // Required build-time environment variables for production
 const REQUIRED_BUILD_VARS = [
   'VITE_FIREBASE_API_KEY',
@@ -73,6 +79,10 @@ function validateEnvVarNames() {
     if (key !== trimmedKey) {
       detected += 1;
       logWarning(`Environment variable has leading/trailing whitespace: "${key}"`);
+      if (trimmedKey === '') {
+        logError('Environment variable name consists only of whitespace; ignoring this variable.');
+        return;
+      }
       logWarning(`  Normalizing to: "${trimmedKey}"`);
       normalizations.push({ key, trimmedKey, value: process.env[key] });
     }
@@ -85,7 +95,7 @@ function validateEnvVarNames() {
   });
 
   normalizations.forEach(({ key, trimmedKey, value }) => {
-    const preExisting = originalKeys.has(trimmedKey) && trimmedKey !== key;
+    const preExisting = originalKeys.has(trimmedKey);
     const alreadyNormalized = targetKeys.has(trimmedKey);
     const collision = preExisting || alreadyNormalized;
 
@@ -111,7 +121,7 @@ function validateEnvVarNames() {
 
   logSuccess('Environment variable name check completed');
 
-  return true;
+  return collisions === 0;
 }
 
 /**
@@ -236,4 +246,14 @@ function main() {
 }
 
 // Run validation
-main();
+if (isMain) {
+  main();
+}
+
+export {
+  validateEnvVarNames,
+  validatePort,
+  validateRequiredVars,
+  validateEnvVarValues,
+  main,
+};

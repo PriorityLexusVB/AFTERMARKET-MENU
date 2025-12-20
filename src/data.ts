@@ -61,7 +61,12 @@ export async function fetchAllData(): Promise<FetchDataResult> {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;
         // Derive features from column assignments based on tier name
         // This makes admin column configuration the single source of truth
-        const derivedFeatures = deriveTierFeatures(data.name, features);
+        let derivedFeatures = deriveTierFeatures(data.name, features);
+        if (derivedFeatures.length === 0 && Array.isArray(data.featureIds) && data.featureIds.length > 0) {
+          derivedFeatures = data.featureIds
+            .map(id => features.find(f => f.id === id))
+            .filter((f): f is ProductFeature => Boolean(f));
+        }
         const pkg: PackageTier = {
             id: doc.id,
             name: data.name,

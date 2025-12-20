@@ -351,6 +351,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     dismissBanner();
   };
 
+  const handleAlaCarteDataUpdate = useCallback(() => {
+    fetchAlaCarteCount();
+    onDataUpdate();
+  }, [fetchAlaCarteCount, onDataUpdate]);
+
   const handleEditFeature = (feature: ProductFeature) => {
     setEditingFeature(feature);
     setIsFormVisible(true);
@@ -719,10 +724,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
         {/* Tab Content */}
         {activeTab === 'alacarte' ? (
-          <AlaCarteAdminPanel onDataUpdate={() => {
-            fetchAlaCarteCount();
-            onDataUpdate();
-          }} />
+          <AlaCarteAdminPanel onDataUpdate={handleAlaCarteDataUpdate} />
         ) : (
           <>
             {/* Informational Banner for A La Carte Options */}

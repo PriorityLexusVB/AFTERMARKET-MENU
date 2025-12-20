@@ -12,6 +12,26 @@ import fs from 'fs';
 import path from 'path';
 
 /**
+ * @typedef {Object} CheckDistDirectoryResult
+ * @property {boolean} exists
+ * @property {boolean} readable
+ * @property {boolean} indexHtmlExists
+ * @property {string[]} files
+ * @property {string[]} sample
+ * @property {string | undefined} error
+ */
+
+/**
+ * @typedef {Object} MemorySnapshot
+ * @property {string} rss
+ * @property {string} heapTotal
+ * @property {string} heapUsed
+ * @property {string} external
+ * @property {string} arrayBuffers
+ * @property {string} timestamp
+ */
+
+/**
  * Scans process.env for keys with leading or trailing whitespace
  * @returns {Array<{original: string, trimmed: string}>}
  */
@@ -35,7 +55,7 @@ export function detectWhitespaceEnvVars() {
 /**
  * Checks if the dist directory exists and is readable
  * @param {string} distPath - Path to the dist directory
- * @returns {Object} Status object with exists, readable, files, and sample properties
+ * @returns {CheckDistDirectoryResult} Status object with exists, readable, files, and sample properties
  */
 export function checkDistDirectory(distPath) {
   const result = {
@@ -69,7 +89,7 @@ export function checkDistDirectory(distPath) {
 
 /**
  * Formats memory usage information
- * @returns {Object} Formatted memory usage statistics
+ * @returns {MemorySnapshot} Formatted memory usage statistics
  */
 export function getMemorySnapshot() {
   const usage = process.memoryUsage();

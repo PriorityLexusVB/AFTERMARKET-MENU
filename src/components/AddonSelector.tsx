@@ -16,8 +16,8 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({ items, selectedIte
       <div className="space-y-3 flex-grow overflow-y-auto pr-2">
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
-            <p>No popular add-ons configured yet.</p>
-            <p>Admin Panel → A La Carte → move items into Column 4.</p>
+            <p>No popular add-ons are configured yet.</p>
+            <p>In the admin interface, open Admin Panel -&gt; A La Carte, then set the add-on&apos;s position/column to Column 4 to show it in this list.</p>
           </div>
         ) : (
           items.map((item) => (

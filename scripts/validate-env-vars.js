@@ -80,7 +80,7 @@ function validateEnvVarNames() {
       detected += 1;
       logWarning(`Environment variable has leading/trailing whitespace: "${key}"`);
       if (trimmedKey === '') {
-        logError('Environment variable name consists only of whitespace; ignoring this variable.');
+        logWarning('Environment variable name consists only of whitespace; ignoring this variable.');
         return;
       }
       logWarning(`  Normalizing to: "${trimmedKey}"`);
@@ -95,7 +95,7 @@ function validateEnvVarNames() {
   });
 
   normalizations.forEach(({ key, trimmedKey, value }) => {
-    const preExisting = originalKeys.has(trimmedKey);
+    const preExisting = trimmedKey !== key && originalKeys.has(trimmedKey);
     const alreadyNormalized = targetKeys.has(trimmedKey);
     const collision = preExisting || alreadyNormalized;
 

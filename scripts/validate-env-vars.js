@@ -95,6 +95,7 @@ function validateEnvVarNames() {
   });
 
   normalizations.forEach(({ key, trimmedKey, value }) => {
+    // Detect a different env entry that already uses the trimmed key
     const preExisting = trimmedKey !== key && originalKeys.has(trimmedKey);
     const alreadyNormalized = targetKeys.has(trimmedKey);
     const collision = preExisting || alreadyNormalized;

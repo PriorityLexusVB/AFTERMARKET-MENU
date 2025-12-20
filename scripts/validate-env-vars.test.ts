@@ -23,7 +23,7 @@ describe('validate-env-vars normalization', () => {
     const result = validateEnvVarNames();
 
     expect(result).toBe(true);
-    expect(process.env.VITE_FIREBASE_PROJECT_ID).toBe('whitespace-value');
+    expect(process.env['VITE_FIREBASE_PROJECT_ID']).toBe('whitespace-value');
     expect(process.env[' VITE_FIREBASE_PROJECT_ID']).toBeUndefined();
   });
 
@@ -37,7 +37,7 @@ describe('validate-env-vars normalization', () => {
     const result = validateEnvVarNames();
 
     expect(result).toBe(false);
-    expect(process.env.VITE_FIREBASE_PROJECT_ID).toBe('existing');
+    expect(process.env['VITE_FIREBASE_PROJECT_ID']).toBe('existing');
     expect(process.env[' VITE_FIREBASE_PROJECT_ID']).toBeDefined();
   });
 
@@ -51,7 +51,7 @@ describe('validate-env-vars normalization', () => {
     const result = validateEnvVarNames();
 
     expect(result).toBe(false);
-    expect(process.env.VITE_FIREBASE_PROJECT_ID).toBe('first');
+    expect(process.env['VITE_FIREBASE_PROJECT_ID']).toBe('first');
     expect(process.env[' VITE_FIREBASE_PROJECT_ID']).toBeUndefined();
     expect(process.env['\tVITE_FIREBASE_PROJECT_ID ']).toBeDefined();
   });

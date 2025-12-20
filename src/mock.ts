@@ -3,11 +3,16 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
-// Column assignments for admin organization (direct 1:1 mapping):
-// - Column 1 = Gold Tier features ONLY
-// - Column 2 = Elite Tier features ONLY
-// - Column 3 = Platinum Tier features ONLY
+// Column assignments for admin organization (ladder/inheritance model):
+// - Column 1 = Gold Base (included in ALL packages)
+// - Column 3 = Platinum Additions (included in Platinum and Elite)
+// - Column 2 = Elite Additions (included in Elite only)
 // - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
+//
+// Package composition:
+// - Gold:     Gets Column 1 (Gold Base)
+// - Platinum: Gets Column 1 + Column 3 (Gold Base + Platinum Additions)
+// - Elite:    Gets Column 1 + Column 3 + Column 2 (Gold Base + Platinum Additions + Elite Additions)
 //
 // Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
@@ -18,7 +23,7 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // - Platinum has 3 features (Column 3)
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
-  // Gold tier features (Column 1)
+  // Gold Base features (Column 1) - included in ALL packages
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -35,7 +40,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0, // Price is included in package
     cost: 300,
     warranty: 'Lifetime coverage',
-    column: 1, // Gold tier feature
+    column: 1, // Gold Base (included in all packages)
     position: 0, // First position in column
     connector: 'AND', // Default connector
   },
@@ -54,7 +59,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 250,
-    column: 1, // Gold tier feature
+    column: 1, // Gold Base (included in all packages)
     position: 1, // Second position in column
     connector: 'AND', // Default connector
   },
@@ -72,11 +77,11 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 200,
-    column: 1, // Gold tier feature
+    column: 1, // Gold Base (included in all packages)
     position: 2, // Third position in column
-    connector: 'OR', // Special connector for Gold package display
+    connector: 'OR', // Special connector for Gold package display (shows as OR in Gold, AND in Platinum/Elite)
   },
-  // Elite tier features (Column 2)
+  // Elite Additions (Column 2) - included in Elite only
   {
     id: 'elite-rustguard',
     name: 'RustGuard Pro',
@@ -93,7 +98,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0,
     cost: 300,
     warranty: 'Lifetime coverage',
-    column: 2, // Elite tier feature
+    column: 2, // Elite Additions (Elite only)
     position: 0,
     connector: 'AND',
   },
@@ -112,7 +117,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 250,
-    column: 2, // Elite tier feature
+    column: 2, // Elite Additions (Elite only)
     position: 1,
     connector: 'AND',
   },
@@ -131,11 +136,11 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 150,
-    column: 2, // Elite tier feature
+    column: 2, // Elite Additions (Elite only)
     position: 2,
     connector: 'AND',
   },
-  // Platinum tier features (Column 3)
+  // Platinum Additions (Column 3) - included in Platinum and Elite
   {
     id: 'platinum-rustguard',
     name: 'RustGuard Pro',
@@ -152,7 +157,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0,
     cost: 300,
     warranty: 'Lifetime coverage',
-    column: 3, // Platinum tier feature
+    column: 3, // Platinum Additions (Platinum and Elite)
     position: 0,
     connector: 'AND',
   },
@@ -171,7 +176,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 250,
-    column: 3, // Platinum tier feature
+    column: 3, // Platinum Additions (Platinum and Elite)
     position: 1,
     connector: 'AND',
   },
@@ -189,7 +194,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 200,
-    column: 3, // Platinum tier feature
+    column: 3, // Platinum Additions (Platinum and Elite)
     position: 2,
     connector: 'OR',
   },
@@ -221,15 +226,17 @@ export const MOCK_FEATURES: ProductFeature[] = [
 
 // MOCK PACKAGES (these would be in the 'packages' table)
 // Features are derived from column assignments using deriveTierFeatures
-// Each tier gets ONLY features from its corresponding column (1:1 mapping)
-// This ensures admin column configuration is the single source of truth
+// Ladder/inheritance model ensures admin column configuration is the single source of truth:
+// - Gold:     Column 1
+// - Platinum: Columns 1 + 3
+// - Elite:    Columns 1 + 3 + 2
 export const MOCK_PACKAGES: PackageTier[] = [
   {
     id: 'package-elite',
     name: 'Elite',
     price: 3499,
     cost: 900,
-    // Elite = Column 2 features ONLY (empty in this mock = empty package)
+    // Elite = Columns 1 + 3 + 2 (Gold Base + Platinum Additions + Elite Additions)
     features: deriveTierFeatures('Elite', MOCK_FEATURES),
     tier_color: 'gray-400',
   },
@@ -238,7 +245,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Platinum',
     price: 2899,
     cost: 750,
-    // Platinum = Column 3 features ONLY (empty in this mock = empty package)
+    // Platinum = Columns 1 + 3 (Gold Base + Platinum Additions)
     features: deriveTierFeatures('Platinum', MOCK_FEATURES),
     is_recommended: true,
     tier_color: 'blue-400',
@@ -248,7 +255,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Gold',
     price: 2399,
     cost: 550,
-    // Gold = Column 1 features ONLY
+    // Gold = Column 1 (Gold Base)
     features: deriveTierFeatures('Gold', MOCK_FEATURES),
     tier_color: 'yellow-400',
   },

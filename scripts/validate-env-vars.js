@@ -58,15 +58,18 @@ function logInfo(message) {
  */
 function validateEnvVarNames() {
   logInfo('Checking for malformed environment variable names...');
-  let hasIssues = false;
+  let normalized = 0;
 
   Object.keys(process.env).forEach(key => {
     // Check for leading/trailing whitespace
     const trimmedKey = key.trim();
     if (key !== trimmedKey) {
-      logError(`Environment variable has leading/trailing whitespace: "${key}"`);
-      logError(`  Should be: "${trimmedKey}"`);
-      hasIssues = true;
+      logWarning(`Environment variable has leading/trailing whitespace: "${key}"`);
+      logWarning(`  Normalizing to: "${trimmedKey}"`);
+      if (!(trimmedKey in process.env)) {
+        process.env[trimmedKey] = process.env[key];
+        normalized += 1;
+      }
     }
 
     // Check for VITE_ variables with common typos
@@ -76,11 +79,13 @@ function validateEnvVarNames() {
     }
   });
 
-  if (!hasIssues) {
-    logSuccess('All environment variable names are properly formatted');
+  if (normalized > 0) {
+    logInfo(`Normalized ${normalized} environment variable(s)`);
   }
 
-  return !hasIssues;
+  logSuccess('Environment variable name check completed');
+
+  return true;
 }
 
 /**

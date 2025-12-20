@@ -2,6 +2,8 @@
 
 This guide provides detailed instructions for deploying the Priority Lexus Aftermarket Menu application to Google Cloud Run using Cloud Build.
 
+> **⚠️ Experiencing deployment failures?** See [Cloud Run Troubleshooting Guide](./CLOUD_RUN_TROUBLESHOOTING.md) for common issues and fixes.
+
 ## The Critical Issue: Build-Time vs. Run-Time Environment Variables
 
 ### Understanding the Problem
@@ -183,6 +185,8 @@ After deployment, verify that everything is working:
 - [ ] Admin panel is accessible (requires authentication)
 
 ## Troubleshooting
+
+> **📖 For detailed troubleshooting**, see [Cloud Run Troubleshooting Guide](./CLOUD_RUN_TROUBLESHOOTING.md)
 
 ### Issue: "Firebase initialization was skipped"
 

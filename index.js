@@ -2,9 +2,25 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { logStartupDiagnostics, startMemoryMonitoring } from "./utils/runtime-checks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Process-level error handling - must be set up before any other code
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught exception:', error);
+  console.error('[FATAL] Stack trace:', error.stack);
+  console.error('[FATAL] Server will exit with code 1');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled promise rejection at:', promise);
+  console.error('[FATAL] Reason:', reason);
+  console.error('[FATAL] Server will exit with code 1');
+  process.exit(1);
+});
 
 // Validate PORT environment variable early
 const port = process.env.PORT || 8080;
@@ -15,6 +31,13 @@ if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
   process.exit(1);
 }
 
+// Run comprehensive startup diagnostics
+const distDir = path.join(__dirname, "dist");
+logStartupDiagnostics({ distPath: distDir, port: portNum });
+
+// Start memory monitoring for first 30 seconds
+startMemoryMonitoring();
+
 // Log environment info for debugging
 console.log("[BOOT] Node version:", process.version);
 console.log("[BOOT] PORT:", port);
@@ -23,7 +46,6 @@ console.log("[BOOT] Working directory:", process.cwd());
 const app = express();
 app.use(express.json());
 
-const distDir = path.join(__dirname, "dist");
 const indexHtml = path.join(distDir, "index.html");
 const distExists = fs.existsSync(distDir);
 const indexExists = fs.existsSync(indexHtml);

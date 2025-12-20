@@ -12,14 +12,16 @@ process.on('uncaughtException', (error) => {
   console.error('[FATAL] Uncaught exception:', error);
   console.error('[FATAL] Stack trace:', error.stack);
   console.error('[FATAL] Server will exit with code 1');
-  process.exit(1);
+  // Allow pending I/O operations to complete before exiting
+  setImmediate(() => process.exit(1));
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[FATAL] Unhandled promise rejection at:', promise);
   console.error('[FATAL] Reason:', reason);
   console.error('[FATAL] Server will exit with code 1');
-  process.exit(1);
+  // Allow pending I/O operations to complete before exiting
+  setImmediate(() => process.exit(1));
 });
 
 // Validate PORT environment variable early

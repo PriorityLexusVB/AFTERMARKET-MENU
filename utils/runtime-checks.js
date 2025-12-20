@@ -13,7 +13,7 @@ import path from 'path';
 
 /**
  * Scans process.env for keys with leading or trailing whitespace
- * @returns {Array<{original: string, trimmed: string, value: string}>}
+ * @returns {Array<{original: string, trimmed: string}>}
  */
 export function detectWhitespaceEnvVars() {
   const issues = [];
@@ -23,8 +23,8 @@ export function detectWhitespaceEnvVars() {
     if (key !== trimmed) {
       issues.push({
         original: key,
-        trimmed: trimmed,
-        value: process.env[key]
+        trimmed: trimmed
+        // Note: value intentionally omitted for security
       });
     }
   });

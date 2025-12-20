@@ -38,13 +38,14 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration
+// Column configuration - display order matches ladder logic
 const COLUMNS = [
-  { num: 1, label: 'Gold Tier' },
-  { num: 2, label: 'Elite Tier' },
-  { num: 3, label: 'Platinum Tier' },
+  { num: 1, label: 'Gold Base (All Packages)' },
+  { num: 3, label: 'Platinum Additions' },
+  { num: 2, label: 'Elite Additions' },
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
+
 
 // Sortable Feature Item Component
 interface SortableFeatureItemProps {

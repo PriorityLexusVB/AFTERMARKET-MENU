@@ -252,7 +252,10 @@ describe('AdminPanel', () => {
       // Find the AND connector button for feature 1 and click the first match
       const andButtons = screen.getAllByRole('button', { name: /Toggle connector for Test Feature 1.*AND/i });
       expect(andButtons.length).toBeGreaterThan(0);
-      await user.click(andButtons[0]);
+      const firstButton = andButtons[0];
+      if (firstButton) {
+        await user.click(firstButton);
+      }
       
       // Verify updateFeature was called (the toggle function changes AND to OR)
       await waitFor(() => {

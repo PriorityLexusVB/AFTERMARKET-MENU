@@ -14,15 +14,22 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({ items, selectedIte
     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 h-full flex flex-col">
       <h3 className="text-2xl font-teko font-bold tracking-wider text-gray-200 mb-4 text-center">Popular Add-Ons</h3>
       <div className="space-y-3 flex-grow overflow-y-auto pr-2">
-        {items.map((item) => (
-          <AddonItem
-            key={item.id}
-            item={item}
-            isSelected={selectedItems.some(selected => selected.id === item.id)}
-            onToggle={() => onToggleItem(item)}
-            onView={() => onViewItem(item)}
-          />
-        ))}
+        {items.length === 0 ? (
+          <div className="text-sm text-gray-400 space-y-1">
+            <p>No popular add-ons configured yet.</p>
+            <p>Admin Panel → A La Carte → move items into Column 4.</p>
+          </div>
+        ) : (
+          items.map((item) => (
+            <AddonItem
+              key={item.id}
+              item={item}
+              isSelected={selectedItems.some(selected => selected.id === item.id)}
+              onToggle={() => onToggleItem(item)}
+              onView={() => onViewItem(item)}
+            />
+          ))
+        )}
       </div>
     </div>
   );

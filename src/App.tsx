@@ -90,15 +90,7 @@ const App: React.FC = () => {
     const { packages, features, alaCarteOptions } = await fetchAllData();
     setPackages(packages);
     setAllFeatures(features);
-    // Combine a la carte and features for detail viewing, preventing duplicates
-    const combinedOptions = [...alaCarteOptions];
-    const alaCarteIds = new Set(alaCarteOptions.map(o => o.id));
-    features.forEach(f => {
-      if (!alaCarteIds.has(f.id)) {
-        combinedOptions.push(f);
-      }
-    });
-    setAllAlaCarteOptions(combinedOptions);
+    setAllAlaCarteOptions(alaCarteOptions);
     setIsLoading(false);
   }, []);
 
@@ -184,6 +176,16 @@ const App: React.FC = () => {
   }, [selectedPackage, displayPackages, displayCustomPackageItems]);
 
   const mainPageAddons = useMemo(() => {
+    const byColumn = displayAllAlaCarteOptions
+      .filter(option => option.column === 4)
+      .sort(
+        (a, b) =>
+          (a.position ?? Number.MAX_SAFE_INTEGER) -
+          (b.position ?? Number.MAX_SAFE_INTEGER)
+      );
+
+    if (byColumn.length > 0) return byColumn;
+
     return displayAllAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
   }, [displayAllAlaCarteOptions]);
 

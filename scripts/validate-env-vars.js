@@ -59,17 +59,22 @@ function logInfo(message) {
 function validateEnvVarNames() {
   logInfo('Checking for malformed environment variable names...');
   let normalized = 0;
+  let detected = 0;
+  let collisions = 0;
 
-  Object.keys(process.env).forEach(key => {
+  const envKeys = Object.keys(process.env);
+  const normalizations = [];
+  const targetKeys = new Set();
+  const originalKeys = new Set(envKeys);
+
+  envKeys.forEach(key => {
     // Check for leading/trailing whitespace
     const trimmedKey = key.trim();
     if (key !== trimmedKey) {
+      detected += 1;
       logWarning(`Environment variable has leading/trailing whitespace: "${key}"`);
       logWarning(`  Normalizing to: "${trimmedKey}"`);
-      if (!(trimmedKey in process.env)) {
-        process.env[trimmedKey] = process.env[key];
-        normalized += 1;
-      }
+      normalizations.push({ key, trimmedKey, value: process.env[key] });
     }
 
     // Check for VITE_ variables with common typos
@@ -79,8 +84,29 @@ function validateEnvVarNames() {
     }
   });
 
-  if (normalized > 0) {
-    logInfo(`Normalized ${normalized} environment variable(s)`);
+  normalizations.forEach(({ key, trimmedKey, value }) => {
+    const preExisting = originalKeys.has(trimmedKey) && trimmedKey !== key;
+    const alreadyNormalized = targetKeys.has(trimmedKey);
+    const collision = preExisting || alreadyNormalized;
+
+    if (collision) {
+      collisions += 1;
+      logWarning(`  Collision detected, keeping existing value for "${trimmedKey}"`);
+      return;
+    }
+
+    process.env[trimmedKey] = value;
+    normalized += 1;
+    targetKeys.add(trimmedKey);
+    delete process.env[key];
+  });
+
+  if (detected > 0) {
+    logInfo(`Detected ${detected} environment variable(s) with whitespace; normalized ${normalized}`);
+  }
+
+  if (collisions > 0) {
+    logWarning(`Encountered ${collisions} collision(s) while normalizing; existing values were preserved`);
   }
 
   logSuccess('Environment variable name check completed');

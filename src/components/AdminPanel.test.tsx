@@ -12,14 +12,45 @@ vi.mock('../firebase', () => ({
 }));
 
 // Mock firebase/firestore/lite
-vi.mock('firebase/firestore/lite', () => ({
-  collection: vi.fn(),
-  getDocs: vi.fn().mockResolvedValue({
-    docs: [],
-  }),
-  orderBy: vi.fn(),
-  query: vi.fn(),
-}));
+vi.mock('firebase/firestore/lite', () => {
+  return {
+    collection: vi.fn((_db: any, name: string) => {
+      return { _collectionName: name };
+    }),
+    getDocs: vi.fn(async (collectionRef: any) => {
+      // Get collection name from either direct collection ref or query result
+      const collectionName = collectionRef?._collectionName;
+      
+      // Check for A La Carte options
+      if (collectionName === 'ala_carte_options') {
+        const mockAlaCarteCount = (global as any).__mockAlaCarteCount;
+        if (mockAlaCarteCount !== undefined) {
+          return {
+            size: mockAlaCarteCount,
+            docs: Array(mockAlaCarteCount).fill(null).map((_, i) => ({
+              id: `alacarte-${i}`,
+              data: () => ({ 
+                name: `Option ${i}`, 
+                price: 100, 
+                cost: 50,
+                description: 'Test option',
+                points: ['Point 1']
+              })
+            }))
+          };
+        }
+      }
+      
+      // Default: return empty
+      return { docs: [], size: 0 };
+    }),
+    orderBy: vi.fn(() => ({ _orderBy: true })),
+    query: vi.fn((collectionRef) => {
+      // Pass through collection name
+      return { ...collectionRef, _query: true };
+    }),
+  };
+});
 
 // Mock data functions
 vi.mock('../data', () => ({
@@ -73,10 +104,8 @@ describe('AdminPanel', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default to empty features
-    vi.mocked(getDocs).mockResolvedValue({
-      docs: [],
-    } as never);
+    // Clear any mock A La Carte count
+    delete (global as any).__mockAlaCarteCount;
   });
 
   it('should render the admin panel title', async () => {
@@ -132,12 +161,18 @@ describe('AdminPanel', () => {
 
   it('should render column headers', async () => {
     // Need to provide some features to see the column grid
-    vi.mocked(getDocs).mockResolvedValue({
-      docs: mockFeatures.map(f => ({
-        id: f.id,
-        data: () => ({ ...f, id: undefined }),
-      })),
-    } as never);
+    vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+      if (collectionRef?._collectionName === 'features') {
+        return {
+          docs: mockFeatures.map(f => ({
+            id: f.id,
+            data: () => ({ ...f, id: undefined }),
+          })),
+          size: mockFeatures.length,
+        } as any;
+      }
+      return { docs: [], size: 0 } as any;
+    });
     
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
@@ -158,12 +193,18 @@ describe('AdminPanel', () => {
 
   describe('with features loaded', () => {
     beforeEach(() => {
-      vi.mocked(getDocs).mockResolvedValue({
-        docs: mockFeatures.map(f => ({
-          id: f.id,
-          data: () => ({ ...f, id: undefined }),
-        })),
-      } as never);
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        if (collectionRef?._collectionName === 'features') {
+          return {
+            docs: mockFeatures.map(f => ({
+              id: f.id,
+              data: () => ({ ...f, id: undefined }),
+            })),
+            size: mockFeatures.length,
+          } as any;
+        }
+        return { docs: [], size: 0 } as any;
+      });
     });
 
     it('should display features in their respective columns', async () => {
@@ -365,6 +406,293 @@ describe('AdminPanel', () => {
       expect(grouped[1]).toHaveLength(1);
       expect(grouped.unassigned).toHaveLength(1);
       expect(grouped.unassigned[0]?.id).toBe(testFeature2.id);
+    });
+  });
+
+  describe('Tab Navigation and A La Carte Integration', () => {
+    beforeEach(() => {
+      // Clear localStorage before each test
+      localStorage.clear();
+      // Reset URL
+      window.history.replaceState({}, '', '/');
+      vi.clearAllMocks();
+      // Clear any mock A La Carte count
+      delete (global as any).__mockAlaCarteCount;
+    });
+
+    it('should render both Package Features and A La Carte Options tabs', async () => {
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      expect(screen.getByText('Package Features')).toBeInTheDocument();
+      expect(screen.getByText(/A La Carte Options/)).toBeInTheDocument();
+    });
+
+    it('should display A La Carte count in tab label', async () => {
+      // Mock getDocs to return different values based on collection
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        const collectionName = collectionRef?._collectionName;
+        
+        if (collectionName === 'ala_carte_options') {
+          return {
+            size: 5,
+            docs: Array(5).fill(null).map((_, i) => ({
+              id: `alacarte-${i}`,
+              data: () => ({ 
+                name: `Option ${i}`, 
+                price: 100, 
+                cost: 50,
+                description: 'Test option',
+                points: ['Point 1']
+              })
+            }))
+          } as any;
+        }
+        
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Wait for the count to load and be rendered
+      await waitFor(() => {
+        const buttons = screen.getAllByRole('button');
+        const alaCarteButton = buttons.find(btn => btn.textContent?.includes('A La Carte Options'));
+        expect(alaCarteButton).toBeDefined();
+        expect(alaCarteButton?.textContent).toContain('5');
+      }, { timeout: 3000 });
+    });
+
+    it('should switch to A La Carte tab when clicked and show correct heading', async () => {
+      const user = userEvent.setup();
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Initially on Package Features tab
+      expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+      
+      // Click A La Carte Options tab
+      const alaCarteTab = screen.getByText(/A La Carte Options/);
+      await user.click(alaCarteTab);
+      
+      // Should now show A La Carte heading
+      await waitFor(() => {
+        expect(screen.getByText('Manage A La Carte Options')).toBeInTheDocument();
+      });
+      
+      // Should not show Package Features heading
+      expect(screen.queryByText('Manage Package Features')).not.toBeInTheDocument();
+    });
+
+    it('should support deep-link with ?tab=alacarte query parameter', async () => {
+      // Set the query parameter before rendering
+      window.history.replaceState({}, '', '/?tab=alacarte');
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Should render A La Carte tab content directly
+      await waitFor(() => {
+        expect(screen.getByText('Manage A La Carte Options')).toBeInTheDocument();
+      });
+    });
+
+    it('should support deep-link with ?tab=features query parameter', async () => {
+      // Set the query parameter before rendering
+      window.history.replaceState({}, '', '/?tab=features');
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Should render Package Features tab content
+      expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+    });
+
+    it('should persist tab selection to localStorage', async () => {
+      const user = userEvent.setup();
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Click A La Carte Options tab
+      const alaCarteTab = screen.getByText(/A La Carte Options/);
+      await user.click(alaCarteTab);
+      
+      // Check localStorage
+      expect(localStorage.getItem('adminPanel_lastTab')).toBe('alacarte');
+    });
+
+    it('should restore last selected tab from localStorage on mount', async () => {
+      // Set localStorage before rendering
+      localStorage.setItem('adminPanel_lastTab', 'alacarte');
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Should render A La Carte tab content
+      await waitFor(() => {
+        expect(screen.getByText('Manage A La Carte Options')).toBeInTheDocument();
+      });
+    });
+
+    it('should prioritize query parameter over localStorage', async () => {
+      // Set localStorage to one tab
+      localStorage.setItem('adminPanel_lastTab', 'alacarte');
+      
+      // But query parameter specifies a different tab
+      window.history.replaceState({}, '', '/?tab=features');
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Should use query parameter (features)
+      expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+    });
+
+    it('should update URL when switching tabs', async () => {
+      const user = userEvent.setup();
+      
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Click A La Carte Options tab
+      const alaCarteTab = screen.getByText(/A La Carte Options/);
+      await user.click(alaCarteTab);
+      
+      // Check URL was updated
+      expect(window.location.search).toBe('?tab=alacarte');
+    });
+
+    it('should show informational banner on Package Features tab when A La Carte count > 0', async () => {
+      // Mock getDocs to return A La Carte count of 3
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        const collectionName = collectionRef?._collectionName;
+        
+        if (collectionName === 'ala_carte_options') {
+          return {
+            size: 3,
+            docs: Array(3).fill(null).map((_, i) => ({
+              id: `alacarte-${i}`,
+              data: () => ({ 
+                name: `Option ${i}`, 
+                price: 100, 
+                cost: 50,
+                description: 'Test option',
+                points: ['Point 1']
+              })
+            }))
+          } as any;
+        }
+        
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Wait for banner to appear
+      await waitFor(() => {
+        expect(screen.getByText(/Looking for A La Carte options\?/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+      
+      // Banner should mention the count
+      expect(screen.getByText(/You currently have/)).toBeInTheDocument();
+      const bannerText = screen.getByText(/You currently have/).closest('div')?.textContent;
+      expect(bannerText).toContain('3');
+    });
+
+    it('should hide banner when dismiss button is clicked', async () => {
+      const user = userEvent.setup();
+      
+      // Mock getDocs to return A La Carte count of 2
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        const collectionName = collectionRef?._collectionName;
+        
+        if (collectionName === 'ala_carte_options') {
+          return {
+            size: 2,
+            docs: Array(2).fill(null).map((_, i) => ({
+              id: `alacarte-${i}`,
+              data: () => ({ 
+                name: `Option ${i}`, 
+                price: 100, 
+                cost: 50,
+                description: 'Test option',
+                points: ['Point 1']
+              })
+            }))
+          } as any;
+        }
+        
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Wait for banner to appear
+      await waitFor(() => {
+        expect(screen.getByText(/Looking for A La Carte options\?/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+      
+      // Click dismiss button
+      const dismissButton = screen.getByLabelText('Dismiss banner');
+      await user.click(dismissButton);
+      
+      // Banner should be hidden
+      await waitFor(() => {
+        expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
+      });
+      
+      // Check localStorage
+      expect(localStorage.getItem('adminPanel_alaCarteBannerDismissed')).toBe('true');
+    });
+
+    it('should not show banner if previously dismissed', async () => {
+      // Set dismissed flag in localStorage
+      localStorage.setItem('adminPanel_alaCarteBannerDismissed', 'true');
+      
+      // Mock getDocs to return A La Carte count of 2
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        const collectionName = collectionRef?._collectionName;
+        
+        if (collectionName === 'ala_carte_options') {
+          return {
+            size: 2,
+            docs: Array(2).fill(null).map((_, i) => ({
+              id: `alacarte-${i}`,
+              data: () => ({ 
+                name: `Option ${i}`, 
+                price: 100, 
+                cost: 50,
+                description: 'Test option',
+                points: ['Point 1']
+              })
+            }))
+          } as any;
+        }
+        
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Wait for potential banner (it shouldn't appear)
+      await waitFor(() => {
+        expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+      });
+      
+      // Banner should not be shown
+      expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
+    });
+
+    it('should not show banner if A La Carte count is 0', async () => {
+      // Mock getDocs to return A La Carte count of 0
+      vi.mocked(getDocs).mockImplementation(async (_collectionRef: any) => {
+        // Always return empty for this test
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+      
+      // Wait for render
+      await waitFor(() => {
+        expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+      });
+      
+      // Banner should not be shown
+      expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
     });
   });
 });

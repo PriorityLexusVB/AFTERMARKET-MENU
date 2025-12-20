@@ -200,8 +200,64 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children })
   );
 };
 
+// Helper functions for localStorage
+const STORAGE_KEY_TAB = 'adminPanel_lastTab';
+const STORAGE_KEY_BANNER_DISMISSED = 'adminPanel_alaCarteBannerDismissed';
+
+const getStoredTab = (): AdminTab | null => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_TAB);
+    return stored === 'features' || stored === 'alacarte' ? stored : null;
+  } catch {
+    return null;
+  }
+};
+
+const setStoredTab = (tab: AdminTab): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY_TAB, tab);
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+const isBannerDismissed = (): boolean => {
+  try {
+    return localStorage.getItem(STORAGE_KEY_BANNER_DISMISSED) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const dismissBanner = (): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY_BANNER_DISMISSED, 'true');
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+// Helper to get initial tab from query string or localStorage
+const getInitialTab = (): AdminTab => {
+  // Check query string first
+  const params = new URLSearchParams(window.location.search);
+  const tabParam = params.get('tab');
+  if (tabParam === 'alacarte' || tabParam === 'features') {
+    return tabParam;
+  }
+  
+  // Fall back to localStorage
+  const storedTab = getStoredTab();
+  if (storedTab) {
+    return storedTab;
+  }
+  
+  // Default to features
+  return 'features';
+};
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('features');
+  const [activeTab, setActiveTab] = useState<AdminTab>(getInitialTab());
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [features, setFeatures] = useState<ProductFeature[]>([]);
   const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(null);
@@ -209,6 +265,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [alaCarteCount, setAlaCarteCount] = useState<number>(0);
+  const [isLoadingCount, setIsLoadingCount] = useState(true);
+  const [showBanner, setShowBanner] = useState(!isBannerDismissed());
   
   // Backup state for rollback on error
   const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
@@ -245,15 +304,51 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     }
   }, []);
 
+  const fetchAlaCarteCount = useCallback(async () => {
+    if (!db) {
+      setIsLoadingCount(false);
+      return;
+    }
+    setIsLoadingCount(true);
+    try {
+      const alaCarteQuery = collection(db, 'ala_carte_options');
+      const querySnapshot = await getDocs(alaCarteQuery);
+      setAlaCarteCount(querySnapshot.size);
+    } catch (err) {
+      console.error("Error fetching A La Carte count:", err);
+      // Silently fail - count is not critical
+      setAlaCarteCount(0);
+    } finally {
+      setIsLoadingCount(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchFeatures();
-  }, [fetchFeatures]);
+    fetchAlaCarteCount();
+  }, [fetchFeatures, fetchAlaCarteCount]);
 
   const handleSaveSuccess = () => {
     setIsFormVisible(false);
     setEditingFeature(null);
     fetchFeatures(); // Refetch the list of features
+    fetchAlaCarteCount(); // Refresh count in case A La Carte options were affected
     onDataUpdate(); // Trigger a full app data refresh
+  };
+
+  const handleTabChange = (tab: AdminTab) => {
+    setActiveTab(tab);
+    setStoredTab(tab);
+    
+    // Update URL without page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const handleDismissBanner = () => {
+    setShowBanner(false);
+    dismissBanner();
   };
 
   const handleEditFeature = (feature: ProductFeature) => {
@@ -595,7 +690,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         <div className="mb-6 border-b border-gray-700">
           <div className="flex gap-1">
             <button
-              onClick={() => setActiveTab('features')}
+              onClick={() => handleTabChange('features')}
               className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
                 activeTab === 'features'
                   ? 'text-blue-400 border-b-2 border-blue-400'
@@ -605,7 +700,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               Package Features
             </button>
             <button
-              onClick={() => setActiveTab('alacarte')}
+              onClick={() => handleTabChange('alacarte')}
               className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
                 activeTab === 'alacarte'
                   ? 'text-blue-400 border-b-2 border-blue-400'
@@ -613,15 +708,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               }`}
             >
               A La Carte Options
+              {!isLoadingCount && (
+                <span className={`ml-2 text-sm ${activeTab === 'alacarte' ? 'text-blue-300' : 'text-gray-500'}`}>
+                  ({alaCarteCount})
+                </span>
+              )}
             </button>
           </div>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'alacarte' ? (
-          <AlaCarteAdminPanel onDataUpdate={onDataUpdate} />
+          <AlaCarteAdminPanel onDataUpdate={() => {
+            fetchAlaCarteCount();
+            onDataUpdate();
+          }} />
         ) : (
           <>
+            {/* Informational Banner for A La Carte Options */}
+            {showBanner && alaCarteCount > 0 && (
+              <div className="mb-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-blue-300 text-sm">
+                    <strong>Looking for A La Carte options?</strong> They are managed separately in the{' '}
+                    <button
+                      onClick={() => handleTabChange('alacarte')}
+                      className="underline hover:text-blue-200 font-semibold"
+                    >
+                      A La Carte Options
+                    </button>{' '}
+                    tab. You currently have <strong>{alaCarteCount}</strong> A La Carte option{alaCarteCount !== 1 ? 's' : ''}.
+                  </p>
+                </div>
+                <button
+                  onClick={handleDismissBanner}
+                  className="text-gray-400 hover:text-gray-300 flex-shrink-0"
+                  aria-label="Dismiss banner"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-teko tracking-wider text-white">Manage Package Features</h3>
           <div className="flex items-center gap-3">

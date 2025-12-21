@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sortFeaturesByPosition, groupFeaturesByColumn } from './data';
+import { sortFeaturesByPosition, groupFeaturesByColumn, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature } from './data';
 import type { ProductFeature } from './types';
 
 // Mock firebase
@@ -15,6 +15,7 @@ vi.mock('firebase/firestore/lite', () => ({
   updateDoc: vi.fn(),
   doc: vi.fn(),
   writeBatch: vi.fn(),
+  setDoc: vi.fn(),
 }));
 
 describe('sortFeaturesByPosition', () => {
@@ -229,5 +230,34 @@ describe('groupFeaturesByColumn', () => {
     expect(grouped[2]?.[0]?.name).toBe('Col2');
     expect(grouped[3]?.[0]?.name).toBe('Col3');
     expect(grouped[4]?.[0]?.name).toBe('Col4');
+  });
+});
+
+describe('A La Carte Publishing', () => {
+  const createFeature = (overrides: Partial<ProductFeature>): ProductFeature => ({
+    id: 'test-id',
+    name: 'Test Feature',
+    description: 'Test description',
+    points: ['Point 1', 'Point 2'],
+    useCases: ['Use case 1'],
+    price: 100,
+    cost: 50,
+    warranty: 'Standard warranty',
+    publishToAlaCarte: false,
+    ...overrides,
+  });
+
+  describe('upsertAlaCarteFromFeature', () => {
+    it('should throw error if firebase is not initialized', async () => {
+      const feature = createFeature({ publishToAlaCarte: true, alaCartePrice: 150 });
+      
+      await expect(upsertAlaCarteFromFeature(feature)).rejects.toThrow('Firebase is not initialized');
+    });
+  });
+
+  describe('unpublishAlaCarteFromFeature', () => {
+    it('should throw error if firebase is not initialized', async () => {
+      await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
+    });
   });
 });

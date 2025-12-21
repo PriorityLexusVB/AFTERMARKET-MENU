@@ -21,6 +21,11 @@ export interface ProductFeature extends OrderableItem {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
+  // A La Carte publishing fields
+  publishToAlaCarte?: boolean;    // Whether this feature is published to A La Carte
+  alaCartePrice?: number;         // Price when sold as A La Carte (required if publishToAlaCarte is true)
+  alaCarteWarranty?: string;      // Optional warranty override for A La Carte
+  alaCarteIsNew?: boolean;        // Optional "new" flag for A La Carte
 }
 
 export interface PackageTier {
@@ -47,6 +52,9 @@ export interface AlaCarteOption extends OrderableItem {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
+  // Publishing fields
+  sourceFeatureId?: string;  // Set to feature.id when published from a feature
+  isPublished?: boolean;     // true/false; customer A La Carte filters on this
 }
 
 export interface PriceOverrides {

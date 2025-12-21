@@ -25,7 +25,24 @@ export const ProductFeatureSchema = z.object({
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
   position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
-});
+  // A La Carte publishing fields
+  publishToAlaCarte: z.boolean().optional(),
+  alaCartePrice: z.number().nonnegative('A La Carte price must be non-negative').optional(),
+  alaCarteWarranty: z.string().optional(),
+  alaCarteIsNew: z.boolean().optional(),
+}).refine(
+  (data) => {
+    // If publishToAlaCarte is true, alaCartePrice is required
+    if (data.publishToAlaCarte === true) {
+      return data.alaCartePrice !== undefined && data.alaCartePrice !== null;
+    }
+    return true;
+  },
+  {
+    message: 'A La Carte price is required when publishing to A La Carte',
+    path: ['alaCartePrice'],
+  }
+);
 
 export type ProductFeature = z.infer<typeof ProductFeatureSchema>;
 
@@ -46,6 +63,9 @@ export const AlaCarteOptionSchema = z.object({
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
   position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
+  // Publishing fields
+  sourceFeatureId: z.string().optional(),
+  isPublished: z.boolean().optional(),
 });
 
 export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;

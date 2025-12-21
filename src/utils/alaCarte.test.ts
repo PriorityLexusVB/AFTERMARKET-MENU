@@ -37,5 +37,11 @@ describe('alaCarte utils', () => {
       expect(isCuratedOption({ ...baseOption, isPublished: true, column: undefined })).toBe(false);
       expect(isCuratedOption({ ...baseOption, isPublished: true, column: 9 })).toBe(false);
     });
+
+    it('rejects legacy items with undefined isPublished (customer-facing strict filter)', () => {
+      // Legacy items (undefined isPublished) should NOT be shown to customers
+      expect(isCuratedOption({ ...baseOption, isPublished: undefined, column: 1 })).toBe(false);
+      expect(isCuratedOption({ ...baseOption, column: 1 })).toBe(false);
+    });
   });
 });

@@ -39,6 +39,18 @@ vi.mock('firebase/firestore/lite', () => {
                 column: 2,
               }),
             },
+            {
+              id: 'legacy-1',
+              data: () => ({
+                name: 'Legacy Item',
+                price: 150,
+                cost: 75,
+                description: 'Legacy desc',
+                points: ['Legacy point'],
+                // isPublished is undefined (legacy doc)
+                column: 3,
+              }),
+            },
           ],
         };
       }
@@ -53,11 +65,16 @@ vi.mock('../data', () => ({
 }));
 
 describe('AlaCarteAdminPanel', () => {
-  it('shows only published A La Carte options', async () => {
+  it('shows published and legacy (undefined) A La Carte options in admin', async () => {
     render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
+    // Should show published item
     await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
 
+    // Should show legacy item (with undefined isPublished)
+    expect(screen.getByText('Legacy Item')).toBeInTheDocument();
+
+    // Should NOT show explicitly unpublished item
     expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
   });
 });

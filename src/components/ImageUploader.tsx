@@ -13,6 +13,18 @@ interface ImageUploaderProps {
 const DEFAULT_MAX_SIZE_MB = 5;
 const DEFAULT_ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+const isSafeImageUrl = (url: string | null | undefined): boolean => {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onUploadComplete,
   onUploadError,
@@ -23,7 +35,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    isSafeImageUrl(existingImageUrl) ? existingImageUrl! : null
+  );
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -221,10 +235,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         />
 
         {/* Preview or Upload UI */}
-        {previewUrl ? (
+        {isSafeImageUrl(previewUrl) ? (
           <div className="space-y-4">
             <img
-              src={previewUrl}
+              src={previewUrl as string}
               alt="Upload preview"
               className="mx-auto max-h-48 rounded-lg"
             />

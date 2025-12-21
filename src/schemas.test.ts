@@ -162,6 +162,63 @@ describe('ProductFeatureSchema', () => {
     const result = ProductFeatureSchema.safeParse(featureWithInvalidUrl);
     expect(result.success).toBe(false);
   });
+
+  it('should validate feature with A La Carte publishing fields', () => {
+    const featureWithAlaCarte = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      publishToAlaCarte: true,
+      alaCartePrice: 1500,
+      alaCarteWarranty: 'Extended warranty',
+      alaCarteIsNew: true,
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithAlaCarte);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.publishToAlaCarte).toBe(true);
+      expect(result.data.alaCartePrice).toBe(1500);
+      expect(result.data.alaCarteWarranty).toBe('Extended warranty');
+      expect(result.data.alaCarteIsNew).toBe(true);
+    }
+  });
+
+  it('should fail when publishToAlaCarte is true but alaCartePrice is missing', () => {
+    const featureWithoutPrice = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      publishToAlaCarte: true,
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureWithoutPrice);
+    expect(result.success).toBe(false);
+  });
+
+  it('should succeed when publishToAlaCarte is false without alaCartePrice', () => {
+    const featureNotPublished = {
+      id: 'test-1',
+      name: 'Test Feature',
+      description: 'Test description',
+      points: [],
+      useCases: [],
+      price: 1000,
+      cost: 500,
+      publishToAlaCarte: false,
+    };
+
+    const result = ProductFeatureSchema.safeParse(featureNotPublished);
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('AlaCarteOptionSchema', () => {
@@ -194,6 +251,44 @@ describe('AlaCarteOptionSchema', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.isNew).toBe(true);
+    }
+  });
+
+  it('should validate option with sourceFeatureId and isPublished', () => {
+    const publishedOption = {
+      id: 'option-1',
+      name: 'Published Option',
+      price: 500,
+      cost: 250,
+      description: 'Test description',
+      points: [],
+      sourceFeatureId: 'feature-123',
+      isPublished: true,
+    };
+
+    const result = AlaCarteOptionSchema.safeParse(publishedOption);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.sourceFeatureId).toBe('feature-123');
+      expect(result.data.isPublished).toBe(true);
+    }
+  });
+
+  it('should validate unpublished option', () => {
+    const unpublishedOption = {
+      id: 'option-1',
+      name: 'Unpublished Option',
+      price: 500,
+      cost: 250,
+      description: 'Test description',
+      points: [],
+      isPublished: false,
+    };
+
+    const result = AlaCarteOptionSchema.safeParse(unpublishedOption);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.isPublished).toBe(false);
     }
   });
 });

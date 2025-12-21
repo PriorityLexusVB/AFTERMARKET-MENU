@@ -28,6 +28,7 @@
     "import-data": "tsx scripts/import-mock-data.ts",
     "migrate:feature-positions": "tsx scripts/migrate/add-feature-position-connector.ts",
     "migrate:backfill-features-from-alacarte": "tsx scripts/migrate/backfill-features-from-alacarte.ts",
+    "migrate:alacarte:publish-backfill": "tsx scripts/migrate/backfill-alacarte-isPublished.ts",
     "seed:emulator": "tsx tools/seed-emulator.ts"
   },
   "dependencies": {

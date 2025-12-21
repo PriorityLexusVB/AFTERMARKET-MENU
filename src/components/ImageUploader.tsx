@@ -25,6 +25,34 @@ const isSafeImageUrl = (url: string | null | undefined): boolean => {
   }
 };
 
+/**
+ * Sanitizes an image URL to prevent XSS attacks.
+ * Returns a safe URL string or empty string if invalid.
+ * Only allows http, https, and blob protocols.
+ */
+const sanitizeImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  
+  // Allow blob URLs for file preview (created by URL.createObjectURL)
+  if (trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+  
+  // Validate http/https URLs
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return trimmed;
+    }
+  } catch {
+    // Invalid URL
+  }
+  
+  return '';
+};
+
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onUploadComplete,
   onUploadError,
@@ -238,7 +266,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         {isSafeImageUrl(previewUrl) ? (
           <div className="space-y-4">
             <img
-              src={previewUrl as string}
+              src={sanitizeImageUrl(previewUrl)}
               alt="Upload preview"
               className="mx-auto max-h-48 rounded-lg"
             />

@@ -7,7 +7,7 @@ export const columnOrderValue = (col?: number) => {
   if (col === 1) return 1;
   if (col === 2) return 2;
   if (col === 3) return 3;
-  return 4;
+  return 999;
 };
 
 export const isCuratedOption = (option: AlaCarteOption) =>

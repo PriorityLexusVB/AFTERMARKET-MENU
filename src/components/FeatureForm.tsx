@@ -136,8 +136,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         // Handle A La Carte publishing after saving the feature
         if (formData.publishToAlaCarte) {
             await upsertAlaCarteFromFeature(savedFeature);
-        } else if (isEditMode && editingFeature && !formData.publishToAlaCarte) {
-            // Unpublish if this edit turned off A La Carte availability
+        } else if (isEditMode && editingFeature && editingFeature.publishToAlaCarte && !formData.publishToAlaCarte) {
+            // Unpublish if this edit turned off A La Carte availability from a previously published feature
             await unpublishAlaCarteFromFeature(editingFeature.id);
         }
 

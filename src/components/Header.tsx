@@ -18,7 +18,7 @@ interface HeaderProps {
     onPrint: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user: _user, guestMode, onOpenSettings, onLogout, onToggleAdminView, isAdminView, onPrint }) => {
+export const Header: React.FC<HeaderProps> = ({ user, guestMode, onOpenSettings, onLogout, onToggleAdminView, isAdminView, onPrint }) => {
   return (
     <header className="bg-lux-bg1/80 backdrop-blur-sm py-4 border-b border-lux-border/60 sticky top-0 z-header">
       <div className="container mx-auto px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ user: _user, guestMode, onOpenSe
               >
                 {isAdminView ? 'View Menu' : 'Admin Panel'}
               </button>
-              {_user && (
+              {user && (
                 <button 
                   onClick={onLogout} 
                   className="btn-lux-ghost text-sm px-3"

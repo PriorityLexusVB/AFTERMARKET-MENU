@@ -134,11 +134,14 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             await updateFeature(editingFeature.id, featureData);
             savedFeatureId = editingFeature.id;
         } else {
-            // For new features, we need to get the ID after creation
-            // Since addFeature doesn't return the ID, we'll handle publish in a second step
+            // For new features, save the feature first
             await addFeature(featureData);
-            // Note: For new features, we can't auto-publish until we have a stable ID
-            // This would require updating addFeature to return the doc ID
+            
+            // Show a warning if user wanted to publish but can't on initial create
+            if (formData.publishToAlaCarte) {
+                setError("Feature saved successfully. To publish to A La Carte, please edit this feature after the page refreshes.");
+            }
+            
             setFormData(initialFormState); // Only reset for add mode
             onSaveSuccess();
             setIsLoading(false);
@@ -147,9 +150,26 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
 
         // Handle publishing/unpublishing for existing features
         if (formData.publishToAlaCarte && savedFeatureId) {
+            // Construct full feature object with all required fields
             const fullFeature: ProductFeature = {
                 id: savedFeatureId,
-                ...featureData,
+                name: featureData.name,
+                description: featureData.description,
+                points: featureData.points,
+                useCases: featureData.useCases,
+                price: featureData.price,
+                cost: featureData.cost,
+                connector: featureData.connector,
+                warranty: featureData.warranty,
+                publishToAlaCarte: featureData.publishToAlaCarte,
+                alaCartePrice: featureData.alaCartePrice,
+                alaCarteWarranty: featureData.alaCarteWarranty,
+                alaCarteIsNew: featureData.alaCarteIsNew,
+                ...(featureData.imageUrl && { imageUrl: featureData.imageUrl }),
+                ...(featureData.thumbnailUrl && { thumbnailUrl: featureData.thumbnailUrl }),
+                ...(featureData.videoUrl && { videoUrl: featureData.videoUrl }),
+                ...(featureData.column && { column: featureData.column }),
+                ...(featureData.position !== undefined && { position: featureData.position }),
             };
             await upsertAlaCarteFromFeature(fullFeature);
         } else if (!formData.publishToAlaCarte && savedFeatureId) {

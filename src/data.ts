@@ -428,7 +428,9 @@ export async function unpublishAlaCarteFromFeature(featureId: string): Promise<v
   } catch (error) {
     console.error("Error unpublishing feature from A La Carte:", error);
     // Don't throw if the document doesn't exist - this is a valid case
-    if (error instanceof Error && !error.message.includes('No document to update')) {
+    // Check for NOT_FOUND error code (document doesn't exist)
+    const isNotFoundError = error && typeof error === 'object' && 'code' in error && error.code === 'not-found';
+    if (!isNotFoundError) {
       throw new Error("Failed to unpublish feature from A La Carte. Please check your connection and Firestore rules.");
     }
   }

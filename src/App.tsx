@@ -155,7 +155,14 @@ const App: React.FC = () => {
   };
 
   const displayPackages = useMemo(() => applyOverrides(packages, priceOverrides), [packages, priceOverrides]);
-  const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
+  const displayAllAlaCarteOptions = useMemo(() => {
+    // Filter to only show published A La Carte options for customers
+    const publishedOptions = allAlaCarteOptions.filter(option => {
+      // Show if explicitly published OR if it has a sourceFeatureId (for backward compatibility)
+      return option.isPublished === true || (option.sourceFeatureId && option.isPublished !== false);
+    });
+    return applyOverrides(publishedOptions, priceOverrides);
+  }, [allAlaCarteOptions, priceOverrides]);
   const displayCustomPackageItems = useMemo(() => applyOverrides(customPackageItems, priceOverrides), [customPackageItems, priceOverrides]);
 
   const { totalPrice, totalCost } = useMemo(() => {

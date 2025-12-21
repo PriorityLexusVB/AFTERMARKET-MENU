@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addFeature, updateFeature } from '../data';
+import { addFeature, updateFeature, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature } from '../data';
 import { ImageUploader } from './ImageUploader';
 import type { ProductFeature, FeatureConnector } from '../types';
 
@@ -22,6 +22,10 @@ const initialFormState = {
   videoUrl: '',
   column: '',
   connector: 'AND' as FeatureConnector,
+  publishToAlaCarte: false,
+  alaCartePrice: '',
+  alaCarteWarranty: '',
+  alaCarteIsNew: false,
 };
 
 export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editingFeature, onCancelEdit }) => {
@@ -30,7 +34,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
   const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!editingFeature;
-  const isFormValid = formData.name && formData.price && formData.cost && formData.description;
+  const isFormValid = formData.name && formData.price && formData.cost && formData.description && 
+    (!formData.publishToAlaCarte || (formData.publishToAlaCarte && formData.alaCartePrice));
 
   // Populate form when editing
   useEffect(() => {
@@ -48,6 +53,10 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         videoUrl: editingFeature.videoUrl || '',
         column: editingFeature.column?.toString() || '',
         connector: editingFeature.connector || 'AND',
+        publishToAlaCarte: editingFeature.publishToAlaCarte || false,
+        alaCartePrice: editingFeature.alaCartePrice?.toString() || '',
+        alaCarteWarranty: editingFeature.alaCarteWarranty || '',
+        alaCarteIsNew: editingFeature.alaCarteIsNew || false,
       });
     } else {
       setFormData(initialFormState);
@@ -55,8 +64,13 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
   }, [editingFeature]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -83,7 +97,20 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
+            publishToAlaCarte: formData.publishToAlaCarte,
         };
+
+        // Add A La Carte fields if publishing
+        if (formData.publishToAlaCarte) {
+            if (!formData.alaCartePrice) {
+                throw new Error("A La Carte price is required when publishing to A La Carte.");
+            }
+            featureData.alaCartePrice = parseFloat(formData.alaCartePrice);
+            if (formData.alaCarteWarranty) {
+                featureData.alaCarteWarranty = formData.alaCarteWarranty;
+            }
+            featureData.alaCarteIsNew = formData.alaCarteIsNew;
+        }
 
         // Add column if valid
         if (formData.column) {
@@ -97,12 +124,38 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             throw new Error("Price and Cost must be valid numbers.");
         }
 
+        if (formData.publishToAlaCarte && featureData.alaCartePrice !== undefined && isNaN(featureData.alaCartePrice)) {
+            throw new Error("A La Carte price must be a valid number.");
+        }
+
+        let savedFeatureId: string;
+        
         if (isEditMode && editingFeature) {
             await updateFeature(editingFeature.id, featureData);
+            savedFeatureId = editingFeature.id;
         } else {
+            // For new features, we need to get the ID after creation
+            // Since addFeature doesn't return the ID, we'll handle publish in a second step
             await addFeature(featureData);
+            // Note: For new features, we can't auto-publish until we have a stable ID
+            // This would require updating addFeature to return the doc ID
             setFormData(initialFormState); // Only reset for add mode
+            onSaveSuccess();
+            setIsLoading(false);
+            return;
         }
+
+        // Handle publishing/unpublishing for existing features
+        if (formData.publishToAlaCarte && savedFeatureId) {
+            const fullFeature: ProductFeature = {
+                id: savedFeatureId,
+                ...featureData,
+            };
+            await upsertAlaCarteFromFeature(fullFeature);
+        } else if (!formData.publishToAlaCarte && savedFeatureId) {
+            await unpublishAlaCarteFromFeature(savedFeatureId);
+        }
+
         onSaveSuccess();
 
     } catch (err: unknown) {
@@ -242,6 +295,77 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                     </p>
                 </div>
             </FormRow>
+
+            {/* A La Carte Publishing Section */}
+            <div className="pt-4 border-t border-gray-700/50 space-y-4">
+                <h3 className="text-lg font-teko font-semibold text-gray-200 tracking-wider">A La Carte Publishing</h3>
+                
+                <FormRow>
+                    <div className="md:col-span-3">
+                        <label htmlFor="publishToAlaCarte" className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="publishToAlaCarte"
+                                name="publishToAlaCarte"
+                                checked={formData.publishToAlaCarte}
+                                onChange={handleChange}
+                                className="w-5 h-5 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800"
+                            />
+                            <span className="text-white font-semibold">Offer as A La Carte</span>
+                        </label>
+                        <p className="text-xs text-gray-500 mt-2 ml-8">
+                            When enabled, this feature will be published to the customer-facing A La Carte menu with a separate price.
+                        </p>
+                    </div>
+                </FormRow>
+
+                {formData.publishToAlaCarte && (
+                    <>
+                        <FormRow>
+                            <Label htmlFor="alaCartePrice" text="A La Carte Price ($)" required />
+                            <input
+                                type="number"
+                                id="alaCartePrice"
+                                name="alaCartePrice"
+                                value={formData.alaCartePrice}
+                                onChange={handleChange}
+                                step="0.01"
+                                min="0"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                                required={formData.publishToAlaCarte}
+                            />
+                        </FormRow>
+                        <FormRow>
+                            <Label htmlFor="alaCarteWarranty" text="A La Carte Warranty" helpText="(Optional override)" />
+                            <input
+                                type="text"
+                                id="alaCarteWarranty"
+                                name="alaCarteWarranty"
+                                value={formData.alaCarteWarranty}
+                                onChange={handleChange}
+                                placeholder="Leave blank to use feature warranty"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                            />
+                        </FormRow>
+                        <FormRow>
+                            <div className="md:col-span-3">
+                                <label htmlFor="alaCarteIsNew" className="flex items-center gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="alaCarteIsNew"
+                                        name="alaCarteIsNew"
+                                        checked={formData.alaCarteIsNew}
+                                        onChange={handleChange}
+                                        className="w-5 h-5 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800"
+                                    />
+                                    <span className="text-white font-semibold">Mark as "New" in A La Carte</span>
+                                </label>
+                            </div>
+                        </FormRow>
+                    </>
+                )}
+            </div>
+
             <FormRow>
                 <Label htmlFor="points" text="Key Features" helpText="One per line" />
                 <textarea

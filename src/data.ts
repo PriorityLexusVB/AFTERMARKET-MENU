@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, doc, writeBatch } from 'firebase/firestore/lite';
+import { collection, getDocs, addDoc, updateDoc, doc, writeBatch, setDoc } from 'firebase/firestore/lite';
 import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
@@ -347,3 +347,89 @@ export { sortFeatures as sortFeaturesByPosition } from './utils/featureOrdering'
  * @deprecated Use groupFeaturesByColumn from './utils/featureOrdering' instead
  */
 export { groupFeaturesByColumn, type GroupedFeatures } from './utils/featureOrdering';
+
+/**
+ * Publishes a feature to the A La Carte options collection.
+ * Creates or updates an A La Carte option with stable ID matching the feature ID.
+ * @param feature - The feature to publish
+ * @returns A promise that resolves when the operation completes
+ */
+export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot publish feature to A La Carte.");
+  }
+
+  if (!feature.publishToAlaCarte) {
+    throw new Error("Feature is not marked for publishing to A La Carte.");
+  }
+
+  if (feature.alaCartePrice === undefined || feature.alaCartePrice === null) {
+    throw new Error("A La Carte price is required when publishing a feature.");
+  }
+
+  try {
+    // Use stable doc ID matching the feature ID
+    const alaCarteRef = doc(db, 'ala_carte_options', feature.id);
+    
+    // Build the A La Carte option data
+    const alaCarteData: Partial<AlaCarteOption> = {
+      sourceFeatureId: feature.id,
+      isPublished: true,
+      name: feature.name,
+      description: feature.description,
+      points: feature.points,
+      price: feature.alaCartePrice,
+      cost: feature.cost,
+      warranty: feature.alaCarteWarranty ?? feature.warranty,
+      isNew: feature.alaCarteIsNew ?? false,
+    };
+
+    // Add optional fields if they exist
+    if (feature.useCases && feature.useCases.length > 0) {
+      alaCarteData.useCases = feature.useCases;
+    }
+    if (feature.imageUrl) {
+      alaCarteData.imageUrl = feature.imageUrl;
+    }
+    if (feature.thumbnailUrl) {
+      alaCarteData.thumbnailUrl = feature.thumbnailUrl;
+    }
+    if (feature.videoUrl) {
+      alaCarteData.videoUrl = feature.videoUrl;
+    }
+
+    // Use setDoc with merge to preserve column/position if they already exist
+    await setDoc(alaCarteRef, alaCarteData, { merge: true });
+  } catch (error) {
+    console.error("Error publishing feature to A La Carte:", error);
+    throw new Error("Failed to publish feature to A La Carte. Please check your connection and Firestore rules.");
+  }
+}
+
+/**
+ * Unpublishes a feature from the A La Carte options.
+ * Sets isPublished to false without deleting the document.
+ * @param featureId - The ID of the feature to unpublish
+ * @returns A promise that resolves when the operation completes
+ */
+export async function unpublishAlaCarteFromFeature(featureId: string): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot unpublish feature from A La Carte.");
+  }
+
+  try {
+    // Use the feature ID as the A La Carte doc ID (stable ID)
+    const alaCarteRef = doc(db, 'ala_carte_options', featureId);
+    
+    // Only update isPublished, don't delete the document
+    await updateDoc(alaCarteRef, {
+      isPublished: false,
+    });
+  } catch (error) {
+    console.error("Error unpublishing feature from A La Carte:", error);
+    // Don't throw if the document doesn't exist - this is a valid case
+    if (error instanceof Error && !error.message.includes('No document to update')) {
+      throw new Error("Failed to unpublish feature from A La Carte. Please check your connection and Firestore rules.");
+    }
+  }
+}

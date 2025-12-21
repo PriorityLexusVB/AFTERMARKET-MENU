@@ -18,6 +18,7 @@ import { MAIN_PAGE_ADDON_IDS } from './constants';
 import { fetchAllData } from './data';
 import { auth, firebaseInitializationError } from './firebase';
 import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from './types';
+import { columnOrderValue, isCuratedOption } from './utils/alaCarte';
 import {
   initializeAnalytics,
   trackPackageSelect,
@@ -184,18 +185,10 @@ const App: React.FC = () => {
   }, [selectedPackage, displayPackages, displayCustomPackageItems]);
 
   const curatedAlaCarteOptions = useMemo(() => {
-    const columnOrder = (col?: number) => {
-      if (col === 4) return 0;
-      if (col === 1) return 1;
-      if (col === 2) return 2;
-      if (col === 3) return 3;
-      return 4;
-    };
-
     return [...displayAllAlaCarteOptions]
-      .filter(option => option.isPublished === true && option.column !== undefined && [1, 2, 3, 4].includes(option.column))
+      .filter(isCuratedOption)
       .sort((a, b) => {
-        const columnDiff = columnOrder(a.column) - columnOrder(b.column);
+        const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
         if (columnDiff !== 0) return columnDiff;
         const posA = a.position ?? Number.MAX_SAFE_INTEGER;
         const posB = b.position ?? Number.MAX_SAFE_INTEGER;

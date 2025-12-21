@@ -55,12 +55,12 @@ describe('AlaCarteSelector', () => {
 
     render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
-    expect(screen.getByText('No add-ons configured.')).toBeInTheDocument();
+    expect(screen.getByText('No add-ons configured')).toBeInTheDocument();
   });
 
   it('should show "All Options Selected" message when items array is empty', () => {
     render(<AlaCarteSelector items={[]} onViewItem={mockOnViewItem} />);
 
-    expect(screen.getByText('No add-ons configured.')).toBeInTheDocument();
+    expect(screen.getByText('No add-ons configured')).toBeInTheDocument();
   });
 });

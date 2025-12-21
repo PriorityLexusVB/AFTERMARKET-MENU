@@ -7,13 +7,23 @@ interface AlaCarteSelectorProps {
   onViewItem: (item: ProductFeature | AlaCarteOption) => void;
 }
 
+// Helper function to determine if an item should be displayed as published
+function isItemPublished(item: AlaCarteOption): boolean {
+  // Item is published if isPublished is explicitly true
+  if (item.isPublished === true) {
+    return true;
+  }
+  // Backward compatibility: treat items with sourceFeatureId as published
+  // unless explicitly unpublished (isPublished === false)
+  if (item.sourceFeatureId && item.isPublished !== false) {
+    return true;
+  }
+  return false;
+}
+
 export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({ items, onViewItem }) => {
   // Filter to only show published items
-  const publishedItems = items.filter(item => 
-    item.isPublished === true || 
-    // Treat older docs with sourceFeatureId as published for backward compatibility
-    (item.sourceFeatureId && item.isPublished !== false)
-  );
+  const publishedItems = items.filter(isItemPublished);
 
   const handleDragStart = (e: React.DragEvent, item: AlaCarteOption) => {
     e.dataTransfer.setData("application/json", JSON.stringify(item));

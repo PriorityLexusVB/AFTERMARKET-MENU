@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { AlaCarteSelector } from './AlaCarteSelector';
 import type { AlaCarteOption } from '../types';
 
+// Note: isItemPublished is not exported, so we test it through the component behavior
 describe('AlaCarteSelector', () => {
   const createOption = (overrides: Partial<AlaCarteOption>): AlaCarteOption => ({
     id: 'test-id',

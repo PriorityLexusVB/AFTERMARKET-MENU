@@ -160,7 +160,7 @@ async function runMigration(): Promise<void> {
             connector: 'AND', // Default connector
             publishToAlaCarte: true,
             alaCartePrice: option.price,
-            alaCarteWarranty: option.warranty,
+            alaCarteWarranty: option.warranty || '',
             alaCarteIsNew: option.isNew || false,
             // Do NOT set column/position from option
           };

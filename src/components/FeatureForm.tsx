@@ -100,7 +100,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             publishToAlaCarte: formData.publishToAlaCarte,
             ...(formData.publishToAlaCarte && formData.alaCartePrice && { alaCartePrice: parseFloat(formData.alaCartePrice) }),
             ...(formData.alaCarteWarranty && { alaCarteWarranty: formData.alaCarteWarranty }),
-            ...(formData.alaCarteIsNew !== undefined && { alaCarteIsNew: formData.alaCarteIsNew }),
+            ...(formData.publishToAlaCarte && { alaCarteIsNew: formData.alaCarteIsNew }),
         };
 
         // Add column if valid
@@ -136,8 +136,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         // Handle A La Carte publishing after saving the feature
         if (formData.publishToAlaCarte) {
             await upsertAlaCarteFromFeature(savedFeature);
-        } else if (isEditMode) {
-            // If unpublishing, set isPublished to false
+        } else if (isEditMode && editingFeature && editingFeature.publishToAlaCarte) {
+            // If unpublishing and feature was previously published, set isPublished to false
             await unpublishAlaCarteFromFeature(editingFeature.id);
         }
 

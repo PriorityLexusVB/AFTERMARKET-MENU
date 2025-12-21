@@ -75,7 +75,7 @@ test.describe('Package Selection', () => {
     }
     
     // Ensure the Popular Add-Ons section is also loaded
-    await expect(page.locator('text=Popular Add-Ons')).toBeVisible();
+    await expect(page.locator('h3:has-text("Popular Add-Ons")')).toBeVisible();
     
     // Take a screenshot of the package section
     const packageSection = page.locator('main').first();

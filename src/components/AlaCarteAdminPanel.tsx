@@ -235,7 +235,8 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       const optionsQuery = query(collection(db, 'ala_carte_options'), orderBy('name'));
       const querySnapshot = await getDocs(optionsQuery);
       const optionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlaCarteOption));
-      setOptions(optionsData.filter(option => option.isPublished === true));
+      // Admin visibility: show published (true) OR legacy (undefined) docs
+      setOptions(optionsData.filter(option => option.isPublished === true || option.isPublished === undefined));
     } catch (err) {
       console.error("Error fetching A La Carte options:", err);
       setError("Failed to fetch A La Carte options. Please check your Firestore rules and connection.");

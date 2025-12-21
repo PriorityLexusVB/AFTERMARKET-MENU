@@ -46,6 +46,18 @@ export default {
 
       // COLORS - Luxury Palette
       colors: {
+        lux: {
+          bg0: '#050608',
+          bg1: '#0D1014',
+          bg2: '#161B22',
+          border: '#2B313B',
+          textStrong: '#F5F7FB',
+          text: '#D8DCE3',
+          textMuted: '#9AA3B5',
+          gold: '#C6A664',
+          blue: '#5FA3FF',
+          red: '#E26B6B',
+        },
         // Luxury Neutrals
         'luxury-black': '#0A0A0A',
         'luxury-charcoal': '#1A1A1A',

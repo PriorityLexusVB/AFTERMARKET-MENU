@@ -8,6 +8,7 @@ import { FeatureModal } from './components/FeatureModal';
 import { CustomPackageBuilder } from './components/CustomPackageBuilder';
 import { AddonSelector } from './components/AddonSelector';
 import { SettingsModal } from './components/SettingsModal';
+import { SelectionDrawer } from './components/SelectionDrawer';
 import { AgreementView } from './components/AgreementView';
 import { AIAssistant } from './components/AIAssistant';
 import { Login } from './components/Login';
@@ -68,6 +69,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const guestMode = !user;
 
   useEffect(() => {
     // Initialize Firebase Analytics
@@ -100,6 +102,12 @@ const App: React.FC = () => {
       loadData();
     }
   }, [user, isDemoMode, loadData]);
+
+  useEffect(() => {
+    if (guestMode && isAdminView) {
+      setIsAdminView(false);
+    }
+  }, [guestMode, isAdminView]);
   
   const handleLogout = useCallback(async () => {
     if (isDemoMode) {
@@ -175,8 +183,28 @@ const App: React.FC = () => {
     return { totalPrice: price, totalCost: cost };
   }, [selectedPackage, displayPackages, displayCustomPackageItems]);
 
+  const curatedAlaCarteOptions = useMemo(() => {
+    const columnOrder = (col?: number) => {
+      if (col === 4) return 0;
+      if (col === 1) return 1;
+      if (col === 2) return 2;
+      if (col === 3) return 3;
+      return 4;
+    };
+
+    return [...displayAllAlaCarteOptions]
+      .filter(option => option.isPublished === true && option.column !== undefined && [1, 2, 3, 4].includes(option.column))
+      .sort((a, b) => {
+        const columnDiff = columnOrder(a.column) - columnOrder(b.column);
+        if (columnDiff !== 0) return columnDiff;
+        const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+        const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+        return posA - posB;
+      });
+  }, [displayAllAlaCarteOptions]);
+
   const mainPageAddons = useMemo(() => {
-    const byColumn = displayAllAlaCarteOptions
+    const byColumn = curatedAlaCarteOptions
       .filter(option => option.column === 4)
       .sort(
         (a, b) =>
@@ -186,12 +214,12 @@ const App: React.FC = () => {
 
     if (byColumn.length > 0) return byColumn;
 
-    return displayAllAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
-  }, [displayAllAlaCarteOptions]);
+    return curatedAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
+  }, [curatedAlaCarteOptions]);
 
   const availableAlaCarteItems = useMemo(() => {
-    return displayAllAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
-  }, [customPackageItems, displayAllAlaCarteOptions]);
+    return curatedAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
+  }, [customPackageItems, curatedAlaCarteOptions]);
 
   const handleShowAgreement = useCallback(() => {
     // Track quote finalization
@@ -269,14 +297,18 @@ const App: React.FC = () => {
     setViewingDetailItem(null);
   }, []);
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   const NavButton: React.FC<{page: Page, label: string}> = ({ page, label }) => (
     <button
       onClick={() => setCurrentPage(page)}
       className={`
-        w-full sm:w-auto px-8 py-2 rounded-md text-xl font-teko tracking-wider transition-all duration-300 transform active:scale-95
+        w-full sm:w-auto px-6 py-3 rounded-xl text-lg font-teko tracking-wider transition-all duration-300 transform active:scale-98 border min-h-[48px]
         ${currentPage === page 
-          ? 'bg-blue-600 text-white shadow-lg' 
-          : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'}
+          ? 'bg-lux-blue text-lux-textStrong border-lux-blue/70 shadow-luxury-lg' 
+          : 'bg-lux-bg2 text-lux-text border-lux-border/60 hover:border-lux-gold/60'}
       `}
     >
       {label}
@@ -295,25 +327,12 @@ const App: React.FC = () => {
     </div>
   );
 
-  const renderContent = () => {
-    if (currentView === 'agreement') {
-      return (
-        <AgreementView
-          onBack={handleShowMenu}
-          selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
-          customPackageItems={displayCustomPackageItems}
-          totalPrice={totalPrice}
-          totalCost={totalCost}
-          customerInfo={customerInfo}
-        />
-      );
-    }
-    
+  const renderMenuContent = () => {
     return (
-      <>
+      <div className="space-y-6">
         <div className="text-center mb-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-teko tracking-wider uppercase text-gray-100">Vehicle Protection Menu</h2>
-          <p className="text-base text-gray-400 mt-1 max-w-3xl mx-auto">
+          <h2 className="lux-title text-4xl md:text-5xl">Vehicle Protection Menu</h2>
+          <p className="lux-subtitle mt-1 max-w-3xl mx-auto">
             Select one of our expertly curated packages, or build a custom package from our a la carte options.
           </p>
         </div>
@@ -332,8 +351,7 @@ const App: React.FC = () => {
               Compare Packages
             </button>
           )}
-        </div>
-      
+       </div>
         {currentPage === 'packages' && (
           <div className="flex-grow flex flex-col lg:flex-row gap-8 items-stretch">
             <div className="w-full lg:w-3/4">
@@ -359,23 +377,27 @@ const App: React.FC = () => {
         {currentPage === 'alacarte' && (
            <div className="flex flex-col xl:flex-row gap-12">
             <div className="xl:w-3/5">
-               <h3 className="text-4xl font-teko font-bold tracking-wider text-gray-300 mb-6">Available Options</h3>
+               <h3 className="lux-title mb-4">Available Options</h3>
               <AlaCarteSelector
                 items={availableAlaCarteItems}
                 onViewItem={handleViewDetail}
+                disableDrag={guestMode}
+                onToggleItem={handleToggleAlaCarteItem}
+                selectedIds={customPackageItems.map(item => item.id)}
               />
             </div>
             <div className="xl:w-2/5 flex flex-col">
-               <h3 className="text-4xl font-teko font-bold tracking-wider text-gray-300 mb-6">Your Custom Package</h3>
+               <h3 className="lux-title mb-4">Your Custom Package</h3>
               <CustomPackageBuilder
                 items={displayCustomPackageItems}
                 onDropItem={handleDropAlaCarte}
                 onRemoveItem={handleRemoveAlaCarte}
+                enableDrop={!guestMode}
               />
             </div>
           </div>
         )}
-      </>
+      </div>
     );
   }
 
@@ -386,25 +408,46 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen antialiased flex flex-col">
+    <div className="lux-app antialiased flex flex-col">
       <Header
         user={user}
+        guestMode={guestMode}
         onOpenSettings={handleOpenSettings}
         onLogout={handleLogout}
         onToggleAdminView={handleToggleAdminView}
         isAdminView={isAdminView}
+        onPrint={handlePrint}
       />
       
-      {isAdminView && !isDemoMode ? (
+      {isAdminView && !isDemoMode && !guestMode ? (
         <AdminPanel onDataUpdate={loadData} />
       ) : (
         <>
           <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">
             {isLoading ? (
               <LoadingSpinner />
+            ) : currentView === 'agreement' ? (
+              <AgreementView
+                onBack={handleShowMenu}
+                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
+                customPackageItems={displayCustomPackageItems}
+                totalPrice={totalPrice}
+                totalCost={totalCost}
+                customerInfo={customerInfo}
+              />
             ) : (
-              <div className="flex-grow flex flex-col">
-                {renderContent()}
+              <div className="grid lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+                <div className="lux-no-select space-y-4">
+                  {renderMenuContent()}
+                </div>
+                <SelectionDrawer
+                  selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
+                  customItems={displayCustomPackageItems}
+                  totalPrice={totalPrice}
+                  onRemoveItem={handleRemoveAlaCarte}
+                  onPrint={handlePrint}
+                  onDeselectPackage={selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined}
+                />
               </div>
             )}
           </main>
@@ -419,7 +462,7 @@ const App: React.FC = () => {
               />
               <AIAssistant
                 packages={displayPackages}
-                alaCarteOptions={displayAllAlaCarteOptions}
+                alaCarteOptions={curatedAlaCarteOptions}
               />
             </>
           )}

@@ -10,42 +10,59 @@ const SettingsIcon: React.FC = () => (
 
 interface HeaderProps {
     user: User | null;
+    guestMode: boolean;
     onOpenSettings: () => void;
     onLogout: () => void;
     onToggleAdminView: () => void;
     isAdminView: boolean;
+    onPrint: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user: _user, onOpenSettings, onLogout, onToggleAdminView, isAdminView }) => {
+export const Header: React.FC<HeaderProps> = ({ user: _user, guestMode, onOpenSettings, onLogout, onToggleAdminView, isAdminView, onPrint }) => {
   return (
-    <header className="bg-black bg-opacity-30 backdrop-blur-sm py-4 border-b border-gray-700 sticky top-0 z-30">
+    <header className="bg-lux-bg1/80 backdrop-blur-sm py-4 border-b border-lux-border/60 sticky top-0 z-header">
       <div className="container mx-auto px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="text-center sm:text-left">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-widest font-teko text-white">PRIORITY <span className="text-gray-400">LEXUS</span></h1>
-          <p className="text-sm text-gray-400 tracking-widest">VIRGINIA BEACH</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-widest font-teko text-lux-textStrong">PRIORITY <span className="text-lux-textMuted">LEXUS</span></h1>
+          <p className="text-sm text-lux-textMuted tracking-widest">VIRGINIA BEACH</p>
         </div>
-        <div className="flex items-center gap-4">
-            <button 
-              onClick={onToggleAdminView} 
-              className="text-sm font-semibold text-gray-300 hover:text-white transition-colors bg-gray-700/50 px-3 py-1.5 rounded-md"
-            >
-              {isAdminView ? 'View Menu' : 'Admin Panel'}
-            </button>
-             <button 
-              onClick={onLogout} 
-              className="text-sm font-semibold text-gray-300 hover:text-white transition-colors"
-            >
-              Logout
-            </button>
-          <div className="h-6 w-px bg-gray-600"></div>
-          <p className="text-lg text-gray-300 font-light font-teko tracking-widest hidden md:block">PRIORITIES FOR LIFE</p>
-           <button 
-            onClick={onOpenSettings} 
-            className="text-gray-400 hover:text-white hover:rotate-90 transition-all duration-300"
-            aria-label="Open Settings"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onPrint}
+            className="btn-lux-ghost text-sm flex items-center gap-2 px-3"
           >
-            <SettingsIcon />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V9h1.25A2.75 2.75 0 0 1 22 11.75v4.5A2.75 2.75 0 0 1 19.25 19h-.75V21a.75.75 0 0 1-.75.75h-11A.75.75 0 0 1 6 21v-2h-.25A2.75 2.75 0 0 1 3 16.25v-4.5A2.75 2.75 0 0 1 5.75 9H7V4.5ZM17.25 9V4.5a.25.25 0 0 0-.25-.25h-9a.25.25 0 0 0-.25.25V9h9.5ZM6.5 19.5h11v-5h-11v5Zm-2.5-3.25c0 .69.56 1.25 1.25 1.25H6v-3.5h-1.5c-.69 0-1.25.56-1.25 1.25v1ZM18 14v3.5h1.25c.69 0 1.25-.56 1.25-1.25v-1c0-.69-.56-1.25-1.25-1.25H18Z" />
+            </svg>
+            Print
           </button>
+          {!guestMode && (
+            <>
+              <button 
+                onClick={onToggleAdminView} 
+                className="btn-lux-secondary text-sm px-3"
+              >
+                {isAdminView ? 'View Menu' : 'Admin Panel'}
+              </button>
+              {_user && (
+                <button 
+                  onClick={onLogout} 
+                  className="btn-lux-ghost text-sm px-3"
+                >
+                  Logout
+                </button>
+              )}
+              <div className="h-6 w-px bg-lux-border/70"></div>
+              <p className="text-lg text-lux-textMuted font-light font-teko tracking-widest hidden md:block">PRIORITIES FOR LIFE</p>
+              <button 
+                onClick={onOpenSettings} 
+                className="text-lux-textMuted hover:text-lux-textStrong hover:rotate-90 transition-all duration-300"
+                aria-label="Open Settings"
+              >
+                <SettingsIcon />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

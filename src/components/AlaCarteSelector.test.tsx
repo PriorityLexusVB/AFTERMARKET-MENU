@@ -17,60 +17,50 @@ describe('AlaCarteSelector', () => {
 
   const mockOnViewItem = vi.fn();
 
-  it('should only render published items', () => {
+  it('should only render published items with valid columns', () => {
     const items: AlaCarteOption[] = [
-      createOption({ id: '1', name: 'Published Option', isPublished: true }),
-      createOption({ id: '2', name: 'Unpublished Option', isPublished: false }),
-      createOption({ id: '3', name: 'Another Published', isPublished: true }),
+      createOption({ id: '1', name: 'Published Option', isPublished: true, column: 1 }),
+      createOption({ id: '2', name: 'Unpublished Option', isPublished: false, column: 2 }),
+      createOption({ id: '3', name: 'Missing Column', isPublished: true }),
     ];
 
     render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
     expect(screen.getByText('Published Option')).toBeInTheDocument();
-    expect(screen.getByText('Another Published')).toBeInTheDocument();
     expect(screen.queryByText('Unpublished Option')).not.toBeInTheDocument();
+    expect(screen.queryByText('Missing Column')).not.toBeInTheDocument();
   });
 
-  it('should render items with sourceFeatureId as published (backward compatibility)', () => {
+  it('should sort curated items with column 4 first then position', () => {
     const items: AlaCarteOption[] = [
-      createOption({ id: '1', name: 'Old Published', sourceFeatureId: 'feature-1' }),
-      createOption({ id: '2', name: 'Not Published' }),
+      createOption({ id: '1', name: 'Column 1', isPublished: true, column: 1, position: 1 }),
+      createOption({ id: '2', name: 'Featured Later', isPublished: true, column: 4, position: 2 }),
+      createOption({ id: '3', name: 'Featured First', isPublished: true, column: 4, position: 0 }),
     ];
 
     render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
-    expect(screen.getByText('Old Published')).toBeInTheDocument();
-    expect(screen.queryByText('Not Published')).not.toBeInTheDocument();
+    const buttons = screen.getAllByRole('button', { name: /Column 1|Featured/ });
+    expect(buttons.map((btn) => btn.textContent)).toEqual([
+      'Featured First',
+      'Featured Later',
+      'Column 1',
+    ]);
   });
 
-  it('should not render items with sourceFeatureId but isPublished false', () => {
+  it('should show empty state when no curated items', () => {
     const items: AlaCarteOption[] = [
-      createOption({ 
-        id: '1', 
-        name: 'Explicitly Unpublished', 
-        sourceFeatureId: 'feature-1',
-        isPublished: false 
-      }),
+      createOption({ id: '1', name: 'Unpublished', isPublished: false, column: 1 }),
     ];
 
     render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
-    expect(screen.queryByText('Explicitly Unpublished')).not.toBeInTheDocument();
-  });
-
-  it('should show "All Options Selected" message when no published items', () => {
-    const items: AlaCarteOption[] = [
-      createOption({ id: '1', name: 'Unpublished', isPublished: false }),
-    ];
-
-    render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
-
-    expect(screen.getByText('All Options Selected!')).toBeInTheDocument();
+    expect(screen.getByText('No add-ons configured.')).toBeInTheDocument();
   });
 
   it('should show "All Options Selected" message when items array is empty', () => {
     render(<AlaCarteSelector items={[]} onViewItem={mockOnViewItem} />);
 
-    expect(screen.getByText('All Options Selected!')).toBeInTheDocument();
+    expect(screen.getByText('No add-ons configured.')).toBeInTheDocument();
   });
 });

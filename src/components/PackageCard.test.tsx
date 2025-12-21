@@ -46,7 +46,7 @@ describe('PackageCard', () => {
     expect(container.textContent).toContain('$1,500');
   });
 
-  it('should display "Most Popular" badge when is_recommended is true', () => {
+  it('should display recommended badge when is_recommended is true', () => {
     const recommendedPackage = createMockPackageTier({
       ...defaultProps.packageInfo,
       is_recommended: true,
@@ -54,13 +54,13 @@ describe('PackageCard', () => {
 
     render(<PackageCard {...defaultProps} packageInfo={recommendedPackage} />);
 
-    expect(screen.getByText('Most Popular')).toBeInTheDocument();
+    expect(screen.getByText(/Recommended/i)).toBeInTheDocument();
   });
 
-  it('should not display "Most Popular" badge when is_recommended is false', () => {
+  it('should not display recommended badge when is_recommended is false', () => {
     render(<PackageCard {...defaultProps} />);
 
-    expect(screen.queryByText('Most Popular')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Recommended/i)).not.toBeInTheDocument();
   });
 
   it('should render all features included in the package', () => {
@@ -153,7 +153,7 @@ describe('PackageCard', () => {
     const { container } = render(<PackageCard {...defaultProps} isSelected={true} />);
 
     const card = container.firstChild as HTMLElement;
-    expect(card).toHaveClass('ring-blue-500');
+    expect(card).toHaveClass('lux-card-selected');
   });
 
   it('should have proper accessibility attributes', () => {

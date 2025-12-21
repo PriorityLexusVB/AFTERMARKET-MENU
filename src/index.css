@@ -261,9 +261,9 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   .stagger-children > *:nth-child(5) { animation-delay: 400ms; }
   .stagger-children > *:nth-child(6) { animation-delay: 500ms; }
 
-  /* Button styles */
-  .btn-luxury-primary {
-    @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
+   /* Button styles */
+   .btn-luxury-primary {
+     @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
     @apply text-white font-bold uppercase tracking-wider;
     @apply rounded-2xl shadow-luxury-lg;
     @apply transition-all duration-300;
@@ -289,6 +289,63 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
     @apply transition-all duration-300;
     @apply active:scale-95;
     @apply min-h-touch px-8 py-4;
+  }
+
+  /* Lexus Highline theme */
+  .lux-app {
+    @apply bg-gradient-to-b from-lux-bg0 to-lux-bg1 text-lux-text min-h-screen;
+  }
+
+  .lux-surface {
+    @apply bg-lux-bg1/80 border border-lux-border/60 rounded-2xl shadow-luxury backdrop-blur-xl text-lux-text;
+  }
+
+  .lux-card {
+    @apply lux-surface transition-all duration-300 ease-in-out hover:shadow-luxury-xl hover:-translate-y-0.5;
+  }
+
+  .lux-card-selected {
+    @apply ring-2 ring-lux-gold/80 shadow-glow-gold;
+  }
+
+  .lux-card-recommended {
+    @apply border border-lux-gold/70 shadow-glow-gold;
+  }
+
+  .lux-title {
+    @apply text-3xl sm:text-4xl font-teko font-semibold tracking-wider text-lux-textStrong;
+  }
+
+  .lux-subtitle {
+    @apply text-base sm:text-lg text-lux-textMuted;
+  }
+
+  .lux-divider {
+    @apply border-t border-lux-border/70;
+  }
+
+  .lux-chip {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full border border-lux-border/60 text-xs font-semibold uppercase tracking-wide bg-lux-bg2 text-lux-text;
+  }
+
+  .lux-chip-gold {
+    @apply lux-chip border-lux-gold/60 text-lux-gold;
+  }
+
+  .lux-price-plaque {
+    @apply w-full flex items-center justify-between bg-gradient-to-r from-lux-bg2 to-lux-bg1 border border-lux-border/80 rounded-xl px-4 py-3 shadow-inner;
+  }
+
+  .btn-lux-primary {
+    @apply bg-lux-blue text-lux-textStrong font-semibold rounded-xl px-4 py-3 min-h-[48px] shadow-luxury hover:shadow-luxury-lg transition-colors duration-200;
+  }
+
+  .btn-lux-secondary {
+    @apply bg-lux-bg2 text-lux-text font-semibold rounded-xl px-4 py-3 min-h-[48px] border border-lux-border/70 hover:border-lux-gold/60 transition-colors duration-200;
+  }
+
+  .btn-lux-ghost {
+    @apply text-lux-textMuted rounded-xl px-4 py-3 min-h-[48px] border border-transparent hover:border-lux-border/70 transition-colors duration-200;
   }
 }
 
@@ -366,6 +423,11 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
 
   .scrollbar-luxury::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  .lux-no-select {
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* Orientation-specific utilities */

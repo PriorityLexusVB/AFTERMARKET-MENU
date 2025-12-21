@@ -8,12 +8,19 @@ interface AlaCarteSelectorProps {
 }
 
 export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({ items, onViewItem }) => {
+  // Filter to only show published items
+  const publishedItems = items.filter(item => 
+    item.isPublished === true || 
+    // Treat older docs with sourceFeatureId as published for backward compatibility
+    (item.sourceFeatureId && item.isPublished !== false)
+  );
+
   const handleDragStart = (e: React.DragEvent, item: AlaCarteOption) => {
     e.dataTransfer.setData("application/json", JSON.stringify(item));
     e.dataTransfer.effectAllowed = "move";
   };
 
-  if (items.length === 0) {
+  if (publishedItems.length === 0) {
     return (
         <div className="text-center py-10 px-6 bg-gray-800 rounded-lg border-2 border-dashed border-gray-700 col-span-1 md:col-span-2 xl:col-span-3 flex flex-col items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mb-4 text-green-500">
@@ -27,7 +34,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({ items, onVie
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
-      {items.map((item) => (
+      {publishedItems.map((item) => (
         <AlaCarteItem
           key={item.id}
           item={item}

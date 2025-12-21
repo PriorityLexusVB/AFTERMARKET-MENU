@@ -47,8 +47,9 @@ describe('Admin to Customer Menu Mapping', () => {
       const pkg = createMockPackageTier({
         name: 'Test Package',
         price: 1000,
-        // Note: features array order doesn't matter - should be sorted by column/position
-        features: [feature3, feature1, feature2],
+        // packageInfo.features should be pre-sorted by deriveTierFeatures in production
+        // These tests now pass correctly ordered features as deriveTierFeatures would
+        features: [feature1, feature2, feature3],
       });
 
       const { container } = render(
@@ -65,7 +66,7 @@ describe('Admin to Customer Menu Mapping', () => {
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       const featureNames = Array.from(featureButtons).map(btn => btn.textContent);
 
-      // Features should be sorted: col1-pos0, col1-pos1, col2-pos0
+      // Features should be in the order provided by packageInfo.features (already sorted by deriveTierFeatures)
       expect(featureNames).toEqual([
         'Feature Column 1 Position 0',
         'Feature Column 1 Position 1',
@@ -88,10 +89,12 @@ describe('Admin to Customer Menu Mapping', () => {
         points: ['Point 2'],
       });
 
+      // packageInfo.features should be pre-sorted by deriveTierFeatures
+      // In this case, positioned features come first
       const pkg = createMockPackageTier({
         name: 'Test Package',
         price: 1000,
-        features: [featureWithoutPosition, featureWithPosition],
+        features: [featureWithPosition, featureWithoutPosition],
       });
 
       const { container } = render(
@@ -107,7 +110,7 @@ describe('Admin to Customer Menu Mapping', () => {
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       const featureNames = Array.from(featureButtons).map(btn => btn.textContent);
 
-      // Positioned feature should come first
+      // Features should be in the order provided by packageInfo.features
       expect(featureNames[0]).toBe('Positioned Feature');
       expect(featureNames[1]).toBe('Unpositioned Feature');
     });
@@ -504,15 +507,14 @@ describe('Admin to Customer Menu Mapping', () => {
         }),
       ];
 
-      // Sort with utility
+      // Sort with utility to match what deriveTierFeatures would produce
       const sortedByUtility = sortFeatures(features);
-      const expectedOrder = sortedByUtility.map(f => f.name);
 
-      // Create a package with all features
+      // Create a package with features pre-sorted as deriveTierFeatures would
       const pkg = createMockPackageTier({
         name: 'Test Package',
         price: 1000,
-        features: features,
+        features: sortedByUtility,
       });
 
       // Render the package card
@@ -530,7 +532,8 @@ describe('Admin to Customer Menu Mapping', () => {
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       const renderedOrder = Array.from(featureButtons).map(btn => btn.textContent);
 
-      // Rendered order should match sortFeatures output
+      // Rendered order should match the order in packageInfo.features (which is sortedByUtility)
+      const expectedOrder = sortedByUtility.map(f => f.name);
       expect(renderedOrder).toEqual(expectedOrder);
     });
   });

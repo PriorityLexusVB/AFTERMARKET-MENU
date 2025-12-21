@@ -1,6 +1,5 @@
 import React from 'react';
 import type { PackageTier, ProductFeature, AlaCarteOption } from '../types';
-import { sortFeatures } from '../utils/featureOrdering';
 
 interface PackageCardProps {
   packageInfo: PackageTier;
@@ -26,13 +25,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
   
-  // Create a list of only the features included in this package, maintaining the display order
-  // Use centralized sortFeatures utility for consistent ordering with admin panel
-  const includedPackageFeatures = sortFeatures(
-    allFeaturesForDisplay.filter(feature => 
-      packageInfo.features.some(pkgFeature => pkgFeature.id === feature.id)
-    )
-  );
+  // Use packageInfo.features directly - it's already derived by deriveTierFeatures with correct ladder ordering and OR→AND conversion
+  const includedPackageFeatures = packageInfo.features ?? [];
 
   return (
     <div 

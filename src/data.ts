@@ -406,7 +406,7 @@ export async function unpublishAlaCarteFromFeature(featureId: string): Promise<v
 
   try {
     const alaCarteRef = doc(db, 'ala_carte_options', featureId);
-    await updateDoc(alaCarteRef, { isPublished: false });
+    await setDoc(alaCarteRef, { isPublished: false }, { merge: true });
   } catch (error) {
     console.error("Error unpublishing feature from A La Carte:", error);
     // If the doc doesn't exist, we can ignore the error (already unpublished)

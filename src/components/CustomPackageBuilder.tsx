@@ -5,23 +5,27 @@ interface CustomPackageBuilderProps {
   items: AlaCarteOption[];
   onDropItem: (item: AlaCarteOption) => void;
   onRemoveItem: (itemId: string) => void;
+  enableDrop?: boolean;
 }
 
-export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({ items, onDropItem, onRemoveItem }) => {
+export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({ items, onDropItem, onRemoveItem, enableDrop = true }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   
   const handleDragOver = (e: React.DragEvent) => {
+    if (!enableDrop) return;
     e.preventDefault();
     setIsDragOver(true);
   };
   
   const handleDragLeave = (e: React.DragEvent) => {
+    if (!enableDrop) return;
     e.preventDefault();
     setIsDragOver(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (!enableDrop) return;
     e.preventDefault();
     setIsDragOver(false);
     try {
@@ -46,8 +50,8 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({ item
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`
-        bg-gray-800/50 border-2 border-dashed rounded-lg p-4 min-h-[300px] h-full transition-colors
-        ${isDragOver ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600'}
+        lux-card ${enableDrop ? 'border-dashed' : 'border-solid'} p-4 min-h-[300px] h-full transition-colors
+        ${isDragOver ? 'border-lux-blue bg-lux-blue/5' : 'border-lux-border/70'}
       `}
     >
       {items.length === 0 ? (

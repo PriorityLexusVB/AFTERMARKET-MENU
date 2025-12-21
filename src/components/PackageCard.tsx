@@ -32,21 +32,26 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     <div 
       data-testid="package-card"
       className={`
-      bg-gradient-to-b from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-2xl shadow-luxury-xl grid grid-rows-[auto_1fr_auto] transition-all duration-500 ease-luxury h-full relative
-      ${isSelected ? 'transform scale-105 ring-4 ring-offset-4 ring-offset-gray-900 ring-blue-500 shadow-glow-blue' : 'hover:scale-102 hover:shadow-luxury-2xl'}
-      ${packageInfo.is_recommended ? 'border-4 border-blue-500' : `border-2 border-white/10 hover:border-white/20`}
+      lux-card grid grid-rows-[auto_1fr_auto] h-full relative
+      ${isSelected ? 'lux-card-selected' : ''}
+      ${packageInfo.is_recommended ? 'lux-card-recommended' : ''}
       ${className}
     `}
       style={style}
     >
-      {packageInfo.is_recommended && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-luxury-lg uppercase tracking-wider animate-glow-pulse">Most Popular</div>
-      )}
-      <div className="p-6 lg:p-8 pb-4">
-        <h3 className={`font-teko text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-wider text-center text-${packageInfo.tier_color} text-shadow-lg`}>{packageInfo.name}</h3>
+      <div className="p-6 lg:p-7 pb-4 flex items-start justify-between">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
+          <h3 className="font-teko text-3xl sm:text-4xl font-bold uppercase tracking-wider text-lux-textStrong">
+            {packageInfo.name}
+          </h3>
+        </div>
+        {packageInfo.is_recommended && (
+          <span className="lux-chip-gold shadow-glow-gold">Platinum Recommended</span>
+        )}
       </div>
 
-      <div className="p-6 lg:p-8 pt-4">
+      <div className="p-6 lg:p-7 pt-2 space-y-3">
         {includedPackageFeatures.map((feature, index) => {
           let divider = null;
           // Add a divider before every feature except the first one
@@ -63,13 +68,13 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
               <div className="text-center mt-3">
                   <button
                     onClick={() => onViewFeature(feature)}
-                    className="min-h-[44px] font-semibold text-lg sm:text-xl hover:text-blue-400 transition-all duration-300 text-shadow text-gray-200 underline decoration-2 underline-offset-4 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                    className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
                     {feature.name}
                   </button>
-                  <ul className="text-sm sm:text-base mt-2 text-shadow text-gray-400 space-y-1">
+                  <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
                       {feature.points.map(p => <li key={p}>*{p}</li>)}
                   </ul>
               </div>
@@ -78,14 +83,20 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
         })}
       </div>
       
-      <div className="p-4 lg:p-6 space-y-4">
-        <div className={`py-3 lg:py-4 rounded-2xl text-center bg-gradient-to-br from-red-600 to-red-700 shadow-luxury-lg`}>
-            <p className="text-4xl sm:text-5xl lg:text-6xl font-bold font-teko text-white text-shadow-lg">{formatPrice(packageInfo.price)}</p>
+      <div className="p-5 lg:p-6 space-y-3">
+        <div className="lux-price-plaque">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Investment</p>
+            <p className="text-4xl sm:text-5xl font-teko text-lux-textStrong">{formatPrice(packageInfo.price)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-lux-textMuted">Includes listed coverage</p>
+          </div>
         </div>
         <button
           onClick={onSelect}
-          className={`w-full min-h-[44px] py-3 lg:py-4 px-6 rounded-2xl text-base lg:text-lg font-bold uppercase tracking-wider transition-all duration-300 transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900
-            ${isSelected ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-luxury-lg ring-2 ring-white/20' : 'bg-white/10 text-gray-300 hover:bg-blue-500 hover:text-white border-2 border-white/20'}
+          className={`w-full text-base lg:text-lg font-semibold uppercase tracking-wider transition-all duration-300 transform active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70 focus:ring-offset-2 focus:ring-offset-lux-bg1 rounded-xl min-h-[48px]
+            ${isSelected ? 'bg-lux-blue text-lux-textStrong shadow-luxury-lg' : 'bg-lux-bg2 text-lux-text border border-lux-border/70 hover:border-lux-gold/60'}
           `}
         >
           {isSelected ? '✓ Selected' : 'Select Plan'}

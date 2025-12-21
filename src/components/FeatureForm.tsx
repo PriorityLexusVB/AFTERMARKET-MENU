@@ -100,7 +100,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             publishToAlaCarte: formData.publishToAlaCarte,
             ...(formData.publishToAlaCarte && formData.alaCartePrice && { alaCartePrice: parseFloat(formData.alaCartePrice) }),
             ...(formData.alaCarteWarranty && { alaCarteWarranty: formData.alaCarteWarranty }),
-            ...(formData.alaCarteIsNew && { alaCarteIsNew: formData.alaCarteIsNew }),
+            ...(formData.alaCarteIsNew !== undefined && { alaCarteIsNew: formData.alaCarteIsNew }),
         };
 
         // Add column if valid
@@ -128,9 +128,6 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             await addFeature(featureData);
             // For new features, we don't have the ID, so we can't publish to A La Carte in the same operation
             // The admin will need to edit the feature after creation to publish it
-            if (formData.publishToAlaCarte) {
-                setError("Feature saved successfully. Please note: To publish to A La Carte, you'll need to edit the feature after creation.");
-            }
             setFormData(initialFormState); // Only reset for add mode
             onSaveSuccess();
             return;

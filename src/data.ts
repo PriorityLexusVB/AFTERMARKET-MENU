@@ -372,7 +372,7 @@ export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promis
     const alaCarteRef = doc(db, 'ala_carte_options', feature.id);
     
     // Build the A La Carte option data
-    const alaCarteData: Partial<AlaCarteOption> = {
+    const alaCarteData: Omit<AlaCarteOption, 'id'> = {
       sourceFeatureId: feature.id,
       isPublished: true,
       name: feature.name,

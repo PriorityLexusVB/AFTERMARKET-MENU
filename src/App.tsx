@@ -158,8 +158,8 @@ const App: React.FC = () => {
   const displayAllAlaCarteOptions = useMemo(() => {
     // Filter to only show published A La Carte options for customers
     const publishedOptions = allAlaCarteOptions.filter(option => {
-      // Show if explicitly published OR if it has a sourceFeatureId (for backward compatibility)
-      return option.isPublished === true || (option.sourceFeatureId && option.isPublished !== false);
+      // Show if explicitly published OR if it has a sourceFeatureId without explicit unpublish (backward compatibility)
+      return option.isPublished === true || (option.sourceFeatureId !== undefined && option.isPublished !== false);
     });
     return applyOverrides(publishedOptions, priceOverrides);
   }, [allAlaCarteOptions, priceOverrides]);

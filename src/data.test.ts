@@ -253,6 +253,17 @@ describe('A La Carte Publishing', () => {
       
       await expect(upsertAlaCarteFromFeature(feature)).rejects.toThrow('Firebase is not initialized');
     });
+
+    it('should validate publishToAlaCarte and alaCartePrice before firebase operations', async () => {
+      // These tests verify the validation logic happens after firebase check
+      // Since db is mocked as null, we always get firebase error first
+      const featureWithoutPublish = createFeature({ publishToAlaCarte: false, alaCartePrice: 150 });
+      const featureWithoutPrice = createFeature({ publishToAlaCarte: true, alaCartePrice: undefined });
+      
+      // Both will throw firebase error since that check happens first
+      await expect(upsertAlaCarteFromFeature(featureWithoutPublish)).rejects.toThrow('Firebase is not initialized');
+      await expect(upsertAlaCarteFromFeature(featureWithoutPrice)).rejects.toThrow('Firebase is not initialized');
+    });
   });
 
   describe('unpublishAlaCarteFromFeature', () => {

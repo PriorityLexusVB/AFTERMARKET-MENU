@@ -165,7 +165,15 @@ const App: React.FC = () => {
 
   const displayPackages = useMemo(() => applyOverrides(packages, priceOverrides), [packages, priceOverrides]);
   const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
-  const displayCustomPackageItems = useMemo(() => applyOverrides(customPackageItems, priceOverrides), [customPackageItems, priceOverrides]);
+  const curatedSelectedItems = useMemo(
+    () => customPackageItems.filter(isCuratedOption),
+    [customPackageItems]
+  );
+
+  const displayCustomPackageItems = useMemo(
+    () => applyOverrides(curatedSelectedItems, priceOverrides),
+    [curatedSelectedItems, priceOverrides]
+  );
 
   const { totalPrice, totalCost } = useMemo(() => {
     let price = 0;
@@ -211,8 +219,8 @@ const App: React.FC = () => {
   }, [curatedAlaCarteOptions]);
 
   const availableAlaCarteItems = useMemo(() => {
-    return curatedAlaCarteOptions.filter(option => !customPackageItems.some(item => item.id === option.id));
-  }, [customPackageItems, curatedAlaCarteOptions]);
+    return curatedAlaCarteOptions.filter(option => !curatedSelectedItems.some(item => item.id === option.id));
+  }, [curatedSelectedItems, curatedAlaCarteOptions]);
 
   const handleShowAgreement = useCallback(() => {
     // Track quote finalization

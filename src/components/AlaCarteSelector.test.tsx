@@ -38,14 +38,10 @@ describe('AlaCarteSelector', () => {
       createOption({ id: '3', name: 'Featured First', isPublished: true, column: 4, position: 0 }),
     ];
 
-    render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
+    const { container } = render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
-    const buttons = screen.getAllByRole('button', { name: /Column 1|Featured/ });
-    expect(buttons.map((btn) => btn.textContent)).toEqual([
-      'Featured First',
-      'Featured Later',
-      'Column 1',
-    ]);
+    const buttons = Array.from(container.querySelectorAll('button')).map((btn) => btn.textContent);
+    expect(buttons).toEqual(['Featured First', 'Featured Later', 'Column 1']);
   });
 
   it('should show empty state when no curated items', () => {
@@ -58,7 +54,7 @@ describe('AlaCarteSelector', () => {
     expect(screen.getByText('No add-ons configured')).toBeInTheDocument();
   });
 
-  it('should show "All Options Selected" message when items array is empty', () => {
+  it('should show empty state when items array is empty', () => {
     render(<AlaCarteSelector items={[]} onViewItem={mockOnViewItem} />);
 
     expect(screen.getByText('No add-ons configured')).toBeInTheDocument();

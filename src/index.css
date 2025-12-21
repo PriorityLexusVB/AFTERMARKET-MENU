@@ -261,9 +261,9 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   .stagger-children > *:nth-child(5) { animation-delay: 400ms; }
   .stagger-children > *:nth-child(6) { animation-delay: 500ms; }
 
-   /* Button styles */
-   .btn-luxury-primary {
-     @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
+  /* Button styles */
+  .btn-luxury-primary {
+    @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
     @apply text-white font-bold uppercase tracking-wider;
     @apply rounded-2xl shadow-luxury-lg;
     @apply transition-all duration-300;

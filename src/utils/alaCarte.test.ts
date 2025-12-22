@@ -27,19 +27,18 @@ describe('alaCarte utils', () => {
   });
 
   describe('isCuratedOption', () => {
-    it('accepts published items with valid columns', () => {
+    it('accepts published items regardless of column assignment', () => {
       expect(isCuratedOption({ ...baseOption, isPublished: true, column: 1 })).toBe(true);
       expect(isCuratedOption({ ...baseOption, isPublished: true, column: 4 })).toBe(true);
+      expect(isCuratedOption({ ...baseOption, isPublished: true, column: undefined })).toBe(true);
     });
 
-    it('rejects unpublished or missing columns', () => {
+    it('rejects unpublished or invalid column values', () => {
       expect(isCuratedOption({ ...baseOption, isPublished: false, column: 1 })).toBe(false);
-      expect(isCuratedOption({ ...baseOption, isPublished: true, column: undefined })).toBe(false);
       expect(isCuratedOption({ ...baseOption, isPublished: true, column: 9 })).toBe(false);
     });
 
     it('rejects legacy items with undefined isPublished (customer-facing strict filter)', () => {
-      // Legacy items (undefined isPublished) should NOT be shown to customers
       expect(isCuratedOption({ ...baseOption, isPublished: undefined, column: 1 })).toBe(false);
       expect(isCuratedOption({ ...baseOption, column: 1 })).toBe(false);
     });

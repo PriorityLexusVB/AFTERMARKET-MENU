@@ -11,4 +11,4 @@ export const columnOrderValue = (col?: number) => {
 };
 
 export const isCuratedOption = (option: AlaCarteOption) =>
-  option.isPublished === true && typeof option.column === 'number' && VALID_ALACARTE_COLUMNS.includes(option.column);
+  option.isPublished === true && (typeof option.column !== 'number' || VALID_ALACARTE_COLUMNS.includes(option.column));

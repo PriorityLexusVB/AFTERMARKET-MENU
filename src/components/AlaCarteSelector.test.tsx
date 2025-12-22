@@ -17,7 +17,7 @@ describe('AlaCarteSelector', () => {
 
   const mockOnViewItem = vi.fn();
 
-  it('should only render published items with valid columns', () => {
+  it('should render all published items and hide unpublished', () => {
     const items: AlaCarteOption[] = [
       createOption({ id: '1', name: 'Published Option', isPublished: true, column: 1 }),
       createOption({ id: '2', name: 'Unpublished Option', isPublished: false, column: 2 }),
@@ -28,7 +28,7 @@ describe('AlaCarteSelector', () => {
 
     expect(screen.getByText('Published Option')).toBeInTheDocument();
     expect(screen.queryByText('Unpublished Option')).not.toBeInTheDocument();
-    expect(screen.queryByText('Missing Column')).not.toBeInTheDocument();
+    expect(screen.getByText('Missing Column')).toBeInTheDocument();
   });
 
   it('should sort curated items with column 4 first then position', () => {
@@ -38,10 +38,23 @@ describe('AlaCarteSelector', () => {
       createOption({ id: '3', name: 'Featured First', isPublished: true, column: 4, position: 0 }),
     ];
 
-    const { container } = render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
+    render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
-    const buttons = Array.from(container.querySelectorAll('button')).map((btn) => btn.textContent);
-    expect(buttons).toEqual(['Featured First', 'Featured Later', 'Column 1']);
+    const buttons = screen.getAllByLabelText(/Learn more about/);
+    expect(buttons.map((btn) => btn.textContent)).toEqual(['Featured First', 'Featured Later', 'Column 1']);
+  });
+
+  it('shows unplaced items in More Options section', () => {
+    const items: AlaCarteOption[] = [
+      createOption({ id: '1', name: 'Placed', isPublished: true, column: 1, position: 0 }),
+      createOption({ id: '2', name: 'Loose', isPublished: true }),
+    ];
+
+    render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
+
+    expect(screen.getByText('More Options')).toBeInTheDocument();
+    expect(screen.getByText('Loose')).toBeInTheDocument();
+    expect(screen.getByText('Placed')).toBeInTheDocument();
   });
 
   it('should show empty state when no curated items', () => {

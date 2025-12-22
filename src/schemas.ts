@@ -26,7 +26,7 @@ export const ProductFeatureSchema = z.object({
   position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
   // A La Carte publishing fields
-  publishToAlaCarte: z.boolean().optional(),
+  publishToAlaCarte: z.boolean().optional().default(false),
   alaCartePrice: z.number().nonnegative('A La Carte price must be non-negative').optional(),
   alaCarteWarranty: z.string().optional(),
   alaCarteIsNew: z.boolean().optional(),
@@ -65,7 +65,7 @@ export const AlaCarteOptionSchema = z.object({
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
   // Publishing fields
   sourceFeatureId: z.string().optional(),
-  isPublished: z.boolean().optional(),
+  isPublished: z.boolean().optional().default(false),
 });
 
 export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;

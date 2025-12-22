@@ -236,6 +236,23 @@ describe('AlaCarteOptionSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('should default isPublished to false when missing', () => {
+    const validOption = {
+      id: 'option-1',
+      name: 'Test Option',
+      price: 500,
+      cost: 250,
+      description: 'Test description',
+      points: ['Point 1'],
+    };
+
+    const result = AlaCarteOptionSchema.safeParse(validOption);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.isPublished).toBe(false);
+    }
+  });
+
   it('should accept isNew flag', () => {
     const newOption = {
       id: 'option-1',
@@ -355,7 +372,7 @@ describe('safeParseData', () => {
     };
 
     const result = safeParseData(ProductFeatureSchema, validData);
-    expect(result).toEqual(validData);
+    expect(result).toMatchObject({ ...validData, publishToAlaCarte: false });
   });
 
   it('should return null on failed parse', () => {

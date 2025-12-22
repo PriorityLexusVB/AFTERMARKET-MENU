@@ -4,7 +4,7 @@ This directory contains one-time migration scripts for updating Firestore data.
 
 ## ONE HUB Backfill — Publish legacy A La Carte items to Features
 
-**Script:** `backfill-alacarte-onehub.ts`
+**Script:** `backfill-onehub-alacarte.ts`
 
 **Purpose:** Ensures every legacy `ala_carte_options` doc is marked published and mirrored into the `features` hub (same ID), without assigning any columns.
 
@@ -17,12 +17,12 @@ This directory contains one-time migration scripts for updating Firestore data.
 
 2. Install dependencies
    ```bash
-   pnpm i
+   npm install
    ```
 
 3. Run the migration
    ```bash
-   pnpm migrate:onehub:backfill-alacarte
+   npm run migrate:onehub:backfill-alacarte
    ```
 
 ### Expected output
@@ -41,6 +41,6 @@ The script logs counts for scanned options, updated options (isPublished backfil
 
 ```bash
 gcloud config set project gen-lang-client-0877787739
-pnpm i
-pnpm migrate:alacarte:publish-backfill
+npm install
+npm run migrate:alacarte:publish-backfill
 ```

@@ -208,6 +208,8 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'published' | 'unpublished'>('all');
+  const [placementFilter, setPlacementFilter] = useState<'all' | 'placed' | 'unplaced'>('all');
   
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -235,8 +237,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       const optionsQuery = query(collection(db, 'ala_carte_options'), orderBy('name'));
       const querySnapshot = await getDocs(optionsQuery);
       const optionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlaCarteOption));
-      // Admin visibility: show only published docs
-      setOptions(optionsData.filter(option => option.isPublished === true));
+      setOptions(optionsData);
     } catch (err) {
       console.error("Error fetching A La Carte options:", err);
       setError("Failed to fetch A La Carte options. Please check your Firestore rules and connection.");
@@ -272,9 +273,19 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   };
 
   // Organize options by column and sort by position using centralized utility
+  const filteredOptions = useMemo(() => {
+    return options.filter((option) => {
+      if (visibilityFilter === 'published' && option.isPublished !== true) return false;
+      if (visibilityFilter === 'unpublished' && option.isPublished === true) return false;
+      if (placementFilter === 'placed' && typeof option.column !== 'number') return false;
+      if (placementFilter === 'unplaced' && typeof option.column === 'number') return false;
+      return true;
+    });
+  }, [options, placementFilter, visibilityFilter]);
+
   const optionsByColumn = useMemo(() => {
-    return groupItemsByColumn(options);
-  }, [options]);
+    return groupItemsByColumn(filteredOptions);
+  }, [filteredOptions]);
 
   // Get the active option being dragged
   const activeOption = useMemo(() => {
@@ -584,27 +595,63 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-teko tracking-wider text-white">Manage A La Carte Options</h3>
-        <div className="flex items-center gap-3">
-          {isSaving && (
-            <span className="text-blue-400 text-sm flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center">
+          <h3 className="text-2xl font-teko tracking-wider text-white">Manage A La Carte Options</h3>
+          <div className="flex items-center gap-3">
+            {isSaving && (
+              <span className="text-blue-400 text-sm flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </span>
+            )}
+            <button
+              onClick={handleAddNew}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 transform active:scale-95"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
               </svg>
-              Saving...
-            </span>
-          )}
-          <button
-            onClick={handleAddNew}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 transform active:scale-95"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-            </svg>
-            Add New Option
-          </button>
+              Add New Option
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row gap-3 md:items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">Visibility:</span>
+            <div className="flex rounded-md overflow-hidden border border-gray-700">
+              {(['all', 'published', 'unpublished'] as const).map((value) => (
+                <button
+                  key={value}
+                  onClick={() => setVisibilityFilter(value)}
+                  className={`px-3 py-1 text-sm ${
+                    visibilityFilter === value ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {value === 'all' ? 'All' : value === 'published' ? 'Published' : 'Unpublished/Legacy'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">Placement:</span>
+            <div className="flex rounded-md overflow-hidden border border-gray-700">
+              {(['all', 'placed', 'unplaced'] as const).map((value) => (
+                <button
+                  key={value}
+                  onClick={() => setPlacementFilter(value)}
+                  className={`px-3 py-1 text-sm ${
+                    placementFilter === value ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {value === 'all' ? 'All' : value === 'placed' ? 'Placed' : 'Not placed'}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -653,13 +700,13 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                   </div>
                   
                   {optionsByColumn.unassigned.length > 0 && (
-                    <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned">
-                      <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
-                        Published (Not Placed Yet)
-                      </h5>
-                      {renderColumnOptions(optionsByColumn.unassigned as AlaCarteOption[], 'unassigned')}
-                    </div>
-                  )}
+                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned">
+                       <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
+                         Not placed yet
+                       </h5>
+                       {renderColumnOptions(optionsByColumn.unassigned as AlaCarteOption[], 'unassigned')}
+                     </div>
+                   )}
                 </>
               )}
             </div>

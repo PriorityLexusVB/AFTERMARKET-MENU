@@ -235,8 +235,8 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       const optionsQuery = query(collection(db, 'ala_carte_options'), orderBy('name'));
       const querySnapshot = await getDocs(optionsQuery);
       const optionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlaCarteOption));
-      // Admin visibility: show published (true) OR legacy (undefined) docs
-      setOptions(optionsData.filter(option => option.isPublished === true || option.isPublished === undefined));
+      // Admin visibility: show only published docs
+      setOptions(optionsData.filter(option => option.isPublished === true));
     } catch (err) {
       console.error("Error fetching A La Carte options:", err);
       setError("Failed to fetch A La Carte options. Please check your Firestore rules and connection.");
@@ -638,7 +638,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           >
             <div className="space-y-6">
               {options.length === 0 ? (
-                <p className="text-gray-500">No A La Carte options found. Click "Add New Option" to create one.</p>
+                <p className="text-gray-500">No published A La Carte options yet. Publish items from the Features hub.</p>
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -655,7 +655,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                   {optionsByColumn.unassigned.length > 0 && (
                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned">
                       <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
-                        Unassigned Options
+                        Published (Not Placed Yet)
                       </h5>
                       {renderColumnOptions(optionsByColumn.unassigned as AlaCarteOption[], 'unassigned')}
                     </div>

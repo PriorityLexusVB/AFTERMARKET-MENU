@@ -2,6 +2,35 @@
 
 This directory contains one-time migration scripts for updating Firestore data.
 
+## ONE HUB Backfill — Publish legacy A La Carte items to Features
+
+**Script:** `backfill-alacarte-onehub.ts`
+
+**Purpose:** Ensures every legacy `ala_carte_options` doc is marked published and mirrored into the `features` hub (same ID), without assigning any columns.
+
+### Running from Cloud Shell
+
+1. Set the project
+   ```bash
+   gcloud config set project gen-lang-client-0877787739
+   ```
+
+2. Install dependencies
+   ```bash
+   pnpm i
+   ```
+
+3. Run the migration
+   ```bash
+   pnpm migrate:onehub:backfill-alacarte
+   ```
+
+### Expected output
+
+The script logs counts for scanned options, updated options (isPublished backfill), created features, updated features, and skipped (no changes).
+
+---
+
 ## Backfill A La Carte isPublished Field
 
 **Script:** `backfill-alacarte-isPublished.ts`
@@ -10,58 +39,8 @@ This directory contains one-time migration scripts for updating Firestore data.
 
 ### Running from Cloud Shell
 
-1. **Set the project:**
-   ```bash
-   gcloud config set project gen-lang-client-0877787739
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pnpm i
-   # or
-   npm i
-   ```
-
-3. **Run the migration:**
-   ```bash
-   pnpm migrate:alacarte:publish-backfill
-   # or
-   npm run migrate:alacarte:publish-backfill
-   ```
-
-### Expected Output
-
+```bash
+gcloud config set project gen-lang-client-0877787739
+pnpm i
+pnpm migrate:alacarte:publish-backfill
 ```
-🚀 Starting A La Carte isPublished Backfill Migration
-
-============================================================
-✅ Firebase Admin SDK initialized
-
-📦 Reading A La Carte options...
-   Found X A La Carte options
-
-🔄 Processing options...
-
-  ✏️  Backfilling isPublished=true for "Option Name 1"
-  ✏️  Backfilling isPublished=true for "Option Name 2"
-  ⏭️  Skipping "Option Name 3" (isPublished=true)
-  ⏭️  Skipping "Option Name 4" (isPublished=false)
-  💾 Committed batch of Y updates
-
-============================================================
-📈 Migration Summary
-============================================================
-   Scanned:   X
-   Updated:   Y
-   Skipped:   Z
-   Errors:    0
-
-✅ Migration complete!
-```
-
-### Notes
-
-- The script is **idempotent** - safe to run multiple times
-- It will **NOT** overwrite `isPublished=false` (respects intentional unpublish)
-- Uses Application Default Credentials (no explicit credentials file needed in Cloud Shell)
-- Batch writes are used for efficiency (max 400 operations per batch)

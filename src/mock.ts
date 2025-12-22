@@ -263,7 +263,8 @@ export const MOCK_PACKAGES: PackageTier[] = [
 
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)
 // Column 4 = Popular Add-ons
-export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
+export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
+[
   {
     id: 'suntek-complete',
     name: 'Suntek Pro Complete Package',
@@ -545,4 +546,5 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = [
     position: 15,
     connector: 'AND',
   },
-];
+ ] as AlaCarteOption[]
+).map(option => ({ ...option, isPublished: option.isPublished ?? true }));

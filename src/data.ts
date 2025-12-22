@@ -374,7 +374,11 @@ export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promis
       points: feature.points,
       price: feature.alaCartePrice,
       cost: feature.cost,
-      warranty: feature.alaCarteWarranty ?? feature.warranty ?? '',
+      ...(feature.alaCarteWarranty !== undefined
+        ? { warranty: feature.alaCarteWarranty }
+        : feature.warranty !== undefined
+          ? { warranty: feature.warranty }
+          : {}),
       isNew: feature.alaCarteIsNew ?? false,
       useCases: feature.useCases,
       imageUrl: feature.imageUrl,

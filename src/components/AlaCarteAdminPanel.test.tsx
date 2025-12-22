@@ -65,16 +65,11 @@ vi.mock('../data', () => ({
 }));
 
 describe('AlaCarteAdminPanel', () => {
-  it('shows only published A La Carte options in admin', async () => {
+  it('shows all A La Carte options by default', async () => {
     render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
-    // Should show published item
     await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
-
-    // Should NOT show legacy item (with undefined isPublished)
-    expect(screen.queryByText('Legacy Item')).not.toBeInTheDocument();
-
-    // Should NOT show explicitly unpublished item
-    expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
+    expect(screen.getByText('Legacy Item')).toBeInTheDocument();
+    expect(screen.getByText('Unpublished Item')).toBeInTheDocument();
   });
 });

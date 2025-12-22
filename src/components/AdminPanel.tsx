@@ -27,12 +27,13 @@ import { FeatureForm } from './FeatureForm';
 import { AlaCarteAdminPanel } from './AlaCarteAdminPanel';
 import { batchUpdateFeaturesPositions, FeaturePositionUpdate, updateFeature } from '../data';
 import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
+import { ProductHub } from './ProductHub';
 
 interface AdminPanelProps {
   onDataUpdate: () => void;
 }
 
-type AdminTab = 'features' | 'alacarte';
+type AdminTab = 'features' | 'alacarte' | 'product-hub';
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
@@ -208,7 +209,7 @@ const STORAGE_KEY_BANNER_DISMISSED = 'adminPanel_alaCarteBannerDismissed';
 const getStoredTab = (): AdminTab | null => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY_TAB);
-    return stored === 'features' || stored === 'alacarte' ? stored : null;
+    return stored === 'features' || stored === 'alacarte' || stored === 'product-hub' ? stored as AdminTab : null;
   } catch {
     return null;
   }
@@ -243,8 +244,8 @@ const getInitialTab = (): AdminTab => {
   // Check query string first
   const params = new URLSearchParams(window.location.search);
   const tabParam = params.get('tab');
-  if (tabParam === 'alacarte' || tabParam === 'features') {
-    return tabParam;
+  if (tabParam === 'alacarte' || tabParam === 'features' || tabParam === 'product-hub') {
+    return tabParam as AdminTab;
   }
   
   // Fall back to localStorage
@@ -266,7 +267,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [alaCarteCount, setAlaCarteCount] = useState<number>(0);
+  const [alaCarteCounts, setAlaCarteCounts] = useState<{ total: number; published: number }>({ total: 0, published: 0 });
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [showBanner, setShowBanner] = useState(!isBannerDismissed());
   
@@ -314,11 +315,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     try {
       const alaCarteQuery = collection(db, 'ala_carte_options');
       const querySnapshot = await getDocs(alaCarteQuery);
-      setAlaCarteCount(querySnapshot.size);
+      const docs = (querySnapshot as any).docs ?? [];
+      const total = typeof querySnapshot.size === 'number' ? querySnapshot.size : docs.length;
+      const published = docs.reduce((count: number, doc: any) => {
+        const data = typeof doc.data === 'function' ? (doc.data() as { isPublished?: boolean }) : undefined;
+        return data && data['isPublished'] === true ? count + 1 : count;
+      }, 0);
+      setAlaCarteCounts({ total, published });
     } catch (err) {
       console.error("Error fetching A La Carte count:", err);
       // Silently fail - count is not critical
-      setAlaCarteCount(0);
+      setAlaCarteCounts({ total: 0, published: 0 });
     } finally {
       setIsLoadingCount(false);
     }
@@ -716,9 +723,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               A La Carte Options
               {!isLoadingCount && (
                 <span className={`ml-2 text-sm ${activeTab === 'alacarte' ? 'text-blue-300' : 'text-gray-500'}`}>
-                  ({alaCarteCount})
+                  ({alaCarteCounts.published}/{alaCarteCounts.total})
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => handleTabChange('product-hub')}
+              className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
+                activeTab === 'product-hub'
+                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              Product Hub
             </button>
           </div>
         </div>
@@ -726,10 +743,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         {/* Tab Content */}
         {activeTab === 'alacarte' ? (
           <AlaCarteAdminPanel onDataUpdate={handleAlaCarteDataUpdate} />
+        ) : activeTab === 'product-hub' ? (
+          <ProductHub onDataUpdate={onDataUpdate} onAlaCarteChange={fetchAlaCarteCount} />
         ) : (
           <>
             {/* Informational Banner for A La Carte Options */}
-            {showBanner && alaCarteCount > 0 && (
+            {showBanner && alaCarteCounts.total > 0 && (
               <div className="mb-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex items-start gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
@@ -743,7 +762,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                     >
                       A La Carte Options
                     </button>{' '}
-                    tab. You currently have <strong>{alaCarteCount}</strong> A La Carte option{alaCarteCount !== 1 ? 's' : ''}.
+                    tab. You currently have <strong>{alaCarteCounts.total}</strong> A La Carte option{alaCarteCounts.total !== 1 ? 's' : ''}.
                   </p>
                 </div>
                 <button

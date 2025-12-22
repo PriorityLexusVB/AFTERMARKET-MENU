@@ -354,12 +354,23 @@ export { groupFeaturesByColumn, type GroupedFeatures } from './utils/featureOrde
  * @param feature - The feature to publish to A La Carte
  * @returns A promise that resolves when the A La Carte option is created/updated
  */
-export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promise<void> {
+type AlaCarteUpsertOptions = Partial<Omit<AlaCarteOption, 'column' | 'position'>> & {
+  column?: number | null;
+  position?: number | null;
+};
+
+export async function upsertAlaCarteFromFeature(
+  feature: ProductFeature,
+  overrides: AlaCarteUpsertOptions = {}
+): Promise<void> {
   if (!db) {
     throw new Error("Firebase is not initialized. Cannot publish to A La Carte.");
   }
 
-  if (!feature.publishToAlaCarte || feature.alaCartePrice === undefined) {
+  const isPublishing = overrides.isPublished ?? true;
+  const price = overrides.price ?? feature.alaCartePrice;
+
+  if (isPublishing && (!feature.publishToAlaCarte || price === undefined)) {
     throw new Error("Feature must have publishToAlaCarte=true and alaCartePrice set to publish.");
   }
 
@@ -367,24 +378,26 @@ export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promis
     // Use stable doc ID: the feature's ID
     const alaCarteRef = doc(db, 'ala_carte_options', feature.id);
     
-    const warranty = feature.alaCarteWarranty ?? feature.warranty;
+    const warranty = overrides.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
 
     // Build the A La Carte option data
-    const alaCarteData: Partial<AlaCarteOption> = {
+    const alaCarteData: AlaCarteUpsertOptions = {
       name: feature.name,
       description: feature.description,
       points: feature.points,
-      price: feature.alaCartePrice,
+      price: price ?? feature.price,
       cost: feature.cost,
       ...(warranty !== undefined ? { warranty } : {}),
-      isNew: feature.alaCarteIsNew ?? false,
+      isNew: overrides.isNew ?? feature.alaCarteIsNew ?? false,
       useCases: feature.useCases,
       imageUrl: feature.imageUrl,
       thumbnailUrl: feature.thumbnailUrl,
       videoUrl: feature.videoUrl,
-      sourceFeatureId: feature.id,
-      isPublished: true,
-      // Do NOT include column or position - preserve admin ordering
+      sourceFeatureId: overrides.sourceFeatureId ?? feature.id,
+      isPublished: overrides.isPublished ?? true,
+      ...(overrides.column !== undefined ? { column: overrides.column } : {}),
+      ...(overrides.position !== undefined ? { position: overrides.position } : {}),
+      ...(overrides.connector !== undefined ? { connector: overrides.connector } : {}),
     };
 
     // Use setDoc with merge to create or update

@@ -106,6 +106,7 @@ describe('AdminPanel', () => {
     vi.clearAllMocks();
     // Clear any mock A La Carte count
     delete (global as any).__mockAlaCarteCount;
+    localStorage.clear();
   });
 
   it('should render the admin panel title', async () => {

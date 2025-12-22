@@ -267,11 +267,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     setIsFormVisible(false);
   };
 
-  const handleAddNew = () => {
-    setEditingOption(null);
-    setIsFormVisible(true);
-  };
-
   // Organize options by column and sort by position using centralized utility
   const filteredOptions = useMemo(() => {
     return options.filter((option) => {
@@ -598,26 +593,18 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <h3 className="text-2xl font-teko tracking-wider text-white">Manage A La Carte Options</h3>
-          <div className="flex items-center gap-3">
-            {isSaving && (
-              <span className="text-blue-400 text-sm flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </span>
-            )}
-            <button
-              onClick={handleAddNew}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 transform active:scale-95"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+          {isSaving && (
+            <span className="text-blue-400 text-sm flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Add New Option
-            </button>
-          </div>
+              Saving...
+            </span>
+          )}
+        </div>
+        <div className="bg-blue-500/10 border border-blue-500/30 text-blue-200 text-sm rounded-md px-3 py-2">
+          A La Carte items are created/edited in Product Hub. This screen is for ordering/placement only.
         </div>
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
           <div className="flex items-center gap-2">
@@ -658,7 +645,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       {isFormVisible && (
         <div className="mb-8">
           <h4 className="text-xl font-teko tracking-wider text-blue-400 mb-3">
-            {editingOption ? 'Edit A La Carte Option' : 'Add New A La Carte Option'}
+            Edit A La Carte Option
           </h4>
           <AlaCarteForm 
             onSaveSuccess={handleSaveSuccess} 

@@ -95,12 +95,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     });
   };
 
-  const handlePackageToggle = async (feature: ProductFeature, column: 1 | 2 | 3) => {
-    const isCurrentlySet = feature.column === column;
-    const newColumn = isCurrentlySet ? undefined : column;
-    const newPosition = newColumn === undefined ? undefined : features.filter((f) => f.id !== feature.id && f.column === column).length;
+  const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
+    if (feature.column === column) return;
+    const newPosition = column === undefined ? undefined : features.filter((f) => f.id !== feature.id && f.column === column).length;
 
-    const payload: Partial<ProductFeature> = { column: newColumn, position: newPosition };
+    const payload: Partial<ProductFeature> = { column, position: newPosition };
 
     updateFeatureState(feature.id, payload);
     try {
@@ -363,20 +362,31 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                     <div className="text-xs text-gray-500">{feature.description}</div>
                   </td>
                   <td className="px-3 py-3">
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 text-xs text-gray-200">
+                      <span className="text-[11px] uppercase text-gray-400">Package placement (choose one lane)</span>
                       {(Object.entries(columnLabels) as [string, string][]).map(([col, label]) => {
                         const colNum = Number(col) as 1 | 2 | 3;
                         return (
-                          <label key={col} className="flex items-center gap-2 text-xs">
+                          <label key={col} className="flex items-center gap-2">
                             <input
-                              type="checkbox"
+                              type="radio"
+                              name={`pkg-${feature.id}`}
                               checked={feature.column === colNum}
-                              onChange={() => handlePackageToggle(feature, colNum)}
+                              onChange={() => handlePackagePlacement(feature, colNum)}
                             />
                             <span>{label}</span>
                           </label>
                         );
                       })}
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={`pkg-${feature.id}`}
+                          checked={feature.column === undefined}
+                          onChange={() => handlePackagePlacement(feature, undefined)}
+                        />
+                        <span>Not in Packages</span>
+                      </label>
                     </div>
                   </td>
                   <td className="px-3 py-3">

@@ -17,7 +17,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({ items, selectedIte
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
             <p>No popular add-ons are configured yet.</p>
-            <p>In the admin interface, open Admin Panel -&gt; A La Carte, then set the add-on&apos;s position/column to Column 4 to show it in this list.</p>
+            <p>Publish items in Product Hub, then set Featured (Column 4) to show them here.</p>
           </div>
         ) : (
           items.map((item) => (

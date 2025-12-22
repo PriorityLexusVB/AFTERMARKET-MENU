@@ -16,8 +16,8 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({ items, selectedIte
       <div className="space-y-3 flex-grow overflow-y-auto pr-2">
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
-            <p>No popular add-ons are configured yet.</p>
-            <p>Publish items in Product Hub, then set Featured (Column 4) to show them here.</p>
+            <p>No featured add-ons configured yet.</p>
+            <p>Publish in Product Hub, then mark Featured (Column 4) to show here.</p>
           </div>
         ) : (
           items.map((item) => (

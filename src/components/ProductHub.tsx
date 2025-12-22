@@ -10,6 +10,7 @@ interface ProductHubProps {
   onAlaCarteChange?: () => void;
 }
 
+// Column mapping: 1 = Gold Base, 2 = Elite Adds, 3 = Platinum Adds (matches ladder elsewhere).
 const columnLabels: Record<1 | 2 | 3, string> = {
   1: 'Gold Base',
   2: 'Elite Adds',
@@ -97,7 +98,16 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
 
   const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
     if (feature.column === column) return;
-    const newPosition = column === undefined ? undefined : features.filter((f) => f.id !== feature.id && f.column === column).length;
+    const newPosition =
+      column === undefined
+        ? undefined
+        : (() => {
+            const positions = features
+              .filter((f) => f.id !== feature.id && f.column === column)
+              .map((f) => f.position ?? 0);
+            if (positions.length === 0) return 0;
+            return Math.max(...positions) + 1;
+          })();
 
     const payload: Partial<ProductFeature> = { column, position: newPosition };
 
@@ -119,6 +129,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       return rest;
     });
     if (Number.isNaN(parsed)) {
+      return;
+    }
+    if (parsed < 0) {
       return;
     }
     updateFeatureState(feature.id, { alaCartePrice: parsed });
@@ -170,7 +183,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     const isNew = option?.isNew ?? feature.alaCarteIsNew ?? false;
     const warranty = option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
     const desiredColumn = column === null ? undefined : column;
-    const desiredPosition = position ?? option?.position;
+    const desiredPosition = desiredColumn === undefined ? undefined : (position ?? option?.position);
 
     try {
       await upsertAlaCarteFromFeature(
@@ -195,7 +208,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     const option = alaCarteMap.get(feature.id);
     const price = option?.price ?? feature.alaCartePrice;
     if (publish && price === undefined) {
-      alert('Please enter an A La Carte price before publishing.');
+      console.error('Please enter an A La Carte price before publishing.');
       return;
     }
 
@@ -268,7 +281,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             id={`featured-${feature.id}`}
             checked={featured}
             disabled={disabled}
-            onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : category ? Number(category) : null, option?.position)}
+            onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
           />
           <label htmlFor={`featured-${feature.id}`} className="text-sm text-gray-200">
             Featured (Popular Add-Ons)
@@ -281,7 +294,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             disabled={disabled || featured}
             onChange={(e) => {
               const value = e.target.value;
-              handlePlacementUpdate(feature, value ? Number(value) : null, option?.position);
+              const newColumn = value ? Number(value) : null;
+              const newPosition = newColumn === null ? undefined : option?.position;
+              handlePlacementUpdate(feature, newColumn, newPosition);
             }}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
@@ -401,7 +416,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                       </label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs text-gray-400">A La Carte Price</label>
+                          <label className="text-xs text-gray-400">A La Carte Price (customer price)</label>
                           <input
                             type="number"
                             min="0"

@@ -315,11 +315,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     try {
       const alaCarteQuery = collection(db, 'ala_carte_options');
       const querySnapshot = await getDocs(alaCarteQuery);
-      const docs = (querySnapshot as any).docs ?? [];
-      const total = typeof querySnapshot.size === 'number' ? querySnapshot.size : docs.length;
+      const docs = querySnapshot.docs;
+      const total = querySnapshot.size;
       const published = docs.reduce((count: number, doc: any) => {
         const data = typeof doc.data === 'function' ? (doc.data() as { isPublished?: boolean }) : undefined;
-        return data && data['isPublished'] === true ? count + 1 : count;
+        return data && data.isPublished === true ? count + 1 : count;
       }, 0);
       setAlaCarteCounts({ total, published });
     } catch (err) {

@@ -76,16 +76,16 @@ async function runMigration(): Promise<void> {
     };
 
     for (const docSnap of optionsSnapshot.docs) {
-      const optionData = docSnap.data();
-      let optionIsPublished = optionData['isPublished'];
-      const optionPrice = optionData['price'];
-      const optionCost = optionData['cost'];
-      const optionWarranty = optionData['warranty'];
-      const optionIsNew = optionData['isNew'];
-      const optionConnector = optionData['connector'];
-      const optionImageUrl = optionData['imageUrl'];
-      const optionThumbnailUrl = optionData['thumbnailUrl'];
-      const optionVideoUrl = optionData['videoUrl'];
+      const optionData = docSnap.data() as any;
+      let optionIsPublished = optionData.isPublished;
+      const optionPrice = optionData.price;
+      const optionCost = optionData.cost;
+      const optionWarranty = optionData.warranty;
+      const optionIsNew = optionData.isNew;
+      const optionConnector = optionData.connector;
+      const optionImageUrl = optionData.imageUrl;
+      const optionThumbnailUrl = optionData.thumbnailUrl;
+      const optionVideoUrl = optionData.videoUrl;
       let madeChange = false;
 
       // A) Ensure option.isPublished set when missing

@@ -114,6 +114,8 @@ async function runMigration(): Promise<void> {
       const featureSnap = await featureRef.get();
 
       if (!featureSnap.exists) {
+        const warranty = optionWarranty;
+
         const newFeature = {
           name: optionData['name'] ?? docSnap.id,
           description: optionData['description'] ?? '',
@@ -124,7 +126,7 @@ async function runMigration(): Promise<void> {
           connector: optionConnector ?? 'AND',
           publishToAlaCarte: true,
           alaCartePrice: coerceNumber(optionPrice, 0),
-          ...(optionWarranty !== undefined ? { alaCarteWarranty: optionWarranty, warranty: optionWarranty } : {}),
+          ...(warranty !== undefined ? { warranty, alaCarteWarranty: warranty } : {}),
           ...(optionIsNew !== undefined ? { alaCarteIsNew: optionIsNew } : {}),
           ...(optionImageUrl !== undefined ? { imageUrl: optionImageUrl } : {}),
           ...(optionThumbnailUrl !== undefined ? { thumbnailUrl: optionThumbnailUrl } : {}),

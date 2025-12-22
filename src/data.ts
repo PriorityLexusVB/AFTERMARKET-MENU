@@ -367,6 +367,8 @@ export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promis
     // Use stable doc ID: the feature's ID
     const alaCarteRef = doc(db, 'ala_carte_options', feature.id);
     
+    const warranty = feature.alaCarteWarranty ?? feature.warranty;
+
     // Build the A La Carte option data
     const alaCarteData: Partial<AlaCarteOption> = {
       name: feature.name,
@@ -374,9 +376,7 @@ export async function upsertAlaCarteFromFeature(feature: ProductFeature): Promis
       points: feature.points,
       price: feature.alaCartePrice,
       cost: feature.cost,
-      ...(feature.alaCarteWarranty ?? feature.warranty) !== undefined
-        ? { warranty: (feature.alaCarteWarranty ?? feature.warranty) }
-        : {},
+      ...(warranty !== undefined ? { warranty } : {}),
       isNew: feature.alaCarteIsNew ?? false,
       useCases: feature.useCases,
       imageUrl: feature.imageUrl,

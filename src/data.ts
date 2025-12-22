@@ -355,8 +355,8 @@ export { groupFeaturesByColumn, type GroupedFeatures } from './utils/featureOrde
  * @returns A promise that resolves when the A La Carte option is created/updated
  */
 type AlaCarteUpsertOptions = Partial<Omit<AlaCarteOption, 'column' | 'position'>> & {
-  column?: number | null;
-  position?: number | null;
+  column?: number | undefined;
+  position?: number | undefined;
 };
 
 export async function upsertAlaCarteFromFeature(
@@ -395,9 +395,9 @@ export async function upsertAlaCarteFromFeature(
       videoUrl: feature.videoUrl,
       sourceFeatureId: overrides.sourceFeatureId ?? feature.id,
       isPublished: overrides.isPublished ?? true,
-      ...(overrides.column !== undefined ? { column: overrides.column } : {}),
-      ...(overrides.position !== undefined ? { position: overrides.position } : {}),
-      ...(overrides.connector !== undefined ? { connector: overrides.connector } : {}),
+      ...(Object.prototype.hasOwnProperty.call(overrides, 'column') ? { column: overrides.column } : {}),
+      ...(Object.prototype.hasOwnProperty.call(overrides, 'position') ? { position: overrides.position } : {}),
+      ...(Object.prototype.hasOwnProperty.call(overrides, 'connector') ? { connector: overrides.connector } : {}),
     };
 
     // Use setDoc with merge to create or update

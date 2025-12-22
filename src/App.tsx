@@ -164,11 +164,12 @@ const App: React.FC = () => {
   };
 
   const displayPackages = useMemo(() => {
+    // Deterministic customer-facing order: Gold → Elite → Platinum.
     const tierRank = (name: string) => {
-      const n = name.toLowerCase();
-      if (n.includes('gold')) return 1;
-      if (n.includes('elite')) return 2;
-      if (n.includes('platinum')) return 3;
+      const n = name.trim().toLowerCase();
+      if (/\bgold\b/.test(n)) return 1;
+      if (/\belite\b/.test(n)) return 2;
+      if (/\bplatinum\b/.test(n)) return 3;
       return 99;
     };
     const sorted = [...packages].sort((a, b) => tierRank(a.name) - tierRank(b.name));

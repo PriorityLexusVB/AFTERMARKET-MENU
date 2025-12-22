@@ -78,11 +78,15 @@ async function runMigration(): Promise<void> {
 
     for (const docSnap of optionsSnapshot.docs) {
       const optionData = docSnap.data();
-      const optionIsPublished = optionData['isPublished'];
+      let optionIsPublished = optionData['isPublished'];
       const optionPrice = optionData['price'];
       const optionCost = optionData['cost'];
       const optionWarranty = optionData['warranty'];
       const optionIsNew = optionData['isNew'];
+      const optionConnector = optionData['connector'];
+      const optionImageUrl = optionData['imageUrl'];
+      const optionThumbnailUrl = optionData['thumbnailUrl'];
+      const optionVideoUrl = optionData['videoUrl'];
       let madeChange = false;
 
       // A) Ensure option.isPublished set when missing
@@ -91,6 +95,7 @@ async function runMigration(): Promise<void> {
         batchCount++;
         stats.updatedOptions++;
         madeChange = true;
+        optionIsPublished = true;
       }
 
       // Respect explicit unpublish signals
@@ -116,11 +121,14 @@ async function runMigration(): Promise<void> {
           useCases: normalizeStringArray(optionData['useCases']),
           price: coerceNumber(optionPrice, 0),
           cost: coerceNumber(optionCost, 0),
-          connector: 'AND',
+          connector: optionConnector ?? 'AND',
           publishToAlaCarte: true,
           alaCartePrice: coerceNumber(optionPrice, 0),
-          ...(optionWarranty ? { alaCarteWarranty: optionWarranty } : {}),
+          ...(optionWarranty !== undefined ? { alaCarteWarranty: optionWarranty, warranty: optionWarranty } : {}),
           ...(optionIsNew !== undefined ? { alaCarteIsNew: optionIsNew } : {}),
+          ...(optionImageUrl !== undefined ? { imageUrl: optionImageUrl } : {}),
+          ...(optionThumbnailUrl !== undefined ? { thumbnailUrl: optionThumbnailUrl } : {}),
+          ...(optionVideoUrl !== undefined ? { videoUrl: optionVideoUrl } : {}),
         };
 
         batch.set(featureRef, newFeature, { merge: true });

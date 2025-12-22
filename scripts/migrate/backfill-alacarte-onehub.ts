@@ -30,7 +30,7 @@ interface MigrationStats {
 }
 
 function coerceNumber(value: unknown, fallback = 0): number {
-  return typeof value === 'number' && !Number.isNaN(value) ? value : fallback;
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
 function normalizeStringArray(value: unknown): string[] {

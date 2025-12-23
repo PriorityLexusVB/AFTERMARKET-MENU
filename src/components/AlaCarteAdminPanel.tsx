@@ -260,12 +260,13 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   }, [options, placementFilter, showUnpublished]);
 
   const { optionsByColumn, publishedUnplaced, unpublishedUnplaced } = useMemo(() => {
-    const grouped = groupItemsByColumn(filteredOptions);
-    const unplaced = filteredOptions.filter((option) => typeof option.column !== 'number');
+    // Placement filter should not affect unplaced lanes; only showUnpublished does
+    const baseForUnplaced = options.filter((option) => showUnpublished || option.isPublished === true);
+    const unplaced = baseForUnplaced.filter((option) => typeof option.column !== 'number');
     const published = unplaced.filter((option) => option.isPublished === true);
     const unpublished = unplaced.filter((option) => option.isPublished !== true);
-    return { optionsByColumn: grouped, publishedUnplaced: published, unpublishedUnplaced: unpublished };
-  }, [filteredOptions]);
+    return { optionsByColumn: groupItemsByColumn(filteredOptions), publishedUnplaced: published, unpublishedUnplaced: unpublished };
+  }, [filteredOptions, options, showUnpublished]);
 
   // Get the active option being dragged
   const activeOption = useMemo(() => {

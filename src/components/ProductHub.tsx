@@ -302,8 +302,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           >
             <option value="">Not placed</option>
             <option value="1">Gold</option>
-            <option value="3">Platinum</option>
             <option value="2">Elite</option>
+            <option value="3">Platinum</option>
           </select>
         </div>
         <div className="flex flex-col gap-1">

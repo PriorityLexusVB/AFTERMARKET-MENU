@@ -13,11 +13,11 @@ const baseOption: AlaCarteOption = {
 
 describe('alaCarte utils', () => {
   describe('columnOrderValue', () => {
-    it('prioritizes column 4 then 1,2,3', () => {
-      expect(columnOrderValue(4)).toBe(0);
+    it('uses Gold → Elite → Platinum ordering with Featured last', () => {
       expect(columnOrderValue(1)).toBe(1);
       expect(columnOrderValue(2)).toBe(2);
       expect(columnOrderValue(3)).toBe(3);
+      expect(columnOrderValue(4)).toBe(4);
     });
 
     it('puts invalid or missing columns at the end', () => {

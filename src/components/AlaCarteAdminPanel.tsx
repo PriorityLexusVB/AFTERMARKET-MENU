@@ -259,19 +259,12 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     });
   }, [options, placementFilter, showUnpublished]);
 
-  const optionsByColumn = useMemo(() => {
-    return groupItemsByColumn(filteredOptions);
+  const { optionsByColumn, publishedUnplaced, unpublishedUnplaced } = useMemo(() => {
+    const grouped = groupItemsByColumn(filteredOptions);
+    const published = grouped.unassigned.filter((option) => option.isPublished === true);
+    const unpublished = grouped.unassigned.filter((option) => option.isPublished !== true);
+    return { optionsByColumn: grouped, publishedUnplaced: published, unpublishedUnplaced: unpublished };
   }, [filteredOptions]);
-
-  const publishedUnplaced = useMemo(
-    () => optionsByColumn.unassigned.filter((option) => option.isPublished === true),
-    [optionsByColumn.unassigned]
-  );
-
-  const unpublishedUnplaced = useMemo(
-    () => optionsByColumn.unassigned.filter((option) => option.isPublished !== true),
-    [optionsByColumn.unassigned]
-  );
 
   // Get the active option being dragged
   const activeOption = useMemo(() => {
@@ -658,7 +651,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                   </div>
                   
                   {publishedUnplaced.length > 0 && (
-                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 max-w-xl" data-testid="column-unassigned">
+                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 max-w-xl" data-testid="column-unassigned-published">
                        <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
                          Published (Not placed yet)
                        </h5>

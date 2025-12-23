@@ -97,6 +97,17 @@ const mockFeatures: ProductFeature[] = [
     position: 0,
     connector: 'AND',
   },
+  {
+    id: 'feature-4',
+    name: 'Unassigned Feature',
+    description: 'Description 4',
+    points: ['Point 4'],
+    useCases: ['Use case 4'],
+    price: 120,
+    cost: 60,
+    position: 0,
+    connector: 'AND',
+  },
 ];
 
 describe('AdminPanel', () => {
@@ -215,6 +226,21 @@ describe('AdminPanel', () => {
       
       expect(andButtons.length).toBeGreaterThanOrEqual(1);
       expect(orButtons.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('hides unassigned lane by default and reveals it when toggled', async () => {
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Feature 1')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByTestId('column-unassigned')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByLabelText(/Show unassigned/i));
+
+      expect(await screen.findByTestId('column-unassigned')).toBeInTheDocument();
+      expect(screen.getByText('Unassigned Feature')).toBeInTheDocument();
     });
 
     it('should display drag handles for features', async () => {

@@ -207,7 +207,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'published' | 'unpublished'>('all');
+  const [showUnpublished, setShowUnpublished] = useState(false);
   const [placementFilter, setPlacementFilter] = useState<'all' | 'placed' | 'unplaced'>('all');
   
   // Backup state for rollback on error
@@ -252,17 +252,26 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   // Organize options by column and sort by position using centralized utility
   const filteredOptions = useMemo(() => {
     return options.filter((option) => {
-      if (visibilityFilter === 'published' && option.isPublished !== true) return false;
-      if (visibilityFilter === 'unpublished' && option.isPublished === true) return false;
+      if (!showUnpublished && option.isPublished !== true) return false;
       if (placementFilter === 'placed' && typeof option.column !== 'number') return false;
       if (placementFilter === 'unplaced' && typeof option.column === 'number') return false;
       return true;
     });
-  }, [options, placementFilter, visibilityFilter]);
+  }, [options, placementFilter, showUnpublished]);
 
   const optionsByColumn = useMemo(() => {
     return groupItemsByColumn(filteredOptions);
   }, [filteredOptions]);
+
+  const publishedUnplaced = useMemo(
+    () => optionsByColumn.unassigned.filter((option) => option.isPublished === true),
+    [optionsByColumn.unassigned]
+  );
+
+  const unpublishedUnplaced = useMemo(
+    () => optionsByColumn.unassigned.filter((option) => option.isPublished !== true),
+    [optionsByColumn.unassigned]
+  );
 
   // Get the active option being dragged
   const activeOption = useMemo(() => {
@@ -588,22 +597,16 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           A La Carte items are created/edited in Product Hub. This screen is for ordering/placement only.
         </div>
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Visibility:</span>
-            <div className="flex rounded-md overflow-hidden border border-gray-700">
-              {(['all', 'published', 'unpublished'] as const).map((value) => (
-                <button
-                  key={value}
-                  onClick={() => setVisibilityFilter(value)}
-                  className={`px-3 py-1 text-sm ${
-                    visibilityFilter === value ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  {value === 'all' ? 'All' : value === 'published' ? 'Published' : 'Unpublished/Legacy'}
-                </button>
-              ))}
-            </div>
-          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-400">
+            <input
+              type="checkbox"
+              checked={showUnpublished}
+              onChange={(e) => setShowUnpublished(e.target.checked)}
+              className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
+              aria-label="Show unpublished or legacy options"
+            />
+            Show unpublished/legacy
+          </label>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">Placement:</span>
             <div className="flex rounded-md overflow-hidden border border-gray-700">
@@ -654,12 +657,20 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                     ))}
                   </div>
                   
-                  {optionsByColumn.unassigned.length > 0 && (
-                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned">
+                  {publishedUnplaced.length > 0 && (
+                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 max-w-xl" data-testid="column-unassigned">
                        <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
-                         Not placed yet
+                         Published (Not placed yet)
                        </h5>
-                       {renderColumnOptions(optionsByColumn.unassigned as AlaCarteOption[], 'unassigned')}
+                       {renderColumnOptions(publishedUnplaced as AlaCarteOption[], 'unassigned')}
+                     </div>
+                   )}
+                  {showUnpublished && unpublishedUnplaced.length > 0 && (
+                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 max-w-xl" data-testid="column-unassigned-unpublished">
+                       <h5 className="text-lg font-semibold text-gray-300 mb-3 font-teko tracking-wider">
+                         Unpublished/Legacy (Not placed yet)
+                       </h5>
+                       {renderColumnOptions(unpublishedUnplaced as AlaCarteOption[], 'unassigned')}
                      </div>
                    )}
                 </>

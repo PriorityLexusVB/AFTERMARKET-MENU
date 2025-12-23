@@ -269,6 +269,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [alaCarteCounts, setAlaCarteCounts] = useState<{ total: number; published: number }>({ total: 0, published: 0 });
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [showBanner, setShowBanner] = useState(!isBannerDismissed());
+  const [showUnassigned, setShowUnassigned] = useState(false);
   
   // Backup state for rollback on error
   const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
@@ -780,7 +781,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         <div className="border-t border-gray-700 pt-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-xl font-teko tracking-wider text-gray-300">Features by Column</h4>
-            <p className="text-sm text-gray-500">Drag to reorder or move between columns • Click AND/OR to toggle</p>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-400">
+                <input
+                  type="checkbox"
+                  checked={showUnassigned}
+                  onChange={(e) => setShowUnassigned(e.target.checked)}
+                  className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
+                  aria-label="Show unassigned features"
+                />
+                Show unassigned
+              </label>
+              <p className="text-sm text-gray-500">Drag to reorder or move between columns • Click AND/OR to toggle</p>
+            </div>
           </div>
           {isLoading && <p className="text-gray-400">Loading features...</p>}
           {error && <p className="text-red-400 bg-red-500/10 p-3 rounded-md border border-red-500/30 mb-4">{error}</p>}
@@ -808,7 +821,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                       ))}
                     </div>
                     
-                    {featuresByColumn.unassigned.length > 0 && (
+                    {showUnassigned && featuresByColumn.unassigned.length > 0 && (
                       <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned">
                         <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
                           Unassigned Features

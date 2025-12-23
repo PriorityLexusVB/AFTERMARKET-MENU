@@ -252,7 +252,8 @@ describe('AdminPanel', () => {
       
       // Each feature should have a drag handle
       const dragHandles = screen.getAllByRole('button', { name: /Drag.*to reorder/i });
-      expect(dragHandles.length).toBe(mockFeatures.length);
+      const visibleFeatureCount = mockFeatures.filter((f) => typeof f.column === 'number').length;
+      expect(dragHandles.length).toBe(visibleFeatureCount);
     });
 
     it('should not render inline edit buttons (Product Hub handles editing)', async () => {

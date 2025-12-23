@@ -261,8 +261,9 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
 
   const { optionsByColumn, publishedUnplaced, unpublishedUnplaced } = useMemo(() => {
     const grouped = groupItemsByColumn(filteredOptions);
-    const published = grouped.unassigned.filter((option) => option.isPublished === true);
-    const unpublished = grouped.unassigned.filter((option) => option.isPublished !== true);
+    const unplaced = filteredOptions.filter((option) => typeof option.column !== 'number');
+    const published = unplaced.filter((option) => option.isPublished === true);
+    const unpublished = unplaced.filter((option) => option.isPublished !== true);
     return { optionsByColumn: grouped, publishedUnplaced: published, unpublishedUnplaced: unpublished };
   }, [filteredOptions]);
 
@@ -651,7 +652,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                   </div>
                   
                   {publishedUnplaced.length > 0 && (
-                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 max-w-xl" data-testid="column-unassigned-published">
+                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned-published">
                        <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
                          Published (Not placed yet)
                        </h5>
@@ -659,7 +660,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                      </div>
                    )}
                   {showUnpublished && unpublishedUnplaced.length > 0 && (
-                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 max-w-xl" data-testid="column-unassigned-unpublished">
+                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned-unpublished">
                        <h5 className="text-lg font-semibold text-gray-300 mb-3 font-teko tracking-wider">
                          Unpublished/Legacy (Not placed yet)
                        </h5>

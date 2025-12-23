@@ -23,7 +23,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { db } from '../firebase';
 import type { ProductFeature, FeatureConnector } from '../types';
-import { FeatureForm } from './FeatureForm';
 import { AlaCarteAdminPanel } from './AlaCarteAdminPanel';
 import { batchUpdateFeaturesPositions, FeaturePositionUpdate, updateFeature } from '../data';
 import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
@@ -39,11 +38,11 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration - display order matches ladder logic
+// Column configuration - display order matches Gold → Elite → Platinum, with Popular last
 const COLUMNS = [
   { num: 1, label: 'Gold Base (All Packages)' },
-  { num: 3, label: 'Platinum Additions' },
   { num: 2, label: 'Elite Additions' },
+  { num: 3, label: 'Platinum Additions' },
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
 
@@ -51,7 +50,7 @@ const COLUMNS = [
 // Sortable Feature Item Component
 interface SortableFeatureItemProps {
   feature: ProductFeature;
-  onEdit: (feature: ProductFeature) => void;
+  onEdit?: (feature: ProductFeature) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onToggleConnector: () => void;
@@ -131,17 +130,19 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
               <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
             </svg>
           </button>
-          <button
-            onClick={() => onEdit(feature)}
-            className="text-blue-400 hover:text-blue-300 transition-colors p-1"
-            title="Edit feature"
-            aria-label={`Edit ${feature.name}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
-              <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
-            </svg>
-          </button>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(feature)}
+              className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+              title="Edit feature"
+              aria-label={`Edit ${feature.name}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -260,9 +261,7 @@ const getInitialTab = (): AdminTab => {
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>(getInitialTab());
-  const [isFormVisible, setIsFormVisible] = useState(false);
   const [features, setFeatures] = useState<ProductFeature[]>([]);
-  const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -336,14 +335,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     fetchAlaCarteCount();
   }, [fetchFeatures, fetchAlaCarteCount]);
 
-  const handleSaveSuccess = () => {
-    setIsFormVisible(false);
-    setEditingFeature(null);
-    fetchFeatures(); // Refetch the list of features
-    fetchAlaCarteCount(); // Refresh count in case A La Carte options were affected
-    onDataUpdate(); // Trigger a full app data refresh
-  };
-
   const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab);
     setStoredTab(tab);
@@ -363,21 +354,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     fetchAlaCarteCount();
     onDataUpdate();
   }, [fetchAlaCarteCount, onDataUpdate]);
-
-  const handleEditFeature = (feature: ProductFeature) => {
-    setEditingFeature(feature);
-    setIsFormVisible(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingFeature(null);
-    setIsFormVisible(false);
-  };
-
-  const handleAddNew = () => {
-    setEditingFeature(null);
-    setIsFormVisible(true);
-  };
 
   // Organize features by column and sort by position using centralized utility
   const featuresByColumn = useMemo(() => {
@@ -677,7 +653,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 <SortableFeatureItem
                   key={feature.id}
                   feature={feature}
-                  onEdit={handleEditFeature}
                   onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
                   onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
                   onToggleConnector={() => handleToggleConnector(feature.id)}
@@ -779,40 +754,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-teko tracking-wider text-white">Manage Package Features</h3>
-          <div className="flex items-center gap-3">
-            {isSaving && (
-              <span className="text-blue-400 text-sm flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </span>
-            )}
-            <button
-              onClick={handleAddNew}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 transform active:scale-95"
-            >
-               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-              </svg>
-              Add New Feature
-            </button>
-          </div>
-        </div>
+              <div className="flex items-center gap-3">
+                {isSaving && (
+                  <span className="text-blue-400 text-sm flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </span>
+                )}
+              </div>
+            </div>
 
-        {isFormVisible && (
-          <div className="mb-8">
-            <h4 className="text-xl font-teko tracking-wider text-blue-400 mb-3">
-              {editingFeature ? 'Edit Feature' : 'Add New Feature'}
-            </h4>
-            <FeatureForm 
-              onSaveSuccess={handleSaveSuccess} 
-              editingFeature={editingFeature}
-              onCancelEdit={handleCancelEdit}
-            />
-          </div>
-        )}
+            <p className="text-sm text-gray-400 mb-4">
+              This view is for column ordering and ladder placement. Create or edit products in the{' '}
+              <button
+                onClick={() => handleTabChange('product-hub')}
+                className="underline text-blue-300 hover:text-blue-200 font-semibold"
+              >
+                Product Hub
+              </button>.
+            </p>
 
         <div className="border-t border-gray-700 pt-6">
           <div className="flex items-center justify-between mb-4">

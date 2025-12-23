@@ -115,10 +115,12 @@ describe('AdminPanel', () => {
     expect(screen.getByText('Admin Control Panel')).toBeInTheDocument();
   });
 
-  it('should render the "Add New Feature" button', async () => {
+  it('shows Product Hub guidance instead of inline creation controls', async () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
-    expect(screen.getByText('Add New Feature')).toBeInTheDocument();
+    expect(screen.getByText(/column ordering and ladder placement/i)).toBeInTheDocument();
+    expect(screen.getByText(/Create or edit products in the/i)).toBeInTheDocument();
+    expect(screen.queryByText('Add New Feature')).not.toBeInTheDocument();
   });
 
   it('should render the manage features section', async () => {
@@ -127,29 +129,10 @@ describe('AdminPanel', () => {
     expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
   });
 
-  it('should show the feature form when "Add New Feature" is clicked', async () => {
-    const user = userEvent.setup();
+  it('should not render the feature form by default', async () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
-    const addButton = screen.getByText('Add New Feature');
-    await user.click(addButton);
-    
-    // The form should be visible with form labels
-    expect(screen.getByLabelText(/Feature Name/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Retail Price/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Internal Cost/)).toBeInTheDocument();
-  });
-
-  it('should show connector options in the feature form', async () => {
-    const user = userEvent.setup();
-    render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
-    
-    const addButton = screen.getByText('Add New Feature');
-    await user.click(addButton);
-    
-    // The form should show connector options
-    expect(screen.getByLabelText('connector-and')).toBeInTheDocument();
-    expect(screen.getByLabelText('connector-or')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Feature Name/)).not.toBeInTheDocument();
   });
 
   it('should display help text for drag-and-drop and connector toggle', async () => {
@@ -246,15 +229,14 @@ describe('AdminPanel', () => {
       expect(dragHandles.length).toBe(mockFeatures.length);
     });
 
-    it('should display edit buttons for features', async () => {
+    it('should not render inline edit buttons (Product Hub handles editing)', async () => {
       render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
       
       await waitFor(() => {
         expect(screen.getByText('Test Feature 1')).toBeInTheDocument();
       });
       
-      const editButtons = screen.getAllByRole('button', { name: /Edit/i });
-      expect(editButtons.length).toBe(mockFeatures.length);
+      expect(screen.queryByRole('button', { name: /Edit/i })).not.toBeInTheDocument();
     });
 
     it('should display position indicators for features', async () => {

@@ -23,7 +23,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { db } from '../firebase';
 import type { AlaCarteOption, FeatureConnector } from '../types';
-import { AlaCarteForm } from './AlaCarteForm';
 import { batchUpdateAlaCartePositions, AlaCartePositionUpdate, updateAlaCarteOption } from '../data';
 import { groupItemsByColumn, normalizePositions, sortOrderableItems } from '../utils/featureOrdering';
 
@@ -46,7 +45,7 @@ const COLUMNS = [
 // Sortable A La Carte Item Component
 interface SortableAlaCarteItemProps {
   option: AlaCarteOption;
-  onEdit: (option: AlaCarteOption) => void;
+  onEdit?: (option: AlaCarteOption) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onToggleConnector: () => void;
@@ -129,17 +128,19 @@ const SortableAlaCarteItem: React.FC<SortableAlaCarteItemProps> = ({
               <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
             </svg>
           </button>
-          <button
-            onClick={() => onEdit(option)}
-            className="text-blue-400 hover:text-blue-300 transition-colors p-1"
-            title="Edit option"
-            aria-label={`Edit ${option.name}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
-              <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
-            </svg>
-          </button>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(option)}
+              className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+              title="Edit option"
+              aria-label={`Edit ${option.name}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -201,9 +202,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children })
 };
 
 export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUpdate }) => {
-  const [isFormVisible, setIsFormVisible] = useState(false);
   const [options, setOptions] = useState<AlaCarteOption[]>([]);
-  const [editingOption, setEditingOption] = useState<AlaCarteOption | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -249,23 +248,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
-
-  const handleSaveSuccess = () => {
-    setIsFormVisible(false);
-    setEditingOption(null);
-    fetchOptions(); // Refetch the list of options
-    onDataUpdate(); // Trigger a full app data refresh
-  };
-
-  const handleEditOption = (option: AlaCarteOption) => {
-    setEditingOption(option);
-    setIsFormVisible(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingOption(null);
-    setIsFormVisible(false);
-  };
 
   // Organize options by column and sort by position using centralized utility
   const filteredOptions = useMemo(() => {
@@ -573,7 +555,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                 <SortableAlaCarteItem
                   key={option.id}
                   option={option}
-                  onEdit={handleEditOption}
                   onMoveUp={() => handleKeyboardReorder(option.id, 'up')}
                   onMoveDown={() => handleKeyboardReorder(option.id, 'down')}
                   onToggleConnector={() => handleToggleConnector(option.id)}
@@ -641,19 +622,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           </div>
         </div>
       </div>
-
-      {isFormVisible && (
-        <div className="mb-8">
-          <h4 className="text-xl font-teko tracking-wider text-blue-400 mb-3">
-            Edit A La Carte Option
-          </h4>
-          <AlaCarteForm 
-            onSaveSuccess={handleSaveSuccess} 
-            editingOption={editingOption}
-            onCancelEdit={handleCancelEdit}
-          />
-        </div>
-      )}
 
       <div className="border-t border-gray-700 pt-6">
         <div className="flex items-center justify-between mb-4">

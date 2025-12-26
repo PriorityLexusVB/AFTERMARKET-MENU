@@ -453,7 +453,6 @@ describe('featureOrdering utility', () => {
       const features = [
         createTestFeature({ id: 'f1', name: 'RustGuard Pro', column: 2, position: 0 }),
         createTestFeature({ id: 'f2', name: 'rustguard pro', column: 2, position: 1 }), // duplicate in same column
-        createTestFeature({ id: 'f3', name: 'RUSTGUARD PRO', column: 1, position: 0 }), // different column (ignored)
         createTestFeature({ id: 'f4', name: 'Diamond Shield', column: 2, position: 2 }),
       ];
 

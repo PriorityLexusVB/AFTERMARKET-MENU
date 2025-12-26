@@ -7,7 +7,7 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 
 /**
  * Helper to read and normalize boolean environment variables.
- * @param varName - The environment variable name (without VITE_ prefix in display)
+ * @param varName - The full environment variable name (including the VITE_ prefix)
  * @param defaultValue - Default value if not set or invalid
  * @returns Boolean value
  */

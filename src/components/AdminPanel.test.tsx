@@ -175,10 +175,13 @@ describe('AdminPanel', () => {
       expect(screen.getByText('Features by Column')).toBeInTheDocument();
     });
     
-    // Columns contain separated text elements, use regex that handles whitespace
-    expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
-    expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
-    expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
+    // Check that all column headers are present (using getAllByText since banner also mentions columns)
+    const column1Matches = screen.getAllByText(/Column\s+1/);
+    expect(column1Matches.length).toBeGreaterThan(0);
+    const column2Matches = screen.getAllByText(/Column\s+2/);
+    expect(column2Matches.length).toBeGreaterThan(0);
+    const column3Matches = screen.getAllByText(/Column\s+3/);
+    expect(column3Matches.length).toBeGreaterThan(0);
     expect(screen.getByText(/Column\s+4/)).toBeInTheDocument();
     expect(screen.getByText(/Gold Package/)).toBeInTheDocument();
     expect(screen.getByText(/Elite Package/)).toBeInTheDocument();
@@ -705,4 +708,263 @@ describe('AdminPanel', () => {
       expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
     });
   });
+
+  describe('Strict Mapping Warning Banner', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+      localStorage.clear();
+    });
+
+    it('should show warning banner when Column 1 (Gold) is empty', async () => {
+      // Mock features with Column 1 empty
+      const featuresWithEmptyCol1: ProductFeature[] = [
+        {
+          id: 'feature-2',
+          name: 'Elite Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 200,
+          cost: 100,
+          column: 2,
+          position: 0,
+          connector: 'AND',
+        },
+        {
+          id: 'feature-3',
+          name: 'Platinum Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 300,
+          cost: 150,
+          column: 3,
+          position: 0,
+          connector: 'AND',
+        },
+      ];
+
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        if (collectionRef?._collectionName === 'features') {
+          return {
+            docs: featuresWithEmptyCol1.map(f => ({
+              id: f.id,
+              data: () => ({ ...f, id: undefined }),
+            })),
+            size: featuresWithEmptyCol1.length,
+          } as any;
+        }
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('strict-mapping-warning')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/Empty Package Column/)).toBeInTheDocument();
+      expect(screen.getByText(/Column 1 \(Gold\)/)).toBeInTheDocument();
+    });
+
+    it('should show warning banner when Column 3 (Platinum) is empty', async () => {
+      // Mock features with Column 3 empty
+      const featuresWithEmptyCol3: ProductFeature[] = [
+        {
+          id: 'feature-1',
+          name: 'Gold Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 100,
+          cost: 50,
+          column: 1,
+          position: 0,
+          connector: 'AND',
+        },
+        {
+          id: 'feature-2',
+          name: 'Elite Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 200,
+          cost: 100,
+          column: 2,
+          position: 0,
+          connector: 'AND',
+        },
+      ];
+
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        if (collectionRef?._collectionName === 'features') {
+          return {
+            docs: featuresWithEmptyCol3.map(f => ({
+              id: f.id,
+              data: () => ({ ...f, id: undefined }),
+            })),
+            size: featuresWithEmptyCol3.length,
+          } as any;
+        }
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('strict-mapping-warning')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/Empty Package Column/)).toBeInTheDocument();
+      expect(screen.getByText(/Column 3 \(Platinum\)/)).toBeInTheDocument();
+    });
+
+    it('should show warning for multiple empty columns', async () => {
+      // Mock features with Columns 1 and 3 empty
+      const featuresWithMultipleEmpty: ProductFeature[] = [
+        {
+          id: 'feature-2',
+          name: 'Elite Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 200,
+          cost: 100,
+          column: 2,
+          position: 0,
+          connector: 'AND',
+        },
+      ];
+
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        if (collectionRef?._collectionName === 'features') {
+          return {
+            docs: featuresWithMultipleEmpty.map(f => ({
+              id: f.id,
+              data: () => ({ ...f, id: undefined }),
+            })),
+            size: featuresWithMultipleEmpty.length,
+          } as any;
+        }
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('strict-mapping-warning')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/Empty Package Columns/)).toBeInTheDocument();
+      expect(screen.getByText(/Column 1 \(Gold\), Column 3 \(Platinum\)/)).toBeInTheDocument();
+    });
+
+    it('should not show warning when all package columns (1-3) have features', async () => {
+      // Mock features with all columns populated
+      const allColumnsPopulated: ProductFeature[] = [
+        {
+          id: 'feature-1',
+          name: 'Gold Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 100,
+          cost: 50,
+          column: 1,
+          position: 0,
+          connector: 'AND',
+        },
+        {
+          id: 'feature-2',
+          name: 'Elite Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 200,
+          cost: 100,
+          column: 2,
+          position: 0,
+          connector: 'AND',
+        },
+        {
+          id: 'feature-3',
+          name: 'Platinum Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 300,
+          cost: 150,
+          column: 3,
+          position: 0,
+          connector: 'AND',
+        },
+      ];
+
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        if (collectionRef?._collectionName === 'features') {
+          return {
+            docs: allColumnsPopulated.map(f => ({
+              id: f.id,
+              data: () => ({ ...f, id: undefined }),
+            })),
+            size: allColumnsPopulated.length,
+          } as any;
+        }
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByTestId('strict-mapping-warning')).not.toBeInTheDocument();
+    });
+
+    it('should include guidance on how to fix empty columns', async () => {
+      // Mock features with Column 1 empty
+      const featuresWithEmptyCol1: ProductFeature[] = [
+        {
+          id: 'feature-2',
+          name: 'Elite Feature',
+          description: 'Description',
+          points: ['Point'],
+          useCases: ['Use case'],
+          price: 200,
+          cost: 100,
+          column: 2,
+          position: 0,
+          connector: 'AND',
+        },
+      ];
+
+      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
+        if (collectionRef?._collectionName === 'features') {
+          return {
+            docs: featuresWithEmptyCol1.map(f => ({
+              id: f.id,
+              data: () => ({ ...f, id: undefined }),
+            })),
+            size: featuresWithEmptyCol1.length,
+          } as any;
+        }
+        return { docs: [], size: 0 } as any;
+      });
+
+      render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('strict-mapping-warning')).toBeInTheDocument();
+      });
+
+      // Check for fix guidance
+      expect(screen.getByText(/How to Fix/)).toBeInTheDocument();
+      const productHubButtons = screen.getAllByText(/Product Hub/);
+      expect(productHubButtons.length).toBeGreaterThan(0); // Multiple buttons exist (tab + in banner)
+      expect(screen.getByText(/duplicate it and assign copies to different columns/)).toBeInTheDocument();
+      expect(screen.getByText(/VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK/)).toBeInTheDocument();
+    });
+  });
 });
+

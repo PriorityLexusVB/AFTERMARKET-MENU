@@ -5,6 +5,21 @@ import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
 import { validateDataArray, ProductFeatureSchema, AlaCarteOptionSchema } from './schemas';
 import { deriveTierFeatures } from './utils/featureOrdering';
 
+/**
+ * Helper to read and normalize boolean environment variables.
+ * @param varName - The environment variable name (without VITE_ prefix in display)
+ * @param defaultValue - Default value if not set or invalid
+ * @returns Boolean value
+ */
+function getBooleanEnvVar(varName: string, defaultValue: boolean): boolean {
+  const value = import.meta.env[varName];
+  if (value === undefined || value === null || value === '') {
+    return defaultValue;
+  }
+  const normalized = String(value).toLowerCase().trim();
+  return normalized === 'true' || normalized === '1';
+}
+
 // Maximum batch size for Firestore (limit is 500)
 const FIRESTORE_BATCH_LIMIT = 500;
 
@@ -57,16 +72,39 @@ export async function fetchAllData(): Promise<FetchDataResult> {
     const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
 
+    // Check if featureIds fallback is allowed (default: true for backward compatibility)
+    const allowFeatureIdsFallback = getBooleanEnvVar('VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK', true);
+
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;
         // Derive features from column assignments based on tier name
         // This makes admin column configuration the single source of truth
         let derivedFeatures = deriveTierFeatures(data.name, features);
+        
+        // Handle fallback to featureIds if derived list is empty
         if (derivedFeatures.length === 0 && Array.isArray(data.featureIds) && data.featureIds.length > 0) {
-          derivedFeatures = data.featureIds
-            .map(id => features.find(f => f.id === id))
-            .filter((f): f is ProductFeature => Boolean(f));
+          if (allowFeatureIdsFallback) {
+            // Fallback is allowed: use featureIds but emit loud warning
+            derivedFeatures = data.featureIds
+              .map(id => features.find(f => f.id === id))
+              .filter((f): f is ProductFeature => Boolean(f));
+            
+            console.warn(
+              `⚠️ PACKAGE FALLBACK WARNING: Package "${data.name}" (doc ID: ${doc.id}) has empty column-derived features but is using featureIds fallback (${data.featureIds.length} feature IDs). ` +
+              `This fallback will be deprecated. Please assign features to the correct column in Admin/Product Hub. ` +
+              `To disable fallback and enforce strict mapping, set VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=false`
+            );
+          } else {
+            // Fallback is disabled: keep empty and emit error
+            console.error(
+              `❌ PACKAGE CONFIGURATION ERROR: Package "${data.name}" (doc ID: ${doc.id}) has no features assigned to its column but featureIds fallback is disabled. ` +
+              `The package will be empty on the customer-facing UI. ` +
+              `To fix: Go to Admin > Package Features and assign features to the proper column (Gold=Column 1, Elite=Column 2, Platinum=Column 3). ` +
+              `Or enable fallback temporarily with VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=true`
+            );
+          }
         }
+        
         const pkg: PackageTier = {
             id: doc.id,
             name: data.name,

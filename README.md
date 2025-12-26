@@ -363,10 +363,50 @@ Click the AND/OR badge on any feature to toggle its connector type. Changes are 
 ### Column Organization
 Features are organized into columns representing package tiers:
 - **Column 1**: Gold Tier features
-- **Column 2**: Elite Tier features (additional beyond Gold)
+- **Column 2**: Elite Tier features
 - **Column 3**: Platinum Tier features
 - **Column 4**: Popular Add-ons (a la carte options)
 - **Unassigned**: Features not yet assigned to a column
+
+#### Strict Per-Tier Column Mapping
+The application uses **strict per-tier column mapping** to ensure admin and customer-facing package contents match:
+
+- **Gold Package** = Column 1 only
+- **Elite Package** = Column 2 only  
+- **Platinum Package** = Column 3 only
+
+Each package derives its features exclusively from its assigned column. This eliminates the admin/customer mismatch that can occur when admin columns are empty but legacy `featureIds` arrays still contain data.
+
+#### Multi-Tier Feature Presence
+If a feature should appear in multiple package tiers:
+1. Create the feature in Product Hub
+2. Assign it to one column
+3. Duplicate the feature for each additional tier
+4. Assign each copy to its respective column
+
+Example: A "Ceramic Coating" feature appearing in all three tiers would need three separate feature entries (one in Column 1, one in Column 2, one in Column 3).
+
+#### Fallback Behavior (Deprecated)
+For backward compatibility, the system includes a configurable fallback to legacy `featureIds`:
+
+- **Default (fallback enabled)**: If a package's column is empty, the system falls back to `featureIds` with a console warning
+- **Strict mode (fallback disabled)**: Empty columns result in empty packages with a console error
+
+Control fallback with the `VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK` environment variable:
+```bash
+# .env.local
+VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK="true"   # Allow fallback (default)
+VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK="false"  # Strict mode, no fallback
+```
+
+**Recommendation**: Keep fallback enabled during migration, then disable it once all packages have proper column assignments.
+
+#### Admin Diagnostics
+The Admin Panel provides visual warnings when package columns are empty:
+- A yellow banner appears on the "Package Features" tab
+- Lists which columns (Gold/Elite/Platinum) are empty
+- Explains the impact on customer-facing UI
+- Provides step-by-step guidance to fix the issue
 
 ### Guest View Rendering
 Changes made in the Admin Panel are immediately reflected in the guest view:

@@ -175,7 +175,9 @@ describe('AdminPanel', () => {
       expect(screen.getByText('Features by Column')).toBeInTheDocument();
     });
     
-    // Check that all column headers are present (using getAllByText since banner also mentions columns)
+    // Check that all column headers are present
+    // Note: Using getAllByText because mockFeatures has empty Column 3,
+    // which triggers the warning banner that also mentions "Column 1", "Column 2", etc.
     const column1Matches = screen.getAllByText(/Column\s+1/);
     expect(column1Matches.length).toBeGreaterThan(0);
     const column2Matches = screen.getAllByText(/Column\s+2/);

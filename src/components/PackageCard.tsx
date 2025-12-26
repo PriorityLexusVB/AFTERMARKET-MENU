@@ -25,7 +25,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
   
-  // Use packageInfo.features directly - it's already derived by deriveTierFeatures with correct ladder ordering and OR→AND conversion
+  // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
 
   return (

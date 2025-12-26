@@ -181,7 +181,7 @@ export function getTierColumns(tier: string): number[] {
  * - Elite: column 2 only
  * - Platinum: column 3 only
  *
- * Features are ordered by column and position. Duplicates within the same column/name are removed.
+ * Features are ordered by column and position. Duplicates within the same column are removed (case-insensitive by name), keeping first occurrence.
  */
 export function deriveTierFeatures(
   tier: string,

@@ -41,8 +41,8 @@ const formatPrice = (price: number) => {
 // Column configuration - display order matches Gold → Elite → Platinum, with Popular last
 const COLUMNS = [
   { num: 1, label: 'Gold Package' },
-  { num: 2, label: 'Elite Additions' },
-  { num: 3, label: 'Platinum Additions' },
+  { num: 2, label: 'Elite Package' },
+  { num: 3, label: 'Platinum Package' },
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
 

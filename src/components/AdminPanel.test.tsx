@@ -917,10 +917,14 @@ describe('AdminPanel', () => {
 
       render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
 
+      // Wait for features to be loaded and rendered
       await waitFor(() => {
-        expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+        expect(screen.getByText('Gold Feature')).toBeInTheDocument();
+        expect(screen.getByText('Elite Feature')).toBeInTheDocument();
+        expect(screen.getByText('Platinum Feature')).toBeInTheDocument();
       });
 
+      // Now check that the warning is not shown
       expect(screen.queryByTestId('strict-mapping-warning')).not.toBeInTheDocument();
     });
 

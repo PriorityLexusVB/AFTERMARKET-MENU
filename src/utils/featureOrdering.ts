@@ -151,14 +151,12 @@ export function getTierColumn(tier: string): number | null {
 }
 
 /**
- * Tier ladder / inheritance mapping.
+ * Strict tier mapping (no inheritance).
  *
- * Columns are referred to by their numeric sequence (1..n).
+ * - Gold:     [1]
+ * - Elite:    [2]
+ * - Platinum: [3]
  *
- * - Gold:     [1] (Gold Base)
- * - Platinum: [1, 3] (Gold Base + Platinum Additions)
- * - Elite:    [1, 3, 2] (Gold Base + Platinum Additions + Elite Additions)
- * 
  * Column 4 is "Popular Add-ons" and not part of any tier package.
  */
 export function getTierColumns(tier: string): number[] {
@@ -167,25 +165,23 @@ export function getTierColumns(tier: string): number[] {
   switch (normalized) {
     case 'gold':
       return [1];
-    case 'platinum':
-      return [1, 3];
     case 'elite':
-      return [1, 3, 2];
+      return [2];
+    case 'platinum':
+      return [3];
     default:
       return [];
   }
 }
 
 /**
- * Derives the feature list for a tier using the ladder/inheritance model.
+ * Derives the feature list for a tier using strict per-column mapping (no inheritance).
  *
- * - Gold: Gets column 1 only
- * - Platinum: Gets columns 1 + 3 (in that order)
- * - Elite: Gets columns 1 + 3 + 2 (in that order)
- * 
- * Features are ordered by the column sequence, then by position within each column.
- * Duplicates are removed by case-insensitive name, keeping the first occurrence.
- * For non-Gold tiers, OR connectors are converted to AND for display.
+ * - Gold: column 1 only
+ * - Elite: column 2 only
+ * - Platinum: column 3 only
+ *
+ * Features are ordered by column and position. Duplicates within the same column/name are removed.
  */
 export function deriveTierFeatures(
   tier: string,
@@ -197,36 +193,20 @@ export function deriveTierFeatures(
     return [];
   }
   
-  const result: ProductFeature[] = [];
-  
-  // Collect features from each column in order
-  for (const col of columns) {
-    const colFeatures = features
-      .filter(f => f.column === col)
-      .sort(compareFeatures);
-    
-    for (const feature of colFeatures) {
-      // Clone to avoid mutation
-      let cloned = { ...feature };
-      
-      // Convert OR to AND for non-Gold tiers
-      if (tier.toLowerCase() !== 'gold' && cloned.connector === 'OR') {
-        cloned = { ...cloned, connector: 'AND' as const };
-      }
-      
-      result.push(cloned);
-    }
-  }
-  
-  // Deduplicate by name (case-insensitive), keeping first occurrence
+  const columnSet = new Set(columns);
+  const columnFeatures = features
+    .filter(f => f.column !== undefined && columnSet.has(f.column))
+    .sort(compareFeatures);
+
+  // Deduplicate by column + name (case-insensitive), keeping first occurrence
   const seen = new Set<string>();
   const deduped: ProductFeature[] = [];
   
-  for (const feature of result) {
-    const key = feature.name.trim().toLowerCase();
+  for (const feature of columnFeatures) {
+    const key = `${feature.column ?? 'unassigned'}::${feature.name.trim().toLowerCase()}`;
     if (!seen.has(key)) {
       seen.add(key);
-      deduped.push(feature);
+      deduped.push({ ...feature });
     }
   }
   

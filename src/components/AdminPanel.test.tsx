@@ -129,7 +129,7 @@ describe('AdminPanel', () => {
   it('shows Product Hub guidance instead of inline creation controls', async () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
-    expect(screen.getByText(/column ordering and ladder placement/i)).toBeInTheDocument();
+    expect(screen.getByText(/column ordering by tier/i)).toBeInTheDocument();
     expect(screen.getByText(/Create or edit products in the/i)).toBeInTheDocument();
     expect(screen.queryByText('Add New Feature')).not.toBeInTheDocument();
   });
@@ -180,7 +180,7 @@ describe('AdminPanel', () => {
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+4/)).toBeInTheDocument();
-    expect(screen.getByText(/Gold Base \(All Packages\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Gold Package/)).toBeInTheDocument();
     expect(screen.getByText(/Elite Additions/)).toBeInTheDocument();
     expect(screen.getByText(/Platinum Additions/)).toBeInTheDocument();
     expect(screen.getByText(/Popular Add-ons/)).toBeInTheDocument();

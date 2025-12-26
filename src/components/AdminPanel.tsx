@@ -40,7 +40,7 @@ const formatPrice = (price: number) => {
 
 // Column configuration - display order matches Gold → Elite → Platinum, with Popular last
 const COLUMNS = [
-  { num: 1, label: 'Gold Base (All Packages)' },
+  { num: 1, label: 'Gold Package' },
   { num: 2, label: 'Elite Additions' },
   { num: 3, label: 'Platinum Additions' },
   { num: 4, label: 'Popular Add-ons' },
@@ -769,7 +769,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </div>
 
             <p className="text-sm text-gray-400 mb-4">
-              This view is for column ordering and ladder placement. Create or edit products in the{' '}
+              This view is for column ordering by tier. Create or edit products in the{' '}
               <button
                 onClick={() => handleTabChange('product-hub')}
                 className="underline text-blue-300 hover:text-blue-200 font-semibold"

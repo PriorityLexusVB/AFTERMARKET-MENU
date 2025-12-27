@@ -32,7 +32,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     <div 
       data-testid="package-card"
       className={`
-      lux-card grid grid-rows-[auto_1fr_auto] h-full relative
+      lux-card grid grid-rows-[auto_1fr_auto] h-full relative overflow-hidden
       ${isSelected ? 'lux-card-selected' : ''}
       ${packageInfo.is_recommended ? 'lux-card-recommended' : ''}
       ${className}
@@ -51,7 +51,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
         )}
       </div>
 
-      <div className="p-6 lg:p-7 pt-2 space-y-3">
+      <div className="p-6 lg:p-7 pt-2 space-y-3 overflow-y-auto">
         {includedPackageFeatures.map((feature, index) => {
           let divider = null;
           // Add a divider before every feature except the first one

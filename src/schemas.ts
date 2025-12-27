@@ -22,12 +22,8 @@ export const ProductFeatureSchema = z.object({
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
   videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
-  // Legacy single column assignment (for backward compatibility)
-  column: z.number().int().min(1).max(4).optional(),
-  position: z.number().int().min(0).optional(),
-  // New multi-column assignment
-  columns: z.array(z.number().int().min(1).max(4)).optional(),
-  positionsByColumn: z.record(z.string(), z.number().int().min(0)).optional(),
+  column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
+  position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
   // A La Carte publishing fields
   publishToAlaCarte: z.boolean().optional().default(false),
@@ -64,12 +60,8 @@ export const AlaCarteOptionSchema = z.object({
   imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
   videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
-  // Legacy single column assignment (for backward compatibility)
-  column: z.number().int().min(1).max(4).optional(),
-  position: z.number().int().min(0).optional(),
-  // New multi-column assignment
-  columns: z.array(z.number().int().min(1).max(4)).optional(),
-  positionsByColumn: z.record(z.string(), z.number().int().min(0)).optional(),
+  column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
+  position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
   // Publishing fields
   sourceFeatureId: z.string().optional(),

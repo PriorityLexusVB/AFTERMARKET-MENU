@@ -21,7 +21,6 @@ const initialFormState = {
   thumbnailUrl: '',
   videoUrl: '',
   column: '',
-  columns: [] as number[],
   connector: 'AND' as FeatureConnector,
   publishToAlaCarte: false,
   alaCartePrice: '',
@@ -41,13 +40,6 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
   // Populate form when editing
   useEffect(() => {
     if (editingFeature) {
-      // Normalize to use columns array (support both legacy and new format)
-      const columns = editingFeature.columns && editingFeature.columns.length > 0
-        ? editingFeature.columns
-        : editingFeature.column
-          ? [editingFeature.column]
-          : [];
-      
       setFormData({
         name: editingFeature.name,
         price: editingFeature.price.toString(),
@@ -60,7 +52,6 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         thumbnailUrl: editingFeature.thumbnailUrl || '',
         videoUrl: editingFeature.videoUrl || '',
         column: editingFeature.column?.toString() || '',
-        columns,
         connector: editingFeature.connector || 'AND',
         publishToAlaCarte: editingFeature.publishToAlaCarte || false,
         alaCartePrice: editingFeature.alaCartePrice?.toString() || '',
@@ -80,23 +71,6 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-  };
-  
-  const handleColumnCheckbox = (columnNum: number, checked: boolean) => {
-    setFormData(prev => {
-      const newColumns = checked
-        ? [...prev.columns, columnNum].sort()
-        : prev.columns.filter(c => c !== columnNum);
-      
-      // Keep legacy column in sync with first item in columns array for backward compatibility
-      const newColumn = newColumns.length > 0 ? (newColumns[0]?.toString() ?? '') : '';
-      
-      return {
-        ...prev,
-        columns: newColumns,
-        column: newColumn,
-      };
-    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -129,18 +103,8 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             ...(formData.publishToAlaCarte && { alaCarteIsNew: formData.alaCarteIsNew }),
         };
 
-        // Add multi-column assignment if any columns selected
-        if (formData.columns.length > 0) {
-            featureData.columns = formData.columns;
-            // Keep legacy column field in sync for backward compatibility
-            featureData.column = formData.columns[0];
-            // Initialize positionsByColumn (will be set by admin panel drag-and-drop)
-            featureData.positionsByColumn = {};
-            for (const col of formData.columns) {
-              featureData.positionsByColumn[col] = 0;
-            }
-        } else if (formData.column) {
-            // Legacy single column (for backward compatibility)
+        // Add column if valid
+        if (formData.column) {
             const parsedColumn = parseInt(formData.column);
             if (!isNaN(parsedColumn)) {
                 featureData.column = parsedColumn;
@@ -263,48 +227,20 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                 />
             </FormRow>
             <FormRow>
-                <Label htmlFor="columns" text="Package Tiers / Columns" helpText="Select one or more tiers where this feature should appear" />
-                <div className="md:col-span-2 space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={formData.columns.includes(1)}
-                            onChange={(e) => handleColumnCheckbox(1, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-200">Column 1 - Elite Tier</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={formData.columns.includes(2)}
-                            onChange={(e) => handleColumnCheckbox(2, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-200">Column 2 - Platinum Tier</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={formData.columns.includes(3)}
-                            onChange={(e) => handleColumnCheckbox(3, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-200">Column 3 - Gold Tier</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={formData.columns.includes(4)}
-                            onChange={(e) => handleColumnCheckbox(4, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-200">Column 4 - Popular Add-ons</span>
-                    </label>
-                    {formData.columns.length === 0 && (
-                        <p className="text-xs text-gray-400 italic">No columns selected - feature will be unassigned</p>
-                    )}
-                </div>
+                <Label htmlFor="column" text="Display Column" helpText="Package tier organization" />
+                <select
+                    id="column"
+                    name="column"
+                    value={formData.column}
+                    onChange={handleChange}
+                    className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
+                >
+                    <option value="">No Column Assignment</option>
+                    <option value="1">Column 1 - Gold Package</option>
+                    <option value="2">Column 2 - Elite Package</option>
+                    <option value="3">Column 3 - Platinum Package</option>
+                    <option value="4">Column 4 - Popular Add-ons</option>
+                </select>
             </FormRow>
             <FormRow>
                 <Label htmlFor="connector" text="Feature Connector" helpText="Connector displayed before this feature" />

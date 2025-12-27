@@ -76,23 +76,9 @@ export function groupItemsByColumn<T extends OrderableItem>(items: T[]): Grouped
   };
   
   for (const item of items) {
-    let assigned = false;
-    
-    // Check new multi-column format first
-    if (item.columns && item.columns.length > 0) {
-      for (const col of item.columns) {
-        if (col === 1 || col === 2 || col === 3 || col === 4) {
-          grouped[col].push(item);
-          assigned = true;
-        }
-      }
-    } else if (item.column === 1 || item.column === 2 || item.column === 3 || item.column === 4) {
-      // Fall back to legacy single column
+    if (item.column === 1 || item.column === 2 || item.column === 3 || item.column === 4) {
       grouped[item.column].push(item);
-      assigned = true;
-    }
-    
-    if (!assigned) {
+    } else {
       grouped.unassigned.push(item);
     }
   }
@@ -146,23 +132,23 @@ export function normalizeGroupedPositions(grouped: GroupedFeatures): GroupedFeat
 }
 
 /**
- * Get the single column number for a tier (1:1 mapping for backwards compatibility).
+ * Get the single column number for a tier (1:1 mapping - strict, no inheritance).
  * Returns null for unknown tiers.
  * 
  * Column mapping:
- * - Elite = Column 1
- * - Platinum = Column 2
- * - Gold = Column 3
+ * - Gold = Column 1
+ * - Elite = Column 2
+ * - Platinum = Column 3
  */
 export function getTierColumn(tier: string): number | null {
   const normalized = tier.toLowerCase();
   
   switch (normalized) {
-    case 'elite':
-      return 1;
-    case 'platinum':
-      return 2;
     case 'gold':
+      return 1;
+    case 'elite':
+      return 2;
+    case 'platinum':
       return 3;
     default:
       return null;
@@ -172,9 +158,9 @@ export function getTierColumn(tier: string): number | null {
 /**
  * Strict tier mapping (no inheritance).
  *
- * - Elite:    [1]
- * - Platinum: [2]
- * - Gold:     [3]
+ * - Gold:     [1]
+ * - Elite:    [2]
+ * - Platinum: [3]
  *
  * Column 4 is "Popular Add-ons" and not part of any tier package.
  */
@@ -182,11 +168,11 @@ export function getTierColumns(tier: string): number[] {
   const normalized = tier.toLowerCase();
   
   switch (normalized) {
-    case 'elite':
-      return [1];
-    case 'platinum':
-      return [2];
     case 'gold':
+      return [1];
+    case 'elite':
+      return [2];
+    case 'platinum':
       return [3];
     default:
       return [];
@@ -194,34 +180,12 @@ export function getTierColumns(tier: string): number[] {
 }
 
 /**
- * Checks if a feature belongs to a specific column.
- * Supports both legacy single column and new multi-column assignment.
- * 
- * @param feature - Feature to check
- * @param columnNum - Column number to check
- * @returns true if feature belongs to the column
- */
-export function featureBelongsToColumn(
-  feature: ProductFeature,
-  columnNum: number
-): boolean {
-  // Check new multi-column format first
-  if (feature.columns && feature.columns.length > 0) {
-    return feature.columns.includes(columnNum);
-  }
-  
-  // Fall back to legacy single column
-  return feature.column === columnNum;
-}
-
-/**
  * Derives the feature list for a tier using strict per-column mapping (no inheritance).
  *
- * - Elite: column 1 only
- * - Platinum: column 2 only
- * - Gold: column 3 only
+ * - Gold: column 1 only
+ * - Elite: column 2 only
+ * - Platinum: column 3 only
  *
- * Supports both legacy single column and new multi-column assignment.
  * Features are ordered by column and position. Duplicates within the same column are removed (case-insensitive by name), keeping first occurrence.
  */
 export function deriveTierFeatures(
@@ -236,24 +200,15 @@ export function deriveTierFeatures(
   
   const columnSet = new Set(columns);
   const columnFeatures = features
-    .filter(f => {
-      // Check if feature belongs to any of the tier's columns
-      for (const col of columnSet) {
-        if (featureBelongsToColumn(f, col)) {
-          return true;
-        }
-      }
-      return false;
-    })
+    .filter(f => f.column !== undefined && columnSet.has(f.column))
     .sort(compareFeatures);
 
-  // Deduplicate by name (case-insensitive) within this tier, keeping first occurrence
-  // For multi-column features, we want them to appear once per tier even if they span multiple columns in that tier
+  // Deduplicate by column + name (case-insensitive), keeping first occurrence
   const seen = new Set<string>();
   const deduped: ProductFeature[] = [];
   
   for (const feature of columnFeatures) {
-    const key = feature.name.trim().toLowerCase();
+    const key = `${feature.column ?? 'unassigned'}::${feature.name.trim().toLowerCase()}`;
     if (!seen.has(key)) {
       seen.add(key);
       deduped.push({ ...feature });
@@ -265,10 +220,9 @@ export function deriveTierFeatures(
 
 /**
  * Get popular add-ons (column 4 features).
- * Supports both legacy single column and new multi-column assignment.
  */
 export function getPopularAddons(features: ProductFeature[]): ProductFeature[] {
   return features
-    .filter(f => featureBelongsToColumn(f, 4))
+    .filter(f => f.column === 4)
     .sort(compareFeatures);
 }

@@ -38,11 +38,11 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration - display order: Elite → Platinum → Gold, with Popular last
+// Column configuration - strict 1:1 mapping (Gold=1, Elite=2, Platinum=3)
 const COLUMNS = [
-  { num: 1, label: 'Elite Package' },
-  { num: 2, label: 'Platinum Package' },
-  { num: 3, label: 'Gold Package' },
+  { num: 1, label: 'Gold Package' },
+  { num: 2, label: 'Elite Package' },
+  { num: 3, label: 'Platinum Package' },
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
 

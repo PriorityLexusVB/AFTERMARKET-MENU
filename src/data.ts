@@ -20,54 +20,6 @@ function getBooleanEnvVar(varName: string, defaultValue: boolean): boolean {
   return normalized === 'true' || normalized === '1';
 }
 
-/**
- * Normalizes legacy column/position fields to new columns/positionsByColumn format.
- * Ensures backward compatibility with existing Firestore documents.
- * 
- * Migration strategy:
- * - If columns exists, use it
- * - If only column exists, convert to columns array
- * - If positionsByColumn exists, use it
- * - If only position exists with column, create positionsByColumn entry
- * 
- * @param item - Item with potential legacy fields
- * @returns Normalized item with both legacy and new fields
- */
-function normalizeColumnAssignment<T extends { column?: number; position?: number; columns?: number[]; positionsByColumn?: Record<number, number> }>(
-  item: T
-): T {
-  const normalized = { ...item };
-  
-  // Normalize columns array
-  if (!normalized.columns || normalized.columns.length === 0) {
-    if (normalized.column !== undefined) {
-      // Legacy single column: convert to array
-      normalized.columns = [normalized.column];
-    }
-  }
-  
-  // Normalize positionsByColumn
-  if (!normalized.positionsByColumn || Object.keys(normalized.positionsByColumn).length === 0) {
-    if (normalized.position !== undefined && normalized.column !== undefined) {
-      // Legacy single position: convert to per-column position
-      normalized.positionsByColumn = { [normalized.column]: normalized.position };
-    }
-  }
-  
-  // For backward compatibility, keep column/position in sync with first entry in columns/positionsByColumn
-  if (normalized.columns && normalized.columns.length > 0 && !normalized.column) {
-    normalized.column = normalized.columns[0];
-  }
-  if (normalized.positionsByColumn && normalized.columns && normalized.columns.length > 0 && normalized.position === undefined) {
-    const firstColumn = normalized.columns[0];
-    if (firstColumn !== undefined && normalized.positionsByColumn[firstColumn] !== undefined) {
-      normalized.position = normalized.positionsByColumn[firstColumn];
-    }
-  }
-  
-  return normalized;
-}
-
 // Maximum batch size for Firestore (limit is 500)
 const FIRESTORE_BATCH_LIMIT = 500;
 
@@ -114,18 +66,14 @@ export async function fetchAllData(): Promise<FetchDataResult> {
 
     // Fetch and validate features with Zod
     const rawFeatures = featuresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const validatedFeatures = validateDataArray(ProductFeatureSchema, rawFeatures, 'features');
-    // Normalize to support both legacy and new column assignment fields
-    const features: ProductFeature[] = validatedFeatures.map(normalizeColumnAssignment);
+    const features: ProductFeature[] = validateDataArray(ProductFeatureSchema, rawFeatures, 'features');
 
     // Fetch and validate a la carte options with Zod
     const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const validatedAlaCarteOptions = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
-    // Normalize to support both legacy and new column assignment fields
-    const alaCarteOptions: AlaCarteOption[] = validatedAlaCarteOptions.map(normalizeColumnAssignment);
+    const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
 
-    // Check if featureIds fallback is allowed (default: true for backward compatibility)
-    const allowFeatureIdsFallback = getBooleanEnvVar('VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK', true);
+    // Check if featureIds fallback is allowed (default: false - strict mapping enforced)
+    const allowFeatureIdsFallback = import.meta.env.VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK === 'true';
 
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;
@@ -136,25 +84,19 @@ export async function fetchAllData(): Promise<FetchDataResult> {
         // Handle fallback to featureIds if derived list is empty
         if (derivedFeatures.length === 0 && Array.isArray(data.featureIds) && data.featureIds.length > 0) {
           if (allowFeatureIdsFallback) {
-            // Fallback is allowed: use featureIds but emit loud warning
+            // Fallback is allowed (debug mode): use featureIds but emit loud warning
             derivedFeatures = data.featureIds
               .map(id => features.find(f => f.id === id))
               .filter((f): f is ProductFeature => Boolean(f));
             
             console.warn(
               `⚠️ PACKAGE FALLBACK WARNING: Package "${data.name}" (doc ID: ${doc.id}) has empty column-derived features but is using featureIds fallback (${data.featureIds.length} feature IDs). ` +
-              `This fallback will be deprecated. Please assign features to the correct column in Admin/Product Hub. ` +
-              `To disable fallback and enforce strict mapping, set VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=false`
-            );
-          } else {
-            // Fallback is disabled: keep empty and emit error
-            console.error(
-              `❌ PACKAGE CONFIGURATION ERROR: Package "${data.name}" (doc ID: ${doc.id}) has no features assigned to its column but featureIds fallback is disabled. ` +
-              `The package will be empty on the customer-facing UI. ` +
-              `To fix: Go to Admin > Package Features and assign features to the proper column (Elite=Column 1, Platinum=Column 2, Gold=Column 3). ` +
-              `Or enable fallback temporarily with VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=true`
+              `This fallback is deprecated. Please assign features to the correct column in Admin/Product Hub. ` +
+              `To disable fallback and enforce strict mapping, set VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=false or remove the env var.`
             );
           }
+          // When fallback is disabled (default), keep empty - no error logging
+          // The package will simply have no features, which is the expected behavior for strict mapping
         }
         
         const pkg: PackageTier = {
@@ -235,12 +177,8 @@ export async function updateFeature(featureId: string, featureData: Partial<Omit
  */
 export interface FeaturePositionUpdate {
   id: string;
-  // Legacy single column/position (for backward compatibility)
-  position?: number;
+  position: number;
   column?: number;
-  // New multi-column assignment
-  columns?: number[];
-  positionsByColumn?: Record<number, number>;
   connector?: 'AND' | 'OR';
 }
 
@@ -286,27 +224,11 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
         
         for (const feature of chunk) {
           const featureRef = doc(db, 'features', feature.id);
-          const updateData: Record<string, unknown> = {};
-          
-          // Write legacy fields for backward compatibility
-          if (feature.position !== undefined) {
-            updateData.position = feature.position;
-          }
-          if (feature.column !== undefined) {
-            updateData.column = feature.column;
-          }
-          
-          // Write new multi-column fields
-          if (feature.columns !== undefined) {
-            updateData.columns = feature.columns;
-          }
-          if (feature.positionsByColumn !== undefined) {
-            updateData.positionsByColumn = feature.positionsByColumn;
-          }
-          
-          if (feature.connector !== undefined) {
-            updateData.connector = feature.connector;
-          }
+          const updateData = {
+            position: feature.position,
+            ...(feature.column !== undefined && { column: feature.column }),
+            ...(feature.connector !== undefined && { connector: feature.connector }),
+          };
           
           batch.update(featureRef, updateData);
         }
@@ -373,12 +295,8 @@ export async function updateAlaCarteOption(optionId: string, optionData: Partial
  */
 export interface AlaCartePositionUpdate {
   id: string;
-  // Legacy single column/position (for backward compatibility)
-  position?: number;
+  position: number;
   column?: number;
-  // New multi-column assignment
-  columns?: number[];
-  positionsByColumn?: Record<number, number>;
   connector?: 'AND' | 'OR';
 }
 
@@ -417,27 +335,11 @@ export async function batchUpdateAlaCartePositions(options: AlaCartePositionUpda
         
         for (const option of chunk) {
           const optionRef = doc(db, 'ala_carte_options', option.id);
-          const updateData: Record<string, unknown> = {};
-          
-          // Write legacy fields for backward compatibility
-          if (option.position !== undefined) {
-            updateData.position = option.position;
-          }
-          if (option.column !== undefined) {
-            updateData.column = option.column;
-          }
-          
-          // Write new multi-column fields
-          if (option.columns !== undefined) {
-            updateData.columns = option.columns;
-          }
-          if (option.positionsByColumn !== undefined) {
-            updateData.positionsByColumn = option.positionsByColumn;
-          }
-          
-          if (option.connector !== undefined) {
-            updateData.connector = option.connector;
-          }
+          const updateData = {
+            position: option.position,
+            ...(option.column !== undefined && { column: option.column }),
+            ...(option.connector !== undefined && { connector: option.connector }),
+          };
           
           batch.update(optionRef, updateData);
         }

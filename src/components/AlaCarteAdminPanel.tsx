@@ -295,15 +295,25 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
 
-    const activeLane = featuredOptions.some((o) => o.id === activeIdStr) ? 'featured' : 'published';
+    const activeInFeatured = featuredOptions.some((o) => o.id === activeIdStr);
+    const activeInPublished = publishedOptions.some((o) => o.id === activeIdStr);
+    if (!activeInFeatured && !activeInPublished) {
+      return;
+    }
+    const activeLane = activeInFeatured ? 'featured' : 'published';
+
     const overLane =
       overIdStr === 'lane-featured'
         ? 'featured'
         : overIdStr === 'lane-published'
           ? 'published'
-          : featuredOptions.some((o) => o.id === overIdStr)
-            ? 'featured'
-            : 'published';
+          : (() => {
+              const overInFeatured = featuredOptions.some((o) => o.id === overIdStr);
+              const overInPublished = publishedOptions.some((o) => o.id === overIdStr);
+              if (!overInFeatured && !overInPublished) return null;
+              return overInFeatured ? 'featured' : 'published';
+            })();
+    if (!overLane) return;
 
     const sourceList = activeLane === 'featured' ? featuredOptions : publishedOptions;
     const targetList = overLane === 'featured' ? featuredOptions : publishedOptions;
@@ -342,7 +352,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       nextPublished = overLane === 'published' ? targetWithInsert : prunedSource;
     }
 
-    setOptionsBackup([...options]);
     await applyLaneUpdates(
       nextFeatured.map((option, index) => ({ ...option, position: index })),
       nextPublished.map((option, index) => ({ ...option, position: index }))
@@ -372,7 +381,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
         reordered.map((option, index) => ({
           ...option,
           position: index,
-          column: option.column === FEATURED_COLUMN.num ? undefined : option.column,
+          column: option.column === undefined ? undefined : option.column,
         }))
       );
     }

@@ -20,6 +20,54 @@ function getBooleanEnvVar(varName: string, defaultValue: boolean): boolean {
   return normalized === 'true' || normalized === '1';
 }
 
+/**
+ * Normalizes legacy column/position fields to new columns/positionsByColumn format.
+ * Ensures backward compatibility with existing Firestore documents.
+ * 
+ * Migration strategy:
+ * - If columns exists, use it
+ * - If only column exists, convert to columns array
+ * - If positionsByColumn exists, use it
+ * - If only position exists with column, create positionsByColumn entry
+ * 
+ * @param item - Item with potential legacy fields
+ * @returns Normalized item with both legacy and new fields
+ */
+function normalizeColumnAssignment<T extends { column?: number; position?: number; columns?: number[]; positionsByColumn?: Record<number, number> }>(
+  item: T
+): T {
+  const normalized = { ...item };
+  
+  // Normalize columns array
+  if (!normalized.columns || normalized.columns.length === 0) {
+    if (normalized.column !== undefined) {
+      // Legacy single column: convert to array
+      normalized.columns = [normalized.column];
+    }
+  }
+  
+  // Normalize positionsByColumn
+  if (!normalized.positionsByColumn || Object.keys(normalized.positionsByColumn).length === 0) {
+    if (normalized.position !== undefined && normalized.column !== undefined) {
+      // Legacy single position: convert to per-column position
+      normalized.positionsByColumn = { [normalized.column]: normalized.position };
+    }
+  }
+  
+  // For backward compatibility, keep column/position in sync with first entry in columns/positionsByColumn
+  if (normalized.columns && normalized.columns.length > 0 && !normalized.column) {
+    normalized.column = normalized.columns[0];
+  }
+  if (normalized.positionsByColumn && normalized.columns && normalized.columns.length > 0 && normalized.position === undefined) {
+    const firstColumn = normalized.columns[0];
+    if (firstColumn !== undefined && normalized.positionsByColumn[firstColumn] !== undefined) {
+      normalized.position = normalized.positionsByColumn[firstColumn];
+    }
+  }
+  
+  return normalized;
+}
+
 // Maximum batch size for Firestore (limit is 500)
 const FIRESTORE_BATCH_LIMIT = 500;
 
@@ -66,11 +114,15 @@ export async function fetchAllData(): Promise<FetchDataResult> {
 
     // Fetch and validate features with Zod
     const rawFeatures = featuresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const features: ProductFeature[] = validateDataArray(ProductFeatureSchema, rawFeatures, 'features');
+    const validatedFeatures = validateDataArray(ProductFeatureSchema, rawFeatures, 'features');
+    // Normalize to support both legacy and new column assignment fields
+    const features: ProductFeature[] = validatedFeatures.map(normalizeColumnAssignment);
 
     // Fetch and validate a la carte options with Zod
     const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
+    const validatedAlaCarteOptions = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
+    // Normalize to support both legacy and new column assignment fields
+    const alaCarteOptions: AlaCarteOption[] = validatedAlaCarteOptions.map(normalizeColumnAssignment);
 
     // Check if featureIds fallback is allowed (default: true for backward compatibility)
     const allowFeatureIdsFallback = getBooleanEnvVar('VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK', true);

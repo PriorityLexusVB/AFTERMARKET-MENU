@@ -20,6 +20,7 @@ const initialFormState = {
   thumbnailUrl: '',
   videoUrl: '',
   column: '',
+  columns: [] as number[],
   connector: 'AND' as FeatureConnector,
   isNew: false,
 };
@@ -35,6 +36,13 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
   // Populate form when editing
   useEffect(() => {
     if (editingOption) {
+      // Normalize to use columns array (support both legacy and new format)
+      const columns = editingOption.columns && editingOption.columns.length > 0
+        ? editingOption.columns
+        : editingOption.column
+          ? [editingOption.column]
+          : [];
+      
       setFormData({
         name: editingOption.name,
         price: editingOption.price.toString(),
@@ -47,6 +55,7 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
         thumbnailUrl: editingOption.thumbnailUrl || '',
         videoUrl: editingOption.videoUrl || '',
         column: editingOption.column?.toString() || '',
+        columns,
         connector: editingOption.connector || 'AND',
         isNew: editingOption.isNew || false,
       });
@@ -63,6 +72,23 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+  
+  const handleColumnCheckbox = (columnNum: number, checked: boolean) => {
+    setFormData(prev => {
+      const newColumns = checked
+        ? [...prev.columns, columnNum].sort()
+        : prev.columns.filter(c => c !== columnNum);
+      
+      // Keep legacy column in sync with first item in columns array for backward compatibility
+      const newColumn = newColumns.length > 0 ? newColumns[0]!.toString() : '';
+      
+      return {
+        ...prev,
+        columns: newColumns,
+        column: newColumn,
+      };
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -92,8 +118,18 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
         ...(formData.isNew && { isNew: formData.isNew }),
       };
 
-      // Add column if valid
-      if (formData.column) {
+      // Add multi-column assignment if any columns selected
+      if (formData.columns.length > 0) {
+        optionData.columns = formData.columns;
+        // Keep legacy column field in sync for backward compatibility
+        optionData.column = formData.columns[0];
+        // Initialize positionsByColumn (will be set by admin panel drag-and-drop)
+        optionData.positionsByColumn = {};
+        for (const col of formData.columns) {
+          optionData.positionsByColumn[col] = 0;
+        }
+      } else if (formData.column) {
+        // Legacy single column (for backward compatibility)
         const parsedColumn = parseInt(formData.column);
         if (!isNaN(parsedColumn)) {
           optionData.column = parsedColumn;
@@ -253,22 +289,50 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="column" className="block text-sm font-semibold text-gray-300 mb-1">
-              Column Assignment
+            <label className="block text-sm font-semibold text-gray-300 mb-1">
+              Package Tiers / Columns
             </label>
-            <select
-              id="column"
-              name="column"
-              value={formData.column}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
-            >
-              <option value="">Unassigned</option>
-              <option value="1">Column 1 (Elite Tier)</option>
-              <option value="2">Column 2 (Platinum Tier)</option>
-              <option value="3">Column 3 (Gold Tier)</option>
-              <option value="4">Column 4 (Popular Add-ons)</option>
-            </select>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.columns.includes(1)}
+                  onChange={(e) => handleColumnCheckbox(1, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-200">Column 1 - Elite Tier</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.columns.includes(2)}
+                  onChange={(e) => handleColumnCheckbox(2, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-200">Column 2 - Platinum Tier</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.columns.includes(3)}
+                  onChange={(e) => handleColumnCheckbox(3, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-200">Column 3 - Gold Tier</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.columns.includes(4)}
+                  onChange={(e) => handleColumnCheckbox(4, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-200">Column 4 - Popular Add-ons</span>
+              </label>
+              {formData.columns.length === 0 && (
+                <p className="text-xs text-gray-400 italic">No columns selected - option will be unassigned</p>
+              )}
+            </div>
           </div>
 
           <div>

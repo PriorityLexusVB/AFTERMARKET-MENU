@@ -72,7 +72,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
     const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
 
-    // Check if featureIds fallback is allowed (default: false - strict mapping enforced)
+    // Check if featureIds fallback is allowed (default: false - no fallback when env var is undefined or not 'true')
     const allowFeatureIdsFallback = import.meta.env.VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK === 'true';
 
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {

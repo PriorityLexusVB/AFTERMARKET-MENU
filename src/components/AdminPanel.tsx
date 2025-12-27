@@ -38,7 +38,8 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration - strict 1:1 mapping (Gold=1, Elite=2, Platinum=3)
+// Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
+// Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
 const COLUMNS = [
   { num: 1, label: 'Gold Package' },
   { num: 2, label: 'Elite Package' },

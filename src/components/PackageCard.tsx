@@ -51,36 +51,43 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
         )}
       </div>
 
-      <div className="p-6 lg:p-7 pt-2 space-y-3 overflow-y-auto">
-        {includedPackageFeatures.map((feature, index) => {
-          let divider = null;
-          // Add a divider before every feature except the first one
-          if (index > 0) {
-            // Use the connector from the current feature (it indicates how this feature connects to the previous one)
-            // Default to 'AND' if not specified
-            const connector = feature.connector || 'AND';
-            divider = <Divider text={connector} />;
-          }
+      {/* Features section with scroll affordance */}
+      <div className="relative">
+        <div className="p-6 lg:p-7 pt-2 space-y-3 overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          {includedPackageFeatures.map((feature, index) => {
+            let divider = null;
+            // Add a divider before every feature except the first one
+            if (index > 0) {
+              // Use the connector from the current feature (it indicates how this feature connects to the previous one)
+              // Default to 'AND' if not specified
+              const connector = feature.connector || 'AND';
+              divider = <Divider text={connector} />;
+            }
 
-          return (
-            <div key={feature.id}>
-              {divider}
-              <div className="text-center mt-3">
-                  <button
-                    onClick={() => onViewFeature(feature)}
-                    className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"
-                    aria-label={`Learn more about ${feature.name}`}
-                    data-testid="package-feature"
-                  >
-                    {feature.name}
-                  </button>
-                  <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
-                      {feature.points.map(p => <li key={p}>*{p}</li>)}
-                  </ul>
+            return (
+              <div key={feature.id}>
+                {divider}
+                <div className="text-center mt-3">
+                    <button
+                      onClick={() => onViewFeature(feature)}
+                      className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"
+                      aria-label={`Learn more about ${feature.name}`}
+                      data-testid="package-feature"
+                    >
+                      {feature.name}
+                    </button>
+                    <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
+                        {feature.points.map(p => <li key={p}>*{p}</li>)}
+                    </ul>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        {/* Gradient fade indicator for scrollable content */}
+        {includedPackageFeatures.length > 3 && (
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-lux-bg1 to-transparent pointer-events-none" />
+        )}
       </div>
       
       <div className="p-5 lg:p-6 space-y-3">

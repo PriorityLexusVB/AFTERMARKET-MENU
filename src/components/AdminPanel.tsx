@@ -92,11 +92,17 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2 flex-1">
+          {/* Position indicator badge - more prominent */}
+          {feature.position !== undefined && (
+            <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-gray-900 bg-blue-400 rounded-full flex-shrink-0">
+              {feature.position + 1}
+            </span>
+          )}
           {/* Drag handle */}
           <button
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1 -ml-1"
+            className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1"
             title="Drag to reorder or move between columns"
             aria-label={`Drag ${feature.name} to reorder or move between columns`}
           >
@@ -160,9 +166,6 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
         >
           {connector}
         </button>
-        {feature.position !== undefined && (
-          <span className="text-xs text-gray-500">#{feature.position + 1}</span>
-        )}
       </div>
     </div>
   );
@@ -360,6 +363,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const featuresByColumn = useMemo(() => {
     return groupFeaturesByColumn(features);
   }, [features]);
+
+  // Count unassigned features for the tab badge
+  const unassignedCount = useMemo(() => {
+    return featuresByColumn.unassigned.length;
+  }, [featuresByColumn]);
 
   // Get the active feature being dragged
   const activeFeature = useMemo(() => {
@@ -640,10 +648,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   // Render a column's sortable list with droppable zone
   const renderColumnFeatures = (columnFeatures: ProductFeature[], columnId: number | 'unassigned') => {
+    // Get a helpful empty state message for each column
+    const getEmptyMessage = (): string => {
+      if (columnId === 1) return 'No Elite features yet - drag items here from unassigned or other columns';
+      if (columnId === 2) return 'No Platinum features yet - drag items here from unassigned or other columns';
+      if (columnId === 3) return 'No Gold features yet - drag items here from unassigned or other columns';
+      if (columnId === 4) return 'No Popular Add-ons yet - drag featured items here';
+      return 'Drop items here to assign them';
+    };
+
     return (
       <DroppableColumn columnId={columnId}>
         {columnFeatures.length === 0 ? (
-          <p className="text-gray-500 text-sm italic p-2">Drop items here to add to this column</p>
+          <p className="text-gray-500 text-sm italic p-2">{getEmptyMessage()}</p>
         ) : (
           <SortableContext
             items={columnFeatures.map(f => f.id)}
@@ -687,6 +704,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               }`}
             >
               Package Features
+              {!isLoading && features.length > 0 && (
+                <span className={`ml-2 text-sm ${activeTab === 'features' ? 'text-blue-300' : 'text-gray-500'}`}>
+                  ({features.length}{unassignedCount > 0 ? `, ${unassignedCount} unassigned` : ''})
+                </span>
+              )}
             </button>
             <button
               onClick={() => handleTabChange('alacarte')}
@@ -782,15 +804,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-xl font-teko tracking-wider text-gray-300">Features by Column</h4>
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-400">
+              <label className="flex items-center gap-3 text-sm cursor-pointer bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 hover:bg-gray-900 transition-colors">
                 <input
                   type="checkbox"
                   checked={showUnassigned}
                   onChange={(e) => setShowUnassigned(e.target.checked)}
-                  className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
+                  className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-800"
                   aria-label="Show unassigned features"
                 />
-                Show unassigned
+                <span className="font-medium text-gray-300">
+                  Show unassigned
+                  {unassignedCount > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-yellow-900 bg-yellow-400 rounded-full">
+                      {unassignedCount}
+                    </span>
+                  )}
+                </span>
               </label>
               <p className="text-sm text-gray-500">Drag to reorder or move between columns • Click AND/OR to toggle</p>
             </div>
@@ -812,8 +841,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {COLUMNS.map(({ num, label }) => (
-                        <div key={num} className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid={`column-${num}`}>
-                          <h5 className="text-lg font-semibold text-blue-400 mb-3 font-teko tracking-wider">
+                        <div 
+                          key={num} 
+                          className={`p-4 rounded-lg border ${
+                            num === 4 
+                              ? 'bg-purple-900/10 border-purple-700/50' 
+                              : 'bg-gray-900/30 border-gray-700'
+                          }`}
+                          data-testid={`column-${num}`}
+                        >
+                          <h5 className={`text-lg font-semibold mb-3 font-teko tracking-wider ${
+                            num === 4 ? 'text-purple-400' : 'text-blue-400'
+                          }`}>
                             Column {num}: {label}
                           </h5>
                           {renderColumnFeatures(featuresByColumn[num], num)}

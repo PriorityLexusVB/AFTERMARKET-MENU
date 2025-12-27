@@ -81,7 +81,7 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
         : prev.columns.filter(c => c !== columnNum);
       
       // Keep legacy column in sync with first item in columns array for backward compatibility
-      const newColumn = newColumns.length > 0 ? newColumns[0]!.toString() : '';
+      const newColumn = newColumns.length > 0 ? (newColumns[0]?.toString() ?? '') : '';
       
       return {
         ...prev,

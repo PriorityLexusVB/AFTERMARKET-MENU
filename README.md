@@ -401,13 +401,6 @@ VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK="false"  # Strict mode, no fallback
 
 **Recommendation**: Keep fallback enabled during migration, then disable it once all packages have proper column assignments.
 
-#### Admin Diagnostics
-The Admin Panel provides visual warnings when package columns are empty:
-- A yellow banner appears on the "Package Features" tab
-- Lists which columns (Elite/Platinum/Gold) are empty
-- Explains the impact on customer-facing UI
-- Provides step-by-step guidance to fix the issue
-
 ### Guest View Rendering
 Changes made in the Admin Panel are immediately reflected in the guest view:
 - Features appear in their assigned column order

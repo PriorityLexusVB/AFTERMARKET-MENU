@@ -45,8 +45,15 @@ export const CompareModal: React.FC<CompareModalProps> = ({ isOpen, onClose, pac
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
   
-  // Create a stable sort order for packages based on price
-  const sortedPackages = [...packages].sort((a, b) => a.price - b.price);
+  // Create a stable sort order for packages: Elite → Platinum → Gold
+  const tierRank = (name: string) => {
+    const n = name.trim().toLowerCase();
+    if (/\belite\b/.test(n)) return 1;
+    if (/\bplatinum\b/.test(n)) return 2;
+    if (/\bgold\b/.test(n)) return 3;
+    return 99;
+  };
+  const sortedPackages = [...packages].sort((a, b) => tierRank(a.name) - tierRank(b.name));
 
   return (
     <div

@@ -32,7 +32,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const [packageLaneFilter, setPackageLaneFilter] = useState<'all' | '1' | '2' | '3' | 'none'>('all');
   const [publishFilter, setPublishFilter] = useState<'all' | 'published' | 'unpublished'>('all');
   const [featuredFilter, setFeaturedFilter] = useState<'all' | 'featured' | 'not-featured'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<'all' | '1' | '2' | '3' | 'unplaced'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | '1' | '2' | '3' | 'unplaced' | 'featured'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkWorking, setIsBulkWorking] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,10 +104,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       if (featuredFilter === 'featured' && !isFeatured) return false;
       if (featuredFilter === 'not-featured' && isFeatured) return false;
 
-      const categoryValue = isFeatured ? '4' : option?.column ? String(option.column) : 'unplaced';
+      const categoryValue = isFeatured ? 'featured' : option?.column ? String(option.column) : 'unplaced';
       if (categoryFilter !== 'all') {
         if (categoryFilter === 'unplaced' && categoryValue !== 'unplaced') return false;
-        if (categoryFilter !== 'unplaced' && categoryFilter !== categoryValue) return false;
+        if (categoryFilter === 'featured' && categoryValue !== 'featured') return false;
+        if (!['unplaced', 'featured'].includes(categoryFilter) && categoryFilter !== categoryValue) return false;
       }
 
       return true;
@@ -346,18 +347,55 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     setSelectedIds(new Set(filteredFeatures.map((f) => f.id)));
   };
 
-  const runBulkAction = async (action: (feature: ProductFeature) => Promise<void> | void) => {
-    if (selectedFeatures.length === 0) return;
+  const runBulkAction = async (
+    action: (feature: ProductFeature) => Promise<void> | void,
+    featuresToProcess: ProductFeature[] = selectedFeatures
+  ) => {
+    if (featuresToProcess.length === 0) return;
     setIsBulkWorking(true);
+    const failures: string[] = [];
     try {
-      await Promise.all(selectedFeatures.map((feature) => action(feature)));
+      await Promise.all(
+        featuresToProcess.map(async (feature) => {
+          try {
+            await action(feature);
+          } catch (err) {
+            console.error('Bulk action failed for feature', feature.id, err);
+            failures.push(feature.name);
+          }
+        })
+      );
+      if (failures.length > 0) {
+        setError(`Some items failed to update: ${failures.join(', ')}`);
+      } else {
+        setError(null);
+      }
     } finally {
       setIsBulkWorking(false);
     }
   };
 
-  const bulkPublishToggle = (publish: boolean) =>
-    runBulkAction((feature) => handlePublishToggle(feature, publish));
+  const bulkPublishToggle = (publish: boolean) => {
+    if (!publish) {
+      return runBulkAction((feature) => handlePublishToggle(feature, publish));
+    }
+    const priced = selectedFeatures.filter((feature) => {
+      const option = alaCarteMap.get(feature.id);
+      const price = option?.price ?? feature.alaCartePrice ?? feature.price;
+      return price !== undefined;
+    });
+    const missingPrice = selectedFeatures.filter((f) => !priced.includes(f));
+    if (priced.length === 0) {
+      setError('Selected items need an A La Carte price before publishing.');
+      return;
+    }
+    if (missingPrice.length > 0) {
+      setError('Some selected items are missing A La Carte prices and were skipped.');
+    } else {
+      setError(null);
+    }
+    return runBulkAction((feature) => handlePublishToggle(feature, publish), priced);
+  };
 
   const bulkSetFeatured = (featured: boolean) =>
     runBulkAction((feature) => {
@@ -374,6 +412,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       if (!isPublished) return;
       return handlePlacementUpdate(feature, column, undefined);
     });
+
+  const getCategoryLabel = (option?: AlaCarteOption) => {
+    if (!option) return 'Not placed';
+    if (option.column === 4) return 'Featured';
+    if (option.column) return columnLabels[option.column as 1 | 2 | 3] ?? 'Placed';
+    return 'Not placed';
+  };
 
   const renderPlacementControls = (feature: ProductFeature, option: AlaCarteOption | undefined) => {
     const column = option?.column;
@@ -495,16 +540,17 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           </select>
         </label>
         <label className="flex items-center gap-2">
-          <span className="text-gray-400">Category</span>
+          <span className="text-gray-400">A La Carte Category</span>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
+            <option value="featured">Featured</option>
+            <option value="1">Column 1 (Gold)</option>
+            <option value="2">Column 2 (Elite)</option>
+            <option value="3">Column 3 (Platinum)</option>
             <option value="unplaced">Not placed</option>
           </select>
         </label>
@@ -517,6 +563,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             ref={bulkSelectRef}
             checked={allFilteredSelected}
             onChange={(e) => handleSelectAll(e.target.checked)}
+            aria-label="Select all filtered products"
           />
           <span className="text-gray-300">
             {selectedIds.size} selected
@@ -527,6 +574,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           className="px-2 py-1 rounded bg-green-600 text-white disabled:opacity-50"
           onClick={() => bulkPublishToggle(true)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-label="Publish selected items"
         >
           Publish
         </button>
@@ -534,6 +583,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
           onClick={() => bulkPublishToggle(false)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-label="Unpublish selected items"
         >
           Unpublish
         </button>
@@ -541,6 +592,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           className="px-2 py-1 rounded bg-blue-700 text-white disabled:opacity-50"
           onClick={() => bulkSetFeatured(true)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-label="Mark selected items as featured"
         >
           Set Featured
         </button>
@@ -548,6 +601,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
           onClick={() => bulkSetFeatured(false)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
+          aria-label="Remove featured from selected items"
         >
           Remove Featured
         </button>
@@ -555,6 +610,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           Category:
           <select
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+            aria-label="Set A La Carte category for selected items"
             onChange={(e) => {
               const val = e.target.value;
               if (!val) return;
@@ -614,12 +670,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
               const isNew = feature.alaCarteIsNew ?? option?.isNew ?? false;
               const isFeatured = option?.column === 4;
               const laneLabel = feature.column ? columnLabels[feature.column as 1 | 2 | 3] ?? 'Not in packages' : 'Not in packages';
-              const categoryLabel =
-                isFeatured && option
-                  ? 'Featured'
-                  : option?.column
-                    ? columnLabels[option.column as 1 | 2 | 3] ?? 'Placed'
-                    : 'Not placed';
+              const categoryLabel = getCategoryLabel(option);
               const positionLabel =
                 option?.position !== undefined ? `Position ${option.position}` : 'Position —';
               return (

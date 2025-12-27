@@ -236,9 +236,9 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                     className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
                 >
                     <option value="">No Column Assignment</option>
-                    <option value="1">Column 1 - Gold Tier</option>
-                    <option value="2">Column 2 - Elite Tier</option>
-                    <option value="3">Column 3 - Platinum Tier</option>
+                    <option value="1">Column 1 - Elite Tier</option>
+                    <option value="2">Column 2 - Platinum Tier</option>
+                    <option value="3">Column 3 - Gold Tier</option>
                     <option value="4">Column 4 - Popular Add-ons</option>
                 </select>
             </FormRow>

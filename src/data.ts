@@ -99,7 +99,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
             console.error(
               `❌ PACKAGE CONFIGURATION ERROR: Package "${data.name}" (doc ID: ${doc.id}) has no features assigned to its column but featureIds fallback is disabled. ` +
               `The package will be empty on the customer-facing UI. ` +
-              `To fix: Go to Admin > Package Features and assign features to the proper column (Gold=Column 1, Elite=Column 2, Platinum=Column 3). ` +
+              `To fix: Go to Admin > Package Features and assign features to the proper column (Elite=Column 1, Platinum=Column 2, Gold=Column 3). ` +
               `Or enable fallback temporarily with VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=true`
             );
           }

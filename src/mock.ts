@@ -3,27 +3,27 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
-// Column assignments for admin organization (ladder/inheritance model):
-// - Column 1 = Gold Base (included in ALL packages)
-// - Column 3 = Platinum Additions (included in Platinum and Elite)
-// - Column 2 = Elite Additions (included in Elite only)
+// Column assignments for admin organization (strict per-tier model):
+// - Column 1 = Elite Base (included in Elite package only)
+// - Column 2 = Platinum Additions (included in Platinum package only)
+// - Column 3 = Gold Additions (included in Gold package only)
 // - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
 //
 // Package composition:
-// - Gold:     Gets Column 1 (Gold Base)
-// - Platinum: Gets Column 1 + Column 3 (Gold Base + Platinum Additions)
-// - Elite:    Gets Column 1 + Column 3 + Column 2 (Gold Base + Platinum Additions + Elite Additions)
+// - Elite:    Gets Column 1 (Elite Base)
+// - Platinum: Gets Column 2 (Platinum Additions)
+// - Gold:     Gets Column 3 (Gold Additions)
 //
 // Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
 //
 // This mock data provides features for all three tiers:
-// - Gold has 3 features (Column 1)
-// - Elite has 3 features (Column 2)
-// - Platinum has 3 features (Column 3)
+// - Elite has 3 features (Column 1)
+// - Platinum has 3 features (Column 2)
+// - Gold has 3 features (Column 3)
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
-  // Gold Base features (Column 1) - included in ALL packages
+  // Elite Base features (Column 1) - included in Elite package only
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -226,17 +226,17 @@ export const MOCK_FEATURES: ProductFeature[] = [
 
 // MOCK PACKAGES (these would be in the 'packages' table)
 // Features are derived from column assignments using deriveTierFeatures
-// Ladder/inheritance model ensures admin column configuration is the single source of truth:
-// - Gold:     Column 1
-// - Platinum: Columns 1 + 3
-// - Elite:    Columns 1 + 3 + 2
+// Strict per-tier column mapping ensures admin column configuration is the single source of truth:
+// - Elite:    Column 1
+// - Platinum: Column 2
+// - Gold:     Column 3
 export const MOCK_PACKAGES: PackageTier[] = [
   {
     id: 'package-elite',
     name: 'Elite',
     price: 3499,
     cost: 900,
-    // Elite = Columns 1 + 3 + 2 (Gold Base + Platinum Additions + Elite Additions)
+    // Elite = Column 1 only
     features: deriveTierFeatures('Elite', MOCK_FEATURES),
     tier_color: 'gray-400',
   },
@@ -245,7 +245,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Platinum',
     price: 2899,
     cost: 750,
-    // Platinum = Columns 1 + 3 (Gold Base + Platinum Additions)
+    // Platinum = Column 2 only
     features: deriveTierFeatures('Platinum', MOCK_FEATURES),
     is_recommended: true,
     tier_color: 'blue-400',
@@ -255,7 +255,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     name: 'Gold',
     price: 2399,
     cost: 550,
-    // Gold = Column 1 (Gold Base)
+    // Gold = Column 3 only
     features: deriveTierFeatures('Gold', MOCK_FEATURES),
     tier_color: 'yellow-400',
   },

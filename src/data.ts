@@ -235,8 +235,12 @@ export async function updateFeature(featureId: string, featureData: Partial<Omit
  */
 export interface FeaturePositionUpdate {
   id: string;
-  position: number;
+  // Legacy single column/position (for backward compatibility)
+  position?: number;
   column?: number;
+  // New multi-column assignment
+  columns?: number[];
+  positionsByColumn?: Record<number, number>;
   connector?: 'AND' | 'OR';
 }
 
@@ -282,11 +286,27 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
         
         for (const feature of chunk) {
           const featureRef = doc(db, 'features', feature.id);
-          const updateData = {
-            position: feature.position,
-            ...(feature.column !== undefined && { column: feature.column }),
-            ...(feature.connector !== undefined && { connector: feature.connector }),
-          };
+          const updateData: Record<string, unknown> = {};
+          
+          // Write legacy fields for backward compatibility
+          if (feature.position !== undefined) {
+            updateData.position = feature.position;
+          }
+          if (feature.column !== undefined) {
+            updateData.column = feature.column;
+          }
+          
+          // Write new multi-column fields
+          if (feature.columns !== undefined) {
+            updateData.columns = feature.columns;
+          }
+          if (feature.positionsByColumn !== undefined) {
+            updateData.positionsByColumn = feature.positionsByColumn;
+          }
+          
+          if (feature.connector !== undefined) {
+            updateData.connector = feature.connector;
+          }
           
           batch.update(featureRef, updateData);
         }
@@ -353,8 +373,12 @@ export async function updateAlaCarteOption(optionId: string, optionData: Partial
  */
 export interface AlaCartePositionUpdate {
   id: string;
-  position: number;
+  // Legacy single column/position (for backward compatibility)
+  position?: number;
   column?: number;
+  // New multi-column assignment
+  columns?: number[];
+  positionsByColumn?: Record<number, number>;
   connector?: 'AND' | 'OR';
 }
 
@@ -393,11 +417,27 @@ export async function batchUpdateAlaCartePositions(options: AlaCartePositionUpda
         
         for (const option of chunk) {
           const optionRef = doc(db, 'ala_carte_options', option.id);
-          const updateData = {
-            position: option.position,
-            ...(option.column !== undefined && { column: option.column }),
-            ...(option.connector !== undefined && { connector: option.connector }),
-          };
+          const updateData: Record<string, unknown> = {};
+          
+          // Write legacy fields for backward compatibility
+          if (option.position !== undefined) {
+            updateData.position = option.position;
+          }
+          if (option.column !== undefined) {
+            updateData.column = option.column;
+          }
+          
+          // Write new multi-column fields
+          if (option.columns !== undefined) {
+            updateData.columns = option.columns;
+          }
+          if (option.positionsByColumn !== undefined) {
+            updateData.positionsByColumn = option.positionsByColumn;
+          }
+          
+          if (option.connector !== undefined) {
+            updateData.connector = option.connector;
+          }
           
           batch.update(optionRef, updateData);
         }

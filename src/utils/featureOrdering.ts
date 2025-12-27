@@ -247,12 +247,13 @@ export function deriveTierFeatures(
     })
     .sort(compareFeatures);
 
-  // Deduplicate by column + name (case-insensitive), keeping first occurrence
+  // Deduplicate by name (case-insensitive) within this tier, keeping first occurrence
+  // For multi-column features, we want them to appear once per tier even if they span multiple columns in that tier
   const seen = new Set<string>();
   const deduped: ProductFeature[] = [];
   
   for (const feature of columnFeatures) {
-    const key = `${feature.column ?? 'unassigned'}::${feature.name.trim().toLowerCase()}`;
+    const key = feature.name.trim().toLowerCase();
     if (!seen.has(key)) {
       seen.add(key);
       deduped.push({ ...feature });

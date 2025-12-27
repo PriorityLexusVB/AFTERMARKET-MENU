@@ -342,7 +342,7 @@ The admin editor supports full drag-and-drop functionality for organizing featur
 
 #### Drag and Drop
 - **Within Column**: Drag features up/down to reorder within the same column
-- **Between Columns**: Drag features to different columns (Gold, Elite, Platinum, Popular Add-ons)
+- **Between Columns**: Drag features to different columns (Elite, Platinum, Gold, Popular Add-ons)
 - **Keyboard Navigation**: Use up/down arrow buttons for accessibility
 
 #### AND/OR Connector Toggle
@@ -362,18 +362,18 @@ Click the AND/OR badge on any feature to toggle its connector type. Changes are 
 
 ### Column Organization
 Features are organized into columns representing package tiers:
-- **Column 1**: Gold Tier features
-- **Column 2**: Elite Tier features
-- **Column 3**: Platinum Tier features
+- **Column 1**: Elite Tier features
+- **Column 2**: Platinum Tier features
+- **Column 3**: Gold Tier features
 - **Column 4**: Popular Add-ons (a la carte options)
 - **Unassigned**: Features not yet assigned to a column
 
 #### Strict Per-Tier Column Mapping
 The application uses **strict per-tier column mapping** to ensure admin and customer-facing package contents match:
 
-- **Gold Package** = Column 1 only
-- **Elite Package** = Column 2 only  
-- **Platinum Package** = Column 3 only
+- **Elite Package** = Column 1 only
+- **Platinum Package** = Column 2 only
+- **Gold Package** = Column 3 only
 
 Each package derives its features exclusively from its assigned column. This eliminates the admin/customer mismatch that can occur when admin columns are empty but legacy `featureIds` arrays still contain data.
 
@@ -404,7 +404,7 @@ VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK="false"  # Strict mode, no fallback
 #### Admin Diagnostics
 The Admin Panel provides visual warnings when package columns are empty:
 - A yellow banner appears on the "Package Features" tab
-- Lists which columns (Gold/Elite/Platinum) are empty
+- Lists which columns (Elite/Platinum/Gold) are empty
 - Explains the impact on customer-facing UI
 - Provides step-by-step guidance to fix the issue
 

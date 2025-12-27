@@ -10,18 +10,18 @@ interface ProductHubProps {
   onAlaCarteChange?: () => void;
 }
 
-// Column mapping: 1 = Gold Package, 2 = Elite Package, 3 = Platinum Package (matches ladder elsewhere).
+// Column mapping: 1 = Elite Package, 2 = Platinum Package, 3 = Gold Package (matches mapping elsewhere).
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Gold Package',
-  2: 'Elite Package',
-  3: 'Platinum Package',
+  1: 'Elite Package',
+  2: 'Platinum Package',
+  3: 'Gold Package',
 };
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 1) return 'Gold';
-  if (column === 2) return 'Elite';
-  if (column === 3) return 'Platinum';
+  if (column === 1) return 'Elite';
+  if (column === 2) return 'Platinum';
+  if (column === 3) return 'Gold';
   return 'Unplaced';
 };
 
@@ -548,9 +548,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           >
             <option value="all">All</option>
             <option value="featured">Featured</option>
-            <option value="1">Column 1 (Gold)</option>
-            <option value="2">Column 2 (Elite)</option>
-            <option value="3">Column 3 (Platinum)</option>
+            <option value="1">Column 1 (Elite)</option>
+            <option value="2">Column 2 (Platinum)</option>
+            <option value="3">Column 3 (Gold)</option>
             <option value="unplaced">Not placed</option>
           </select>
         </label>

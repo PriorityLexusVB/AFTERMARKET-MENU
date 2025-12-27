@@ -5,21 +5,6 @@ import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
 import { validateDataArray, ProductFeatureSchema, AlaCarteOptionSchema } from './schemas';
 import { deriveTierFeatures } from './utils/featureOrdering';
 
-/**
- * Helper to read and normalize boolean environment variables.
- * @param varName - The full environment variable name (including the VITE_ prefix)
- * @param defaultValue - Default value if not set or invalid
- * @returns Boolean value
- */
-function getBooleanEnvVar(varName: string, defaultValue: boolean): boolean {
-  const value = import.meta.env[varName];
-  if (value === undefined || value === null || value === '') {
-    return defaultValue;
-  }
-  const normalized = String(value).toLowerCase().trim();
-  return normalized === 'true' || normalized === '1';
-}
-
 // Maximum batch size for Firestore (limit is 500)
 const FIRESTORE_BATCH_LIMIT = 500;
 
@@ -73,7 +58,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
     const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
 
     // Check if featureIds fallback is allowed (default: false - no fallback when env var is undefined or not 'true')
-    const allowFeatureIdsFallback = import.meta.env.VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK === 'true';
+    const allowFeatureIdsFallback = import.meta.env['VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK'] === 'true';
 
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;

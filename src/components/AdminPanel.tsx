@@ -39,7 +39,7 @@ const formatPrice = (price: number) => {
 };
 
 // Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
-// Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
+// Note: Admin panel display order shown here. Customer-facing order is Gold → Elite → Platinum.
 const COLUMNS = [
   { num: 1, label: 'Gold Package' },
   { num: 2, label: 'Elite Package' },

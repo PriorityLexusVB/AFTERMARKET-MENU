@@ -176,7 +176,7 @@ describe('AdminPanel', () => {
     });
     
     // Check that all column headers are present with new tier order
-    // Column 1 = Elite, Column 2 = Platinum, Column 3 = Gold
+    // Column 1 = Gold, Column 2 = Elite, Column 3 = Platinum
     expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();

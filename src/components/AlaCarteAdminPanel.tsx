@@ -434,13 +434,13 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
       await batchUpdateAlaCartePositions([
         ...normalizedFeatured.map((option) => ({
           id: option.id,
-          position: option.position!,
+          position: option.position ?? 0,
           column: FEATURED_COLUMN.num,
           connector: option.connector,
         })),
         ...normalizedPublished.map((option) => ({
           id: option.id,
-          position: option.position!,
+          position: option.position ?? 0,
           column: option.column,
           connector: option.connector,
         })),

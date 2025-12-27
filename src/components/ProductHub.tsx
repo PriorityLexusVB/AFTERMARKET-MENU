@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
 import { db } from '../firebase';
 import type { AlaCarteOption, ProductFeature } from '../types';
@@ -41,6 +41,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const [showForm, setShowForm] = useState(false);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [positionInputs, setPositionInputs] = useState<Record<string, string>>({});
+  const bulkSelectRef = useRef<HTMLInputElement>(null);
+  const headerSelectRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     if (!db) {
@@ -111,6 +113,22 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       return true;
     });
   }, [alaCarteMap, categoryFilter, features, featuredFilter, packageLaneFilter, publishFilter, searchTerm]);
+
+  const allFilteredSelected = useMemo(
+    () => filteredFeatures.length > 0 && filteredFeatures.every((f) => selectedIds.has(f.id)),
+    [filteredFeatures, selectedIds]
+  );
+  const someSelected = selectedIds.size > 0;
+
+  useEffect(() => {
+    const indeterminate = someSelected && !allFilteredSelected;
+    if (bulkSelectRef.current) {
+      bulkSelectRef.current.indeterminate = indeterminate;
+    }
+    if (headerSelectRef.current) {
+      headerSelectRef.current.indeterminate = indeterminate;
+    }
+  }, [allFilteredSelected, someSelected]);
 
   const updateFeatureState = (featureId: string, updates: Partial<ProductFeature>) => {
     setFeatures((prev) => prev.map((f) => (f.id === featureId ? { ...f, ...updates } : f)));
@@ -496,7 +514,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={selectedIds.size > 0 && filteredFeatures.every((f) => selectedIds.has(f.id))}
+            ref={bulkSelectRef}
+            checked={allFilteredSelected}
             onChange={(e) => handleSelectAll(e.target.checked)}
           />
           <span className="text-gray-300">
@@ -575,7 +594,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                 <input
                   type="checkbox"
                   aria-label="Select all filtered"
-                  checked={selectedIds.size > 0 && filteredFeatures.every((f) => selectedIds.has(f.id))}
+                  ref={headerSelectRef}
+                  checked={allFilteredSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
                 />
               </th>

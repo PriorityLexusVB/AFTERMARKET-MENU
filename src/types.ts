@@ -4,8 +4,12 @@ export type FeatureConnector = 'AND' | 'OR';
 // Base interface for items that can be ordered in columns
 export interface OrderableItem {
   id: string;
+  // Legacy single column assignment (for backward compatibility)
   column?: number;
   position?: number;
+  // New multi-column assignment
+  columns?: number[];
+  positionsByColumn?: Record<number, number>;
   connector?: FeatureConnector;
 }
 

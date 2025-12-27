@@ -31,7 +31,7 @@ describe('AlaCarteSelector', () => {
     expect(screen.getByText('Missing Column')).toBeInTheDocument();
   });
 
-  it('should sort curated items as Gold → Elite → Platinum with Featured last', () => {
+  it('renders featured items first and sorted by position', () => {
     const items: AlaCarteOption[] = [
       createOption({ id: '1', name: 'Column 1', isPublished: true, column: 1, position: 1 }),
       createOption({ id: '2', name: 'Featured Later', isPublished: true, column: 4, position: 2 }),
@@ -41,10 +41,10 @@ describe('AlaCarteSelector', () => {
     render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
     const buttons = screen.getAllByLabelText(/Learn more about/);
-    expect(buttons.map((btn) => btn.textContent)).toEqual(['Column 1', 'Featured First', 'Featured Later']);
+    expect(buttons.map((btn) => btn.textContent)).toEqual(['Featured First', 'Featured Later', 'Column 1']);
   });
 
-  it('shows unplaced items in More Options section', () => {
+  it('shows all published items together in All Add-Ons section', () => {
     const items: AlaCarteOption[] = [
       createOption({ id: '1', name: 'Placed', isPublished: true, column: 1, position: 0 }),
       createOption({ id: '2', name: 'Loose', isPublished: true }),
@@ -52,7 +52,7 @@ describe('AlaCarteSelector', () => {
 
     render(<AlaCarteSelector items={items} onViewItem={mockOnViewItem} />);
 
-    expect(screen.getByText('More Options')).toBeInTheDocument();
+    expect(screen.getByText('All Add-Ons')).toBeInTheDocument();
     expect(screen.getByText('Loose')).toBeInTheDocument();
     expect(screen.getByText('Placed')).toBeInTheDocument();
   });

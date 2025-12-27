@@ -88,12 +88,12 @@ vi.mock('../data', () => ({
 }));
 
 describe('AlaCarteAdminPanel', () => {
-  it('defaults to published-only view with published unplaced lane', async () => {
+  it('defaults to published-only view with published lane', async () => {
     render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
     await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
     expect(screen.getByText('Published Unplaced')).toBeInTheDocument();
-    expect(screen.getByText('Published (Not placed yet)')).toBeInTheDocument();
+    expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
     expect(screen.queryByText('Legacy Item')).not.toBeInTheDocument();
     expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
   });
@@ -107,6 +107,6 @@ describe('AlaCarteAdminPanel', () => {
     await waitFor(() => expect(screen.getByText('Unpublished Item')).toBeInTheDocument());
     expect(screen.getByText('Legacy Item')).toBeInTheDocument();
     expect(screen.getByText('Unpublished Unplaced')).toBeInTheDocument();
-    expect(screen.getByText('Unpublished/Legacy (Not placed yet)')).toBeInTheDocument();
+    expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
   });
 });

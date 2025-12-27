@@ -23,8 +23,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { db } from '../firebase';
 import type { AlaCarteOption, FeatureConnector } from '../types';
-import { batchUpdateAlaCartePositions, AlaCartePositionUpdate, updateAlaCarteOption } from '../data';
-import { groupItemsByColumn, normalizePositions, sortOrderableItems } from '../utils/featureOrdering';
+import { batchUpdateAlaCartePositions, updateAlaCarteOption } from '../data';
+import { sortOrderableItems } from '../utils/featureOrdering';
 
 interface AlaCarteAdminPanelProps {
   onDataUpdate: () => void;
@@ -34,13 +34,7 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration
-const COLUMNS = [
-  { num: 1, label: 'Gold Tier' },
-  { num: 2, label: 'Elite Tier' },
-  { num: 3, label: 'Platinum Tier' },
-  { num: 4, label: 'Popular Add-ons' },
-] as const;
+const FEATURED_COLUMN = { num: 4, label: 'Featured Add-ons' } as const;
 
 // Sortable A La Carte Item Component
 interface SortableAlaCarteItemProps {
@@ -180,13 +174,13 @@ const DragOverlayItem: React.FC<{ option: AlaCarteOption }> = ({ option }) => (
 
 // Droppable column component for cross-column drag support
 interface DroppableColumnProps {
-  columnId: number | 'unassigned';
+  columnId: 'featured' | 'published';
   children: React.ReactNode;
 }
 
 const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
   const { isOver, setNodeRef } = useDroppable({
-    id: `column-${columnId}`,
+    id: `lane-${columnId}`,
   });
 
   return (
@@ -208,7 +202,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showUnpublished, setShowUnpublished] = useState(false);
-  const [placementFilter, setPlacementFilter] = useState<'all' | 'placed' | 'unplaced'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | '1' | '2' | '3' | 'unplaced'>('all');
   
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -253,67 +247,32 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const filteredOptions = useMemo(() => {
     return options.filter((option) => {
       if (!showUnpublished && option.isPublished !== true) return false;
-      if (placementFilter === 'placed' && typeof option.column !== 'number') return false;
-      if (placementFilter === 'unplaced' && typeof option.column === 'number') return false;
+      if (categoryFilter !== 'all') {
+        if (categoryFilter === 'unplaced') {
+          if (typeof option.column === 'number') return false;
+        } else if (option.column !== Number(categoryFilter)) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [options, placementFilter, showUnpublished]);
+  }, [categoryFilter, options, showUnpublished]);
 
-  const { optionsByColumn, publishedUnplaced, unpublishedUnplaced } = useMemo(() => {
-    // Placement filter should not affect unplaced lanes; only showUnpublished does
-    const baseForUnplaced = options.filter((option) => showUnpublished || option.isPublished === true);
-    const unplaced = baseForUnplaced.filter((option) => typeof option.column !== 'number');
-    const published = unplaced.filter((option) => option.isPublished === true);
-    const unpublished = unplaced.filter((option) => option.isPublished !== true);
-    return { optionsByColumn: groupItemsByColumn(filteredOptions), publishedUnplaced: published, unpublishedUnplaced: unpublished };
-  }, [filteredOptions, options, showUnpublished]);
+  const { featuredOptions, publishedOptions } = useMemo(() => {
+    const base = filteredOptions;
+    const featured = base.filter((option) => option.column === FEATURED_COLUMN.num);
+    const published = base.filter((option) => option.column !== FEATURED_COLUMN.num);
+    return {
+      featuredOptions: sortOrderableItems(featured),
+      publishedOptions: sortOrderableItems(published),
+    };
+  }, [filteredOptions]);
 
   // Get the active option being dragged
   const activeOption = useMemo(() => {
     if (!activeId) return null;
     return options.find(o => o.id === activeId) || null;
   }, [activeId, options]);
-
-  // Find which column an option belongs to
-  const findColumnForOption = useCallback((optionId: string): number | 'unassigned' | null => {
-    const option = options.find(o => o.id === optionId);
-    if (!option) return null;
-    return option.column || 'unassigned';
-  }, [options]);
-
-  // Persist position changes to Firestore with normalization
-  const persistPositionChanges = useCallback(async (updatedOptions: AlaCarteOption[], column: number | 'unassigned') => {
-    // Filter options in the affected column and sort by position
-    const columnOptions = sortOrderableItems(
-      updatedOptions.filter(o => column === 'unassigned' ? !o.column : o.column === column)
-    );
-    
-    // Normalize positions (0..n-1) to ensure deterministic ordering
-    const normalizedOptions = normalizePositions(columnOptions);
-    
-    // Build position updates with normalized positions
-    const updates: AlaCartePositionUpdate[] = normalizedOptions.map((option) => ({
-      id: option.id,
-      position: option.position!, // position is guaranteed by normalizePositions
-      column: column === 'unassigned' ? undefined : column,
-      connector: option.connector,
-    }));
-    
-    if (updates.length === 0) return;
-    
-    setIsSaving(true);
-    try {
-      await batchUpdateAlaCartePositions(updates);
-      onDataUpdate(); // Trigger app-wide refresh
-    } catch (err) {
-      console.error("Error saving position changes:", err);
-      // Rollback to backup
-      setOptions(optionsBackup);
-      setError("Failed to save position changes. Changes have been rolled back.");
-    } finally {
-      setIsSaving(false);
-    }
-  }, [optionsBackup, onDataUpdate]);
 
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
@@ -322,194 +281,101 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     setOptionsBackup([...options]);
   };
 
-  // Helper to parse column ID from droppable zone
-  const parseColumnFromDroppableId = (id: string): number | 'unassigned' | null => {
-    const allowedColumns = [1, 2, 3, 4];
-    if (typeof id === 'string' && id.startsWith('column-')) {
-      const columnPart = id.replace('column-', '');
-      if (columnPart === 'unassigned') return 'unassigned';
-      const num = parseInt(columnPart, 10);
-      if (!isNaN(num) && allowedColumns.includes(num)) return num;
-    }
-    return null;
-  };
-
   // Handle drag over - for visual feedback during cross-column drag
   const handleDragOver = (_event: DragOverEvent) => {
     // Visual feedback is handled by the DroppableColumn component
   };
 
-  // Handle drag end - supports both same-column reorder and cross-column move
+  // Handle drag end - supports both lane reorder and cross-lane move
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
-    
-    if (!over) {
-      return;
-    }
+    if (!over) return;
 
-    const activeColumn = findColumnForOption(active.id as string);
-    if (activeColumn === null) return;
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
 
-    // Check if dropped on a column zone (cross-column move)
-    const targetColumn = parseColumnFromDroppableId(over.id as string);
-    
-    // If dropped on a column zone and it's a different column, perform cross-column move
-    if (targetColumn !== null && targetColumn !== activeColumn) {
-      // Move option to the new column
-      const movedOption = options.find(o => o.id === active.id);
-      if (!movedOption) return;
-      
-      // Get options in the target column to determine position
-      const targetColumnOptions = targetColumn === 'unassigned' 
-        ? optionsByColumn.unassigned 
-        : optionsByColumn[targetColumn as 1 | 2 | 3 | 4];
-      
-      // Add at the end of the target column
-      const newPosition = targetColumnOptions.length;
-      
-      // Update the option's column and position
-      const updatedOption = {
-        ...movedOption,
-        column: targetColumn === 'unassigned' ? undefined : targetColumn,
-        position: newPosition,
-      };
-      
-      // Also need to update positions in the old column (fill the gap)
-      const oldColumnOptions = activeColumn === 'unassigned' 
-        ? optionsByColumn.unassigned.filter(o => o.id !== active.id)
-        : optionsByColumn[activeColumn as 1 | 2 | 3 | 4].filter(o => o.id !== active.id);
-      
-      const updatedOldColumnOptions = oldColumnOptions.map((o, idx) => ({
-        ...o,
-        position: idx,
-      })) as AlaCarteOption[];
-      
-      // Store backup immediately before optimistic update for consistent rollback state
-      setOptionsBackup([...options]);
-      
-      // Optimistic UI update
-      const updatedOptions = options.map(o => {
-        if (o.id === active.id) return updatedOption;
-        const updated = updatedOldColumnOptions.find(uo => uo.id === o.id);
-        return updated || o;
-      });
-      
-      setOptions(updatedOptions);
-      
-      // Persist changes to both columns
-      setIsSaving(true);
-      try {
-        // Build updates for both columns
-        const allUpdates: AlaCartePositionUpdate[] = [
-          // The moved option
-          {
-            id: updatedOption.id,
-            position: updatedOption.position!,
-            column: updatedOption.column,
-            connector: updatedOption.connector,
-          },
-          // Updated positions in old column
-          ...updatedOldColumnOptions.map(o => ({
-            id: o.id,
-            position: o.position!,
-            column: o.column,
-            connector: o.connector,
-          })),
-        ];
-        
-        await batchUpdateAlaCartePositions(allUpdates);
-        onDataUpdate();
-      } catch (err) {
-        console.error("Error saving cross-column move:", err);
-        setOptions(optionsBackup);
-        setError("Failed to move option to new column. Changes have been rolled back.");
-      } finally {
-        setIsSaving(false);
+    const activeLane = featuredOptions.some((o) => o.id === activeIdStr) ? 'featured' : 'published';
+    const overLane =
+      overIdStr === 'lane-featured'
+        ? 'featured'
+        : overIdStr === 'lane-published'
+          ? 'published'
+          : featuredOptions.some((o) => o.id === overIdStr)
+            ? 'featured'
+            : 'published';
+
+    const sourceList = activeLane === 'featured' ? featuredOptions : publishedOptions;
+    const targetList = overLane === 'featured' ? featuredOptions : publishedOptions;
+
+    const oldIndex = sourceList.findIndex((o) => o.id === activeIdStr);
+    const newIndex = targetList.findIndex((o) => o.id === overIdStr);
+    if (oldIndex === -1) return;
+
+    let nextFeatured = featuredOptions;
+    let nextPublished = publishedOptions;
+
+    if (activeLane === overLane) {
+      const reordered = arrayMove(sourceList, oldIndex, newIndex === -1 ? sourceList.length - 1 : newIndex);
+      if (activeLane === 'featured') {
+        nextFeatured = reordered;
+      } else {
+        nextPublished = reordered;
       }
-      return;
+    } else {
+      const moving = sourceList[oldIndex];
+      if (!moving) return;
+      const updatedMoving =
+        overLane === 'featured'
+          ? { ...moving, column: FEATURED_COLUMN.num }
+          : { ...moving, column: undefined };
+
+      const prunedSource = sourceList.filter((o) => o.id !== activeIdStr);
+      const insertIndex = newIndex === -1 ? targetList.length : newIndex;
+      const targetWithInsert = [
+        ...targetList.slice(0, insertIndex),
+        updatedMoving,
+        ...targetList.slice(insertIndex),
+      ];
+
+      nextFeatured = overLane === 'featured' ? targetWithInsert : prunedSource;
+      nextPublished = overLane === 'published' ? targetWithInsert : prunedSource;
     }
-    
-    // Same-column reorder: dropped on another option
-    const overColumn = findColumnForOption(over.id as string);
-    
-    if (active.id === over.id) {
-      return;
-    }
-    
-    // Only allow reordering within the same column when dropping on an option
-    if (activeColumn !== overColumn || activeColumn === null) {
-      return;
-    }
-    
-    // Get options in the column
-    const columnOptions = [...(activeColumn === 'unassigned' 
-      ? optionsByColumn.unassigned 
-      : optionsByColumn[activeColumn as 1 | 2 | 3 | 4])];
-    
-    const oldIndex = columnOptions.findIndex(o => o.id === active.id);
-    const newIndex = columnOptions.findIndex(o => o.id === over.id);
-    
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
-    
-    // Reorder the column options
-    const reorderedColumnOptions = arrayMove(columnOptions, oldIndex, newIndex);
-    
-    // Update positions in the reordered array
-    const updatedColumnOptions = reorderedColumnOptions.map((option, index) => ({
-      ...option,
-      position: index,
-    })) as AlaCarteOption[];
-    
-    // Optimistic UI update
-    const updatedOptions = options.map(o => {
-      const updated = updatedColumnOptions.find(uo => uo.id === o.id);
-      return updated || o;
-    });
-    
-    setOptions(updatedOptions);
-    
-    // Persist to Firestore
-    await persistPositionChanges(updatedOptions, activeColumn);
+
+    setOptionsBackup([...options]);
+    await applyLaneUpdates(
+      nextFeatured.map((option, index) => ({ ...option, position: index })),
+      nextPublished.map((option, index) => ({ ...option, position: index }))
+    );
   };
 
   // Handle keyboard reorder (up/down buttons)
   const handleKeyboardReorder = async (optionId: string, direction: 'up' | 'down') => {
-    const column = findColumnForOption(optionId);
-    if (column === null) return;
-    
-    const columnOptions = [...(column === 'unassigned' 
-      ? optionsByColumn.unassigned 
-      : optionsByColumn[column as 1 | 2 | 3 | 4])];
-    
-    const currentIndex = columnOptions.findIndex(o => o.id === optionId);
+    const inFeatured = featuredOptions.some((o) => o.id === optionId);
+    const laneItems = inFeatured ? featuredOptions : publishedOptions;
+    const currentIndex = laneItems.findIndex((o) => o.id === optionId);
     if (currentIndex === -1) return;
-    
+
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= columnOptions.length) return;
-    
-    // Store backup for rollback
+    if (newIndex < 0 || newIndex >= laneItems.length) return;
+
+    const reordered = arrayMove(laneItems, currentIndex, newIndex);
     setOptionsBackup([...options]);
-    
-    // Reorder
-    const reorderedColumnOptions = arrayMove(columnOptions, currentIndex, newIndex);
-    const updatedColumnOptions = reorderedColumnOptions.map((option, index) => ({
-      ...option,
-      position: index,
-    })) as AlaCarteOption[];
-    
-    // Optimistic UI update
-    const updatedOptions = options.map(o => {
-      const updated = updatedColumnOptions.find(uo => uo.id === o.id);
-      return updated || o;
-    });
-    
-    setOptions(updatedOptions);
-    
-    // Persist to Firestore
-    await persistPositionChanges(updatedOptions, column);
+    if (inFeatured) {
+      await applyLaneUpdates(
+        reordered.map((option, index) => ({ ...option, position: index, column: FEATURED_COLUMN.num })),
+        publishedOptions
+      );
+    } else {
+      await applyLaneUpdates(
+        featuredOptions,
+        reordered.map((option, index) => ({
+          ...option,
+          position: index,
+          column: option.column === FEATURED_COLUMN.num ? undefined : option.column,
+        }))
+      );
+    }
   };
 
   // Handle inline connector toggle (AND/OR)
@@ -543,12 +409,58 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     }
   };
 
+  const applyLaneUpdates = async (nextFeatured: AlaCarteOption[], nextPublished: AlaCarteOption[]) => {
+    const normalizedFeatured = nextFeatured.map((option, index) => ({
+      ...option,
+      column: FEATURED_COLUMN.num,
+      position: index,
+    }));
+    const normalizedPublished = nextPublished.map((option, index) => ({
+      ...option,
+      column: option.column && option.column !== FEATURED_COLUMN.num ? option.column : undefined,
+      position: index,
+    }));
+
+    const updatedOptions = options.map((option) => {
+      const updated =
+        normalizedFeatured.find((o) => o.id === option.id) ||
+        normalizedPublished.find((o) => o.id === option.id);
+      return updated || option;
+    });
+
+    setIsSaving(true);
+    try {
+      setOptions(updatedOptions);
+      await batchUpdateAlaCartePositions([
+        ...normalizedFeatured.map((option) => ({
+          id: option.id,
+          position: option.position!,
+          column: FEATURED_COLUMN.num,
+          connector: option.connector,
+        })),
+        ...normalizedPublished.map((option) => ({
+          id: option.id,
+          position: option.position!,
+          column: option.column,
+          connector: option.connector,
+        })),
+      ]);
+      onDataUpdate();
+    } catch (err) {
+      console.error("Error saving position changes:", err);
+      setOptions(optionsBackup);
+      setError("Failed to save position changes. Changes have been rolled back.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Render a column's sortable list with droppable zone
-  const renderColumnOptions = (columnOptions: AlaCarteOption[], columnId: number | 'unassigned') => {
+  const renderColumnOptions = (columnOptions: AlaCarteOption[], columnId: 'featured' | 'published') => {
     return (
       <DroppableColumn columnId={columnId}>
         {columnOptions.length === 0 ? (
-          <p className="text-gray-500 text-sm italic p-2">Drop items here to add to this column</p>
+          <p className="text-gray-500 text-sm italic p-2">Drop items here to add to this lane</p>
         ) : (
           <SortableContext
             items={columnOptions.map(o => o.id)}
@@ -603,28 +515,26 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
             Show hidden (legacy)
           </label>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Placement:</span>
-            <div className="flex rounded-md overflow-hidden border border-gray-700">
-              {(['all', 'placed', 'unplaced'] as const).map((value) => (
-                <button
-                  key={value}
-                  onClick={() => setPlacementFilter(value)}
-                  className={`px-3 py-1 text-sm ${
-                    placementFilter === value ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  {value === 'all' ? 'All' : value === 'placed' ? 'Placed' : 'Not placed'}
-                </button>
-              ))}
-            </div>
+            <span className="text-sm text-gray-400">Category filter:</span>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
+              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+            >
+              <option value="all">All</option>
+              <option value="1">Gold</option>
+              <option value="2">Elite</option>
+              <option value="3">Platinum</option>
+              <option value="unplaced">Unplaced</option>
+            </select>
           </div>
         </div>
       </div>
 
       <div className="border-t border-gray-700 pt-6">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-xl font-teko tracking-wider text-gray-300">A La Carte Options by Column</h4>
-          <p className="text-sm text-gray-500">Drag to reorder or move between columns • Click AND/OR to toggle</p>
+          <h4 className="text-xl font-teko tracking-wider text-gray-300">A La Carte Options</h4>
+          <p className="text-sm text-gray-500">Drag to reorder or move between lanes • Click AND/OR to toggle</p>
         </div>
         {isLoading && <p className="text-gray-400">Loading A La Carte options...</p>}
         {error && <p className="text-red-400 bg-red-500/10 p-3 rounded-md border border-red-500/30 mb-4">{error}</p>}
@@ -641,33 +551,20 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
                 <p className="text-gray-500">No published A La Carte options yet. Publish items from the Features hub.</p>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {COLUMNS.map(({ num, label }) => (
-                      <div key={num} className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid={`column-${num}`}>
-                        <h5 className="text-lg font-semibold text-blue-400 mb-3 font-teko tracking-wider">
-                          Column {num}: {label}
-                        </h5>
-                        {renderColumnOptions(optionsByColumn[num] as AlaCarteOption[], num)}
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-featured">
+                      <h5 className="text-lg font-semibold text-blue-400 mb-3 font-teko tracking-wider">
+                        Featured Add-Ons (Column 4)
+                      </h5>
+                      {renderColumnOptions(featuredOptions as AlaCarteOption[], 'featured')}
+                    </div>
+                    <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-published">
+                      <h5 className="text-lg font-semibold text-gray-300 mb-3 font-teko tracking-wider">
+                        Published (Not featured)
+                      </h5>
+                      {renderColumnOptions(publishedOptions as AlaCarteOption[], 'published')}
+                    </div>
                   </div>
-                  
-                  {publishedUnplaced.length > 0 && (
-                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned-published">
-                       <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
-                         Published (Not placed yet)
-                       </h5>
-                       {renderColumnOptions(publishedUnplaced as AlaCarteOption[], 'unassigned')}
-                     </div>
-                   )}
-                  {showUnpublished && unpublishedUnplaced.length > 0 && (
-                     <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700" data-testid="column-unassigned-unpublished">
-                       <h5 className="text-lg font-semibold text-gray-300 mb-3 font-teko tracking-wider">
-                         Unpublished/Legacy (Not placed yet)
-                       </h5>
-                       {renderColumnOptions(unpublishedUnplaced as AlaCarteOption[], 'unassigned')}
-                     </div>
-                   )}
                 </>
               )}
             </div>

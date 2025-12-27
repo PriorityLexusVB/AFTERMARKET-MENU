@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AlaCarteOption, ProductFeature } from '../types';
 import { AlaCarteItem } from './AlaCarteItem';
-import { columnOrderValue, isCuratedOption } from '../utils/alaCarte';
+import { isCuratedOption } from '../utils/alaCarte';
 
 interface AlaCarteSelectorProps {
   items: AlaCarteOption[];
@@ -14,19 +14,23 @@ interface AlaCarteSelectorProps {
 export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({ items, onViewItem, disableDrag = false, onToggleItem, selectedIds = [] }) => {
   const curatedItems = items.filter(isCuratedOption);
 
-  const placedItems = curatedItems
-    .filter((item) => typeof item.column === 'number')
+  const featuredItems = curatedItems
+    .filter((item) => item.column === 4)
     .sort((a, b) => {
-      const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
-      if (columnDiff !== 0) return columnDiff;
       const posA = a.position ?? Number.MAX_SAFE_INTEGER;
       const posB = b.position ?? Number.MAX_SAFE_INTEGER;
-      return posA - posB;
+      if (posA !== posB) return posA - posB;
+      return a.name.localeCompare(b.name);
     });
 
-  const unplacedItems = curatedItems
-    .filter((item) => typeof item.column !== 'number')
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const otherItems = curatedItems
+    .filter((item) => item.column !== 4)
+    .sort((a, b) => {
+      const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+      const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+      if (posA !== posB) return posA - posB;
+      return a.name.localeCompare(b.name);
+    });
 
   const selectedSet = new Set(selectedIds);
 
@@ -50,27 +54,30 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({ items, onVie
 
   return (
     <div className="space-y-6">
-      {placedItems.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
-          {placedItems.map((item) => (
-            <AlaCarteItem
-              key={item.id}
-              item={item}
-              onViewItem={() => onViewItem(item)}
-              onDragStart={(e) => handleDragStart(e, item)}
-              disableDrag={disableDrag}
-              isSelected={selectedSet.has(item.id)}
-              onToggle={onToggleItem ? () => onToggleItem(item) : undefined}
-            />
-          ))}
+      {featuredItems.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-lg font-semibold text-lux-text">Featured Add-Ons</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
+            {featuredItems.map((item) => (
+              <AlaCarteItem
+                key={item.id}
+                item={item}
+                onViewItem={() => onViewItem(item)}
+                onDragStart={(e) => handleDragStart(e, item)}
+                disableDrag={disableDrag}
+                isSelected={selectedSet.has(item.id)}
+                onToggle={onToggleItem ? () => onToggleItem(item) : undefined}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {unplacedItems.length > 0 && (
+      {otherItems.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-lg font-semibold text-lux-text">More Options</h4>
+          <h4 className="text-lg font-semibold text-lux-text">All Add-Ons</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
-            {unplacedItems.map((item) => (
+            {otherItems.map((item) => (
               <AlaCarteItem
                 key={item.id}
                 item={item}

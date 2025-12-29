@@ -382,6 +382,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         await updateFeature(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
         if (!feature.publishToAlaCarte) {
           await unpublishAlaCarteFromFeature(feature.id);
+        } else {
+          await upsertAlaCarteFromFeature(feature, {
+            isPublished: true,
+            column: option?.column,
+            position: option?.position,
+            price: option?.price ?? feature.alaCartePrice,
+            isNew: option?.isNew ?? feature.alaCarteIsNew,
+            warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
+          });
         }
       } catch (rollbackErr) {
         console.error('Failed to roll back publish status in Firestore', rollbackErr);

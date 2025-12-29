@@ -10,18 +10,18 @@ interface ProductHubProps {
   onAlaCarteChange?: () => void;
 }
 
-// Column mapping: 1 = Elite Package, 2 = Platinum Package, 3 = Gold Package (matches mapping elsewhere).
+// Column mapping: 1 = Gold Package, 2 = Elite Package, 3 = Platinum Package (strict mapping).
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Elite Package',
-  2: 'Platinum Package',
-  3: 'Gold Package',
+  1: 'Gold Package',
+  2: 'Elite Package',
+  3: 'Platinum Package',
 };
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 1) return 'Elite';
-  if (column === 2) return 'Platinum';
-  if (column === 3) return 'Gold';
+  if (column === 1) return 'Gold';
+  if (column === 2) return 'Elite';
+  if (column === 3) return 'Platinum';
   return 'Unplaced';
 };
 
@@ -41,8 +41,44 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const [showForm, setShowForm] = useState(false);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [positionInputs, setPositionInputs] = useState<Record<string, string>>({});
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const bulkSelectRef = useRef<HTMLInputElement>(null);
   const headerSelectRef = useRef<HTMLInputElement>(null);
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const clearRowError = (featureId: string) => {
+    setRowErrors((prev) => {
+      const { [featureId]: _removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const setRowErrorMessage = (featureId: string, message: string) => {
+    setRowErrors((prev) => ({ ...prev, [featureId]: message }));
+  };
+
+  const markSaved = (featureId: string) => {
+    clearRowError(featureId);
+    setError(null);
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      next.add(featureId);
+      return next;
+    });
+    if (saveTimers.current[featureId]) {
+      clearTimeout(saveTimers.current[featureId]);
+    }
+    saveTimers.current[featureId] = setTimeout(() => {
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(featureId);
+        return next;
+      });
+      const { [featureId]: _timer, ...rest } = saveTimers.current;
+      saveTimers.current = rest;
+    }, 1500);
+  };
 
   const fetchData = useCallback(async () => {
     if (!db) {
@@ -78,6 +114,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       return new Set([...prev].filter((id) => validIds.has(id)));
     });
   }, [features]);
+
+  useEffect(
+    () => () => {
+      Object.values(saveTimers.current).forEach((timer) => clearTimeout(timer));
+    },
+    []
+  );
 
   const alaCarteMap = useMemo(() => {
     return new Map(alaCarteOptions.map((opt) => [opt.id, opt]));
@@ -155,6 +198,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
 
   const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
     if (feature.column === column) return;
+    const prevColumn = feature.column;
+    const prevPosition = feature.position;
     const newPosition =
       column === undefined
         ? undefined
@@ -164,16 +209,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
               .map((f) => f.position ?? 0);
             if (positions.length === 0) return 0;
             return Math.max(...positions) + 1;
-          })();
+      })();
 
     const payload: Partial<ProductFeature> = { column, position: newPosition };
 
     updateFeatureState(feature.id, payload);
+    clearRowError(feature.id);
     try {
       await updateFeature(feature.id, payload);
       onDataUpdate();
+      markSaved(feature.id);
     } catch (err) {
       console.error('Failed to update package placement', err);
+      setRowErrorMessage(feature.id, 'Failed to update package lane.');
+      updateFeatureState(feature.id, { column: prevColumn, position: prevPosition });
     }
   };
 
@@ -185,12 +234,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       const { [feature.id]: _removed, ...rest } = prev;
       return rest;
     });
-    if (Number.isNaN(parsed)) {
+    if (Number.isNaN(parsed) || parsed < 0) {
+      setRowErrorMessage(feature.id, 'Enter a valid A La Carte price to save.');
       return;
     }
-    if (parsed < 0) {
-      return;
-    }
+    clearRowError(feature.id);
     updateFeatureState(feature.id, { alaCartePrice: parsed });
     try {
       await updateFeature(feature.id, { alaCartePrice: parsed });
@@ -202,8 +250,10 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         );
         upsertOptionState(feature, { price: parsed });
       }
+      markSaved(feature.id);
     } catch (err) {
       console.error('Failed to update A La Carte price', err);
+      setRowErrorMessage(feature.id, 'Failed to save price.');
     }
   };
 
@@ -220,6 +270,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     updateFeatureState(feature.id, { alaCarteIsNew: checked });
     const option = alaCarteMap.get(feature.id);
     try {
+      clearRowError(feature.id);
       await updateFeature(feature.id, { alaCarteIsNew: checked });
       if (option) {
         await upsertAlaCarteFromFeature(
@@ -228,8 +279,10 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         );
         upsertOptionState(feature, { isNew: checked });
       }
+      markSaved(feature.id);
     } catch (err) {
       console.error('Failed to update NEW flag', err);
+      setRowErrorMessage(feature.id, 'Failed to update NEW flag.');
     }
   };
 
@@ -243,6 +296,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     const desiredPosition = desiredColumn === undefined ? undefined : (position ?? option?.position);
 
     try {
+      clearRowError(feature.id);
       await upsertAlaCarteFromFeature(
         { ...feature, publishToAlaCarte: feature.publishToAlaCarte ?? isPublished, alaCartePrice: price ?? feature.alaCartePrice },
         {
@@ -256,16 +310,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       );
       upsertOptionState(feature, { column: desiredColumn, position: desiredPosition, isPublished });
       onAlaCarteChange?.();
+      markSaved(feature.id);
     } catch (err) {
       console.error('Failed to update placement', err);
+      setRowErrorMessage(feature.id, 'Failed to update placement.');
     }
   };
 
   const handlePublishToggle = async (feature: ProductFeature, publish: boolean) => {
     const option = alaCarteMap.get(feature.id);
-    const price = option?.price ?? feature.alaCartePrice;
-    if (publish && price === undefined) {
-      console.error('Please enter an A La Carte price before publishing.');
+    const inputValue = priceInputs[feature.id];
+    const parsedInputPrice = inputValue !== undefined && inputValue !== '' ? Number(inputValue) : undefined;
+    const price = option?.price ?? feature.alaCartePrice ?? parsedInputPrice;
+    if (publish && (price === undefined || Number.isNaN(price))) {
+      setRowErrorMessage(feature.id, 'Enter an A La Carte price before publishing.');
       return;
     }
 
@@ -275,24 +333,35 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         await updateFeature(feature.id, { publishToAlaCarte: false });
         await unpublishAlaCarteFromFeature(feature.id);
         upsertOptionState(feature, { isPublished: false });
+        markSaved(feature.id);
+        clearRowError(feature.id);
       } else {
-        const featurePayload = { ...feature, publishToAlaCarte: true, alaCartePrice: price };
-        updateFeatureState(feature.id, { publishToAlaCarte: true, alaCartePrice: price });
-        await updateFeature(feature.id, { publishToAlaCarte: true, alaCartePrice: price });
+        const resolvedPrice = Number(price);
+        const featurePayload = { ...feature, publishToAlaCarte: true, alaCartePrice: resolvedPrice };
+        updateFeatureState(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
+        clearRowError(feature.id);
+        await updateFeature(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
         await upsertAlaCarteFromFeature(featurePayload, {
           isPublished: true,
           column: option?.column,
           position: option?.position,
-          price,
+          price: resolvedPrice,
           isNew: option?.isNew ?? feature.alaCarteIsNew,
           warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
         });
-        upsertOptionState(feature, { isPublished: true });
+        upsertOptionState(feature, { isPublished: true, price: resolvedPrice, column: option?.column, position: option?.position });
+        setPriceInputs((prev) => {
+          const { [feature.id]: _removed, ...rest } = prev;
+          return rest;
+        });
+        markSaved(feature.id);
       }
       onAlaCarteChange?.();
       onDataUpdate();
     } catch (err) {
       console.error('Failed to update publish status', err);
+      setRowErrorMessage(feature.id, 'Failed to update publish status.');
+      updateFeatureState(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
     }
   };
 
@@ -548,9 +617,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           >
             <option value="all">All</option>
             <option value="featured">Featured</option>
-            <option value="1">Column 1 (Elite)</option>
-            <option value="2">Column 2 (Platinum)</option>
-            <option value="3">Column 3 (Gold)</option>
+            <option value="1">Column 1 (Gold)</option>
+            <option value="2">Column 2 (Elite)</option>
+            <option value="3">Column 3 (Platinum)</option>
             <option value="unplaced">Not placed</option>
           </select>
         </label>
@@ -784,6 +853,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                         <span>Mark as NEW</span>
                       </label>
                       {renderPlacementControls(feature, option)}
+                      {rowErrors[feature.id] && <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>}
+                      {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
                     </div>
                   </td>
                   <td className="px-3 py-3">

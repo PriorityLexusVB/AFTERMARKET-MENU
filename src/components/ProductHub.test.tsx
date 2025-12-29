@@ -66,6 +66,9 @@ describe('ProductHub inline editing', () => {
     const radios = within(row as HTMLElement).getAllByRole('radio');
     const labels = radios.map((radio) => (radio as HTMLInputElement).labels?.[0]?.textContent?.trim());
     expect(labels).toEqual(['Gold Package', 'Elite Package', 'Platinum Package', 'Not in Packages']);
+
+    await userEvent.click(within(row as HTMLElement).getByLabelText('Gold Package'));
+    await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: 1 })));
   });
 
   it('publishes inline using the typed A La Carte price', async () => {
@@ -114,5 +117,16 @@ describe('ProductHub inline editing', () => {
     await waitFor(() => expect(mockUpsert).toHaveBeenCalledTimes(2));
     const featuredCall = mockUpsert.mock.calls[mockUpsert.mock.calls.length - 1]?.[1];
     expect(featuredCall?.column).toBe(4);
+  });
+
+  it('shows row error when publish save fails', async () => {
+    mockUpsert.mockRejectedValueOnce(new Error('boom'));
+    const { feature } = await renderHub({ alaCartePrice: 150 });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
+
+    await userEvent.click(publishToggle);
+
+    await waitFor(() => expect(screen.getByText(/Failed to update publish status/i)).toBeInTheDocument());
   });
 });

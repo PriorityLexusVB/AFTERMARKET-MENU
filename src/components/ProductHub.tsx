@@ -45,6 +45,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const bulkSelectRef = useRef<HTMLInputElement>(null);
   const headerSelectRef = useRef<HTMLInputElement>(null);
+  const isMounted = useRef(true);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const clearRowError = (featureId: string) => {
@@ -54,13 +55,26 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     });
   };
 
+  const clearSaved = (featureId: string) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(featureId);
+      return next;
+    });
+    if (saveTimers.current[featureId]) {
+      clearTimeout(saveTimers.current[featureId]);
+      const { [featureId]: _timer, ...rest } = saveTimers.current;
+      saveTimers.current = rest;
+    }
+  };
+
   const setRowErrorMessage = (featureId: string, message: string) => {
     setRowErrors((prev) => ({ ...prev, [featureId]: message }));
   };
 
   const markSaved = (featureId: string) => {
     clearRowError(featureId);
-    setError(null);
+    if (!isMounted.current) return;
     setSavedIds((prev) => {
       const next = new Set(prev);
       next.add(featureId);
@@ -70,6 +84,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       clearTimeout(saveTimers.current[featureId]);
     }
     saveTimers.current[featureId] = setTimeout(() => {
+      if (!isMounted.current) return;
       setSavedIds((prev) => {
         const next = new Set(prev);
         next.delete(featureId);
@@ -117,6 +132,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
 
   useEffect(
     () => () => {
+      isMounted.current = false;
       Object.values(saveTimers.current).forEach((timer) => clearTimeout(timer));
     },
     []
@@ -223,6 +239,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       console.error('Failed to update package placement', err);
       setRowErrorMessage(feature.id, 'Failed to update package lane.');
       updateFeatureState(feature.id, { column: prevColumn, position: prevPosition });
+      clearSaved(feature.id);
     }
   };
 
@@ -322,19 +339,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     const inputValue = priceInputs[feature.id];
     const parsedInputPrice = inputValue !== undefined && inputValue !== '' ? Number(inputValue) : undefined;
     const price = option?.price ?? feature.alaCartePrice ?? parsedInputPrice;
-    if (publish && (price === undefined || Number.isNaN(price))) {
+    if (publish && (price === undefined || Number.isNaN(price) || price <= 0)) {
       setRowErrorMessage(feature.id, 'Enter an A La Carte price before publishing.');
       return;
     }
 
     try {
       if (!publish) {
+        clearRowError(feature.id);
         updateFeatureState(feature.id, { publishToAlaCarte: false });
         await updateFeature(feature.id, { publishToAlaCarte: false });
         await unpublishAlaCarteFromFeature(feature.id);
         upsertOptionState(feature, { isPublished: false });
         markSaved(feature.id);
-        clearRowError(feature.id);
       } else {
         const resolvedPrice = Number(price);
         const featurePayload = { ...feature, publishToAlaCarte: true, alaCartePrice: resolvedPrice };
@@ -361,7 +378,16 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     } catch (err) {
       console.error('Failed to update publish status', err);
       setRowErrorMessage(feature.id, 'Failed to update publish status.');
+      try {
+        await updateFeature(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
+        if (!feature.publishToAlaCarte) {
+          await unpublishAlaCarteFromFeature(feature.id);
+        }
+      } catch (rollbackErr) {
+        console.error('Failed to roll back publish status in Firestore', rollbackErr);
+      }
       updateFeatureState(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
+      clearSaved(feature.id);
     }
   };
 

@@ -71,7 +71,7 @@ describe('ProductHub inline editing', () => {
   it('publishes inline using the typed A La Carte price', async () => {
     const { feature } = await renderHub();
     const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
-    const priceInput = within(row).getAllByRole('spinbutton')[0];
+    const priceInput = within(row).getAllByRole('spinbutton')[0]!;
     await userEvent.clear(priceInput);
     await userEvent.type(priceInput, '125');
 
@@ -100,7 +100,7 @@ describe('ProductHub inline editing', () => {
   it('updates category and featured placement inline', async () => {
     const { feature } = await renderHub({ publishToAlaCarte: true }, { isPublished: true, column: undefined, price: 200 });
     const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
-    const categorySelect = within(row).getAllByRole('combobox')[0];
+    const categorySelect = within(row).getAllByRole('combobox')[0]!;
 
     await userEvent.selectOptions(categorySelect, '2');
 

@@ -28,11 +28,6 @@ vi.mock('firebase/firestore/lite', () => ({
   query: (...args: unknown[]) => args,
 }));
 
-const stripId = <T extends { id: string }>(item: T) => {
-  const { id: _id, ...rest } = item;
-  return rest;
-};
-
 const renderHub = async (
   featureOverrides?: Partial<ProductFeature>,
   optionOverrides?: Partial<AlaCarteOption>,

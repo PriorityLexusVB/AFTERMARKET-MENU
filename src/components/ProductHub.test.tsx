@@ -8,6 +8,7 @@ const mockUpdateFeature = vi.fn().mockResolvedValue(undefined);
 const mockUpsert = vi.fn().mockResolvedValue(undefined);
 const mockUnpublish = vi.fn().mockResolvedValue(undefined);
 const mockGetDocs = vi.fn();
+const mockAddDoc = vi.fn();
 
 vi.mock('../data', () => ({
   updateFeature: (...args: unknown[]) => mockUpdateFeature(...args),
@@ -21,6 +22,7 @@ vi.mock('../firebase', () => ({
 
 vi.mock('firebase/firestore/lite', () => ({
   collection: vi.fn(),
+  addDoc: (...args: unknown[]) => mockAddDoc(...args),
   getDocs: (...args: unknown[]) => mockGetDocs(...args),
   orderBy: (...args: unknown[]) => args,
   query: (...args: unknown[]) => args,
@@ -31,7 +33,11 @@ const stripId = <T extends { id: string }>(item: T) => {
   return rest;
 };
 
-const renderHub = async (featureOverrides?: Partial<ProductFeature>, optionOverrides?: Partial<AlaCarteOption>) => {
+const renderHub = async (
+  featureOverrides?: Partial<ProductFeature>,
+  optionOverrides?: Partial<AlaCarteOption>,
+  additionalFeatures: ProductFeature[] = []
+) => {
   const feature = createMockFeature({
     id: 'feature-1',
     publishToAlaCarte: false,
@@ -40,23 +46,26 @@ const renderHub = async (featureOverrides?: Partial<ProductFeature>, optionOverr
     ...featureOverrides,
   });
   const option = optionOverrides ? createMockAlaCarteOption({ id: feature.id, ...optionOverrides }) : null;
+  const features = [feature, ...additionalFeatures];
 
-  mockGetDocs.mockResolvedValueOnce({
-    docs: [{ id: feature.id, data: () => stripId(feature) }],
-  });
-  mockGetDocs.mockResolvedValueOnce({
-    docs: option ? [{ id: option.id, data: () => stripId(option) }] : [],
-  });
-
-  render(<ProductHub onDataUpdate={vi.fn()} onAlaCarteChange={vi.fn()} />);
-  await screen.findByText(feature.name);
-  return { feature, option };
+  render(
+    <ProductHub
+      onDataUpdate={vi.fn()}
+      onAlaCarteChange={vi.fn()}
+      initialFeatures={features}
+      initialAlaCarteOptions={option ? [option] : []}
+    />
+  );
+  await waitFor(() => expect(screen.getByText(feature.name)).toBeInTheDocument(), { timeout: 2000 });
+  return { feature, option, features };
 };
 
 describe('ProductHub inline editing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetDocs.mockReset();
+    mockAddDoc.mockReset();
+    mockAddDoc.mockResolvedValue({ id: 'new-feature' });
   });
 
   it('orders package lane radios Gold, Elite, Platinum, Not in Packages', async () => {
@@ -128,5 +137,38 @@ describe('ProductHub inline editing', () => {
     await userEvent.click(publishToggle);
 
     await waitFor(() => expect(screen.getByText(/Failed to update publish status/i)).toBeInTheDocument());
+  });
+
+  it('clears publish error on successful retry', async () => {
+    mockUpsert.mockRejectedValueOnce(new Error('boom'));
+    const { feature } = await renderHub({ alaCartePrice: 150 });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
+
+    await userEvent.click(publishToggle);
+    await screen.findByText(/Failed to update publish status/i);
+
+    mockUpsert.mockResolvedValueOnce(undefined);
+    await userEvent.click(publishToggle);
+
+    await waitFor(() => expect(screen.queryByText(/Failed to update publish status/i)).not.toBeInTheDocument());
+  });
+
+  it('duplicates a feature into a target lane with the next position', async () => {
+    const extraFeature = createMockFeature({ id: 'existing', column: 2, position: 3 });
+    mockAddDoc.mockResolvedValueOnce({ id: 'duplicate-id' });
+    const { feature } = await renderHub({ column: 1, position: 1 }, undefined, [extraFeature]);
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const duplicateSelect = within(row).getByLabelText(/Duplicate to/i);
+
+    await userEvent.selectOptions(duplicateSelect, '2');
+
+    await waitFor(() => expect(mockAddDoc).toHaveBeenCalled());
+    const payload = mockAddDoc.mock.calls[0]?.[1] as ProductFeature;
+    expect(payload.column).toBe(2);
+    expect(payload.position).toBe(4); // next after existing position 3
+    expect(payload.name).toBe(feature.name);
+    expect(payload.description).toBe(feature.description);
+    expect(payload.connector).toBe(feature.connector);
   });
 });

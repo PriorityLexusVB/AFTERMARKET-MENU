@@ -89,8 +89,8 @@ async function importData() {
       for (const pkg of MOCK_PACKAGES) {
         const { id: mockId, features, ...packageData } = pkg;
 
-        // Map feature IDs from mock to actual Firestore IDs
-        const featureIds_array: string[] = [];
+        // Map feature IDs from mock to actual Firestore IDs (stored only as legacy reference)
+        const legacyFeatureIds: string[] = [];
         const missingFeatures: string[] = [];
 
         for (const f of features) {
@@ -103,7 +103,7 @@ async function importData() {
             console.error(`  ❌ Error: Package "${pkg.name}" requires feature "${f.name}" but it wasn't imported to Firestore`);
             missingFeatures.push(f.name);
           } else {
-            featureIds_array.push(featureIds[mockFeatureId]);
+            legacyFeatureIds.push(featureIds[mockFeatureId]);
           }
         }
 
@@ -115,7 +115,7 @@ async function importData() {
 
         const packageDoc = {
           ...packageData,
-          featureIds: featureIds_array,
+          ...(legacyFeatureIds.length > 0 ? { legacyFeatureIds } : {}),
         };
 
         const docRef = await addDoc(packagesCol, packageDoc);

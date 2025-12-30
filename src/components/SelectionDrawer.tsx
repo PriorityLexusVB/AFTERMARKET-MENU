@@ -8,6 +8,8 @@ interface SelectionDrawerProps {
   onRemoveItem: (itemId: string) => void;
   onPrint: () => void;
   onDeselectPackage?: () => void;
+  onShowAgreement?: () => void;
+  variant?: 'panel' | 'bar';
 }
 
 const formatPrice = (price: number) =>
@@ -24,7 +26,56 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   onRemoveItem,
   onPrint,
   onDeselectPackage,
+  onShowAgreement,
+  variant = 'panel',
 }) => {
+  if (variant === 'bar') {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden">
+        <div className="container mx-auto px-4 sm:px-8 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Your Selection</p>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-lux-text">
+                <span className="font-semibold text-white">
+                  {selectedPackage ? `${selectedPackage.name} Package` : 'No package selected'}
+                </span>
+                <span className="px-2 py-1 rounded-full bg-gray-800 text-gray-200 text-xs">
+                  {customItems.length} add-on{customItems.length === 1 ? '' : 's'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap justify-between">
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Total</p>
+                <p className="text-3xl sm:text-4xl font-teko text-white">{formatPrice(totalPrice)}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onPrint}
+                  className="btn-lux-ghost px-4 min-h-[44px]"
+                  aria-label="Print summary"
+                >
+                  Print Selection
+                </button>
+                {onShowAgreement && (
+                  <button
+                    onClick={onShowAgreement}
+                    className="btn-lux-primary px-4 min-h-[44px]"
+                    aria-label="Finalize and view agreement"
+                  >
+                    Finalize
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <aside className="lux-card lg:sticky lg:top-6 p-5 space-y-4">
       <div className="flex items-center justify-between">

@@ -3,7 +3,6 @@ import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Header } from './components/Header';
 import { PackageSelector } from './components/PackageSelector';
 import { AlaCarteSelector } from './components/AlaCarteSelector';
-import { Summary } from './components/Summary';
 import { FeatureModal } from './components/FeatureModal';
 import { CustomPackageBuilder } from './components/CustomPackageBuilder';
 import { AddonSelector } from './components/AddonSelector';
@@ -365,25 +364,23 @@ const App: React.FC = () => {
           )}
        </div>
         {currentPage === 'packages' && (
-          <div className="flex-grow flex flex-col lg:flex-row gap-8 items-stretch">
-            <div className="w-full lg:w-3/4">
-              <PackageSelector
-                packages={displayPackages}
-                allFeaturesForDisplay={allFeatures}
-                selectedPackage={selectedPackage}
-                onSelectPackage={handleSelectPackage}
-                onViewFeature={handleViewDetail}
-              />
-            </div>
-            <div className="w-full lg:w-1/4">
+          <PackageSelector
+            packages={displayPackages}
+            allFeaturesForDisplay={allFeatures}
+            selectedPackage={selectedPackage}
+            onSelectPackage={handleSelectPackage}
+            onViewFeature={handleViewDetail}
+            addonColumn={
               <AddonSelector
                 items={mainPageAddons}
                 selectedItems={customPackageItems}
                 onToggleItem={handleToggleAlaCarteItem}
                 onViewItem={handleViewDetail}
+                className="h-full"
               />
-            </div>
-          </div>
+            }
+            gridClassName="items-stretch"
+          />
         )}
 
         {currentPage === 'alacarte' && (
@@ -435,7 +432,7 @@ const App: React.FC = () => {
         <AdminPanel onDataUpdate={loadData} />
       ) : (
         <>
-          <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">
+          <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col pb-32 lg:pb-36">
             {isLoading ? (
               <LoadingSpinner />
             ) : currentView === 'agreement' ? (
@@ -448,29 +445,22 @@ const App: React.FC = () => {
                 customerInfo={customerInfo}
               />
             ) : (
-              <div className="grid lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
-                <div className="lux-no-select space-y-4">
-                  {renderMenuContent()}
-                </div>
-                <SelectionDrawer
-                  selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
-                  customItems={displayCustomPackageItems}
-                  totalPrice={totalPrice}
-                  onRemoveItem={handleRemoveAlaCarte}
-                  onPrint={handlePrint}
-                  onDeselectPackage={selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined}
-                />
+              <div className="lux-no-select space-y-4">
+                {renderMenuContent()}
               </div>
             )}
           </main>
           {currentView === 'menu' && !isLoading && (
             <>
-              <Summary
+              <SelectionDrawer
                 selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
-                customPackageItems={displayCustomPackageItems}
+                customItems={displayCustomPackageItems}
                 totalPrice={totalPrice}
-                customerInfo={customerInfo}
+                onRemoveItem={handleRemoveAlaCarte}
+                onPrint={handlePrint}
+                onDeselectPackage={selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined}
                 onShowAgreement={handleShowAgreement}
+                variant="bar"
               />
               <AIAssistant
                 packages={displayPackages}

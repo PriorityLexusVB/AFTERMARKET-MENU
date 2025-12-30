@@ -851,11 +851,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                           }`}
                           data-testid={`column-${num}`}
                         >
-                          <h5 className={`text-lg font-semibold mb-3 font-teko tracking-wider ${
+                          <h5 className={`text-lg font-semibold mb-1 font-teko tracking-wider ${
                             num === 4 ? 'text-purple-400' : 'text-blue-400'
                           }`}>
-                            Column {num}: {label}
+                            {label}
                           </h5>
+                          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted mb-2">Column {num}</p>
                           {renderColumnFeatures(featuresByColumn[num], num)}
                         </div>
                       ))}

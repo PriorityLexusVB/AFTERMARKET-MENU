@@ -150,7 +150,7 @@ describe('ProductHub inline editing', () => {
   });
 
   it('duplicates a feature into a target lane with the next position', async () => {
-    const extraFeature = createMockFeature({ id: 'existing', column: 2, position: 3 });
+    const extraFeature = createMockFeature({ id: 'existing', name: 'Existing Feature', column: 2, position: 3 });
     mockAddDoc.mockResolvedValueOnce({ id: 'duplicate-id' });
     const { feature } = await renderHub({ column: 1, position: 1 }, undefined, [extraFeature]);
     const row = screen.getByText(feature.name).closest('tr') as HTMLElement;

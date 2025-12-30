@@ -221,7 +221,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const getNextPosition = (column: 1 | 2 | 3) => {
     const positions = features
       .filter((f) => f.column === column)
-      .map((f) => (f.position ?? -1));
+      .map((f) => (f.position ?? 0));
     if (positions.length === 0) return 0;
     return Math.max(...positions) + 1;
   };
@@ -365,7 +365,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         await updateFeature(feature.id, { publishToAlaCarte: false });
         await unpublishAlaCarteFromFeature(feature.id);
         upsertOptionState(feature, { isPublished: false });
-        clearRowError(feature.id);
         markSaved(feature.id);
       } else {
         const resolvedPrice = Number(price);
@@ -386,7 +385,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           const { [feature.id]: _removed, ...rest } = prev;
           return rest;
         });
-        clearRowError(feature.id);
         markSaved(feature.id);
       }
       onAlaCarteChange?.();
@@ -433,7 +431,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         ...rest,
         column: targetColumn,
         position: nextPosition,
-        connector: feature.connector,
       };
 
       const docRef = await addDoc(collection(db, 'features'), payload);

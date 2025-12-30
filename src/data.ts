@@ -28,7 +28,8 @@ interface FirebasePackage {
   cost: number;
   is_recommended?: boolean;
   tier_color: string;
-  featureIds: string[]; // This array of strings (feature document IDs) is expected in your Firestore package documents
+  featureIds?: string[]; // Legacy field (removed by migration)
+  legacyFeatureIds?: string[]; // Backup of legacy featureIds (added by migration)
 }
 
 export async function fetchAllData(): Promise<FetchDataResult> {
@@ -57,32 +58,11 @@ export async function fetchAllData(): Promise<FetchDataResult> {
     const rawAlaCarteOptions = alaCarteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const alaCarteOptions: AlaCarteOption[] = validateDataArray(AlaCarteOptionSchema, rawAlaCarteOptions, 'ala_carte_options');
 
-    // Check if featureIds fallback is allowed (default: false - no fallback when env var is undefined or not 'true')
-    const allowFeatureIdsFallback = import.meta.env['VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK'] === 'true';
-
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;
         // Derive features from column assignments based on tier name
         // This makes admin column configuration the single source of truth
         let derivedFeatures = deriveTierFeatures(data.name, features);
-        
-        // Handle fallback to featureIds if derived list is empty
-        if (derivedFeatures.length === 0 && Array.isArray(data.featureIds) && data.featureIds.length > 0) {
-          if (allowFeatureIdsFallback) {
-            // Fallback is allowed (debug mode): use featureIds but emit loud warning
-            derivedFeatures = data.featureIds
-              .map(id => features.find(f => f.id === id))
-              .filter((f): f is ProductFeature => Boolean(f));
-            
-            console.warn(
-              `⚠️ PACKAGE FALLBACK WARNING: Package "${data.name}" (doc ID: ${doc.id}) has empty column-derived features but is using featureIds fallback (${data.featureIds.length} feature IDs). ` +
-              `This fallback is deprecated. Please assign features to the correct column in Admin/Product Hub. ` +
-              `To disable fallback and enforce strict mapping, set VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=false or remove the env var.`
-            );
-          }
-          // When fallback is disabled (default), keep empty - no error logging
-          // The package will simply have no features, which is the expected behavior for strict mapping
-        }
         
         const pkg: PackageTier = {
             id: doc.id,

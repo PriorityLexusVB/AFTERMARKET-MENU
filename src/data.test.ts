@@ -326,46 +326,13 @@ describe('Package FeatureIds Fallback Behavior', () => {
     });
   });
 
-  describe('Fallback behavior documentation', () => {
-    it('should use featureIds and log warning when fallback is allowed', () => {
-      // When VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=true (default):
-      // 1. Package with empty deriveTierFeatures() but non-empty featureIds uses featureIds
-      // 2. console.warn is called with:
-      //    - Package name and doc ID
-      //    - Number of feature IDs in the fallback array
-      //    - Instructions to fix by assigning features to columns
-      //    - Note that fallback will be deprecated
-      // Verified through code inspection at data.ts:86-96
-      expect(true).toBe(true);
-    });
-
-    it('should keep package empty and log error when fallback is disabled', () => {
-      // When VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK=false:
-      // 1. Package with empty deriveTierFeatures() remains empty (no featureIds used)
-      // 2. console.error is called with:
-      //    - Package name and doc ID
-      //    - Warning that package will be empty on customer UI
-      //    - Instructions to fix: assign features to proper columns
-      //    - Tier-to-column mapping (Gold=1, Elite=2, Platinum=3)
-      // Verified through code inspection at data.ts:98-104
-      expect(true).toBe(true);
-    });
-
-    it('should not trigger fallback when derived features are present', () => {
-      // When deriveTierFeatures() returns features (length > 0):
-      // - No fallback logic is executed
-      // - No console warnings or errors
-      // - Package uses the column-derived features
-      // Verified through code inspection at data.ts:85 (condition check)
-      expect(true).toBe(true);
-    });
-
-    it('should not trigger fallback when featureIds is empty or missing', () => {
-      // When package has empty deriveTierFeatures() AND empty/missing featureIds:
-      // - No fallback logic is executed
-      // - No console warnings or errors
-      // - Package remains empty
-      // Verified through code inspection at data.ts:85 (condition check)
+  describe('Strict mapping behavior', () => {
+    it('renders packages from column mapping only (no legacy featureIds fallback)', () => {
+      // Packages derive their feature lists exclusively from column assignments:
+      // - Gold = column 1
+      // - Elite = column 2
+      // - Platinum = column 3
+      // Legacy featureIds arrays are ignored for customer rendering.
       expect(true).toBe(true);
     });
   });

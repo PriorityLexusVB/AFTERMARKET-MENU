@@ -27,6 +27,7 @@
     "typecheck": "tsc --noEmit",
     "import-data": "tsx scripts/import-mock-data.ts",
     "migrate:feature-positions": "tsx scripts/migrate/add-feature-position-connector.ts",
+    "migrate:packages:remove-featureids": "tsx scripts/migrate/remove-package-featureIds.ts",
     "migrate:backfill-features-from-alacarte": "tsx scripts/migrate/backfill-features-from-alacarte.ts",
     "migrate:alacarte:publish-backfill": "tsx scripts/migrate/backfill-alacarte-isPublished.ts",
     "migrate:onehub:backfill-alacarte": "tsx scripts/migrate/backfill-onehub-alacarte.ts",

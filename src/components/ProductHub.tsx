@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
+import { addDoc, collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
 import { db } from '../firebase';
 import type { AlaCarteOption, ProductFeature } from '../types';
 import { updateFeature, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature } from '../data';
@@ -8,6 +8,8 @@ import { FeatureForm } from './FeatureForm';
 interface ProductHubProps {
   onDataUpdate: () => void;
   onAlaCarteChange?: () => void;
+  initialFeatures?: ProductFeature[];
+  initialAlaCarteOptions?: AlaCarteOption[];
 }
 
 // Column mapping: 1 = Gold Package, 2 = Elite Package, 3 = Platinum Package (strict mapping).
@@ -25,9 +27,9 @@ const getPlacementDisplay = (column?: number) => {
   return 'Unplaced';
 };
 
-export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarteChange }) => {
-  const [features, setFeatures] = useState<ProductFeature[]>([]);
-  const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>([]);
+export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarteChange, initialFeatures, initialAlaCarteOptions }) => {
+  const [features, setFeatures] = useState<ProductFeature[]>(initialFeatures ?? []);
+  const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>(initialAlaCarteOptions ?? []);
   const [searchTerm, setSearchTerm] = useState('');
   const [packageLaneFilter, setPackageLaneFilter] = useState<'all' | '1' | '2' | '3' | 'none'>('all');
   const [publishFilter, setPublishFilter] = useState<'all' | 'published' | 'unpublished'>('all');
@@ -35,7 +37,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const [categoryFilter, setCategoryFilter] = useState<'all' | '1' | '2' | '3' | 'unplaced' | 'featured'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkWorking, setIsBulkWorking] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(initialFeatures ? false : true);
   const [error, setError] = useState<string | null>(null);
   const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -120,8 +122,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   }, []);
 
   useEffect(() => {
+    if (initialFeatures) {
+      setIsLoading(false);
+      return;
+    }
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, initialFeatures]);
 
   useEffect(() => {
     setSelectedIds((prev) => {
@@ -210,6 +216,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       };
       return [...prev, { ...base, ...updates }];
     });
+  };
+
+  const getNextPosition = (column: 1 | 2 | 3) => {
+    const positions = features
+      .filter((f) => f.column === column)
+      .map((f) => (f.position ?? -1));
+    if (positions.length === 0) return 0;
+    return Math.max(...positions) + 1;
   };
 
   const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
@@ -335,6 +349,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   };
 
   const handlePublishToggle = async (feature: ProductFeature, publish: boolean) => {
+    clearRowError(feature.id);
     const option = alaCarteMap.get(feature.id);
     const inputValue = priceInputs[feature.id];
     const parsedInputPrice = inputValue !== undefined && inputValue !== '' ? Number(inputValue) : undefined;
@@ -346,11 +361,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
 
     try {
       if (!publish) {
-        clearRowError(feature.id);
         updateFeatureState(feature.id, { publishToAlaCarte: false });
         await updateFeature(feature.id, { publishToAlaCarte: false });
         await unpublishAlaCarteFromFeature(feature.id);
         upsertOptionState(feature, { isPublished: false });
+        clearRowError(feature.id);
         markSaved(feature.id);
       } else {
         const resolvedPrice = Number(price);
@@ -371,13 +386,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           const { [feature.id]: _removed, ...rest } = prev;
           return rest;
         });
+        clearRowError(feature.id);
         markSaved(feature.id);
       }
       onAlaCarteChange?.();
       onDataUpdate();
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       console.error('Failed to update publish status', err);
-      setRowErrorMessage(feature.id, 'Failed to update publish status.');
+      setRowErrorMessage(feature.id, `Failed to update publish status: ${message}`);
       try {
         await updateFeature(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
         if (!feature.publishToAlaCarte) {
@@ -396,6 +413,37 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         console.error('Failed to roll back publish status in Firestore', rollbackErr);
       }
       updateFeatureState(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
+      clearSaved(feature.id);
+    }
+  };
+
+  const handleDuplicateToLane = async (feature: ProductFeature, targetColumn: 1 | 2 | 3) => {
+    if (!db) {
+      setRowErrorMessage(feature.id, 'Firebase is not connected.');
+      return;
+    }
+
+    clearRowError(feature.id);
+
+    try {
+      const nextPosition = getNextPosition(targetColumn);
+      const { id: _id, publishToAlaCarte: _publish, alaCartePrice: _price, alaCarteWarranty: _warranty, alaCarteIsNew: _isNew, ...rest } = feature;
+
+      const payload: Omit<ProductFeature, 'id'> = {
+        ...rest,
+        column: targetColumn,
+        position: nextPosition,
+        connector: feature.connector,
+      };
+
+      const docRef = await addDoc(collection(db, 'features'), payload);
+      setFeatures((prev) => [...prev, { ...payload, id: docRef.id }]);
+      onDataUpdate();
+      markSaved(docRef.id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Failed to duplicate feature to lane', err);
+      setRowErrorMessage(feature.id, `Failed to duplicate: ${message}`);
       clearSaved(feature.id);
     }
   };
@@ -899,6 +947,35 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                     >
                       Edit details
                     </button>
+                    <div className="mt-2">
+                      <label className="text-xs text-gray-400 block mb-1" htmlFor={`duplicate-${feature.id}`}>
+                        Duplicate to
+                      </label>
+                      <select
+                        id={`duplicate-${feature.id}`}
+                        className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (!value) return;
+                          handleDuplicateToLane(feature, Number(value) as 1 | 2 | 3);
+                          e.target.value = '';
+                        }}
+                      >
+                        <option value="" disabled>
+                          Choose lane...
+                        </option>
+                        <option value="1" disabled={feature.column === 1}>
+                          Gold
+                        </option>
+                        <option value="2" disabled={feature.column === 2}>
+                          Elite
+                        </option>
+                        <option value="3" disabled={feature.column === 3}>
+                          Platinum
+                        </option>
+                      </select>
+                    </div>
                   </td>
                 </tr>
               );

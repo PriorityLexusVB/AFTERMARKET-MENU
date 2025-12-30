@@ -44,3 +44,18 @@ gcloud config set project gen-lang-client-0877787739
 npm install
 npm run migrate:alacarte:publish-backfill
 ```
+
+## Remove legacy package featureIds
+
+**Script:** `remove-package-featureIds.ts`
+
+**Purpose:** Backs up deprecated `featureIds` arrays to `legacyFeatureIds` (when missing) and removes the `featureIds` field from every doc in the `packages` collection so customer rendering is strictly column-based.
+
+**Running from Cloud Shell**
+
+```bash
+gcloud config set project <your-project-id>
+npm install
+# DRY_RUN=1 by default (logs only). Set DRY_RUN=0 to write changes.
+DRY_RUN=0 npm run migrate:packages:remove-featureids
+```

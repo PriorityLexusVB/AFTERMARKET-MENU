@@ -172,7 +172,7 @@ Structure your documents as follows:
 *   **cost** (number): 1900
 *   **is_recommended** (boolean): true
 *   **tier_color** (string): "blue-400"
-*   **featureIds** (array): ["ppf-full", "ceramic-coating"] (These are Document IDs from the `features` collection).
+*   **legacyFeatureIds** (array, optional): Backup of removed `featureIds` (not used for rendering; retained only for reference).
 
 ### Step 5: Configure Firestore Security Rules
 
@@ -362,18 +362,18 @@ Click the AND/OR badge on any feature to toggle its connector type. Changes are 
 
 ### Column Organization
 Features are organized into columns representing package tiers:
-- **Column 1**: Elite Tier features
-- **Column 2**: Platinum Tier features
-- **Column 3**: Gold Tier features
+- **Column 1**: Gold Tier features
+- **Column 2**: Elite Tier features
+- **Column 3**: Platinum Tier features
 - **Column 4**: Popular Add-ons (a la carte options)
 - **Unassigned**: Features not yet assigned to a column
 
 #### Strict Per-Tier Column Mapping
 The application uses **strict per-tier column mapping** to ensure admin and customer-facing package contents match:
 
-- **Elite Package** = Column 1 only
-- **Platinum Package** = Column 2 only
-- **Gold Package** = Column 3 only
+- **Gold Package** = Column 1 only
+- **Elite Package** = Column 2 only
+- **Platinum Package** = Column 3 only
 
 Each package derives its features exclusively from its assigned column. This eliminates the admin/customer mismatch that can occur when admin columns are empty but legacy `featureIds` arrays still contain data.
 
@@ -386,20 +386,16 @@ If a feature should appear in multiple package tiers:
 
 Example: A "Ceramic Coating" feature appearing in all three tiers would need three separate feature entries (one in Column 1, one in Column 2, one in Column 3).
 
-#### Fallback Behavior (Deprecated)
-For backward compatibility, the system includes a configurable fallback to legacy `featureIds`:
+#### Removing legacy `featureIds`
+Legacy package `featureIds` are no longer used for rendering. Run the migration script to back them up to `legacyFeatureIds` and remove the old field:
 
-- **Default (fallback enabled)**: If a package's column is empty, the system falls back to `featureIds` with a console warning
-- **Strict mode (fallback disabled)**: Empty columns result in empty packages with a console error
-
-Control fallback with the `VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK` environment variable:
 ```bash
-# .env.local
-VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK="true"   # Allow fallback (default)
-VITE_ALLOW_PACKAGE_FEATUREIDS_FALLBACK="false"  # Strict mode, no fallback
+# From Cloud Shell
+gcloud config set project <your-project-id>
+npm install
+# DRY_RUN=1 by default; set to 0 to commit
+DRY_RUN=0 npm run migrate:packages:remove-featureids
 ```
-
-**Recommendation**: Keep fallback enabled during migration, then disable it once all packages have proper column assignments.
 
 ### Guest View Rendering
 Changes made in the Admin Panel are immediately reflected in the guest view:

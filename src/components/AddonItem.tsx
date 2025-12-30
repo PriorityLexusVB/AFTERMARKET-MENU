@@ -41,7 +41,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({ item, isSelected, onToggle
       <div className="mt-3">
         <button
           onClick={onToggle}
-          className={`w-full py-2 px-3 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]
+          className={`w-full py-3 px-3 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]
             ${isSelected 
               ? 'bg-green-600 text-white hover:bg-green-700' 
               : 'bg-gray-600 text-gray-200 hover:bg-blue-500 hover:text-white'}

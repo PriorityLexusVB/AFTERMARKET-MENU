@@ -31,7 +31,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
 }) => {
   if (variant === 'bar') {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden">
         <div className="container mx-auto px-4 sm:px-8 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
@@ -46,8 +46,8 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap justify-between">
-              <div className="text-right">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap justify-end">
+              <div className="text-left sm:text-right">
                 <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Total</p>
                 <p className="text-3xl sm:text-4xl font-teko text-white">{formatPrice(totalPrice)}</p>
               </div>

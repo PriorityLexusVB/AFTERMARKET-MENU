@@ -95,4 +95,28 @@ describe('SelectionDrawer', () => {
 
     expect(screen.getByText('No add-ons selected')).toBeInTheDocument();
   });
+
+  it('renders bar variant with finalize action and correct classes', () => {
+    const onShowAgreement = vi.fn();
+    const { container } = render(
+      <SelectionDrawer
+        selectedPackage={pkg}
+        customItems={[item]}
+        totalPrice={pkg.price + item.price}
+        onRemoveItem={vi.fn()}
+        onPrint={vi.fn()}
+        onShowAgreement={onShowAgreement}
+        variant="bar"
+      />
+    );
+
+    const root = container.firstChild as HTMLElement;
+    expect(root).toHaveClass('fixed');
+    expect(root).toHaveClass('z-40');
+    expect(root).toHaveClass('print:hidden');
+    expect(screen.getByRole('button', { name: /Finalize and view agreement/i })).toBeInTheDocument();
+    const totalBlock = screen.getByText('Total').parentElement as HTMLElement;
+    expect(totalBlock).toHaveClass('text-left');
+    expect(totalBlock.className).toContain('sm:text-right');
+  });
 });

@@ -24,7 +24,9 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   const baseGrid = addonColumn
     ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8'
     : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8';
-  const gridClasses = `${baseGrid} stagger-children ${gridClassName ?? ''}`.trim();
+  const gridClasses = gridClassName
+    ? `${baseGrid} stagger-children ${gridClassName}`
+    : `${baseGrid} stagger-children`;
 
   return (
     <div className={gridClasses}>

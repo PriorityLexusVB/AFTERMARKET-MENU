@@ -32,7 +32,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     <div 
       data-testid="package-card"
       className={`
-      lux-card grid grid-rows-[auto_1fr_auto] h-full relative overflow-hidden
+      lux-card flex flex-col h-full relative overflow-hidden
       ${isSelected ? 'lux-card-selected' : ''}
       ${packageInfo.is_recommended ? 'lux-card-recommended' : ''}
       ${className}
@@ -51,9 +51,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
         )}
       </div>
 
-      {/* Features section with scroll affordance */}
-      <div className="relative">
-        <div className="p-6 lg:p-7 pt-2 space-y-3 overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      {/* Features section stretches with page scroll */}
+      <div className="relative flex-1 flex flex-col">
+        <div className="p-6 lg:p-7 pt-2 space-y-3 flex-1">
           {includedPackageFeatures.map((feature, index) => {
             let divider = null;
             // Add a divider before every feature except the first one
@@ -84,13 +84,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
             );
           })}
         </div>
-        {/* Gradient fade indicator for scrollable content */}
-        {includedPackageFeatures.length > 3 && (
-          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-lux-bg1 to-transparent pointer-events-none" />
-        )}
       </div>
       
-      <div className="p-5 lg:p-6 space-y-3">
+      <div className="p-5 lg:p-6 space-y-3 mt-auto">
         <div className="lux-price-plaque">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Investment</p>

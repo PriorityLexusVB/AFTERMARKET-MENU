@@ -327,10 +327,10 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     } else {
       const moving = sourceList[oldIndex];
       if (!moving) return;
-    const updatedMoving =
-      overLane === 'featured'
-        ? { ...moving, column: FEATURED_COLUMN.num }
-        : { ...moving, column: undefined };
+      const updatedMoving =
+        overLane === 'featured'
+          ? { ...moving, column: FEATURED_COLUMN.num }
+          : { ...moving, column: undefined };
 
       const prunedSource = sourceList.filter((o) => o.id !== activeIdStr);
       const insertIndex = newIndex === -1 ? targetList.length : newIndex;

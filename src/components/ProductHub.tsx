@@ -229,7 +229,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   };
 
   const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
-    if (feature.column === column) return;
+    if ((feature.column ?? null) === (column ?? null)) return;
     const prevColumn = feature.column;
     const prevPosition = feature.position;
     const newPosition =
@@ -917,7 +917,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                         <input
                           type="radio"
                           name={`pkg-${feature.id}`}
-                          checked={feature.column === undefined}
+                          checked={feature.column == null}
                           onChange={() => handlePackagePlacement(feature, undefined)}
                         />
                         <span>Not in Packages</span>

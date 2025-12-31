@@ -922,7 +922,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                         />
                         <span>Not in Packages</span>
                       </label>
-                      {feature.column !== undefined && (
+                      {feature.column !== undefined && packageOrder.includes(feature.column as 1 | 2 | 3) && (
                         <div className="mt-2 flex items-center gap-2">
                           <span className="text-[11px] uppercase text-gray-400">Connector:</span>
                           <div className="flex gap-2">

@@ -541,42 +541,42 @@ describe('Admin to Customer Menu Mapping', () => {
   describe('Empty Admin Columns', () => {
     it('should show empty package when admin column is empty', () => {
       // Simulate features only in Column 1 (Elite Tier)
-      const goldFeature = createMockFeature({
-        id: 'gold-feature',
-        name: 'Gold Feature',
+      const eliteFeature = createMockFeature({
+        id: 'elite-feature',
+        name: 'Elite Feature',
         column: 1,
         position: 0,
         points: ['Point 1'],
       });
 
-      // Elite package with no features (column 2 is empty in admin)
-      const elitePackage = createMockPackageTier({
-        name: 'Elite',
+      // Platinum package with no features (column 2 is empty in admin)
+      const platinumPackage = createMockPackageTier({
+        name: 'Platinum',
         price: 3499,
         tier_color: 'gray-400',
-        features: [], // Empty because Elite column (2) has no features
+        features: [], // Empty because Platinum column (2) has no features
       });
 
       const { container } = render(
         <PackageCard
-          packageInfo={elitePackage}
-          allFeaturesForDisplay={[goldFeature]}
+          packageInfo={platinumPackage}
+          allFeaturesForDisplay={[eliteFeature]}
           isSelected={false}
           onSelect={vi.fn()}
           onViewFeature={vi.fn()}
         />
       );
 
-      // Should not show Gold Feature in Elite package
+      // Should not show Elite Feature in Platinum package
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       expect(featureButtons).toHaveLength(0);
     });
 
     it('should not auto-populate from other columns', () => {
       // Features in columns 1 and 4, but not in 2 or 3
-      const goldFeature = createMockFeature({
-        id: 'gold-feature',
-        name: 'Gold Feature',
+      const eliteFeature = createMockFeature({
+        id: 'elite-feature',
+        name: 'Elite Feature',
         column: 1,
         position: 0,
         points: ['Point'],
@@ -589,28 +589,28 @@ describe('Admin to Customer Menu Mapping', () => {
         points: ['Point'],
       });
 
-      // Gold package should only have Column 1 features
-      const goldPackage = createMockPackageTier({
-        name: 'Gold',
+      // Elite package should only have Column 1 features
+      const elitePackage = createMockPackageTier({
+        name: 'Elite',
         price: 2399,
         tier_color: 'yellow-400',
-        features: [goldFeature], // Only Gold column features
+        features: [eliteFeature], // Only Elite column features
       });
 
       const { container } = render(
         <PackageCard
-          packageInfo={goldPackage}
-          allFeaturesForDisplay={[goldFeature, addonFeature]}
+          packageInfo={elitePackage}
+          allFeaturesForDisplay={[eliteFeature, addonFeature]}
           isSelected={false}
           onSelect={vi.fn()}
           onViewFeature={vi.fn()}
         />
       );
 
-      // Should only show Gold Feature, not Add-on Feature
+      // Should only show Elite Feature, not Add-on Feature
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       expect(featureButtons).toHaveLength(1);
-      expect(featureButtons[0]?.textContent).toBe('Gold Feature');
+      expect(featureButtons[0]?.textContent).toBe('Elite Feature');
     });
   });
 });

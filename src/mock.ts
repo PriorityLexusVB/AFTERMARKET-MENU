@@ -4,26 +4,26 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
 // Column assignments for admin organization (strict per-tier model):
-// - Column 1 = Elite Base (included in Elite package only)
-// - Column 2 = Platinum Additions (included in Platinum package only)
-// - Column 3 = Gold Additions (included in Gold package only)
+// - Column 1 = Gold Additions (included in Gold package only)
+// - Column 2 = Elite Base (included in Elite package only)
+// - Column 3 = Platinum Additions (included in Platinum package only)
 // - Column 4 = Admin organization only (does NOT control customer "Popular Add-ons" section)
 //
 // Package composition:
-// - Elite:    Gets Column 1 (Elite Base)
-// - Platinum: Gets Column 2 (Platinum Additions)
-// - Gold:     Gets Column 3 (Gold Additions)
+// - Elite:    Gets Column 2 (Elite Base)
+// - Platinum: Gets Column 3 (Platinum Additions)
+// - Gold:     Gets Column 1 (Gold Additions)
 //
 // Note: The customer-facing "Popular Add-ons" section is populated from alaCarteOptions
 // filtered by MAIN_PAGE_ADDON_IDS (see App.tsx), not from Column 4 features.
 //
 // This mock data provides features for all three tiers:
-// - Elite has 3 features (Column 1)
-// - Platinum has 3 features (Column 2)
-// - Gold has 3 features (Column 3)
+// - Elite has 3 features (Column 2)
+// - Platinum has 3 features (Column 3)
+// - Gold has 3 features (Column 1)
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
-  // Elite Base features (Column 1) - included in Elite package only
+// Elite Base features (Column 2) - included in Elite package only
   {
     id: 'rustguard-pro',
     name: 'RustGuard Pro',
@@ -40,7 +40,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0, // Price is included in package
     cost: 300,
     warranty: 'Lifetime coverage',
-    column: 1, // Elite Base (included in Elite package only)
+    column: 2, // Elite Base (included in Elite package only)
     position: 0, // First position in column
     connector: 'AND', // Default connector
   },
@@ -59,7 +59,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 250,
-    column: 1, // Elite Base (included in Elite package only)
+    column: 2, // Elite Base (included in Elite package only)
     position: 1, // Second position in column
     connector: 'AND', // Default connector
   },
@@ -77,11 +77,11 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0, // Price is included in package
     cost: 200,
-    column: 1, // Elite Base (included in Elite package only)
+    column: 2, // Elite Base (included in Elite package only)
     position: 2, // Third position in column
     connector: 'OR', // Special connector for Elite package display
   },
-  // Platinum Additions (Column 2) - included in Platinum only
+// Platinum Additions (Column 3) - included in Platinum only
   {
     id: 'platinum-rustguard',
     name: 'RustGuard Pro',
@@ -98,7 +98,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0,
     cost: 300,
     warranty: 'Lifetime coverage',
-    column: 2, // Platinum Additions (Platinum only)
+    column: 3, // Platinum Additions (Platinum only)
     position: 0,
     connector: 'AND',
   },
@@ -117,7 +117,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 250,
-    column: 2, // Platinum Additions (Platinum only)
+    column: 3, // Platinum Additions (Platinum only)
     position: 1,
     connector: 'AND',
   },
@@ -136,11 +136,11 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 150,
-    column: 2, // Platinum Additions (Platinum only)
+    column: 3, // Platinum Additions (Platinum only)
     position: 2,
     connector: 'AND',
   },
-  // Gold Additions (Column 3) - included in Gold only
+  // Gold Additions (Column 1) - included in Gold only
   {
     id: 'gold-rustguard',
     name: 'RustGuard Pro',
@@ -157,7 +157,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     price: 0,
     cost: 300,
     warranty: 'Lifetime coverage',
-    column: 3, // Gold Additions (Gold only)
+    column: 1, // Gold Additions (Gold only)
     position: 0,
     connector: 'AND',
   },
@@ -176,7 +176,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 250,
-    column: 3, // Gold Additions (Gold only)
+    column: 1, // Gold Additions (Gold only)
     position: 1,
     connector: 'AND',
   },
@@ -194,7 +194,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     ],
     price: 0,
     cost: 200,
-    column: 3, // Gold Additions (Gold only)
+    column: 1, // Gold Additions (Gold only)
     position: 2,
     connector: 'OR',
   },

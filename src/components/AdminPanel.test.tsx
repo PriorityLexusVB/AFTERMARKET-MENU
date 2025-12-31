@@ -65,11 +65,12 @@ vi.mock('firebase/firestore/lite', () => {
 });
 
 // Mock data functions
+const mockSetRecommendedPackage = vi.fn().mockResolvedValue(undefined);
 vi.mock('../data', () => ({
   batchUpdateFeaturesPositions: vi.fn().mockResolvedValue(undefined),
   addFeature: vi.fn().mockResolvedValue(undefined),
   updateFeature: vi.fn().mockResolvedValue(undefined),
-  setRecommendedPackage: vi.fn().mockResolvedValue(undefined),
+  setRecommendedPackage: (...args: unknown[]) => mockSetRecommendedPackage(...args),
 }));
 
 // Sample features for testing
@@ -160,6 +161,17 @@ describe('AdminPanel', () => {
     expect(screen.getByRole('radiogroup', { name: /Recommended package/i })).toBeInTheDocument();
   });
 
+  it('writes recommended package selection when radio is changed', async () => {
+    render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+    const eliteRadio = await screen.findByLabelText('Elite');
+
+    await userEvent.click(eliteRadio);
+
+    await waitFor(() => {
+      expect(mockSetRecommendedPackage).toHaveBeenCalledWith('pkg-elite');
+    });
+  });
+
   it('should not render the feature form by default', async () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
@@ -195,11 +207,10 @@ describe('AdminPanel', () => {
       expect(screen.getByText('Features by Column')).toBeInTheDocument();
     });
     
-    // Check that all column headers are present with new tier order
-    // Column 1 = Elite, Column 2 = Platinum, Column 3 = Gold
-    expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
+    // Check that all column headers are present with new tier order (Elite → Platinum → Gold)
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
+    expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+4/)).toBeInTheDocument();
     expect(screen.getByText(/Elite Package/)).toBeInTheDocument();
     expect(screen.getByText(/Platinum Package/)).toBeInTheDocument();

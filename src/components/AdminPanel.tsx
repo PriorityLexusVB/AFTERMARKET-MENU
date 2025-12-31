@@ -38,12 +38,12 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration - strict 1:1 mapping (Elite=Column 1, Platinum=Column 2, Gold=Column 3)
+// Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
 // Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
 const COLUMNS = [
-  { num: 1, label: 'Elite Package' },
-  { num: 2, label: 'Platinum Package' },
-  { num: 3, label: 'Gold Package' },
+  { num: 2, label: 'Elite Package' },
+  { num: 3, label: 'Platinum Package' },
+  { num: 1, label: 'Gold Package' },
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
 
@@ -155,18 +155,22 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
       <div className="flex items-center gap-2">
         <span className="text-gray-400 font-mono text-xs">{formatPrice(feature.price)}</span>
         {/* Inline AND/OR Toggle Button */}
-        <button
-          onClick={onToggleConnector}
-          className={`text-xs font-semibold px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
-            connector === 'OR' 
-              ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
-              : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-          }`}
-          title={`Click to toggle connector (currently ${connector})`}
-          aria-label={`Toggle connector for ${feature.name}, currently ${connector}`}
-        >
-          {connector}
-        </button>
+        {!isLast ? (
+          <button
+            onClick={onToggleConnector}
+            className={`text-xs font-semibold px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
+              connector === 'OR' 
+                ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
+                : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+            }`}
+            title={`Click to toggle connector (currently ${connector})`}
+            aria-label={`Toggle connector for ${feature.name}, currently ${connector}`}
+          >
+            {connector}
+          </button>
+        ) : (
+          <span className="text-[11px] text-gray-500 italic">End of column</span>
+        )}
       </div>
     </div>
   );
@@ -736,9 +740,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const renderColumnFeatures = (columnFeatures: ProductFeature[], columnId: number | 'unassigned') => {
     // Get a helpful empty state message for each column
     const getEmptyMessage = (): string => {
-      if (columnId === 1) return 'No Elite features yet - drag items here from unassigned or other columns';
-      if (columnId === 2) return 'No Platinum features yet - drag items here from unassigned or other columns';
-      if (columnId === 3) return 'No Gold features yet - drag items here from unassigned or other columns';
+      if (columnId === 2) return 'No Elite features yet - drag items here from unassigned or other columns';
+      if (columnId === 3) return 'No Platinum features yet - drag items here from unassigned or other columns';
+      if (columnId === 1) return 'No Gold features yet - drag items here from unassigned or other columns';
       if (columnId === 4) return 'No Popular Add-ons yet - drag featured items here';
       return 'Drop items here to assign them';
     };
@@ -967,7 +971,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   )}
                 </span>
               </label>
-              <p className="text-sm text-gray-500">Drag to reorder or move between columns • Click AND/OR to toggle</p>
+              <p className="text-sm text-gray-500">Drag to reorder or move between columns • AND/OR controls the connector to the NEXT item below (hidden on the last item)</p>
             </div>
           </div>
           {isLoading && <p className="text-gray-400">Loading features...</p>}

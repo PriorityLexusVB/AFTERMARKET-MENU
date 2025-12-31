@@ -112,7 +112,7 @@ describe('SelectionDrawer', () => {
 
     const root = container.firstChild as HTMLElement;
     expect(root).toHaveClass('fixed');
-    expect(root).toHaveClass('z-40');
+    expect(root).toHaveClass('z-50');
     expect(root).toHaveClass('print:hidden');
     expect(screen.getByRole('button', { name: /Finalize and view agreement/i })).toBeInTheDocument();
     const totalBlock = screen.getByText('Total').parentElement as HTMLElement;

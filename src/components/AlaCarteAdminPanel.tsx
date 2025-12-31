@@ -202,7 +202,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showUnpublished, setShowUnpublished] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<'all' | '1' | '2' | '3' | 'unplaced'>('all');
   
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -247,16 +246,9 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const filteredOptions = useMemo(() => {
     return options.filter((option) => {
       if (!showUnpublished && option.isPublished !== true) return false;
-      if (categoryFilter !== 'all') {
-        if (categoryFilter === 'unplaced') {
-          if (typeof option.column === 'number') return false;
-        } else if (option.column !== Number(categoryFilter)) {
-          return false;
-        }
-      }
       return true;
     });
-  }, [categoryFilter, options, showUnpublished]);
+  }, [options, showUnpublished]);
 
   const { featuredOptions, publishedOptions } = useMemo(() => {
     const base = filteredOptions;
@@ -335,10 +327,10 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     } else {
       const moving = sourceList[oldIndex];
       if (!moving) return;
-      const updatedMoving =
-        overLane === 'featured'
-          ? { ...moving, column: FEATURED_COLUMN.num }
-          : { ...moving, column: undefined };
+    const updatedMoving =
+      overLane === 'featured'
+        ? { ...moving, column: FEATURED_COLUMN.num }
+        : { ...moving, column: undefined };
 
       const prunedSource = sourceList.filter((o) => o.id !== activeIdStr);
       const insertIndex = newIndex === -1 ? targetList.length : newIndex;
@@ -381,7 +373,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
         reordered.map((option, index) => ({
           ...option,
           position: index,
-          column: option.column === undefined ? undefined : option.column,
+          column: undefined,
         }))
       );
     }
@@ -426,7 +418,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     }));
     const normalizedPublished = nextPublished.map((option, index) => ({
       ...option,
-      column: option.column && option.column !== FEATURED_COLUMN.num ? option.column : undefined,
+      column: undefined,
       position: index,
     }));
 
@@ -519,24 +511,10 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
               checked={showUnpublished}
               onChange={(e) => setShowUnpublished(e.target.checked)}
               className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
-              aria-label="Show hidden (legacy)"
+              aria-label="Show legacy or unpublished options"
             />
-            Show hidden (legacy)
+            Show legacy/unpublished
           </label>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Category filter:</span>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
-              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-            >
-              <option value="all">All</option>
-              <option value="1">Gold</option>
-              <option value="2">Elite</option>
-              <option value="3">Platinum</option>
-              <option value="unplaced">Unplaced</option>
-            </select>
-          </div>
         </div>
       </div>
 

@@ -91,7 +91,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({ isOpen, onClose, pac
                 {sortedPackages.map(pkg => (
                   <th key={pkg.id} className={`p-4 border-l border-gray-700 ${(pkg.isRecommended ?? pkg.is_recommended) ? 'bg-blue-500/10' : ''}`}>
                     <h3 className={`font-teko text-2xl sm:text-3xl font-bold uppercase tracking-wider text-${pkg.tier_color}`}>{pkg.name}</h3>
-                    {(pkg.isRecommended ?? pkg.is_recommended) && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">Most Popular</span>}
+                    {(pkg.isRecommended ?? pkg.is_recommended) && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">Recommended</span>}
                   </th>
                 ))}
               </tr>

@@ -12,19 +12,19 @@ interface ProductHubProps {
   initialAlaCarteOptions?: AlaCarteOption[];
 }
 
-// Column mapping: 1 = Elite Package, 2 = Platinum Package, 3 = Gold Package (strict mapping).
+// Column mapping: 1 = Gold Package, 2 = Elite Package, 3 = Platinum Package (strict mapping).
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Elite Package',
-  2: 'Platinum Package',
-  3: 'Gold Package',
+  1: 'Gold Package',
+  2: 'Elite Package',
+  3: 'Platinum Package',
 };
-const packageOrder: (1 | 2 | 3)[] = [1, 2, 3];
+const packageOrder: (1 | 2 | 3)[] = [2, 3, 1];
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 1) return 'Elite';
-  if (column === 2) return 'Platinum';
-  if (column === 3) return 'Gold';
+  if (column === 1) return 'Gold';
+  if (column === 2) return 'Elite';
+  if (column === 3) return 'Platinum';
   return 'Unplaced';
 };
 
@@ -1022,13 +1022,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                         <option value="" disabled>
                           Choose lane...
                         </option>
-                        <option value="1" disabled={feature.column === 1}>
+                        <option value="2" disabled={feature.column === 2}>
                           Elite
                         </option>
-                        <option value="2" disabled={feature.column === 2}>
+                        <option value="3" disabled={feature.column === 3}>
                           Platinum
                         </option>
-                        <option value="3" disabled={feature.column === 3}>
+                        <option value="1" disabled={feature.column === 1}>
                           Gold
                         </option>
                       </select>

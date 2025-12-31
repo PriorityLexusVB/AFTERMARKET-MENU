@@ -18,6 +18,7 @@ import { fetchAllData } from './data';
 import { auth, firebaseInitializationError } from './firebase';
 import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from './types';
 import { columnOrderValue, isCuratedOption } from './utils/alaCarte';
+import { sortPackagesForDisplay } from './utils/packageOrder';
 import {
   initializeAnalytics,
   trackPackageSelect,
@@ -164,14 +165,7 @@ const App: React.FC = () => {
 
   const displayPackages = useMemo(() => {
     // Deterministic customer-facing order: Elite → Platinum → Gold (matches requested layout).
-    const tierRank = (name: string) => {
-      const n = name.trim().toLowerCase();
-      if (/\belite\b/.test(n)) return 1;
-      if (/\bplatinum\b/.test(n)) return 2;
-      if (/\bgold\b/.test(n)) return 3;
-      return 99;
-    };
-    const sorted = [...packages].sort((a, b) => tierRank(a.name) - tierRank(b.name));
+    const sorted = sortPackagesForDisplay(packages);
     return applyOverrides(sorted, priceOverrides);
   }, [packages, priceOverrides]);
   const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
@@ -431,8 +425,11 @@ const App: React.FC = () => {
       {isAdminView && !isDemoMode && !guestMode ? (
         <AdminPanel onDataUpdate={loadData} />
       ) : (
-        <>
-          <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col pb-32 lg:pb-36">
+          <>
+          <main
+            className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' }}
+          >
             {isLoading ? (
               <LoadingSpinner />
             ) : currentView === 'agreement' ? (

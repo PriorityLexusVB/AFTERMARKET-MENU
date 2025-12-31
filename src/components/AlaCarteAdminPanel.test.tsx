@@ -102,7 +102,7 @@ describe('AlaCarteAdminPanel', () => {
   it('reveals unpublished and legacy options when toggled on', async () => {
     render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
-    const toggle = await screen.findByLabelText('Show hidden (legacy)');
+    const toggle = await screen.findByLabelText(/Show legacy/i);
     await userEvent.click(toggle);
 
     await waitFor(() => expect(screen.getByText('Unpublished Item')).toBeInTheDocument());

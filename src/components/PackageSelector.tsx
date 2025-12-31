@@ -29,7 +29,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     : `${baseGrid} stagger-children`;
 
   return (
-    <div className={gridClasses}>
+    <div className={gridClasses} data-testid="package-grid">
       {packages.map((pkg, index) => (
         <PackageCard
           key={pkg.id}

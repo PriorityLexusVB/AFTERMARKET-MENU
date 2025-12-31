@@ -12,19 +12,19 @@ interface ProductHubProps {
   initialAlaCarteOptions?: AlaCarteOption[];
 }
 
-// Column mapping: 1 = Gold Package, 2 = Elite Package, 3 = Platinum Package (strict mapping).
+// Column mapping: 1 = Elite Package, 2 = Platinum Package, 3 = Gold Package (strict mapping).
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Gold Package',
-  2: 'Elite Package',
-  3: 'Platinum Package',
+  1: 'Elite Package',
+  2: 'Platinum Package',
+  3: 'Gold Package',
 };
-const packageOrder: (1 | 2 | 3)[] = [2, 3, 1];
+const packageOrder: (1 | 2 | 3)[] = [1, 2, 3];
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 1) return 'Gold';
-  if (column === 2) return 'Elite';
-  if (column === 3) return 'Platinum';
+  if (column === 1) return 'Elite';
+  if (column === 2) return 'Platinum';
+  if (column === 3) return 'Gold';
   return 'Unplaced';
 };
 
@@ -634,9 +634,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="">Not placed</option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
+            <option value="1">Elite</option>
+            <option value="2">Platinum</option>
+            <option value="3">Gold</option>
           </select>
         </div>
         <div className="flex flex-col gap-1">
@@ -687,9 +687,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
+            <option value="1">Elite</option>
+            <option value="2">Platinum</option>
+            <option value="3">Gold</option>
             <option value="none">Not in packages</option>
           </select>
         </label>
@@ -726,9 +726,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           >
             <option value="all">All</option>
             <option value="featured">Featured</option>
-            <option value="1">Column 1 (Gold)</option>
-            <option value="2">Column 2 (Elite)</option>
-            <option value="3">Column 3 (Platinum)</option>
+            <option value="1">Column 1 (Elite)</option>
+            <option value="2">Column 2 (Platinum)</option>
+            <option value="3">Column 3 (Gold)</option>
             <option value="unplaced">Not placed</option>
           </select>
         </label>
@@ -804,9 +804,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             <option value="" disabled>
               Set category...
             </option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
+            <option value="1">Elite</option>
+            <option value="2">Platinum</option>
+            <option value="3">Gold</option>
             <option value="none">Not placed</option>
           </select>
         </label>
@@ -1023,13 +1023,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                           Choose lane...
                         </option>
                         <option value="1" disabled={feature.column === 1}>
-                          Gold
-                        </option>
-                        <option value="2" disabled={feature.column === 2}>
                           Elite
                         </option>
-                        <option value="3" disabled={feature.column === 3}>
+                        <option value="2" disabled={feature.column === 2}>
                           Platinum
+                        </option>
+                        <option value="3" disabled={feature.column === 3}>
+                          Gold
                         </option>
                       </select>
                     </div>

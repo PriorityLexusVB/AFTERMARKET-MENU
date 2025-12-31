@@ -72,7 +72,7 @@ describe('ProductHub inline editing', () => {
     expect(labels).toEqual(['Elite Package', 'Platinum Package', 'Gold Package', 'Not in Packages']);
 
     await userEvent.click(within(row as HTMLElement).getByLabelText('Gold Package'));
-    await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: 1 })));
+    await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: 3 })));
   });
 
   it('allows inline connector toggling for placed features', async () => {

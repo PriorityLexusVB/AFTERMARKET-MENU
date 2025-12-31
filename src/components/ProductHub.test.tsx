@@ -63,16 +63,39 @@ describe('ProductHub inline editing', () => {
     mockAddDoc.mockResolvedValue({ id: 'new-feature' });
   });
 
-  it('orders package lane radios Gold, Elite, Platinum, Not in Packages', async () => {
+  it('orders package lane radios Elite, Platinum, Gold, Not in Packages', async () => {
     const { feature } = await renderHub({ column: 2 });
     const row = screen.getByText(feature.name).closest('tr');
     expect(row).toBeTruthy();
     const radios = within(row as HTMLElement).getAllByRole('radio');
     const labels = radios.map((radio) => (radio as HTMLInputElement).labels?.[0]?.textContent?.trim());
-    expect(labels).toEqual(['Gold Package', 'Elite Package', 'Platinum Package', 'Not in Packages']);
+    expect(labels).toEqual(['Elite Package', 'Platinum Package', 'Gold Package', 'Not in Packages']);
 
     await userEvent.click(within(row as HTMLElement).getByLabelText('Gold Package'));
     await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: 1 })));
+  });
+
+  it('allows inline connector toggling for placed features', async () => {
+    const { feature } = await renderHub({ column: 2, connector: 'AND' });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const orButton = within(row).getByRole('button', { name: /Set connector to OR/i });
+
+    await userEvent.click(orButton);
+
+    await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ connector: 'OR' })));
+    expect(orButton).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('scrolls the row into view before opening edit form', async () => {
+    const { feature } = await renderHub({ column: 1 });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const scrollSpy = vi.fn();
+    (row as HTMLElement & { scrollIntoView: () => void }).scrollIntoView = scrollSpy;
+
+    await userEvent.click(within(row).getByRole('button', { name: /Edit details/i }));
+
+    expect(scrollSpy).toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByLabelText(/Feature Name/i)).toBeInTheDocument());
   });
 
   it('publishes inline using the typed A La Carte price', async () => {

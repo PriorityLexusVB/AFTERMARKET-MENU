@@ -83,7 +83,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   },
   // Platinum Additions (Column 2) - included in Platinum only
   {
-    id: 'elite-rustguard',
+    id: 'platinum-rustguard',
     name: 'RustGuard Pro',
     description: 'Underbody protection to prevent corrosion and structural damage.',
     points: [
@@ -103,7 +103,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     connector: 'AND',
   },
   {
-    id: 'elite-toughguard',
+    id: 'platinum-toughguard',
     name: 'ToughGuard Premium',
     description: 'A premium paint sealant that protects against environmental damage.',
     points: [
@@ -122,7 +122,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     connector: 'AND',
   },
   {
-    id: 'elite-diamond-shield',
+    id: 'platinum-diamond-shield',
     name: 'Diamond Shield Windshield Protection',
     description: 'A treatment that improves visibility and protects your windshield.',
     points: [
@@ -142,7 +142,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   },
   // Gold Additions (Column 3) - included in Gold only
   {
-    id: 'platinum-rustguard',
+    id: 'gold-rustguard',
     name: 'RustGuard Pro',
     description: 'Underbody protection to prevent corrosion and structural damage.',
     points: [
@@ -162,7 +162,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     connector: 'AND',
   },
   {
-    id: 'platinum-toughguard',
+    id: 'gold-toughguard',
     name: 'ToughGuard Premium',
     description: 'A premium paint sealant that protects against environmental damage.',
     points: [
@@ -181,7 +181,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     connector: 'AND',
   },
   {
-    id: 'platinum-interior',
+    id: 'gold-interior',
     name: 'Interior Leather & Fabric Protection',
     description: 'A complete interior treatment to protect against stains and damage.',
     points: [

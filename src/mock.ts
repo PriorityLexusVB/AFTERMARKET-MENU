@@ -247,7 +247,7 @@ export const MOCK_PACKAGES: PackageTier[] = [
     cost: 750,
     // Platinum = Column 2 only
     features: deriveTierFeatures('Platinum', MOCK_FEATURES),
-    is_recommended: true,
+    isRecommended: true,
     tier_color: 'blue-400',
   },
   {

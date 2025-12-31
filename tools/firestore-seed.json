@@ -206,7 +206,7 @@
           "platinum-graphene-coating",
           "platinum-wheel-coating"
         ],
-        "is_recommended": true,
+        "isRecommended": true,
         "tier_color": "blue-400"
       },
       "package-gold": {

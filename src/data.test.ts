@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { sortFeaturesByPosition, groupFeaturesByColumn, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature } from './data';
+import { sortFeaturesByPosition, groupFeaturesByColumn, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature, setRecommendedPackage } from './data';
+import { writeBatch, getDocs, doc } from 'firebase/firestore/lite';
 import type { ProductFeature } from './types';
 
 // Mock firebase
@@ -266,11 +267,64 @@ describe('A La Carte Publishing', () => {
     });
   });
 
-  describe('unpublishAlaCarteFromFeature', () => {
-    it('should throw error if firebase is not initialized', async () => {
-      await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
-    });
+describe('unpublishAlaCarteFromFeature', () => {
+  it('should throw error if firebase is not initialized', async () => {
+    await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
   });
+});
+
+describe('setRecommendedPackage', () => {
+  const mockUpdate = vi.fn();
+  const mockCommit = vi.fn();
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const firebaseModule = await import('./firebase');
+    (firebaseModule as any).db = {} as any;
+    vi.mocked(writeBatch).mockReturnValue({
+      update: mockUpdate,
+      commit: mockCommit,
+    } as any);
+    vi.mocked(doc).mockImplementation((_db: any, _collection: string, id: string) => ({ path: id }) as any);
+    mockUpdate.mockClear();
+    mockCommit.mockClear();
+  });
+
+  afterEach(async () => {
+    const firebaseModule = await import('./firebase');
+    (firebaseModule as any).db = null;
+  });
+
+  it('sets one package as recommended and clears the rest', async () => {
+    vi.mocked(getDocs).mockResolvedValue({
+      docs: [
+        { id: 'elite', data: () => ({ name: 'Elite', isRecommended: false }) },
+        { id: 'platinum', data: () => ({ name: 'Platinum', isRecommended: true }) },
+      ],
+      empty: false,
+    } as any);
+
+    await setRecommendedPackage('elite');
+
+    expect(mockUpdate).toHaveBeenCalledWith({ path: 'elite' }, { isRecommended: true, is_recommended: true });
+    expect(mockUpdate).toHaveBeenCalledWith({ path: 'platinum' }, { isRecommended: false, is_recommended: false });
+    expect(mockCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears all recommendations when passed null', async () => {
+    vi.mocked(getDocs).mockResolvedValue({
+      docs: [
+        { id: 'elite', data: () => ({ name: 'Elite', isRecommended: true }) },
+      ],
+      empty: false,
+    } as any);
+
+    await setRecommendedPackage(null);
+
+    expect(mockUpdate).toHaveBeenCalledWith({ path: 'elite' }, { isRecommended: false, is_recommended: false });
+    expect(mockCommit).toHaveBeenCalledTimes(1);
+  });
+});
 });
 
 describe('Package FeatureIds Fallback Behavior', () => {

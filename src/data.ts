@@ -26,6 +26,7 @@ interface FirebasePackage {
   name: string;
   price: number;
   cost: number;
+  isRecommended?: boolean;
   is_recommended?: boolean;
   tier_color: string;
   featureIds?: string[]; // Legacy field (removed by migration)
@@ -60,6 +61,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
 
     const packages: PackageTier[] = packagesSnapshot.docs.map(doc => {
         const data = doc.data() as Omit<FirebasePackage, 'id'>;
+        const isRecommended = data.isRecommended ?? data.is_recommended ?? false;
         // Derive features from column assignments based on tier name
         // This makes admin column configuration the single source of truth
         let derivedFeatures = deriveTierFeatures(data.name, features);
@@ -69,6 +71,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
             name: data.name,
             price: data.price,
             cost: data.cost,
+            isRecommended,
             is_recommended: data.is_recommended,
             tier_color: data.tier_color,
             features: derivedFeatures
@@ -96,6 +99,30 @@ export async function fetchAllData(): Promise<FetchDataResult> {
         alaCarteOptions: MOCK_ALA_CARTE_OPTIONS,
       };
   }
+}
+
+export async function setRecommendedPackage(packageIdOrNull: string | null): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update recommended package.");
+  }
+
+  const packagesSnapshot = await getDocs(collection(db, 'packages'));
+  if (packagesSnapshot.empty || packagesSnapshot.docs.length === 0) {
+    return;
+  }
+
+  const batch = writeBatch(db);
+  packagesSnapshot.docs.forEach(pkgDoc => {
+    const targetRef = doc(db!, 'packages', pkgDoc.id);
+    const isRecommended = packageIdOrNull !== null && pkgDoc.id === packageIdOrNull;
+    batch.update(targetRef, {
+      isRecommended,
+      // Preserve legacy field for backward compatibility
+      is_recommended: isRecommended,
+    });
+  });
+
+  await batch.commit();
 }
 
 /**

@@ -77,6 +77,7 @@ export const PackageTierSchema = z.object({
   price: z.number().nonnegative('Price must be non-negative'),
   cost: z.number().nonnegative('Cost must be non-negative'),
   features: z.array(ProductFeatureSchema),
+  isRecommended: z.boolean().optional(),
   is_recommended: z.boolean().optional(),
   tier_color: z.string().min(1, 'Tier color is required'),
 });

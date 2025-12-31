@@ -89,9 +89,9 @@ export const CompareModal: React.FC<CompareModalProps> = ({ isOpen, onClose, pac
               <tr>
                 <th className="text-left font-bold font-teko text-xl tracking-wider text-gray-200 p-4 w-1/3">Feature</th>
                 {sortedPackages.map(pkg => (
-                  <th key={pkg.id} className={`p-4 border-l border-gray-700 ${pkg.is_recommended ? 'bg-blue-500/10' : ''}`}>
+                  <th key={pkg.id} className={`p-4 border-l border-gray-700 ${(pkg.isRecommended ?? pkg.is_recommended) ? 'bg-blue-500/10' : ''}`}>
                     <h3 className={`font-teko text-2xl sm:text-3xl font-bold uppercase tracking-wider text-${pkg.tier_color}`}>{pkg.name}</h3>
-                    {pkg.is_recommended && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">Most Popular</span>}
+                    {(pkg.isRecommended ?? pkg.is_recommended) && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">Most Popular</span>}
                   </th>
                 ))}
               </tr>
@@ -102,8 +102,9 @@ export const CompareModal: React.FC<CompareModalProps> = ({ isOpen, onClose, pac
                   <td className="p-4 font-semibold text-gray-300">{feature.name}</td>
                   {sortedPackages.map(pkg => {
                     const hasFeature = pkg.features.some(f => f.id === feature.id);
+                    const isRecommended = pkg.isRecommended ?? pkg.is_recommended;
                     return (
-                      <td key={`${pkg.id}-${feature.id}`} className={`p-4 border-l border-gray-700 text-center ${pkg.is_recommended ? 'bg-blue-500/10' : ''}`}>
+                      <td key={`${pkg.id}-${feature.id}`} className={`p-4 border-l border-gray-700 text-center ${isRecommended ? 'bg-blue-500/10' : ''}`}>
                         {hasFeature ? <CheckIcon /> : <XIcon />}
                       </td>
                     );
@@ -115,7 +116,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({ isOpen, onClose, pac
                 <tr className="border-t-2 border-gray-600">
                     <td className="p-4 text-right font-bold font-teko text-2xl tracking-wider">Total Price</td>
                      {sortedPackages.map(pkg => (
-                        <td key={pkg.id} className={`p-4 border-l border-gray-700 text-center ${pkg.is_recommended ? 'bg-blue-500/10' : ''}`}>
+                        <td key={pkg.id} className={`p-4 border-l border-gray-700 text-center ${(pkg.isRecommended ?? pkg.is_recommended) ? 'bg-blue-500/10' : ''}`}>
                              <p className={`text-3xl sm:text-4xl font-bold font-teko text-white text-shadow`}>{formatPrice(pkg.price)}</p>
                         </td>
                     ))}
@@ -123,7 +124,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({ isOpen, onClose, pac
                  <tr className="bg-gray-900/50">
                     <td></td>
                      {sortedPackages.map(pkg => (
-                        <td key={pkg.id} className={`p-4 border-l border-gray-700 text-center ${pkg.is_recommended ? 'bg-blue-500/10' : ''}`}>
+                        <td key={pkg.id} className={`p-4 border-l border-gray-700 text-center ${(pkg.isRecommended ?? pkg.is_recommended) ? 'bg-blue-500/10' : ''}`}>
                             <button
                                 onClick={() => onSelectPackage(pkg)}
                                 className="w-full py-2 px-4 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 transform active:scale-95 bg-gray-700 text-gray-300 hover:bg-blue-500 hover:text-white"

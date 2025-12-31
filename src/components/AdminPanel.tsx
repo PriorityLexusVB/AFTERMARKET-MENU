@@ -22,9 +22,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { db } from '../firebase';
-import type { ProductFeature, FeatureConnector } from '../types';
+import type { ProductFeature, FeatureConnector, PackageTier } from '../types';
 import { AlaCarteAdminPanel } from './AlaCarteAdminPanel';
-import { batchUpdateFeaturesPositions, FeaturePositionUpdate, updateFeature } from '../data';
+import { batchUpdateFeaturesPositions, FeaturePositionUpdate, updateFeature, setRecommendedPackage } from '../data';
 import { groupFeaturesByColumn, normalizePositions, sortFeatures } from '../utils/featureOrdering';
 import { ProductHub } from './ProductHub';
 
@@ -274,6 +274,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [showBanner, setShowBanner] = useState(!isBannerDismissed());
   const [showUnassigned, setShowUnassigned] = useState(false);
+  const [packages, setPackages] = useState<PackageTier[]>([]);
+  const [recommendedSelection, setRecommendedSelection] = useState<string>('none');
+  const [isSavingRecommended, setIsSavingRecommended] = useState(false);
+  const [recommendedMessage, setRecommendedMessage] = useState<string | null>(null);
+  const [recommendedError, setRecommendedError] = useState<string | null>(null);
   
   // Backup state for rollback on error
   const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
@@ -310,6 +315,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     }
   }, []);
 
+  const fetchPackages = useCallback(async () => {
+    if (!db) {
+      setPackages([]);
+      setRecommendedSelection('none');
+      return;
+    }
+
+    try {
+      const packagesSnapshot = await getDocs(collection(db, 'packages'));
+      const packageData: PackageTier[] = packagesSnapshot.docs.map(pkgDoc => {
+        const data = pkgDoc.data() as Partial<PackageTier>;
+        const isRecommended = data.isRecommended ?? data.is_recommended ?? false;
+        return {
+          id: pkgDoc.id,
+          name: data.name ?? '',
+          price: data.price ?? 0,
+          cost: data.cost ?? 0,
+          features: data.features ?? [],
+          tier_color: data.tier_color ?? '',
+          isRecommended,
+          is_recommended: data.is_recommended,
+        };
+      });
+      setPackages(packageData);
+      setRecommendedSelection(packageData.find(pkg => pkg.isRecommended ?? pkg.is_recommended)?.id ?? 'none');
+      setRecommendedError(null);
+    } catch (err) {
+      console.error("Error fetching packages:", err);
+      setPackages([]);
+      setRecommendedSelection('none');
+      setRecommendedError("Failed to load packages.");
+    }
+  }, []);
+
   const fetchAlaCarteCount = useCallback(async () => {
     if (!db) {
       setIsLoadingCount(false);
@@ -338,7 +377,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   useEffect(() => {
     fetchFeatures();
     fetchAlaCarteCount();
-  }, [fetchFeatures, fetchAlaCarteCount]);
+    fetchPackages();
+  }, [fetchFeatures, fetchAlaCarteCount, fetchPackages]);
 
   const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab);
@@ -360,6 +400,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     onDataUpdate();
   }, [fetchAlaCarteCount, onDataUpdate]);
 
+  const handleRecommendedChange = useCallback(async (packageId: string | 'none') => {
+    if (packageId === 'none') {
+      setRecommendedSelection('none');
+    } else {
+      setRecommendedSelection(packageId);
+    }
+    setRecommendedMessage(null);
+    setRecommendedError(null);
+    setIsSavingRecommended(true);
+    try {
+      await setRecommendedPackage(packageId === 'none' ? null : packageId);
+      setRecommendedMessage('Saved');
+      await fetchPackages();
+      onDataUpdate();
+    } catch (err) {
+      console.error("Error updating recommended package:", err);
+      const message = err instanceof Error ? err.message : 'Failed to update recommended package.';
+      setRecommendedError(message);
+    } finally {
+      setIsSavingRecommended(false);
+    }
+  }, [fetchPackages, onDataUpdate]);
+
   // Organize features by column and sort by position using centralized utility
   const featuresByColumn = useMemo(() => {
     return groupFeaturesByColumn(features);
@@ -369,6 +432,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const unassignedCount = useMemo(() => {
     return featuresByColumn.unassigned.length;
   }, [featuresByColumn]);
+
+  const elitePackageId = useMemo(
+    () => packages.find(pkg => pkg.name.toLowerCase().includes('elite'))?.id,
+    [packages]
+  );
+  const platinumPackageId = useMemo(
+    () => packages.find(pkg => pkg.name.toLowerCase().includes('platinum'))?.id,
+    [packages]
+  );
+  const goldPackageId = useMemo(
+    () => packages.find(pkg => pkg.name.toLowerCase().includes('gold'))?.id,
+    [packages]
+  );
 
   // Get the active feature being dragged
   const activeFeature = useMemo(() => {
@@ -800,6 +876,66 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 Product Hub
               </button>.
             </p>
+
+            <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <p className="text-sm text-gray-300 font-semibold">Recommended package</p>
+                  <p className="text-xs text-gray-500">Choose which package shows the recommended badge to customers.</p>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  {isSavingRecommended && <span className="text-blue-400 flex items-center gap-1">Saving...</span>}
+                  {recommendedMessage && !isSavingRecommended && <span className="text-green-400 flex items-center gap-1">Saved</span>}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-4 mt-3" role="radiogroup" aria-label="Recommended package">
+                <label className="flex items-center gap-2 text-sm text-gray-200">
+                  <input
+                    type="radio"
+                    name="recommended-package"
+                    checked={recommendedSelection === elitePackageId}
+                    disabled={!elitePackageId || isSavingRecommended}
+                    onChange={() => elitePackageId && handleRecommendedChange(elitePackageId)}
+                    className="form-radio h-4 w-4 text-blue-500"
+                  />
+                  Elite
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-200">
+                  <input
+                    type="radio"
+                    name="recommended-package"
+                    checked={recommendedSelection === platinumPackageId}
+                    disabled={!platinumPackageId || isSavingRecommended}
+                    onChange={() => platinumPackageId && handleRecommendedChange(platinumPackageId)}
+                    className="form-radio h-4 w-4 text-blue-500"
+                  />
+                  Platinum
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-200">
+                  <input
+                    type="radio"
+                    name="recommended-package"
+                    checked={recommendedSelection === goldPackageId}
+                    disabled={!goldPackageId || isSavingRecommended}
+                    onChange={() => goldPackageId && handleRecommendedChange(goldPackageId)}
+                    className="form-radio h-4 w-4 text-blue-500"
+                  />
+                  Gold
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-200">
+                  <input
+                    type="radio"
+                    name="recommended-package"
+                    checked={recommendedSelection === 'none'}
+                    disabled={isSavingRecommended}
+                    onChange={() => handleRecommendedChange('none')}
+                    className="form-radio h-4 w-4 text-blue-500"
+                  />
+                  None
+                </label>
+              </div>
+              {recommendedError && <p className="text-red-400 text-sm mt-2">{recommendedError}</p>}
+            </div>
 
         <div className="border-t border-gray-700 pt-6">
           <div className="flex items-center justify-between mb-4">

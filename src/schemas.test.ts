@@ -329,7 +329,7 @@ describe('PackageTierSchema', () => {
         },
       ],
       tier_color: 'blue-400',
-      is_recommended: true,
+      isRecommended: true,
     };
 
     const result = PackageTierSchema.safeParse(validPackage);

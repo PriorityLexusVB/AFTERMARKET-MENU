@@ -25,6 +25,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
   
+  const isRecommended = packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
+
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
 
@@ -34,7 +36,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
       className={`
       lux-card flex flex-col h-full relative overflow-hidden
       ${isSelected ? 'lux-card-selected' : ''}
-      ${packageInfo.is_recommended ? 'lux-card-recommended' : ''}
+      ${isRecommended ? 'lux-card-recommended' : ''}
       ${className}
     `}
       style={style}
@@ -46,8 +48,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
             {packageInfo.name}
           </h3>
         </div>
-        {packageInfo.is_recommended && (
-          <span className="lux-chip-gold shadow-glow-gold">Platinum Recommended</span>
+        {isRecommended && (
+          <span className="lux-chip-gold shadow-glow-gold">Recommended</span>
         )}
       </div>
 

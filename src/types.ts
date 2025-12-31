@@ -35,6 +35,8 @@ export interface PackageTier {
   cost: number;
   // This now contains the full feature objects, fetched from the DB
   features: ProductFeature[];
+  isRecommended?: boolean;
+  // Legacy field maintained for backward compatibility with existing data
   is_recommended?: boolean;
   tier_color: string;
 }

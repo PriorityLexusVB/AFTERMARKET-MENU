@@ -57,6 +57,7 @@ vi.mock('../data', () => ({
   batchUpdateFeaturesPositions: vi.fn().mockResolvedValue(undefined),
   addFeature: vi.fn().mockResolvedValue(undefined),
   updateFeature: vi.fn().mockResolvedValue(undefined),
+  setRecommendedPackage: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Sample features for testing
@@ -138,6 +139,13 @@ describe('AdminPanel', () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
     expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
+  });
+
+  it('should render recommended package controls', async () => {
+    render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
+
+    expect(screen.getByText(/Recommended package/i)).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: /Recommended package/i })).toBeInTheDocument();
   });
 
   it('should not render the feature form by default', async () => {
@@ -975,4 +983,3 @@ describe('AdminPanel', () => {
     });
   });
 });
-

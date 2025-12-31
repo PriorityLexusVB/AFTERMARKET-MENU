@@ -48,7 +48,7 @@ export function trackPackageSelect(packageInfo: PackageTier): void {
     package_id: packageInfo.id,
     package_name: packageInfo.name,
     package_price: packageInfo.price,
-    is_recommended: packageInfo.is_recommended || false,
+    is_recommended: packageInfo.isRecommended ?? packageInfo.is_recommended ?? false,
   });
 }
 

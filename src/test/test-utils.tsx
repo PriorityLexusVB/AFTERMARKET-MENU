@@ -41,7 +41,7 @@ export const createMockPackageTier = (overrides?: Partial<PackageTier>): Package
   price: 2000,
   cost: 1000,
   features: [createMockFeature()],
-  is_recommended: false,
+  isRecommended: false,
   tier_color: 'blue-400',
   ...overrides,
 });

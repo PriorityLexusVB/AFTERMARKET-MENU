@@ -28,7 +28,7 @@ describe('PackageCard', () => {
       name: 'Silver',
       price: 1500,
       tier_color: 'gray-400',
-      is_recommended: false,
+      isRecommended: false,
       features: [mockFeature1, mockFeature2],
     }),
     allFeaturesForDisplay: [mockFeature1, mockFeature2, mockFeature3],
@@ -46,10 +46,10 @@ describe('PackageCard', () => {
     expect(container.textContent).toContain('$1,500');
   });
 
-  it('should display recommended badge when is_recommended is true', () => {
+  it('should display recommended badge when isRecommended is true', () => {
     const recommendedPackage = createMockPackageTier({
       ...defaultProps.packageInfo,
-      is_recommended: true,
+      isRecommended: true,
     });
 
     render(<PackageCard {...defaultProps} packageInfo={recommendedPackage} />);
@@ -57,7 +57,7 @@ describe('PackageCard', () => {
     expect(screen.getByText(/Recommended/i)).toBeInTheDocument();
   });
 
-  it('should not display recommended badge when is_recommended is false', () => {
+  it('should not display recommended badge when isRecommended is false', () => {
     render(<PackageCard {...defaultProps} />);
 
     expect(screen.queryByText(/Recommended/i)).not.toBeInTheDocument();

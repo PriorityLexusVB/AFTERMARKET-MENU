@@ -170,7 +170,7 @@ Structure your documents as follows:
 *   **name** (string): "Platinum"
 *   **price** (number): 3995
 *   **cost** (number): 1900
-*   **is_recommended** (boolean): true
+*   **isRecommended** (boolean): true
 *   **tier_color** (string): "blue-400"
 *   **legacyFeatureIds** (array, optional): Backup of removed `featureIds` (not used for rendering; retained only for reference).
 

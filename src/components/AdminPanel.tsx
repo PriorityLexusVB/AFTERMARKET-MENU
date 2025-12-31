@@ -38,12 +38,12 @@ const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 };
 
-// Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
-// Note: Admin panel display order shown here. Customer-facing order is Gold → Elite → Platinum.
+// Column configuration - strict 1:1 mapping (Elite=Column 1, Platinum=Column 2, Gold=Column 3)
+// Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
 const COLUMNS = [
-  { num: 1, label: 'Gold Package' },
-  { num: 2, label: 'Elite Package' },
-  { num: 3, label: 'Platinum Package' },
+  { num: 1, label: 'Elite Package' },
+  { num: 2, label: 'Platinum Package' },
+  { num: 3, label: 'Gold Package' },
   { num: 4, label: 'Popular Add-ons' },
 ] as const;
 

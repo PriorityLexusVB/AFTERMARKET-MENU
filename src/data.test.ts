@@ -17,6 +17,7 @@ vi.mock('firebase/firestore/lite', () => ({
   doc: vi.fn(),
   writeBatch: vi.fn(),
   setDoc: vi.fn(),
+  deleteField: vi.fn(() => ({ _type: 'deleteField' })),
 }));
 
 describe('sortFeaturesByPosition', () => {

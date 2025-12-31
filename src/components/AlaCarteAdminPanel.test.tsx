@@ -79,6 +79,7 @@ vi.mock('firebase/firestore/lite', () => {
       }
       return { docs: [] };
     }),
+    deleteField: vi.fn(() => ({ _type: 'deleteField' })),
   };
 });
 

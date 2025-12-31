@@ -12,19 +12,19 @@ interface ProductHubProps {
   initialAlaCarteOptions?: AlaCarteOption[];
 }
 
-// Column mapping: 1 = Gold Package, 2 = Elite Package, 3 = Platinum Package (strict mapping).
+// Column mapping: 1 = Elite Package, 2 = Platinum Package, 3 = Gold Package (strict mapping).
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Gold Package',
-  2: 'Elite Package',
-  3: 'Platinum Package',
+  1: 'Elite Package',
+  2: 'Platinum Package',
+  3: 'Gold Package',
 };
-const packageOrder: (1 | 2 | 3)[] = [2, 3, 1];
+const packageOrder: (1 | 2 | 3)[] = [1, 2, 3];
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 1) return 'Gold';
-  if (column === 2) return 'Elite';
-  if (column === 3) return 'Platinum';
+  if (column === 1) return 'Elite';
+  if (column === 2) return 'Platinum';
+  if (column === 3) return 'Gold';
   return 'Unplaced';
 };
 

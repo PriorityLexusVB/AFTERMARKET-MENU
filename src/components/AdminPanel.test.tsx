@@ -21,6 +21,18 @@ vi.mock('firebase/firestore/lite', () => {
       // Get collection name from either direct collection ref or query result
       const collectionName = collectionRef?._collectionName;
       
+      if (collectionName === 'packages') {
+        return {
+          docs: [
+            { id: 'pkg-elite', data: () => ({ name: 'Elite', price: 100, cost: 50, tier_color: 'gray-400' }) },
+            { id: 'pkg-platinum', data: () => ({ name: 'Platinum', price: 200, cost: 75, tier_color: 'blue-400', isRecommended: true }) },
+            { id: 'pkg-gold', data: () => ({ name: 'Gold', price: 150, cost: 60, tier_color: 'yellow-400' }) },
+          ],
+          size: 3,
+          empty: false,
+        };
+      }
+      
       // Check for A La Carte options
       if (collectionName === 'ala_carte_options') {
         const mockAlaCarteCount = (global as any).__mockAlaCarteCount;

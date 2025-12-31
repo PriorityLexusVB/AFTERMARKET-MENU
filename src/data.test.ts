@@ -324,6 +324,13 @@ describe('setRecommendedPackage', () => {
     expect(mockUpdate).toHaveBeenCalledWith({ path: 'elite' }, { isRecommended: false, is_recommended: false });
     expect(mockCommit).toHaveBeenCalledTimes(1);
   });
+
+  it('throws when firebase is not initialized', async () => {
+    const firebaseModule = await import('./firebase');
+    (firebaseModule as any).db = null;
+
+    await expect(setRecommendedPackage('any')).rejects.toThrow('Firebase is not initialized. Cannot update recommended package.');
+  });
 });
 });
 

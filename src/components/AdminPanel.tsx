@@ -380,6 +380,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     fetchPackages();
   }, [fetchFeatures, fetchAlaCarteCount, fetchPackages]);
 
+  useEffect(() => {
+    if (!recommendedMessage) return;
+    const timeoutId = window.setTimeout(() => setRecommendedMessage(null), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [recommendedMessage]);
+
   const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab);
     setStoredTab(tab);
@@ -401,6 +407,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   }, [fetchAlaCarteCount, onDataUpdate]);
 
   const handleRecommendedChange = useCallback(async (packageId: string | 'none') => {
+    const previousSelection = recommendedSelection;
     if (packageId === 'none') {
       setRecommendedSelection('none');
     } else {
@@ -418,10 +425,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       console.error("Error updating recommended package:", err);
       const message = err instanceof Error ? err.message : 'Failed to update recommended package.';
       setRecommendedError(message);
+      setRecommendedSelection(previousSelection);
+      await fetchPackages();
     } finally {
       setIsSavingRecommended(false);
     }
-  }, [fetchPackages, onDataUpdate]);
+  }, [fetchPackages, onDataUpdate, recommendedSelection]);
 
   // Organize features by column and sort by position using centralized utility
   const featuresByColumn = useMemo(() => {

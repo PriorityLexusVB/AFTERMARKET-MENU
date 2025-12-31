@@ -511,8 +511,8 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
               checked={showUnpublished}
               onChange={(e) => setShowUnpublished(e.target.checked)}
               className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
-              aria-label="Show legacy or unpublished options"
-            />
+            aria-label="Show legacy/unpublished"
+          />
             Show legacy/unpublished
           </label>
         </div>

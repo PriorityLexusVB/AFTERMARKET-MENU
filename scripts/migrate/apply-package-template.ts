@@ -98,7 +98,7 @@ async function run(): Promise<void> {
   try {
     console.log('\n📦 Fetching features...');
     const snapshot = await db.collection('features').get();
-    const features: ProductFeature[] = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as ProductFeature) }));
+    const features: ProductFeature[] = snapshot.docs.map((doc) => ({ ...(doc.data() as ProductFeature), id: doc.id }));
     console.log(`Found ${features.length} feature(s).\n`);
 
     for (const lane of TEMPLATE) {

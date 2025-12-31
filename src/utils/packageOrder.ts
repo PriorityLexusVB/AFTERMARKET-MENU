@@ -1,11 +1,13 @@
 import type { PackageTier } from '../types';
 
+const UNKNOWN_TIER_RANK = 99;
+
 const tierRank = (name: string) => {
   const n = name.trim().toLowerCase();
   if (/\belite\b/.test(n)) return 1;
   if (/\bplatinum\b/.test(n)) return 2;
   if (/\bgold\b/.test(n)) return 3;
-  return 99;
+  return UNKNOWN_TIER_RANK;
 };
 
 export const sortPackagesForDisplay = (packages: PackageTier[]): PackageTier[] => {

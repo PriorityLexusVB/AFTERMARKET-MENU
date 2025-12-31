@@ -184,7 +184,7 @@ describe('AdminPanel', () => {
     
     // The help text should mention cross-column drag and connector toggle
     expect(screen.getByText(/Drag to reorder or move between columns/)).toBeInTheDocument();
-    expect(screen.getByText(/Click AND\/OR to toggle/)).toBeInTheDocument();
+    expect(screen.getByText(/AND\/OR controls the connector to the NEXT item below/)).toBeInTheDocument();
   });
 
   it('should render column headers', async () => {

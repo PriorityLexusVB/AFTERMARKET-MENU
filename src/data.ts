@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, doc, writeBatch, setDoc } from 'firebase/firestore/lite';
+import { collection, getDocs, addDoc, updateDoc, doc, writeBatch, setDoc, deleteField } from 'firebase/firestore/lite';
 import { db } from './firebase';
 import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
 import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from './mock';
@@ -146,6 +146,7 @@ export async function addFeature(featureData: Omit<ProductFeature, 'id'>): Promi
 
 /**
  * Updates an existing feature document in the 'features' collection in Firestore.
+ * When a field value is explicitly set to `undefined`, it will be removed from the document.
  * @param featureId - The ID of the feature to update.
  * @param featureData - The feature data to update (partial).
  * @returns A promise that resolves when the document is successfully updated.
@@ -157,7 +158,14 @@ export async function updateFeature(featureId: string, featureData: Partial<Omit
   
   try {
     const featureRef = doc(db, 'features', featureId);
-    await updateDoc(featureRef, featureData);
+    
+    // Convert undefined values to deleteField() for proper Firestore field removal
+    const updateData: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(featureData)) {
+      updateData[key] = value === undefined ? deleteField() : value;
+    }
+    
+    await updateDoc(featureRef, updateData);
   } catch (error) {
     console.error("Error updating feature in Firestore:", error);
     throw new Error("Failed to update the feature. Please check your connection and Firestore rules.");
@@ -264,6 +272,7 @@ export async function addAlaCarteOption(optionData: Omit<AlaCarteOption, 'id'>):
 
 /**
  * Updates an existing A La Carte option document in the 'ala_carte_options' collection in Firestore.
+ * When a field value is explicitly set to `undefined`, it will be removed from the document.
  * @param optionId - The ID of the A La Carte option to update.
  * @param optionData - The A La Carte option data to update (partial).
  * @returns A promise that resolves when the document is successfully updated.
@@ -275,7 +284,14 @@ export async function updateAlaCarteOption(optionId: string, optionData: Partial
   
   try {
     const optionRef = doc(db, 'ala_carte_options', optionId);
-    await updateDoc(optionRef, optionData);
+    
+    // Convert undefined values to deleteField() for proper Firestore field removal
+    const updateData: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(optionData)) {
+      updateData[key] = value === undefined ? deleteField() : value;
+    }
+    
+    await updateDoc(optionRef, updateData);
   } catch (error) {
     console.error("Error updating A La Carte option in Firestore:", error);
     throw new Error("Failed to update the A La Carte option. Please check your connection and Firestore rules.");

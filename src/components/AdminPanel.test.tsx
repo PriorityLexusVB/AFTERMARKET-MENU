@@ -61,6 +61,7 @@ vi.mock('firebase/firestore/lite', () => {
       // Pass through collection name
       return { ...collectionRef, _query: true };
     }),
+    deleteField: vi.fn(() => ({ _type: 'deleteField' })),
   };
 });
 

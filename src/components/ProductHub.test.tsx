@@ -26,6 +26,7 @@ vi.mock('firebase/firestore/lite', () => ({
   getDocs: (...args: unknown[]) => mockGetDocs(...args),
   orderBy: (...args: unknown[]) => args,
   query: (...args: unknown[]) => args,
+  deleteField: vi.fn(() => ({ _type: 'deleteField' })),
 }));
 
 const renderHub = async (
@@ -188,5 +189,56 @@ describe('ProductHub inline editing', () => {
     expect(payload.name).toBe(feature.name);
     expect(payload.description).toBe(feature.description);
     expect(payload.connector).toBe(feature.connector);
+  });
+
+  it('allows removing a feature from a package lane (regression test)', async () => {
+    const { feature } = await renderHub({ column: 2, position: 1 });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    
+    // Verify feature is currently in Platinum Package
+    expect(within(row).getByLabelText('Platinum Package')).toBeChecked();
+    
+    // Click "Not in Packages" radio button
+    await userEvent.click(within(row).getByLabelText('Not in Packages'));
+    
+    // Verify updateFeature was called with column: undefined and position: undefined
+    await waitFor(() => {
+      expect(mockUpdateFeature).toHaveBeenCalledWith(
+        feature.id,
+        expect.objectContaining({ column: undefined, position: undefined })
+      );
+    });
+    
+    // Verify "Not in Packages" is now checked
+    expect(within(row).getByLabelText('Not in Packages')).toBeChecked();
+  });
+
+  it('can add a feature to a package lane and then remove it', async () => {
+    const { feature } = await renderHub({ column: undefined, position: undefined });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    
+    // Start with "Not in Packages"
+    expect(within(row).getByLabelText('Not in Packages')).toBeChecked();
+    
+    // Add to Elite Package
+    await userEvent.click(within(row).getByLabelText('Elite Package'));
+    await waitFor(() => {
+      expect(mockUpdateFeature).toHaveBeenCalledWith(
+        feature.id,
+        expect.objectContaining({ column: 1, position: 0 })
+      );
+    });
+    
+    // Now remove from package
+    mockUpdateFeature.mockClear();
+    await userEvent.click(within(row).getByLabelText('Not in Packages'));
+    
+    // Verify updateFeature was called to remove the feature
+    await waitFor(() => {
+      expect(mockUpdateFeature).toHaveBeenCalledWith(
+        feature.id,
+        expect.objectContaining({ column: undefined, position: undefined })
+      );
+    });
   });
 });

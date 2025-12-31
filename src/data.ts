@@ -14,6 +14,20 @@ const MAX_RETRIES = 3;
 // Delay between retries in ms
 const RETRY_DELAY_MS = 1000;
 
+/**
+ * Converts undefined values in an object to Firestore's deleteField() sentinel.
+ * This ensures that fields with undefined values are properly removed from Firestore documents.
+ * @param data - The data object to process
+ * @returns A new object with undefined values replaced by deleteField()
+ */
+function prepareUpdateData(data: Record<string, unknown>): Record<string, unknown> {
+  const updateData: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    updateData[key] = value === undefined ? deleteField() : value;
+  }
+  return updateData;
+}
+
 interface FetchDataResult {
     packages: PackageTier[];
     features: ProductFeature[];
@@ -158,13 +172,7 @@ export async function updateFeature(featureId: string, featureData: Partial<Omit
   
   try {
     const featureRef = doc(db, 'features', featureId);
-    
-    // Convert undefined values to deleteField() for proper Firestore field removal
-    const updateData: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(featureData)) {
-      updateData[key] = value === undefined ? deleteField() : value;
-    }
-    
+    const updateData = prepareUpdateData(featureData as Record<string, unknown>);
     await updateDoc(featureRef, updateData);
   } catch (error) {
     console.error("Error updating feature in Firestore:", error);
@@ -284,13 +292,7 @@ export async function updateAlaCarteOption(optionId: string, optionData: Partial
   
   try {
     const optionRef = doc(db, 'ala_carte_options', optionId);
-    
-    // Convert undefined values to deleteField() for proper Firestore field removal
-    const updateData: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(optionData)) {
-      updateData[key] = value === undefined ? deleteField() : value;
-    }
-    
+    const updateData = prepareUpdateData(optionData as Record<string, unknown>);
     await updateDoc(optionRef, updateData);
   } catch (error) {
     console.error("Error updating A La Carte option in Firestore:", error);

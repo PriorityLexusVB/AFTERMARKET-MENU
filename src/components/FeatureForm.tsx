@@ -227,20 +227,37 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
                 />
             </FormRow>
             <FormRow>
-                <Label htmlFor="column" text="Display Column" helpText="Package tier organization" />
-                <select
-                    id="column"
-                    name="column"
-                    value={formData.column}
-                    onChange={handleChange}
-                    className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 md:col-span-2"
-                >
-                    <option value="">No Column Assignment</option>
-                    <option value="1">Column 1 - Gold Package</option>
-                    <option value="2">Column 2 - Elite Package</option>
-                    <option value="3">Column 3 - Platinum Package</option>
-                    <option value="4">Column 4 - Popular Add-ons</option>
-                </select>
+                <Label htmlFor="column-2" text="Package placement" helpText="Choose one lane" />
+                <div className="md:col-span-2 space-y-2">
+                    {[
+                        { value: '2', label: 'Elite Package' },
+                        { value: '3', label: 'Platinum Package' },
+                        { value: '1', label: 'Gold Package' },
+                    ].map((option) => (
+                        <label key={option.value} className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                id={`column-${option.value}`}
+                                name="column"
+                                value={option.value}
+                                checked={formData.column === option.value}
+                                onChange={handleChange}
+                            />
+                            <span>{option.label}</span>
+                        </label>
+                    ))}
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="radio"
+                            id="column-none"
+                            name="column"
+                            value=""
+                            checked={!formData.column}
+                            onChange={handleChange}
+                        />
+                        <span>Not in packages</span>
+                    </label>
+                </div>
             </FormRow>
             <FormRow>
                 <Label htmlFor="connector" text="Feature Connector" helpText="Connector displayed before this feature" />

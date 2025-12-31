@@ -18,6 +18,7 @@ const columnLabels: Record<1 | 2 | 3, string> = {
   2: 'Elite Package',
   3: 'Platinum Package',
 };
+const packageOrder: (1 | 2 | 3)[] = [2, 3, 1];
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
@@ -47,6 +48,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const bulkSelectRef = useRef<HTMLInputElement>(null);
   const headerSelectRef = useRef<HTMLInputElement>(null);
+  const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
   const isMounted = useRef(true);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -458,7 +460,34 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     }
   };
 
+  const handleConnectorChange = async (feature: ProductFeature, connector: 'AND' | 'OR') => {
+    const previousConnector = feature.connector || 'AND';
+    if (previousConnector === connector) return;
+    updateFeatureState(feature.id, { connector });
+    clearRowError(feature.id);
+    try {
+      await updateFeature(feature.id, { connector });
+      markSaved(feature.id);
+    } catch (err) {
+      console.error('Failed to update connector', err);
+      setRowErrorMessage(feature.id, 'Failed to update connector.');
+      updateFeatureState(feature.id, { connector: previousConnector });
+      clearSaved(feature.id);
+    }
+  };
+
   const handleEditDetails = (feature: ProductFeature) => {
+    const rowEl = rowRefs.current[feature.id];
+    const scheduleFrame =
+      typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb: FrameRequestCallback) => setTimeout(cb, 0);
+    if (rowEl) {
+      rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      scheduleFrame(() => {
+        setEditingFeature(feature);
+        setShowForm(true);
+      });
+      return;
+    }
     setEditingFeature(feature);
     setShowForm(true);
   };
@@ -818,12 +847,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
               const warrantyValue = feature.alaCarteWarranty ?? '';
               const isNew = feature.alaCarteIsNew ?? option?.isNew ?? false;
               const isFeatured = option?.column === 4;
+              const currentConnector = feature.connector || 'AND';
               const laneLabel = feature.column ? columnLabels[feature.column as 1 | 2 | 3] ?? 'Not in packages' : 'Not in packages';
               const categoryLabel = getCategoryLabel(option);
               const positionLabel =
                 option?.position !== undefined ? `Position ${option.position}` : 'Position —';
               return (
-                <tr key={feature.id} className="text-sm text-gray-200 align-top">
+                <tr
+                  key={feature.id}
+                  className="text-sm text-gray-200 align-top"
+                  ref={(el) => {
+                    rowRefs.current[feature.id] = el;
+                  }}
+                >
                   <td className="px-3 py-3">
                     <input
                       type="checkbox"
@@ -864,17 +900,16 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                   <td className="px-3 py-3">
                     <div className="flex flex-col gap-1 text-xs text-gray-200">
                       <span className="text-[11px] uppercase text-gray-400">Package placement (choose one lane)</span>
-                      {(Object.entries(columnLabels) as [string, string][]).map(([col, label]) => {
-                        const colNum = Number(col) as 1 | 2 | 3;
+                      {packageOrder.map((colNum) => {
                         return (
-                          <label key={col} className="flex items-center gap-2">
+                          <label key={colNum} className="flex items-center gap-2">
                             <input
                               type="radio"
                               name={`pkg-${feature.id}`}
                               checked={feature.column === colNum}
                               onChange={() => handlePackagePlacement(feature, colNum)}
                             />
-                            <span>{label}</span>
+                            <span>{columnLabels[colNum]}</span>
                           </label>
                         );
                       })}
@@ -887,6 +922,31 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                         />
                         <span>Not in Packages</span>
                       </label>
+                      {feature.column !== undefined && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[11px] uppercase text-gray-400">Connector:</span>
+                          <div className="flex gap-2">
+                            {(['AND', 'OR'] as const).map((optionConnector) => (
+                              <button
+                                key={optionConnector}
+                                type="button"
+                                onClick={() => handleConnectorChange(feature, optionConnector)}
+                                aria-label={`Set connector to ${optionConnector}`}
+                                aria-pressed={currentConnector === optionConnector}
+                                className={`px-2 py-1 rounded text-xs border ${
+                                  currentConnector === optionConnector
+                                    ? optionConnector === 'OR'
+                                      ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/60'
+                                      : 'bg-green-500/20 text-green-300 border-green-400/60'
+                                    : 'bg-gray-800 text-gray-200 border-gray-700'
+                                }`}
+                              >
+                                {optionConnector}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-3 py-3">

@@ -264,9 +264,9 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
             >
               <option value="">Unassigned</option>
-              <option value="1">Column 1 (Gold Package)</option>
-              <option value="2">Column 2 (Elite Package)</option>
-              <option value="3">Column 3 (Platinum Package)</option>
+              <option value="1">Column 1 (Elite Package)</option>
+              <option value="2">Column 2 (Platinum Package)</option>
+              <option value="3">Column 3 (Gold Package)</option>
               <option value="4">Column 4 (Featured Add-ons)</option>
             </select>
           </div>

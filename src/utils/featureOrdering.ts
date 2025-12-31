@@ -136,19 +136,19 @@ export function normalizeGroupedPositions(grouped: GroupedFeatures): GroupedFeat
  * Returns null for unknown tiers.
  * 
  * Column mapping:
- * - Gold = Column 1
- * - Elite = Column 2
- * - Platinum = Column 3
+ * - Elite = Column 1
+ * - Platinum = Column 2
+ * - Gold = Column 3
  */
 export function getTierColumn(tier: string): number | null {
   const normalized = tier.toLowerCase();
   
   switch (normalized) {
-    case 'gold':
-      return 1;
     case 'elite':
-      return 2;
+      return 1;
     case 'platinum':
+      return 2;
+    case 'gold':
       return 3;
     default:
       return null;
@@ -158,9 +158,9 @@ export function getTierColumn(tier: string): number | null {
 /**
  * Strict tier mapping (no inheritance).
  *
- * - Gold:     [1]
- * - Elite:    [2]
- * - Platinum: [3]
+ * - Elite:    [1]
+ * - Platinum: [2]
+ * - Gold:     [3]
  *
  * Column 4 is "Popular Add-ons" and not part of any tier package.
  */
@@ -168,11 +168,11 @@ export function getTierColumns(tier: string): number[] {
   const normalized = tier.toLowerCase();
   
   switch (normalized) {
-    case 'gold':
-      return [1];
     case 'elite':
-      return [2];
+      return [1];
     case 'platinum':
+      return [2];
+    case 'gold':
       return [3];
     default:
       return [];
@@ -182,9 +182,9 @@ export function getTierColumns(tier: string): number[] {
 /**
  * Derives the feature list for a tier using strict per-column mapping (no inheritance).
  *
- * - Gold: column 1 only
- * - Elite: column 2 only
- * - Platinum: column 3 only
+ * - Elite: column 1 only
+ * - Platinum: column 2 only
+ * - Gold: column 3 only
  *
  * Features are ordered by column and position. Duplicates within the same column are removed (case-insensitive by name), keeping first occurrence.
  */

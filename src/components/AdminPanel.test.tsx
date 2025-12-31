@@ -196,7 +196,7 @@ describe('AdminPanel', () => {
     });
     
     // Check that all column headers are present with new tier order
-    // Column 1 = Gold, Column 2 = Elite, Column 3 = Platinum
+    // Column 1 = Elite, Column 2 = Platinum, Column 3 = Gold
     expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
@@ -739,7 +739,7 @@ describe('AdminPanel', () => {
       localStorage.clear();
     });
 
-    it.skip('should show warning banner when Column 1 (Gold) is empty', async () => {
+    it.skip('should show warning banner when Column 1 (Elite) is empty', async () => {
       // Mock features with Column 1 empty
       const featuresWithEmptyCol1: ProductFeature[] = [
         {
@@ -788,10 +788,10 @@ describe('AdminPanel', () => {
       });
 
       expect(screen.getByText(/Empty Package Column/)).toBeInTheDocument();
-      expect(screen.getByText(/Column 1 \(Gold\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Column 1 \(Elite\)/)).toBeInTheDocument();
     });
 
-    it.skip('should show warning banner when Column 3 (Platinum) is empty', async () => {
+    it.skip('should show warning banner when Column 3 (Gold) is empty', async () => {
       // Mock features with Column 3 empty
       const featuresWithEmptyCol3: ProductFeature[] = [
         {
@@ -840,7 +840,7 @@ describe('AdminPanel', () => {
       });
 
       expect(screen.getByText(/Empty Package Column/)).toBeInTheDocument();
-      expect(screen.getByText(/Column 3 \(Platinum\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Column 3 \(Gold\)/)).toBeInTheDocument();
     });
 
     it.skip('should show warning for multiple empty columns', async () => {
@@ -880,7 +880,7 @@ describe('AdminPanel', () => {
       });
 
       expect(screen.getByText(/Empty Package Columns/)).toBeInTheDocument();
-      expect(screen.getByText(/Column 1 \(Gold\), Column 3 \(Platinum\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Column 1 \(Elite\), Column 3 \(Gold\)/)).toBeInTheDocument();
     });
 
     it('should not show warning when all package columns (1-3) have features', async () => {

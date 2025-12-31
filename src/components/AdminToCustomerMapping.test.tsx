@@ -10,9 +10,9 @@ import { sortFeatures, compareFeatures, normalizePositions } from '../utils/feat
  * rendered in the customer-facing menu.
  * 
  * Admin columns represent organizational groupings:
- * - Column 1: Gold Tier features (base features)
- * - Column 2: Elite Tier features (additional features)
- * - Column 3: Platinum Tier features (premium features)
+ * - Column 1: Elite Tier features (Elite package features)
+ * - Column 2: Platinum Tier features (Platinum package features)
+ * - Column 3: Gold Tier features (Gold package features)
  * - Column 4: Popular Add-ons
  * 
  * Features are sorted by column first, then by position within column.
@@ -245,8 +245,8 @@ describe('Admin to Customer Menu Mapping', () => {
   describe('Multi-Column Feature Rendering', () => {
     it('should correctly sort features from multiple columns', () => {
       // Simulate features as they would be organized in admin:
-      // Column 1 (Gold base): RustGuard, ToughGuard, Interior
-      // Column 2 (Elite extra): Diamond Shield
+      // Column 1 (Elite package): RustGuard, ToughGuard, Interior
+      // Column 2 (Platinum package): Diamond Shield
       // Note: IDs follow the same kebab-case pattern as production mock data
       const rustGuard = createMockFeature({
         id: 'rustguard-pro',
@@ -540,7 +540,7 @@ describe('Admin to Customer Menu Mapping', () => {
 
   describe('Empty Admin Columns', () => {
     it('should show empty package when admin column is empty', () => {
-      // Simulate features only in Column 1 (Gold Tier)
+      // Simulate features only in Column 1 (Elite Tier)
       const goldFeature = createMockFeature({
         id: 'gold-feature',
         name: 'Gold Feature',

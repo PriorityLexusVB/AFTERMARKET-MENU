@@ -784,24 +784,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     }
 
     return (
-      <SortableContext
-        items={columnFeatures.map(f => f.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="space-y-2">
-          {columnFeatures.map((feature, index) => (
-            <SortableFeatureItem
-              key={feature.id}
-              feature={feature}
-              onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
-              onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
-              onToggleConnector={() => handleToggleConnector(feature.id)}
-              isFirst={index === 0}
-              isLast={index === columnFeatures.length - 1}
-            />
-          ))}
-        </div>
-      </SortableContext>
+      <>
+        <SortableContext
+          items={columnFeatures.map(f => f.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {columnFeatures.map((feature, index) => (
+              <SortableFeatureItem
+                key={feature.id}
+                feature={feature}
+                onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
+                onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
+                onToggleConnector={() => handleToggleConnector(feature.id)}
+                isFirst={index === 0}
+                isLast={index === columnFeatures.length - 1}
+              />
+            ))}
+          </div>
+        </SortableContext>
+        {/* Lightweight drop target for whitespace/bottom-of-column drops without wrapping items */}
+        <DroppableColumn columnId={columnId}>
+          <div className="h-3 pointer-events-none" aria-hidden="true" />
+        </DroppableColumn>
+      </>
     );
   };
 

@@ -624,6 +624,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       }
 
       // Same-column drop on column zone: move to end (or no-op if already last)
+      const backupFeatures = [...features];
+      setFeaturesBackup(backupFeatures);
+
       const columnFeatures = [...(activeColumn === 'unassigned' 
         ? featuresByColumn.unassigned 
         : featuresByColumn[activeColumn as 1 | 2 | 3 | 4])];
@@ -647,7 +650,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       });
       
       setFeatures(updatedFeatures);
-      await persistPositionChanges(updatedFeatures, activeColumn);
+      try {
+        await persistPositionChanges(updatedFeatures, activeColumn);
+      } catch (err) {
+        console.error("Error saving same-column drop:", err);
+        setFeatures(backupFeatures);
+        setError("Failed to save position changes. Changes have been rolled back.");
+      }
       return;
     }
     
@@ -805,7 +814,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         </SortableContext>
         {/* Lightweight drop target for whitespace/bottom-of-column drops without wrapping items */}
         <DroppableColumn columnId={columnId}>
-          <div className="h-3 pointer-events-none" aria-hidden="true" />
+          <div className="h-3" aria-hidden="true" />
         </DroppableColumn>
       </>
     );

@@ -183,7 +183,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
     
     // The help text should mention cross-column drag and connector toggle
-    expect(screen.getByText(/Drag to reorder or move between columns/)).toBeInTheDocument();
+    expect(screen.getByText(/Drag using the ≡ handle/i)).toBeInTheDocument();
     expect(screen.getByText(/AND\/OR controls the connector to the NEXT item below/)).toBeInTheDocument();
   });
 
@@ -213,9 +213,9 @@ describe('AdminPanel', () => {
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+4/)).toBeInTheDocument();
-    expect(screen.getByText(/Elite Package/)).toBeInTheDocument();
-    expect(screen.getByText(/Platinum Package/)).toBeInTheDocument();
-    expect(screen.getByText(/Gold Package/)).toBeInTheDocument();
+    expect(screen.getByText('Elite Package (Column 2)')).toBeInTheDocument();
+    expect(screen.getByText('Platinum Package (Column 3)')).toBeInTheDocument();
+    expect(screen.getByText('Gold Package (Column 1)')).toBeInTheDocument();
     // Popular Add-ons appears in both header and empty state message, so use getAllByText
     const popularAddonsMatches = screen.getAllByText(/Popular Add-ons/);
     expect(popularAddonsMatches.length).toBeGreaterThan(0);

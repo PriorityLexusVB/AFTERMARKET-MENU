@@ -41,10 +41,10 @@ const formatPrice = (price: number) => {
 // Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
 // Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
 const COLUMNS = [
-  { num: 2, label: 'Elite Package' },
-  { num: 3, label: 'Platinum Package' },
-  { num: 1, label: 'Gold Package' },
-  { num: 4, label: 'Popular Add-ons' },
+  { num: 2, label: 'Elite Package (Column 2)' },
+  { num: 3, label: 'Platinum Package (Column 3)' },
+  { num: 1, label: 'Gold Package (Column 1)' },
+  { num: 4, label: 'Popular Add-ons (Column 4)' },
 ] as const;
 
 
@@ -542,84 +542,112 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     const activeColumn = findColumnForFeature(active.id as string);
     if (activeColumn === null) return;
 
-    // Check if dropped on a column zone (cross-column move)
+    // Check if dropped on a column zone
     const targetColumn = parseColumnFromDroppableId(over.id as string);
     
-    // If dropped on a column zone and it's a different column, perform cross-column move
-    if (targetColumn !== null && targetColumn !== activeColumn) {
-      // Move feature to the new column
-      const movedFeature = features.find(f => f.id === active.id);
-      if (!movedFeature) return;
-      
-      // Get features in the target column to determine position
-      const targetColumnFeatures = targetColumn === 'unassigned' 
+    if (targetColumn !== null) {
+      if (targetColumn !== activeColumn) {
+        // Cross-column move
+        const movedFeature = features.find(f => f.id === active.id);
+        if (!movedFeature) return;
+        
+        // Get features in the target column to determine position
+        const targetColumnFeatures = targetColumn === 'unassigned' 
+          ? featuresByColumn.unassigned 
+          : featuresByColumn[targetColumn as 1 | 2 | 3 | 4];
+        
+        // Add at the end of the target column
+        // If the target column is empty, targetColumnFeatures.length will be 0,
+        // so the new feature will be placed at position 0 (the expected behavior).
+        const newPosition = targetColumnFeatures.length;
+        
+        // Update the feature's column and position
+        const updatedFeature = {
+          ...movedFeature,
+          column: targetColumn === 'unassigned' ? undefined : targetColumn,
+          position: newPosition,
+        };
+        
+        // Also need to update positions in the old column (fill the gap)
+        const oldColumnFeatures = activeColumn === 'unassigned' 
+          ? featuresByColumn.unassigned.filter(f => f.id !== active.id)
+          : featuresByColumn[activeColumn as 1 | 2 | 3 | 4].filter(f => f.id !== active.id);
+        
+        const updatedOldColumnFeatures = oldColumnFeatures.map((f, idx) => ({
+          ...f,
+          position: idx,
+        }));
+        
+        // Store backup immediately before optimistic update for consistent rollback state
+        setFeaturesBackup([...features]);
+        
+        // Optimistic UI update
+        const updatedFeatures = features.map(f => {
+          if (f.id === active.id) return updatedFeature;
+          const updated = updatedOldColumnFeatures.find(uf => uf.id === f.id);
+          return updated || f;
+        });
+        
+        setFeatures(updatedFeatures);
+        
+        // Persist changes to both columns
+        setIsSaving(true);
+        try {
+          // Build updates for both columns
+          const allUpdates: FeaturePositionUpdate[] = [
+            // The moved feature
+            {
+              id: updatedFeature.id,
+              position: updatedFeature.position!,
+              column: updatedFeature.column,
+              connector: updatedFeature.connector,
+            },
+            // Updated positions in old column
+            ...updatedOldColumnFeatures.map(f => ({
+              id: f.id,
+              position: f.position!,
+              column: f.column,
+              connector: f.connector,
+            })),
+          ];
+          
+          await batchUpdateFeaturesPositions(allUpdates);
+          onDataUpdate();
+        } catch (err) {
+          console.error("Error saving cross-column move:", err);
+          setFeatures(featuresBackup);
+          setError("Failed to move feature to new column. Changes have been rolled back.");
+        } finally {
+          setIsSaving(false);
+        }
+        return;
+      }
+
+      // Same-column drop on column zone: move to end (or no-op if already last)
+      const columnFeatures = [...(activeColumn === 'unassigned' 
         ? featuresByColumn.unassigned 
-        : featuresByColumn[targetColumn as 1 | 2 | 3 | 4];
+        : featuresByColumn[activeColumn as 1 | 2 | 3 | 4])];
+
+      const oldIndex = columnFeatures.findIndex(f => f.id === active.id);
+      if (oldIndex === -1) return;
+
+      const newIndex = columnFeatures.length - 1;
+      if (newIndex === oldIndex) return;
+
+      const reorderedColumnFeatures = arrayMove(columnFeatures, oldIndex, newIndex);
       
-      // Add at the end of the target column
-      // If the target column is empty, targetColumnFeatures.length will be 0,
-      // so the new feature will be placed at position 0 (the expected behavior).
-      const newPosition = targetColumnFeatures.length;
-      
-      // Update the feature's column and position
-      const updatedFeature = {
-        ...movedFeature,
-        column: targetColumn === 'unassigned' ? undefined : targetColumn,
-        position: newPosition,
-      };
-      
-      // Also need to update positions in the old column (fill the gap)
-      const oldColumnFeatures = activeColumn === 'unassigned' 
-        ? featuresByColumn.unassigned.filter(f => f.id !== active.id)
-        : featuresByColumn[activeColumn as 1 | 2 | 3 | 4].filter(f => f.id !== active.id);
-      
-      const updatedOldColumnFeatures = oldColumnFeatures.map((f, idx) => ({
-        ...f,
-        position: idx,
+      const updatedColumnFeatures = reorderedColumnFeatures.map((feature, index) => ({
+        ...feature,
+        position: index,
       }));
       
-      // Store backup immediately before optimistic update for consistent rollback state
-      setFeaturesBackup([...features]);
-      
-      // Optimistic UI update
       const updatedFeatures = features.map(f => {
-        if (f.id === active.id) return updatedFeature;
-        const updated = updatedOldColumnFeatures.find(uf => uf.id === f.id);
+        const updated = updatedColumnFeatures.find(uf => uf.id === f.id);
         return updated || f;
       });
       
       setFeatures(updatedFeatures);
-      
-      // Persist changes to both columns
-      setIsSaving(true);
-      try {
-        // Build updates for both columns
-        const allUpdates: FeaturePositionUpdate[] = [
-          // The moved feature
-          {
-            id: updatedFeature.id,
-            position: updatedFeature.position!,
-            column: updatedFeature.column,
-            connector: updatedFeature.connector,
-          },
-          // Updated positions in old column
-          ...updatedOldColumnFeatures.map(f => ({
-            id: f.id,
-            position: f.position!,
-            column: f.column,
-            connector: f.connector,
-          })),
-        ];
-        
-        await batchUpdateFeaturesPositions(allUpdates);
-        onDataUpdate();
-      } catch (err) {
-        console.error("Error saving cross-column move:", err);
-        setFeatures(featuresBackup);
-        setError("Failed to move feature to new column. Changes have been rolled back.");
-      } finally {
-        setIsSaving(false);
-      }
+      await persistPositionChanges(updatedFeatures, activeColumn);
       return;
     }
     
@@ -747,31 +775,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       return 'Drop items here to assign them';
     };
 
-    return (
-      <DroppableColumn columnId={columnId}>
-        {columnFeatures.length === 0 ? (
+    if (columnFeatures.length === 0) {
+      return (
+        <DroppableColumn columnId={columnId}>
           <p className="text-gray-500 text-sm italic p-2">{getEmptyMessage()}</p>
-        ) : (
-          <SortableContext
-            items={columnFeatures.map(f => f.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-2">
-              {columnFeatures.map((feature, index) => (
-                <SortableFeatureItem
-                  key={feature.id}
-                  feature={feature}
-                  onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
-                  onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
-                  onToggleConnector={() => handleToggleConnector(feature.id)}
-                  isFirst={index === 0}
-                  isLast={index === columnFeatures.length - 1}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        )}
-      </DroppableColumn>
+        </DroppableColumn>
+      );
+    }
+
+    return (
+      <SortableContext
+        items={columnFeatures.map(f => f.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-2">
+          {columnFeatures.map((feature, index) => (
+            <SortableFeatureItem
+              key={feature.id}
+              feature={feature}
+              onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
+              onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
+              onToggleConnector={() => handleToggleConnector(feature.id)}
+              isFirst={index === 0}
+              isLast={index === columnFeatures.length - 1}
+            />
+          ))}
+        </div>
+      </SortableContext>
     );
   };
 
@@ -971,7 +1001,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   )}
                 </span>
               </label>
-              <p className="text-sm text-gray-500">Drag to reorder or move between columns • AND/OR controls the connector to the NEXT item below (hidden on the last item)</p>
+              <p className="text-sm text-gray-500">Drag using the ≡ handle to reorder or move between columns • AND/OR controls the connector to the NEXT item below (hidden on the last item)</p>
             </div>
           </div>
           {isLoading && <p className="text-gray-400">Loading features...</p>}
@@ -1005,7 +1035,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                           }`}>
                             {label}
                           </h5>
-                          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted mb-2">Column {num}</p>
+                          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted mb-2">Package column {num}</p>
                           {renderColumnFeatures(featuresByColumn[num], num)}
                         </div>
                       ))}

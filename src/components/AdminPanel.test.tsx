@@ -291,14 +291,15 @@ describe('AdminPanel', () => {
       expect(dragHandles.length).toBe(visibleFeatureCount);
     });
 
-    it('should not render inline edit buttons (Product Hub handles editing)', async () => {
+    it('surfaces Product Hub edit links for features', async () => {
       render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
       
       await waitFor(() => {
         expect(screen.getByText('Test Feature 1')).toBeInTheDocument();
       });
       
-      expect(screen.queryByRole('button', { name: /Edit/i })).not.toBeInTheDocument();
+      const editLinks = screen.getAllByRole('button', { name: /Edit in Product Hub/i });
+      expect(editLinks.length).toBeGreaterThan(0);
     });
 
     it('should display position indicators for features', async () => {

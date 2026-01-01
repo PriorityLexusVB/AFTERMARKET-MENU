@@ -70,10 +70,15 @@ describe('ProductHub inline editing', () => {
     expect(row).toBeTruthy();
     const radios = within(row as HTMLElement).getAllByRole('radio');
     const labels = radios.map((radio) => (radio as HTMLInputElement).labels?.[0]?.textContent?.trim());
-    expect(labels).toEqual(['Elite Package', 'Platinum Package', 'Gold Package', 'Not in Packages']);
+    expect(labels).toEqual([
+      'Elite Package (Column 2)',
+      'Platinum Package (Column 3)',
+      'Gold Package (Column 1)',
+      'Not in Packages',
+    ]);
 
-    await userEvent.click(within(row as HTMLElement).getByLabelText('Gold Package'));
-    await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: 3 })));
+    await userEvent.click(within(row as HTMLElement).getByLabelText('Gold Package (Column 1)'));
+    await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: 1 })));
 
     await userEvent.click(within(row as HTMLElement).getByLabelText('Not in Packages'));
     await waitFor(() => expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ column: undefined })));
@@ -159,7 +164,7 @@ describe('ProductHub inline editing', () => {
 
     await userEvent.click(publishToggle);
 
-    await waitFor(() => expect(screen.getByText(/Failed to update publish status/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/boom/i)).toBeInTheDocument());
   });
 
   it('clears publish error on successful retry', async () => {
@@ -169,12 +174,12 @@ describe('ProductHub inline editing', () => {
     const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
 
     await userEvent.click(publishToggle);
-    await screen.findByText(/Failed to update publish status/i);
+    await screen.findByText(/boom/i);
 
     mockUpsert.mockResolvedValueOnce(undefined);
     await userEvent.click(publishToggle);
 
-    await waitFor(() => expect(screen.queryByText(/Failed to update publish status/i)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(/boom/i)).not.toBeInTheDocument());
   });
 
   it('duplicates a feature into a target lane with the next position', async () => {
@@ -182,9 +187,9 @@ describe('ProductHub inline editing', () => {
     mockAddDoc.mockResolvedValueOnce({ id: 'duplicate-id' });
     const { feature } = await renderHub({ column: 1, position: 1 }, undefined, [extraFeature]);
     const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
-    const duplicateSelect = within(row).getByLabelText(/Duplicate to/i);
+    const duplicateButton = within(row).getByRole('button', { name: /Elite/i });
 
-    await userEvent.selectOptions(duplicateSelect, '2');
+    await userEvent.click(duplicateButton);
 
     await waitFor(() => expect(mockAddDoc).toHaveBeenCalled());
     const payload = mockAddDoc.mock.calls[0]?.[1] as ProductFeature;
@@ -196,11 +201,11 @@ describe('ProductHub inline editing', () => {
   });
 
   it('allows removing a feature from a package lane (regression test)', async () => {
-    const { feature } = await renderHub({ column: 2, position: 1 });
+    const { feature } = await renderHub({ column: 3, position: 1 });
     const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
     
     // Verify feature is currently in Platinum Package
-    expect(within(row).getByLabelText('Platinum Package')).toBeChecked();
+    expect(within(row).getByLabelText('Platinum Package (Column 3)')).toBeChecked();
     
     // Click "Not in Packages" radio button
     await userEvent.click(within(row).getByLabelText('Not in Packages'));
@@ -225,11 +230,11 @@ describe('ProductHub inline editing', () => {
     expect(within(row).getByLabelText('Not in Packages')).toBeChecked();
     
     // Add to Elite Package
-    await userEvent.click(within(row).getByLabelText('Elite Package'));
+    await userEvent.click(within(row).getByLabelText('Elite Package (Column 2)'));
     await waitFor(() => {
       expect(mockUpdateFeature).toHaveBeenCalledWith(
         feature.id,
-        expect.objectContaining({ column: 1, position: 0 })
+        expect.objectContaining({ column: 2, position: 0 })
       );
     });
     
@@ -244,5 +249,35 @@ describe('ProductHub inline editing', () => {
         expect.objectContaining({ column: undefined, position: undefined })
       );
     });
+  });
+
+  it('removes a feature from packages via explicit action', async () => {
+    const { feature } = await renderHub({ column: 2, position: 3 });
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+
+    await userEvent.click(within(row).getByRole('button', { name: /Remove from Packages/i }));
+
+    await waitFor(() =>
+      expect(mockUpdateFeature).toHaveBeenCalledWith(
+        feature.id,
+        expect.objectContaining({ column: undefined, position: undefined })
+      )
+    );
+  });
+
+  it('unpublishes A La Carte without changing package placement', async () => {
+    const { feature } = await renderHub(
+      { column: 2, position: 1, publishToAlaCarte: true, alaCartePrice: 200 },
+      { isPublished: true, column: 4, price: 200 }
+    );
+    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+
+    await userEvent.click(within(row).getByRole('button', { name: /Unpublish A La Carte/i }));
+
+    await waitFor(() =>
+      expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, expect.objectContaining({ publishToAlaCarte: false }))
+    );
+    expect(mockUnpublish).toHaveBeenCalledWith(feature.id);
+    expect(feature.column).toBe(2);
   });
 });

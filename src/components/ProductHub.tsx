@@ -10,25 +10,38 @@ interface ProductHubProps {
   onAlaCarteChange?: () => void;
   initialFeatures?: ProductFeature[];
   initialAlaCarteOptions?: AlaCarteOption[];
+  scrollTargetId?: string | null;
+  onScrollHandled?: () => void;
 }
 
-// Column mapping: 1 = Elite Package, 2 = Platinum Package, 3 = Gold Package (strict mapping).
+const packageLaneOptions: Array<{ value: 1 | 2 | 3; label: string }> = [
+  { value: 2, label: 'Elite Package (Column 2)' },
+  { value: 3, label: 'Platinum Package (Column 3)' },
+  { value: 1, label: 'Gold Package (Column 1)' },
+];
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Elite Package',
-  2: 'Platinum Package',
-  3: 'Gold Package',
+  1: 'Gold Package (Column 1)',
+  2: 'Elite Package (Column 2)',
+  3: 'Platinum Package (Column 3)',
 };
-const packageOrder: (1 | 2 | 3)[] = [1, 2, 3];
+const packageOrder: (1 | 2 | 3)[] = packageLaneOptions.map((opt) => opt.value);
 
 const getPlacementDisplay = (column?: number) => {
   if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 1) return 'Elite';
-  if (column === 2) return 'Platinum';
-  if (column === 3) return 'Gold';
+  if (column === 2) return 'Elite';
+  if (column === 3) return 'Platinum';
+  if (column === 1) return 'Gold';
   return 'Unplaced';
 };
 
-export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarteChange, initialFeatures, initialAlaCarteOptions }) => {
+export const ProductHub: React.FC<ProductHubProps> = ({
+  onDataUpdate,
+  onAlaCarteChange,
+  initialFeatures,
+  initialAlaCarteOptions,
+  scrollTargetId,
+  onScrollHandled,
+}) => {
   const [features, setFeatures] = useState<ProductFeature[]>(initialFeatures ?? []);
   const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>(initialAlaCarteOptions ?? []);
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,6 +159,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
     []
   );
 
+  useEffect(() => {
+    if (!scrollTargetId) return;
+    setSearchTerm('');
+    setPackageLaneFilter('all');
+    setPublishFilter('all');
+    setFeaturedFilter('all');
+    setCategoryFilter('all');
+  }, [scrollTargetId]);
+
   const alaCarteMap = useMemo(() => {
     return new Map(alaCarteOptions.map((opt) => [opt.id, opt]));
   }, [alaCarteOptions]);
@@ -181,6 +203,24 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
       return true;
     });
   }, [alaCarteMap, categoryFilter, features, featuredFilter, packageLaneFilter, publishFilter, searchTerm]);
+
+  useEffect(() => {
+    if (!scrollTargetId || isLoading) return;
+    const attemptScroll = () => {
+      const row = rowRefs.current[scrollTargetId];
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        onScrollHandled?.();
+        return true;
+      }
+      return false;
+    };
+    if (attemptScroll()) return;
+    const timer = window.setTimeout(() => {
+      attemptScroll();
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [filteredFeatures, isLoading, onScrollHandled, scrollTargetId]);
 
   const allFilteredSelected = useMemo(
     () => filteredFeatures.length > 0 && filteredFeatures.every((f) => selectedIds.has(f.id)),
@@ -221,9 +261,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
   };
 
   const getNextPosition = (column: 1 | 2 | 3) => {
-    const positions = features
-      .filter((f) => f.column === column)
-      .map((f) => (f.position ?? 0));
+    const positions = features.filter((f) => f.column === column).map((f) => f.position ?? 0);
     if (positions.length === 0) return 0;
     return Math.max(...positions) + 1;
   };
@@ -368,6 +406,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
         await unpublishAlaCarteFromFeature(feature.id);
         upsertOptionState(feature, { isPublished: false });
         markSaved(feature.id);
+        clearRowError(feature.id);
       } else {
         const resolvedPrice = Number(price);
         const featurePayload = { ...feature, publishToAlaCarte: true, alaCartePrice: resolvedPrice };
@@ -388,13 +427,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
           return rest;
         });
         markSaved(feature.id);
+        clearRowError(feature.id);
       }
       onAlaCarteChange?.();
       onDataUpdate();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('Failed to update publish status', err);
-      setRowErrorMessage(feature.id, `Failed to update publish status: ${message}`);
+      setRowErrorMessage(feature.id, message);
       try {
         await updateFeature(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
         if (!feature.publishToAlaCarte) {
@@ -409,12 +448,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
             warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
           });
         }
-      } catch (rollbackErr) {
-        console.error('Failed to roll back publish status in Firestore', rollbackErr);
+      } catch (_rollbackErr) {
+        // Best-effort rollback; swallow to avoid masking primary error message
       }
       updateFeatureState(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
       clearSaved(feature.id);
     }
+  };
+
+  const handleRemoveFromPackages = (feature: ProductFeature) => {
+    return handlePackagePlacement(feature, undefined);
+  };
+
+  const handleUnpublishOnly = (feature: ProductFeature) => {
+    return handlePublishToggle(feature, false);
   };
 
   const handleDuplicateToLane = async (feature: ProductFeature, targetColumn: 1 | 2 | 3) => {
@@ -900,7 +947,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                   <td className="px-3 py-3">
                     <div className="flex flex-col gap-1 text-xs text-gray-200">
                       <span className="text-[11px] uppercase text-gray-400">Package placement (choose one lane)</span>
-                      {packageOrder.map((colNum) => {
+                      {packageLaneOptions.map(({ value: colNum, label }) => {
                         return (
                           <label key={colNum} className="flex items-center gap-2">
                             <input
@@ -909,7 +956,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                               checked={feature.column === colNum}
                               onChange={() => handlePackagePlacement(feature, colNum)}
                             />
-                            <span>{columnLabels[colNum]}</span>
+                            <span>{label}</span>
                           </label>
                         );
                       })}
@@ -998,41 +1045,57 @@ export const ProductHub: React.FC<ProductHubProps> = ({ onDataUpdate, onAlaCarte
                     </div>
                   </td>
                   <td className="px-3 py-3">
-                    <button
-                      onClick={() => handleEditDetails(feature)}
-                      className="text-blue-400 hover:text-blue-200 text-sm underline"
-                    >
-                      Edit details
-                    </button>
-                    <div className="mt-2">
-                      <label className="text-xs text-gray-400 block mb-1" htmlFor={`duplicate-${feature.id}`}>
-                        Duplicate to
-                      </label>
-                      <select
-                        id={`duplicate-${feature.id}`}
-                        className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                        defaultValue=""
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (!value) return;
-                          handleDuplicateToLane(feature, Number(value) as 1 | 2 | 3);
-                          e.target.value = '';
-                        }}
-                      >
-                        <option value="" disabled>
-                          Choose lane...
-                        </option>
-                        <option value="2" disabled={feature.column === 2}>
-                          Elite
-                        </option>
-                        <option value="3" disabled={feature.column === 3}>
-                          Platinum
-                        </option>
-                        <option value="1" disabled={feature.column === 1}>
-                          Gold
-                        </option>
-                      </select>
-                    </div>
+                     <div className="flex flex-col gap-2">
+                       <button
+                         onClick={() => handleEditDetails(feature)}
+                         className="text-blue-400 hover:text-blue-200 text-sm underline text-left"
+                       >
+                         Edit details
+                       </button>
+                       <button
+                         onClick={() => handleRemoveFromPackages(feature)}
+                         className="text-sm text-red-300 hover:text-red-200 underline text-left disabled:opacity-50"
+                         disabled={feature.column === undefined}
+                       >
+                         Remove from Packages
+                       </button>
+                       <button
+                         onClick={() => handleUnpublishOnly(feature)}
+                         className="text-sm text-yellow-300 hover:text-yellow-200 underline text-left disabled:opacity-50"
+                         disabled={!isPublished}
+                       >
+                         Unpublish A La Carte
+                       </button>
+                       <div className="mt-1 space-y-1">
+                         <p className="text-xs text-gray-400 font-semibold">Duplicate to Gold/Elite/Platinum</p>
+                         <div className="flex flex-wrap gap-2">
+                           <button
+                             type="button"
+                             className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
+                             disabled={feature.column === 1}
+                             onClick={() => handleDuplicateToLane(feature, 1)}
+                           >
+                             Gold
+                           </button>
+                           <button
+                             type="button"
+                             className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
+                             disabled={feature.column === 2}
+                             onClick={() => handleDuplicateToLane(feature, 2)}
+                           >
+                             Elite
+                           </button>
+                           <button
+                             type="button"
+                             className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
+                             disabled={feature.column === 3}
+                             onClick={() => handleDuplicateToLane(feature, 3)}
+                           >
+                             Platinum
+                           </button>
+                         </div>
+                       </div>
+                     </div>
                   </td>
                 </tr>
               );

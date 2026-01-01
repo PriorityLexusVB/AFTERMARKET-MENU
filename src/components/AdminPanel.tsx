@@ -34,10 +34,6 @@ interface AdminPanelProps {
 
 type AdminTab = 'features' | 'alacarte' | 'product-hub';
 
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
-};
-
 // Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
 // Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
 const COLUMNS = [
@@ -140,21 +136,14 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
           {onEdit && (
             <button
               onClick={() => onEdit(feature)}
-              className="text-blue-400 hover:text-blue-300 transition-colors p-1"
-              title="Edit feature"
-              aria-label={`Edit ${feature.name}`}
+              className="text-blue-400 hover:text-blue-300 transition-colors text-xs underline"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
-                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
-              </svg>
+              Edit in Product Hub
             </button>
           )}
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-gray-400 font-mono text-xs">{formatPrice(feature.price)}</span>
-        {/* Inline AND/OR Toggle Button */}
         {!isLast ? (
           <button
             onClick={onToggleConnector}
@@ -283,6 +272,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [isSavingRecommended, setIsSavingRecommended] = useState(false);
   const [recommendedMessage, setRecommendedMessage] = useState<string | null>(null);
   const [recommendedError, setRecommendedError] = useState<string | null>(null);
+  const [productHubScrollTarget, setProductHubScrollTarget] = useState<string | null>(null);
   
   // Backup state for rollback on error
   const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
@@ -390,7 +380,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     return () => window.clearTimeout(timeoutId);
   }, [recommendedMessage]);
 
-  const handleTabChange = (tab: AdminTab) => {
+  const handleTabChange = useCallback((tab: AdminTab) => {
     setActiveTab(tab);
     setStoredTab(tab);
     
@@ -398,7 +388,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     const url = new URL(window.location.href);
     url.searchParams.set('tab', tab);
     window.history.replaceState({}, '', url.toString());
-  };
+  }, []);
+
+  const handleEditInProductHub = useCallback((featureId: string) => {
+    setProductHubScrollTarget(featureId);
+    handleTabChange('product-hub');
+  }, [handleTabChange]);
 
   const handleDismissBanner = () => {
     setShowBanner(false);
@@ -774,7 +769,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   };
 
   // Render a column's sortable list with droppable zone
-  const renderColumnFeatures = (columnFeatures: ProductFeature[], columnId: number | 'unassigned') => {
+  const renderColumnFeatures = (columnFeatures: ProductFeature[], columnId: number | 'unassigned', onEditFeature?: (feature: ProductFeature) => void) => {
     // Get a helpful empty state message for each column
     const getEmptyMessage = (): string => {
       if (columnId === 2) return 'No Elite features yet - drag items here from unassigned or other columns';
@@ -806,6 +801,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 onMoveUp={() => handleKeyboardReorder(feature.id, 'up')}
                 onMoveDown={() => handleKeyboardReorder(feature.id, 'down')}
                 onToggleConnector={() => handleToggleConnector(feature.id)}
+                onEdit={onEditFeature ? () => onEditFeature(feature) : undefined}
                 isFirst={index === 0}
                 isLast={index === columnFeatures.length - 1}
               />
@@ -875,9 +871,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
         {/* Tab Content */}
         {activeTab === 'alacarte' ? (
-          <AlaCarteAdminPanel onDataUpdate={handleAlaCarteDataUpdate} />
+          <AlaCarteAdminPanel onDataUpdate={handleAlaCarteDataUpdate} onEditItem={handleEditInProductHub} />
         ) : activeTab === 'product-hub' ? (
-          <ProductHub onDataUpdate={onDataUpdate} onAlaCarteChange={fetchAlaCarteCount} />
+          <ProductHub
+            onDataUpdate={onDataUpdate}
+            onAlaCarteChange={fetchAlaCarteCount}
+            scrollTargetId={productHubScrollTarget}
+            onScrollHandled={() => setProductHubScrollTarget(null)}
+          />
         ) : (
           <>
             {/* Informational Banner for A La Carte Options */}
@@ -1051,7 +1052,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                             {label}
                           </h5>
                           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted mb-2">Package column {num}</p>
-                          {renderColumnFeatures(featuresByColumn[num], num)}
+                          {renderColumnFeatures(featuresByColumn[num], num, (feature) => handleEditInProductHub(feature.id))}
                         </div>
                       ))}
                     </div>
@@ -1061,7 +1062,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                         <h5 className="text-lg font-semibold text-yellow-400 mb-3 font-teko tracking-wider">
                           Unassigned Features
                         </h5>
-                        {renderColumnFeatures(featuresByColumn.unassigned, 'unassigned')}
+                        {renderColumnFeatures(featuresByColumn.unassigned, 'unassigned', (feature) => handleEditInProductHub(feature.id))}
                       </div>
                     )}
                   </>

@@ -399,19 +399,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       return;
     }
 
+    const previousPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const previousPrice = option?.price ?? feature.alaCartePrice;
+
     try {
       if (!publish) {
-        updateFeatureState(feature.id, { publishToAlaCarte: false });
         await updateFeature(feature.id, { publishToAlaCarte: false });
         await unpublishAlaCarteFromFeature(feature.id);
+        updateFeatureState(feature.id, { publishToAlaCarte: false });
         upsertOptionState(feature, { isPublished: false });
         markSaved(feature.id);
         clearRowError(feature.id);
       } else {
         const resolvedPrice = Number(price);
         const featurePayload = { ...feature, publishToAlaCarte: true, alaCartePrice: resolvedPrice };
-        updateFeatureState(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
-        clearRowError(feature.id);
         await updateFeature(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
         await upsertAlaCarteFromFeature(featurePayload, {
           isPublished: true,
@@ -421,6 +422,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           isNew: option?.isNew ?? feature.alaCarteIsNew,
           warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
         });
+        updateFeatureState(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
         upsertOptionState(feature, { isPublished: true, price: resolvedPrice, column: option?.column, position: option?.position });
         setPriceInputs((prev) => {
           const { [feature.id]: _removed, ...rest } = prev;
@@ -433,25 +435,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       onDataUpdate();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      console.error('Failed to update publish status', err);
       setRowErrorMessage(feature.id, message);
-      try {
-        await updateFeature(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
-        if (!feature.publishToAlaCarte) {
-          await unpublishAlaCarteFromFeature(feature.id);
-        } else {
-          await upsertAlaCarteFromFeature(feature, {
-            isPublished: true,
-            column: option?.column,
-            position: option?.position,
-            price: option?.price ?? feature.alaCartePrice,
-            isNew: option?.isNew ?? feature.alaCarteIsNew,
-            warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
-          });
-        }
-      } catch (_rollbackErr) {
-        // Best-effort rollback; swallow to avoid masking primary error message
-      }
-      updateFeatureState(feature.id, { publishToAlaCarte: feature.publishToAlaCarte, alaCartePrice: feature.alaCartePrice });
+      updateFeatureState(feature.id, { publishToAlaCarte: previousPublished, alaCartePrice: previousPrice });
+      upsertOptionState(feature, {
+        isPublished: previousPublished,
+        price: previousPrice,
+        column: option?.column,
+        position: option?.position,
+      });
       clearSaved(feature.id);
     }
   };

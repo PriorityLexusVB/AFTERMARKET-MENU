@@ -8,6 +8,7 @@ import {
   DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -68,6 +69,7 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
@@ -99,7 +101,10 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
           <button
             {...attributes}
             {...listeners}
+            ref={setActivatorNodeRef}
+            style={{ touchAction: 'none' }}
             className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1"
+            data-testid="feature-drag-handle"
             title="Drag to reorder or move between columns"
             aria-label={`Drag ${feature.name} to reorder or move between columns`}
           >
@@ -283,6 +288,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         distance: 8,
       },
     }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        distance: 12,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -404,6 +414,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     fetchAlaCarteCount();
     onDataUpdate();
   }, [fetchAlaCarteCount, onDataUpdate]);
+
+  const handleProductHubDataUpdate = useCallback(() => {
+    fetchFeatures();
+    onDataUpdate();
+  }, [fetchFeatures, onDataUpdate]);
 
   const handleRecommendedChange = useCallback(async (packageId: string | 'none') => {
     const previousSelection = recommendedSelection;
@@ -874,7 +889,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
           <AlaCarteAdminPanel onDataUpdate={handleAlaCarteDataUpdate} onEditItem={handleEditInProductHub} />
         ) : activeTab === 'product-hub' ? (
           <ProductHub
-            onDataUpdate={onDataUpdate}
+            onDataUpdate={handleProductHubDataUpdate}
             onAlaCarteChange={fetchAlaCarteCount}
             scrollTargetId={productHubScrollTarget}
             onScrollHandled={() => setProductHubScrollTarget(null)}

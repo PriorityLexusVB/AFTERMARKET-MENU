@@ -31,9 +31,12 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   }) => {
   if (variant === 'bar') {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden">
-        <div className="container mx-auto px-4 sm:px-8 py-3 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden"
+        style={{ height: 'calc(var(--ipad-bottom-bar-h) + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="container mx-auto px-4 sm:px-8 h-full">
+          <div className="flex h-full flex-col gap-3 md:flex-row md:items-center md:justify-between pb-[env(safe-area-inset-bottom,0px)] py-3">
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Your Selection</p>
               <div className="flex flex-wrap items-center gap-2 text-sm text-lux-text">

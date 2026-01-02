@@ -34,7 +34,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     <div 
       data-testid="package-card"
       className={`
-      lux-card flex flex-col h-full relative overflow-hidden
+      lux-card flex flex-col h-full min-h-0 relative overflow-hidden
       ${isSelected ? 'lux-card-selected' : ''}
       ${isRecommended ? 'lux-card-recommended' : ''}
       ${className}
@@ -54,8 +54,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
       </div>
 
       {/* Features section stretches with page scroll */}
-      <div className="relative flex-1 flex flex-col">
-        <div className="p-6 lg:p-7 pt-2 space-y-3 flex-1">
+      <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="p-6 lg:p-7 pt-2 space-y-3 flex-1 overflow-hidden">
           {includedPackageFeatures.map((feature, index) => {
             let divider = null;
             // Add a divider before every feature except the first one
@@ -69,19 +69,19 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
             return (
               <div key={feature.id}>
                 {divider}
-                <div className="text-center mt-3">
-                    <button
-                      onClick={() => onViewFeature(feature)}
-                      className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"
-                      aria-label={`Learn more about ${feature.name}`}
-                      data-testid="package-feature"
-                    >
-                      {feature.name}
-                    </button>
-                    <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
-                        {feature.points.map(p => <li key={p}>*{p}</li>)}
-                    </ul>
-                </div>
+                 <div className="text-center mt-3">
+                     <button
+                       onClick={() => onViewFeature(feature)}
+                       className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1 clamp-2"
+                       aria-label={`Learn more about ${feature.name}`}
+                       data-testid="package-feature"
+                     >
+                       {feature.name}
+                     </button>
+                     <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1 clamp-3">
+                         {feature.points.map(p => <li key={p}>*{p}</li>)}
+                     </ul>
+                 </div>
               </div>
             );
           })}

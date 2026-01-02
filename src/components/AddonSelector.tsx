@@ -12,9 +12,9 @@ interface AddonSelectorProps {
 
 export const AddonSelector: React.FC<AddonSelectorProps> = ({ items, selectedItems, onToggleItem, onViewItem, className }) => {
   return (
-    <div className={`bg-gray-800/50 border border-gray-700 rounded-lg p-4 h-full flex flex-col ${className ?? ''}`}>
+    <div className={`bg-gray-800/50 border border-gray-700 rounded-lg p-4 h-full min-h-0 flex flex-col ${className ?? ''}`}>
       <h3 className="text-2xl font-teko font-bold tracking-wider text-gray-200 mb-4 text-center">Popular Add-Ons</h3>
-      <div className="space-y-3 flex-grow pr-2">
+      <div className="space-y-3 flex-grow pr-2 min-h-0 overflow-hidden">
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
             <p>No featured add-ons configured yet.</p>

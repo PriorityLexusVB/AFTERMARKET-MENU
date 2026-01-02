@@ -57,6 +57,11 @@ const App: React.FC = () => {
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const ipadLandscapeQuery = '(min-width: 1024px) and (max-width: 1366px) and (orientation: landscape)';
+  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(ipadLandscapeQuery).matches;
+  });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
@@ -87,6 +92,48 @@ const App: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia(ipadLandscapeQuery);
+    const updateMatches = () => setIsIpadLandscape(mediaQuery.matches);
+    updateMatches();
+    mediaQuery.addEventListener('change', updateMatches);
+    window.addEventListener('resize', updateMatches);
+    return () => {
+      mediaQuery.removeEventListener('change', updateMatches);
+      window.removeEventListener('resize', updateMatches);
+    };
+  }, [ipadLandscapeQuery]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const className = 'ipad-landscape-lock';
+    if (isIpadLandscape) {
+      document.body.classList.add(className);
+    } else {
+      document.body.classList.remove(className);
+    }
+    return () => document.body.classList.remove(className);
+  }, [isIpadLandscape]);
+
+  useEffect(() => {
+    if (!isIpadLandscape || typeof document === 'undefined') return;
+    const updateHeaderHeight = () => {
+      const header = document.querySelector('header');
+      if (header) {
+        document.documentElement.style.setProperty('--ipad-header-h', `${header.getBoundingClientRect().height}px`);
+      }
+      document.documentElement.style.setProperty('--ipad-bottom-bar-h', '84px');
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      document.documentElement.style.removeProperty('--ipad-header-h');
+      document.documentElement.style.removeProperty('--ipad-bottom-bar-h');
+    };
+  }, [isIpadLandscape]);
   
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -333,16 +380,17 @@ const App: React.FC = () => {
   );
 
   const renderMenuContent = () => {
+    const wrapperClass = isIpadLandscape ? 'flex flex-col h-full min-h-0 gap-4' : 'space-y-6';
     return (
-      <div className="space-y-6">
-        <div className="text-center mb-6">
+      <div className={wrapperClass}>
+        <div className={`text-center ${isIpadLandscape ? 'mb-2' : 'mb-6'} shrink-0`}>
           <h2 className="lux-title text-4xl md:text-5xl">Vehicle Protection Menu</h2>
-          <p className="lux-subtitle mt-1 max-w-3xl mx-auto">
+          <p className="lux-subtitle mt-1 max-w-3xl mx-auto clamp-3">
             Select one of our expertly curated packages, or build a custom package from our a la carte options.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
+        <div className={`flex flex-col sm:flex-row justify-center items-center gap-4 ${isIpadLandscape ? 'mb-2' : 'mb-6'} shrink-0`}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
            {currentPage === 'packages' && (
@@ -356,30 +404,33 @@ const App: React.FC = () => {
               Compare Packages
             </button>
           )}
-       </div>
+        </div>
         {currentPage === 'packages' && (
-          <PackageSelector
-            packages={displayPackages}
-            allFeaturesForDisplay={allFeatures}
-            selectedPackage={selectedPackage}
-            onSelectPackage={handleSelectPackage}
-            onViewFeature={handleViewDetail}
-            addonColumn={
-              <AddonSelector
-                items={mainPageAddons}
-                selectedItems={customPackageItems}
-                onToggleItem={handleToggleAlaCarteItem}
-                onViewItem={handleViewDetail}
-                className="h-full"
-              />
-            }
-            gridClassName="items-stretch"
-          />
+          <div className="flex-1 min-h-0">
+            <PackageSelector
+              packages={displayPackages}
+              allFeaturesForDisplay={allFeatures}
+              selectedPackage={selectedPackage}
+              onSelectPackage={handleSelectPackage}
+              onViewFeature={handleViewDetail}
+              addonColumn={
+                <AddonSelector
+                  items={mainPageAddons}
+                  selectedItems={customPackageItems}
+                  onToggleItem={handleToggleAlaCarteItem}
+                  onViewItem={handleViewDetail}
+                  className="h-full min-h-0"
+                />
+              }
+              gridClassName={isIpadLandscape ? 'items-stretch h-full' : 'items-stretch'}
+              isIpadLandscape={isIpadLandscape}
+            />
+          </div>
         )}
 
         {currentPage === 'alacarte' && (
-           <div className="flex flex-col xl:flex-row gap-12">
-            <div className="xl:w-3/5">
+           <div className="flex flex-col xl:flex-row gap-12 flex-1 min-h-0">
+            <div className="xl:w-3/5 min-h-0">
                <h3 className="lux-title mb-4">Available Options</h3>
               <AlaCarteSelector
                 items={availableAlaCarteItems}
@@ -389,7 +440,7 @@ const App: React.FC = () => {
                 selectedIds={customPackageItems.map(item => item.id)}
               />
             </div>
-            <div className="xl:w-2/5 flex flex-col">
+            <div className="xl:w-2/5 flex flex-col min-h-0">
                <h3 className="lux-title mb-4">Your Custom Package</h3>
               <CustomPackageBuilder
                 items={displayCustomPackageItems}
@@ -403,6 +454,15 @@ const App: React.FC = () => {
       </div>
     );
   }
+
+  const isMenuView = currentView === 'menu';
+  const mainStyle = isIpadLandscape && isMenuView
+    ? {
+        height: 'calc(100vh - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px) - env(safe-area-inset-bottom, 0px))',
+        overflow: 'hidden',
+        overscrollBehavior: 'none' as const,
+      }
+    : { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' };
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
@@ -427,8 +487,8 @@ const App: React.FC = () => {
       ) : (
           <>
           <main
-            className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' }}
+            className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col min-h-0"
+            style={mainStyle}
           >
             {isLoading ? (
               <LoadingSpinner />
@@ -442,7 +502,7 @@ const App: React.FC = () => {
                 customerInfo={customerInfo}
               />
             ) : (
-              <div className="lux-no-select space-y-4">
+              <div className={`lux-no-select ${isIpadLandscape ? 'flex-1 flex flex-col min-h-0' : 'space-y-4'}`}>
                 {renderMenuContent()}
               </div>
             )}

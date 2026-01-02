@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { sortFeaturesByPosition, groupFeaturesByColumn, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature, setRecommendedPackage } from './data';
-import { writeBatch, getDocs, doc } from 'firebase/firestore/lite';
+import { writeBatch, getDocs, doc, setDoc, deleteField } from 'firebase/firestore/lite';
 import type { ProductFeature } from './types';
 
 // Mock firebase
@@ -249,6 +249,12 @@ describe('A La Carte Publishing', () => {
     ...overrides,
   });
 
+  afterEach(async () => {
+    const firebaseModule = await import('./firebase');
+    (firebaseModule as any).db = null;
+    vi.clearAllMocks();
+  });
+
   describe('upsertAlaCarteFromFeature', () => {
     it('should throw error if firebase is not initialized', async () => {
       const feature = createFeature({ publishToAlaCarte: true, alaCartePrice: 150 });
@@ -266,12 +272,63 @@ describe('A La Carte Publishing', () => {
       await expect(upsertAlaCarteFromFeature(featureWithoutPublish)).rejects.toThrow('Firebase is not initialized');
       await expect(upsertAlaCarteFromFeature(featureWithoutPrice)).rejects.toThrow('Firebase is not initialized');
     });
+
+    it('cleans undefined fields before writing to Firestore', async () => {
+      const firebaseModule = await import('./firebase');
+      (firebaseModule as any).db = {} as any;
+      vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
+      vi.mocked(setDoc).mockResolvedValue(undefined as any);
+      vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+
+      const feature = createFeature({
+        publishToAlaCarte: true,
+        alaCartePrice: 150,
+        imageUrl: undefined,
+        thumbnailUrl: undefined,
+        videoUrl: undefined,
+      });
+
+      await upsertAlaCarteFromFeature(feature, { price: 150 });
+
+      expect(setDoc).toHaveBeenCalledWith(
+        { path: 'ala_carte_options/test-id' },
+        expect.objectContaining({
+          imageUrl: expect.objectContaining({ _type: 'deleteField' }),
+          thumbnailUrl: expect.objectContaining({ _type: 'deleteField' }),
+          videoUrl: expect.objectContaining({ _type: 'deleteField' }),
+        }),
+        { merge: true }
+      );
+    });
   });
 
 describe('unpublishAlaCarteFromFeature', () => {
   it('should throw error if firebase is not initialized', async () => {
     await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
   });
+
+  it('clears placement fields when unpublishing', async () => {
+    const firebaseModule = await import('./firebase');
+    (firebaseModule as any).db = {} as any;
+    vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
+    vi.mocked(setDoc).mockResolvedValue(undefined as any);
+    vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+
+    await unpublishAlaCarteFromFeature('test-id');
+
+    expect(setDoc).toHaveBeenCalledWith(
+      { path: 'ala_carte_options/test-id' },
+      expect.objectContaining({
+        isPublished: false,
+        column: expect.objectContaining({ _type: 'deleteField' }),
+        position: expect.objectContaining({ _type: 'deleteField' }),
+        connector: expect.objectContaining({ _type: 'deleteField' }),
+      }),
+      { merge: true }
+    );
+  });
+});
+
 });
 
 describe('setRecommendedPackage', () => {
@@ -332,7 +389,6 @@ describe('setRecommendedPackage', () => {
 
     await expect(setRecommendedPackage('any')).rejects.toThrow('Firebase is not initialized. Cannot update recommended package.');
   });
-});
 });
 
 describe('Package FeatureIds Fallback Behavior', () => {

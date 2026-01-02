@@ -437,16 +437,25 @@ export async function upsertAlaCarteFromFeature(
       videoUrl: feature.videoUrl,
       sourceFeatureId: overrides.sourceFeatureId ?? feature.id,
       isPublished: overrides.isPublished ?? true,
-      ...(Object.prototype.hasOwnProperty.call(overrides, 'column') ? { column: overrides.column } : {}),
-      ...(Object.prototype.hasOwnProperty.call(overrides, 'position') ? { position: overrides.position } : {}),
-      ...(Object.prototype.hasOwnProperty.call(overrides, 'connector') ? { connector: overrides.connector } : {}),
     };
+    if (overrides.column !== undefined) {
+      alaCarteData.column = overrides.column;
+    }
+    if (overrides.position !== undefined) {
+      alaCarteData.position = overrides.position;
+    }
+    if (overrides.connector !== undefined) {
+      alaCarteData.connector = overrides.connector;
+    }
 
     // Use setDoc with merge to create or update
     await setDoc(alaCarteRef, alaCarteData, { merge: true });
   } catch (error) {
     console.error("Error publishing feature to A La Carte:", error);
-    throw new Error("Failed to publish feature to A La Carte. Please check your connection and Firestore rules.");
+    const message = error instanceof Error ? error.message : String(error);
+    const code = error && typeof error === 'object' && 'code' in error ? (error as { code?: string }).code : undefined;
+    const details = code ? `[${code}] ${message}` : message;
+    throw new Error(`Failed to publish feature to A La Carte: ${details}`);
   }
 }
 

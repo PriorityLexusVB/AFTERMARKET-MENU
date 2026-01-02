@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { addDoc, collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
 import { db } from '../firebase';
 import type { AlaCarteOption, ProductFeature } from '../types';
-import { updateFeature, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature } from '../data';
+import { updateFeature, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature, updateAlaCarteOption } from '../data';
 import { FeatureForm } from './FeatureForm';
 
 interface ProductHubProps {
@@ -368,18 +368,23 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
     try {
       clearRowError(feature.id);
-      await upsertAlaCarteFromFeature(
-        { ...feature, publishToAlaCarte: feature.publishToAlaCarte ?? isPublished, alaCartePrice: price ?? feature.alaCartePrice },
-        {
-          isPublished,
-          column: desiredColumn,
-          position: desiredPosition,
-          price,
-          isNew,
-          warranty,
-        }
-      );
-      upsertOptionState(feature, { column: desiredColumn, position: desiredPosition, isPublished });
+      if (desiredColumn === undefined) {
+        await updateAlaCarteOption(feature.id, { column: undefined, position: undefined });
+        upsertOptionState(feature, { column: undefined, position: undefined, isPublished });
+      } else {
+        await upsertAlaCarteFromFeature(
+          { ...feature, publishToAlaCarte: feature.publishToAlaCarte ?? isPublished, alaCartePrice: price ?? feature.alaCartePrice },
+          {
+            isPublished,
+            column: desiredColumn,
+            position: desiredPosition,
+            price,
+            isNew,
+            warranty,
+          }
+        );
+        upsertOptionState(feature, { column: desiredColumn, position: desiredPosition, isPublished });
+      }
       onAlaCarteChange?.();
       markSaved(feature.id);
     } catch (err) {
@@ -638,11 +643,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   };
 
   const renderPlacementControls = (feature: ProductFeature, option: AlaCarteOption | undefined) => {
-    const column = option?.column;
-    const featured = column === 4;
-    const category = !featured && column ? String(column) : '';
-    const positionValue = positionInputs[feature.id] ?? (option?.position ?? '');
     const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const column = isPublished ? option?.column : undefined;
+    const featured = isPublished && column === 4;
+    const category = !featured && column ? String(column) : '';
+    const positionValue = isPublished ? positionInputs[feature.id] ?? (option?.position ?? '') : '';
     const disabled = !isPublished;
 
     return (
@@ -690,7 +695,10 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           />
         </div>
-        <p className="text-xs text-gray-500">Current: {getPlacementDisplay(option?.column)}</p>
+        {!isPublished && (
+          <p className="text-xs text-amber-400">Publish to A La Carte to enable placement + Featured.</p>
+        )}
+        <p className="text-xs text-gray-500">Current: {getPlacementDisplay(isPublished ? option?.column : undefined)}</p>
       </div>
     );
   };

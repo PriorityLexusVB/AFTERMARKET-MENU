@@ -302,32 +302,32 @@ describe('A La Carte Publishing', () => {
     });
   });
 
-describe('unpublishAlaCarteFromFeature', () => {
-  it('should throw error if firebase is not initialized', async () => {
-    await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
+  describe('unpublishAlaCarteFromFeature', () => {
+    it('should throw error if firebase is not initialized', async () => {
+      await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
+    });
+
+    it('clears placement fields when unpublishing', async () => {
+      const firebaseModule = await import('./firebase');
+      (firebaseModule as any).db = {} as any;
+      vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
+      vi.mocked(setDoc).mockResolvedValue(undefined as any);
+      vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+
+      await unpublishAlaCarteFromFeature('test-id');
+
+      expect(setDoc).toHaveBeenCalledWith(
+        { path: 'ala_carte_options/test-id' },
+        expect.objectContaining({
+          isPublished: false,
+          column: expect.objectContaining({ _type: 'deleteField' }),
+          position: expect.objectContaining({ _type: 'deleteField' }),
+          connector: expect.objectContaining({ _type: 'deleteField' }),
+        }),
+        { merge: true }
+      );
+    });
   });
-
-  it('clears placement fields when unpublishing', async () => {
-    const firebaseModule = await import('./firebase');
-    (firebaseModule as any).db = {} as any;
-    vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
-    vi.mocked(setDoc).mockResolvedValue(undefined as any);
-    vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
-
-    await unpublishAlaCarteFromFeature('test-id');
-
-    expect(setDoc).toHaveBeenCalledWith(
-      { path: 'ala_carte_options/test-id' },
-      expect.objectContaining({
-        isPublished: false,
-        column: expect.objectContaining({ _type: 'deleteField' }),
-        position: expect.objectContaining({ _type: 'deleteField' }),
-        connector: expect.objectContaining({ _type: 'deleteField' }),
-      }),
-      { merge: true }
-    );
-  });
-});
 
 });
 

@@ -449,7 +449,8 @@ export async function upsertAlaCarteFromFeature(
     }
 
     // Use setDoc with merge to create or update
-    await setDoc(alaCarteRef, alaCarteData, { merge: true });
+    const cleaned = prepareUpdateData(alaCarteData as Record<string, unknown>);
+    await setDoc(alaCarteRef, cleaned, { merge: true });
   } catch (error) {
     console.error("Error publishing feature to A La Carte:", error);
     const message = error instanceof Error ? error.message : String(error);
@@ -472,7 +473,16 @@ export async function unpublishAlaCarteFromFeature(featureId: string): Promise<v
 
   try {
     const alaCarteRef = doc(db, 'ala_carte_options', featureId);
-    await setDoc(alaCarteRef, { isPublished: false }, { merge: true });
+    await setDoc(
+      alaCarteRef,
+      prepareUpdateData({
+        isPublished: false,
+        column: undefined,
+        position: undefined,
+        connector: undefined,
+      } as Record<string, unknown>),
+      { merge: true }
+    );
   } catch (error) {
     console.error("Error unpublishing feature from A La Carte:", error);
     // If the doc doesn't exist, we can ignore the error (already unpublished)

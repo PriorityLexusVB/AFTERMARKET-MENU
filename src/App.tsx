@@ -58,10 +58,15 @@ const App: React.FC = () => {
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
   const ipadLandscapeQuery = '(min-width: 1024px) and (max-width: 1367px) and (orientation: landscape)';
-  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+  const computeIsIpadLandscape = useCallback(() => {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+    const isIpadUA =
+      /iPad/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIpadUA) return false;
     return window.matchMedia(ipadLandscapeQuery).matches;
-  });
+  }, [ipadLandscapeQuery]);
+  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => computeIsIpadLandscape());
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
@@ -96,12 +101,12 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mediaQuery = window.matchMedia(ipadLandscapeQuery);
-    const updateMatches = () => setIsIpadLandscape(mediaQuery.matches);
+    const updateMatches = () => setIsIpadLandscape(computeIsIpadLandscape());
     mediaQuery.addEventListener('change', updateMatches);
     return () => {
       mediaQuery.removeEventListener('change', updateMatches);
     };
-  }, []);
+  }, [computeIsIpadLandscape, ipadLandscapeQuery]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;

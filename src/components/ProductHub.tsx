@@ -673,9 +673,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="">Not placed</option>
-            <option value="1">Elite</option>
-            <option value="2">Platinum</option>
-            <option value="3">Gold</option>
+            <option value="1">Gold</option>
+            <option value="2">Elite</option>
+            <option value="3">Platinum</option>
           </select>
         </div>
         <div className="flex flex-col gap-1">
@@ -726,9 +726,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
-            <option value="1">Elite</option>
-            <option value="2">Platinum</option>
-            <option value="3">Gold</option>
+            <option value="2">Elite</option>
+            <option value="3">Platinum</option>
+            <option value="1">Gold</option>
             <option value="none">Not in packages</option>
           </select>
         </label>
@@ -765,9 +765,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           >
             <option value="all">All</option>
             <option value="featured">Featured</option>
-            <option value="1">Column 1 (Elite)</option>
-            <option value="2">Column 2 (Platinum)</option>
-            <option value="3">Column 3 (Gold)</option>
+            <option value="1">Column 1 (Gold)</option>
+            <option value="2">Column 2 (Elite)</option>
+            <option value="3">Column 3 (Platinum)</option>
             <option value="unplaced">Not placed</option>
           </select>
         </label>
@@ -843,9 +843,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             <option value="" disabled>
               Set category...
             </option>
-            <option value="1">Elite</option>
-            <option value="2">Platinum</option>
-            <option value="3">Gold</option>
+            <option value="1">Gold</option>
+            <option value="2">Elite</option>
+            <option value="3">Platinum</option>
             <option value="none">Not placed</option>
           </select>
         </label>

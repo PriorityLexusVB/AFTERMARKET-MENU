@@ -825,7 +825,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         </SortableContext>
         {/* Lightweight drop target for whitespace/bottom-of-column drops without wrapping items */}
         <DroppableColumn columnId={columnId}>
-          <div className="h-3" aria-hidden="true" />
+          <div className="h-12" aria-hidden="true" />
         </DroppableColumn>
       </>
     );

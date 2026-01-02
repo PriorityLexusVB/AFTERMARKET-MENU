@@ -232,11 +232,11 @@ export async function batchUpdateFeaturesPositions(features: FeaturePositionUpda
         
         for (const feature of chunk) {
           const featureRef = doc(db, 'features', feature.id);
-          const updateData = {
+          const updateData = prepareUpdateData({
             position: feature.position,
-            ...(feature.column !== undefined && { column: feature.column }),
-            ...(feature.connector !== undefined && { connector: feature.connector }),
-          };
+            column: feature.column,
+            connector: feature.connector,
+          });
           
           batch.update(featureRef, updateData);
         }
@@ -345,11 +345,11 @@ export async function batchUpdateAlaCartePositions(options: AlaCartePositionUpda
         
         for (const option of chunk) {
           const optionRef = doc(db, 'ala_carte_options', option.id);
-          const updateData = {
+          const updateData = prepareUpdateData({
             position: option.position,
-            ...(option.column !== undefined && { column: option.column }),
-            ...(option.connector !== undefined && { connector: option.connector }),
-          };
+            column: option.column,
+            connector: option.connector,
+          });
           
           batch.update(optionRef, updateData);
         }

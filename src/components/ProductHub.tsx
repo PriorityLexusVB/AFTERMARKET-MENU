@@ -696,7 +696,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           />
         </div>
         {!isPublished && (
-          <p className="text-xs text-amber-400">Publish to A La Carte to enable placement + Featured.</p>
+          <p className="text-xs text-amber-400">
+            Publish first to enable Featured / Category / Position. Unpublished items won’t show to customers.
+          </p>
         )}
         <p className="text-xs text-gray-500">Current: {getPlacementDisplay(isPublished ? option?.column : undefined)}</p>
       </div>

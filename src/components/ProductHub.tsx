@@ -369,8 +369,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     try {
       clearRowError(feature.id);
       if (desiredColumn === undefined) {
-        await updateAlaCarteOption(feature.id, { column: undefined, position: undefined });
-        upsertOptionState(feature, { column: undefined, position: undefined, isPublished });
+        await updateAlaCarteOption(feature.id, { column: undefined, position: undefined, connector: undefined });
+        upsertOptionState(feature, { column: undefined, position: undefined, connector: undefined, isPublished });
       } else {
         await upsertAlaCarteFromFeature(
           { ...feature, publishToAlaCarte: feature.publishToAlaCarte ?? isPublished, alaCartePrice: price ?? feature.alaCartePrice },

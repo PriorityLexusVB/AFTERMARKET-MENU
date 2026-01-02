@@ -446,6 +446,7 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   .clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    /* autoprefixer: ignore next */
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -453,6 +454,7 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   .clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    /* autoprefixer: ignore next */
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

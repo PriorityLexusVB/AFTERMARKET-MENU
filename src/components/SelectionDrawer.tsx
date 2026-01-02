@@ -33,7 +33,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
     return (
       <div
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden"
-        style={{ height: 'calc(var(--ipad-bottom-bar-h) + env(safe-area-inset-bottom, 0px))' }}
+        style={{ height: 'var(--ipad-bottom-bar-h)' }}
       >
         <div className="container mx-auto px-4 sm:px-8 h-full">
           <div className="flex h-full flex-col gap-3 md:flex-row md:items-center md:justify-between pb-[env(safe-area-inset-bottom,0px)] py-3">

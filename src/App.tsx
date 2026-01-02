@@ -57,7 +57,7 @@ const App: React.FC = () => {
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
-  const ipadLandscapeQuery = '(min-width: 1024px) and (max-width: 1366px) and (orientation: landscape)';
+  const ipadLandscapeQuery = '(min-width: 1024px) and (max-width: 1367px) and (orientation: landscape)';
   const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.matchMedia(ipadLandscapeQuery).matches;
@@ -97,14 +97,11 @@ const App: React.FC = () => {
     if (typeof window === 'undefined') return;
     const mediaQuery = window.matchMedia(ipadLandscapeQuery);
     const updateMatches = () => setIsIpadLandscape(mediaQuery.matches);
-    updateMatches();
     mediaQuery.addEventListener('change', updateMatches);
-    window.addEventListener('resize', updateMatches);
     return () => {
       mediaQuery.removeEventListener('change', updateMatches);
-      window.removeEventListener('resize', updateMatches);
     };
-  }, [ipadLandscapeQuery]);
+  }, []);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -118,20 +115,48 @@ const App: React.FC = () => {
   }, [isIpadLandscape]);
 
   useEffect(() => {
-    if (!isIpadLandscape || typeof document === 'undefined') return;
+    if (!isIpadLandscape || typeof document === 'undefined' || typeof window === 'undefined') return;
+    const root = document.documentElement;
+    let header: Element | null = document.querySelector('header');
+
     const updateHeaderHeight = () => {
-      const header = document.querySelector('header');
-      if (header) {
-        document.documentElement.style.setProperty('--ipad-header-h', `${header.getBoundingClientRect().height}px`);
+      if (!header) {
+        header = document.querySelector('header');
       }
-      document.documentElement.style.setProperty('--ipad-bottom-bar-h', '84px');
+      if (header) {
+        const height = (header as HTMLElement).getBoundingClientRect().height;
+        root.style.setProperty('--ipad-header-h', `${height}px`);
+      }
+      root.style.setProperty('--ipad-bottom-bar-h', '84px');
     };
+
     updateHeaderHeight();
-    window.addEventListener('resize', updateHeaderHeight);
+
+    let resizeObserver: ResizeObserver | null = null;
+    let handleResize: (() => void) | null = null;
+
+    if (typeof ResizeObserver !== 'undefined' && header) {
+      resizeObserver = new ResizeObserver(() => {
+        updateHeaderHeight();
+      });
+      resizeObserver.observe(header);
+    } else {
+      handleResize = () => {
+        updateHeaderHeight();
+      };
+      window.addEventListener('resize', handleResize);
+    }
+
     return () => {
-      window.removeEventListener('resize', updateHeaderHeight);
-      document.documentElement.style.removeProperty('--ipad-header-h');
-      document.documentElement.style.removeProperty('--ipad-bottom-bar-h');
+      if (resizeObserver && header) {
+        resizeObserver.unobserve(header);
+        resizeObserver.disconnect();
+      }
+      if (handleResize) {
+        window.removeEventListener('resize', handleResize);
+      }
+      root.style.removeProperty('--ipad-header-h');
+      root.style.removeProperty('--ipad-bottom-bar-h');
     };
   }, [isIpadLandscape]);
   
@@ -380,17 +405,18 @@ const App: React.FC = () => {
   );
 
   const renderMenuContent = () => {
-    const wrapperClass = isIpadLandscape ? 'flex flex-col h-full min-h-0 gap-4' : 'space-y-6';
+    const enableIpadPackagesLayout = isIpadLandscape && currentPage === 'packages';
+    const wrapperClass = enableIpadPackagesLayout ? 'flex flex-col h-full min-h-0 gap-4' : 'space-y-6';
     return (
       <div className={wrapperClass}>
-        <div className={`text-center ${isIpadLandscape ? 'mb-2' : 'mb-6'} shrink-0`}>
+        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
           <h2 className="lux-title text-4xl md:text-5xl">Vehicle Protection Menu</h2>
           <p className="lux-subtitle mt-1 max-w-3xl mx-auto clamp-3">
             Select one of our expertly curated packages, or build a custom package from our a la carte options.
           </p>
         </div>
 
-        <div className={`flex flex-col sm:flex-row justify-center items-center gap-4 ${isIpadLandscape ? 'mb-2' : 'mb-6'} shrink-0`}>
+        <div className={`flex flex-col sm:flex-row justify-center items-center gap-4 ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
            {currentPage === 'packages' && (
@@ -429,8 +455,8 @@ const App: React.FC = () => {
         )}
 
         {currentPage === 'alacarte' && (
-           <div className="flex flex-col xl:flex-row gap-12 flex-1 min-h-0">
-            <div className="xl:w-3/5 min-h-0">
+           <div className="flex flex-col xl:flex-row gap-12">
+            <div className="xl:w-3/5">
                <h3 className="lux-title mb-4">Available Options</h3>
               <AlaCarteSelector
                 items={availableAlaCarteItems}
@@ -456,11 +482,11 @@ const App: React.FC = () => {
   }
 
   const isMenuView = currentView === 'menu';
-  const mainStyle = isIpadLandscape && isMenuView
+  const enableIpadPackagesLayout = isIpadLandscape && currentPage === 'packages';
+  const mainStyle = enableIpadPackagesLayout && isMenuView
     ? {
-        height: 'calc(100vh - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px) - env(safe-area-inset-bottom, 0px))',
+        height: 'calc(100vh - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px))',
         overflow: 'hidden',
-        overscrollBehavior: 'none' as const,
       }
     : { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' };
 

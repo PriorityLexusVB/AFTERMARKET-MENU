@@ -72,14 +72,18 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
                  <div className="text-center mt-3">
                      <button
                        onClick={() => onViewFeature(feature)}
-                       className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1 clamp-2"
+                       className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"
                        aria-label={`Learn more about ${feature.name}`}
                        data-testid="package-feature"
                      >
-                       {feature.name}
+                       <span className="clamp-2">{feature.name}</span>
                      </button>
-                     <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1 clamp-3">
-                         {feature.points.map(p => <li key={p}>*{p}</li>)}
+                     <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
+                         {feature.points.map((p, idx) => (
+                           <li key={`${feature.id}-point-${idx}`} className="clamp-3">
+                             *{p}
+                           </li>
+                         ))}
                      </ul>
                  </div>
               </div>

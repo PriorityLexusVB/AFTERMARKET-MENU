@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
 import { logStartupDiagnostics, startMemoryMonitoring } from "./utils/runtime-checks.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -85,6 +86,18 @@ console.log("[BOOT] Working directory:", process.cwd());
 const app = express();
 app.use(express.json());
 
+// Rate limiter for PWA asset routes to prevent DoS attacks via file system operations
+// Allows 100 requests per 15 minutes per IP for manifest and icon routes
+const pwaAssetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: "Too many requests for PWA assets, please try again later.",
+  // Skip rate limiting for health check endpoints
+  skip: (req) => req.path === "/health-check" || req.path === "/ping",
+});
+
 const indexHtml = path.join(distDir, "index.html");
 const distExists = fs.existsSync(distDir);
 const indexExists = fs.existsSync(indexHtml);
@@ -109,7 +122,9 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 
 app.use((req,res,next)=>{ if(req.path.endsWith(".html")||req.path==="/") res.setHeader("Cache-Control","no-store"); next(); });
 
-app.get("/manifest.webmanifest", (_req, res) => {
+// PWA manifest route with rate limiting to prevent DoS attacks
+// The manifest is read from disk, so we limit requests to avoid file system abuse
+app.get("/manifest.webmanifest", pwaAssetLimiter, (_req, res) => {
   const cacheControlHeader = process.env.NODE_ENV === "production"
     ? "public, max-age=300"
     : "no-store";
@@ -120,25 +135,46 @@ app.get("/manifest.webmanifest", (_req, res) => {
   return res.status(404).send("Manifest not found");
 });
 
-app.get("/icons/*", (_req, res) => {
+// PWA icon route with rate limiting and path traversal protection
+// Icons are read from disk, so we limit requests and validate paths strictly
+app.get("/icons/*", pwaAssetLimiter, (_req, res) => {
+  // Extract the relative path, removing leading slashes
   const relativePath = _req.path.replace(/^\/+/, "");
+  
+  // Validate that the path starts with "icons/" to prevent path traversal
+  if (!relativePath.startsWith("icons/")) {
+    return res.status(400).send("Invalid icon path");
+  }
+  
+  // Resolve paths relative to dist and public directories
   const distIconPath = path.resolve(distDir, relativePath);
   const publicIconPath = path.resolve(publicDir, relativePath);
 
+  // Security: Validate that resolved paths stay within their respective base directories
+  // This prevents path traversal attacks (e.g., /icons/../../../etc/passwd)
   const isSafePath = (targetPath, baseDir) => {
     const rel = path.relative(baseDir, targetPath);
+    // Path must be non-empty, not start with "..", and not be absolute
     return rel && !rel.startsWith("..") && !path.isAbsolute(rel);
   };
 
+  // Reject if neither resolved path is safe
   if (!isSafePath(distIconPath, distDir) && !isSafePath(publicIconPath, publicDir)) {
     return res.status(400).send("Invalid icon path");
   }
 
+  // Check which file exists (prefer dist over public)
+  // SECURITY NOTE: Using existsSync is acceptable here because:
+  // 1. Paths are validated above to prevent traversal
+  // 2. Route is rate-limited to prevent DoS
+  // 3. This is a read-only operation for static assets
   const iconFile = fs.existsSync(distIconPath) ? distIconPath : fs.existsSync(publicIconPath) ? publicIconPath : null;
 
   if (!iconFile) return res.status(404).send("Icon not found");
 
+  // Set long-term cache for immutable icons
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  // sendFile is safe here because we've validated the path above
   return res.sendFile(iconFile);
 });
 

@@ -35,6 +35,9 @@ if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
 
 // Run comprehensive startup diagnostics
 const distDir = path.join(__dirname, "dist");
+const publicDir = path.join(__dirname, "public");
+const manifestPath = path.join(distDir, "manifest.webmanifest");
+const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
 logStartupDiagnostics({ distPath: distDir, port: portNum });
 
 // Start memory monitoring for first 30 seconds
@@ -71,6 +74,21 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 <p>We added <code>gcp-build</code> and <code>prestart</code> so Cloud Run builds before start.</p></body></html>`;
 
 app.use((req,res,next)=>{ if(req.path.endsWith(".html")||req.path==="/") res.setHeader("Cache-Control","no-store"); next(); });
+
+app.get("/manifest.webmanifest", (_req, res) => {
+  const distManifestExists = fs.existsSync(manifestPath);
+  const publicManifestExists = fs.existsSync(publicManifestPath);
+  const manifestFile = distManifestExists ? manifestPath : publicManifestExists ? publicManifestPath : null;
+  res.type("application/manifest+json");
+  res.setHeader("Cache-Control", "no-store");
+  if (manifestFile) return res.sendFile(manifestFile);
+  return res.status(404).send("Manifest not found");
+});
+
+app.get("/icons/*", (_req, res, next) => {
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  next();
+});
 
 if (distExists) app.use(express.static(distDir));
 

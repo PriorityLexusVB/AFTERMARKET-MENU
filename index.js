@@ -117,8 +117,17 @@ app.get("/manifest.webmanifest", (_req, res) => {
 
 app.get("/icons/*", (_req, res) => {
   const relativePath = _req.path.replace(/^\/+/, "");
-  const distIconPath = path.join(distDir, relativePath);
-  const publicIconPath = path.join(publicDir, relativePath);
+  const distIconPath = path.resolve(distDir, relativePath);
+  const publicIconPath = path.resolve(publicDir, relativePath);
+
+  const isSafePath = (targetPath, baseDir) =>
+    targetPath === baseDir ||
+    targetPath.startsWith(baseDir + path.sep);
+
+  if (!isSafePath(distIconPath, distDir) && !isSafePath(publicIconPath, publicDir)) {
+    return res.status(400).send("Invalid icon path");
+  }
+
   const iconFile = fs.existsSync(distIconPath) ? distIconPath : fs.existsSync(publicIconPath) ? publicIconPath : null;
 
   if (!iconFile) return res.status(404).send("Icon not found");

@@ -5,7 +5,6 @@ import react from '@vitejs/plugin-react'
 // from .env files and exposes them via import.meta.env
 export default defineConfig({
   plugins: [react()],
-  publicDir: false,
   build: {
     outDir: 'dist',
     sourcemap: true

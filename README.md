@@ -14,6 +14,10 @@ This is an interactive digital menu for customers to explore and select vehicle 
 - 🧪 **Tested** - Comprehensive test coverage with Vitest
 - 📱 **Responsive** - Mobile-friendly design with Tailwind CSS
 
+## Install on iPad
+
+Open the site in Safari on iPad → tap **Share** → **Add to Home Screen** → launch from the new icon for a full-screen experience.
+
 ## Local Development Setup
 
 ### Step 1: Clone the Repository

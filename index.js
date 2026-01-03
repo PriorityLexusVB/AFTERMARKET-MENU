@@ -39,8 +39,8 @@ const publicDir = path.join(__dirname, "public");
 const manifestPath = path.join(distDir, "manifest.webmanifest");
 const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
 let manifestPayload = null;
-let manifestSource = null;
 let lastManifestLoadAttempt = 0;
+let manifestLoadFailed = false;
 
 const findManifestPath = () => {
   if (fs.existsSync(manifestPath)) return manifestPath;
@@ -51,17 +51,22 @@ const findManifestPath = () => {
 const loadManifest = () => {
   const now = Date.now();
   if (manifestPayload) return manifestPayload;
-  if (now - lastManifestLoadAttempt < 5000) return manifestPayload;
+  if (manifestLoadFailed && now - lastManifestLoadAttempt < 30000) return null;
+  if (now - lastManifestLoadAttempt < 5000) return null;
   lastManifestLoadAttempt = now;
   const file = findManifestPath();
-  if (!file) return null;
+  if (!file) {
+    manifestLoadFailed = true;
+    return null;
+  }
   try {
     manifestPayload = fs.readFileSync(file);
-    manifestSource = file;
+    manifestLoadFailed = false;
     console.log("[BOOT] Loaded manifest from", file);
     return manifestPayload;
   } catch (error) {
     console.warn("[BOOT WARNING] Failed to read manifest from", file, ":", error);
+    manifestLoadFailed = true;
     return null;
   }
 };

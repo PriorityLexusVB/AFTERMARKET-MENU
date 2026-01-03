@@ -72,8 +72,7 @@ describe('PWA asset routes', () => {
     const res = await fetch(`${BASE_URL}/manifest.webmanifest`);
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('application/manifest+json');
-    const cacheHeader = res.headers.get('cache-control') || '';
-    expect(cacheHeader.includes('no-store') || cacheHeader.includes('max-age=300')).toBe(true);
+    expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
   it('serves icons with long cache headers', async () => {

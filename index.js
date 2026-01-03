@@ -38,15 +38,35 @@ const distDir = path.join(__dirname, "dist");
 const publicDir = path.join(__dirname, "public");
 const manifestPath = path.join(distDir, "manifest.webmanifest");
 const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
-const manifestFile = fs.existsSync(manifestPath) ? manifestPath : fs.existsSync(publicManifestPath) ? publicManifestPath : null;
 let manifestPayload = null;
-if (manifestFile) {
+let manifestSource = null;
+let lastManifestLoadAttempt = 0;
+
+const findManifestPath = () => {
+  if (fs.existsSync(manifestPath)) return manifestPath;
+  if (fs.existsSync(publicManifestPath)) return publicManifestPath;
+  return null;
+};
+
+const loadManifest = () => {
+  const now = Date.now();
+  if (manifestPayload && manifestSource) return manifestPayload;
+  if (now - lastManifestLoadAttempt < 5000) return manifestPayload;
+  lastManifestLoadAttempt = now;
+  const file = findManifestPath();
+  if (!file) return null;
   try {
-    manifestPayload = fs.readFileSync(manifestFile);
+    manifestPayload = fs.readFileSync(file);
+    manifestSource = file;
+    console.log("[BOOT] Loaded manifest from", file);
+    return manifestPayload;
   } catch (error) {
-    console.warn("[BOOT WARNING] Failed to read manifest:", error);
+    console.warn("[BOOT WARNING] Failed to read manifest from", file, ":", error);
+    return null;
   }
-}
+};
+
+loadManifest();
 logStartupDiagnostics({ distPath: distDir, port: portNum });
 
 // Start memory monitoring for first 30 seconds
@@ -85,15 +105,26 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 app.use((req,res,next)=>{ if(req.path.endsWith(".html")||req.path==="/") res.setHeader("Cache-Control","no-store"); next(); });
 
 app.get("/manifest.webmanifest", (_req, res) => {
+  const cacheControlHeader = process.env.NODE_ENV === "production"
+    ? "public, max-age=300"
+    : "no-store";
   res.type("application/manifest+json");
-  res.setHeader("Cache-Control", "no-store");
-  if (manifestPayload) return res.send(manifestPayload);
+  res.setHeader("Cache-Control", cacheControlHeader);
+  const payload = manifestPayload || loadManifest();
+  if (payload) return res.send(payload);
   return res.status(404).send("Manifest not found");
 });
 
-app.get("/icons/*", (_req, res, next) => {
+app.get("/icons/*", (_req, res) => {
+  const relativePath = _req.path.replace(/^\/+/, "");
+  const distIconPath = path.join(distDir, relativePath);
+  const publicIconPath = path.join(publicDir, relativePath);
+  const iconFile = fs.existsSync(distIconPath) ? distIconPath : fs.existsSync(publicIconPath) ? publicIconPath : null;
+
+  if (!iconFile) return res.status(404).send("Icon not found");
+
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-  next();
+  return res.sendFile(iconFile);
 });
 
 if (distExists) app.use(express.static(distDir));

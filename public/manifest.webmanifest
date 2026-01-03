@@ -6,6 +6,7 @@
   "display": "standalone",
   "background_color": "#050608",
   "theme_color": "#050608",
+  "description": "Interactive digital menu for exploring Priority Lexus aftermarket vehicle accessories and upgrades",
   "icons": [
     {
       "src": "/icons/icon-192.png",

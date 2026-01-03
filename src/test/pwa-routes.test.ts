@@ -52,8 +52,14 @@ beforeAll(async () => {
 afterAll(async () => {
   if (serverProcess) {
     const exitPromise = new Promise(resolve => {
-      serverProcess?.once('close', () => resolve(undefined));
-      setTimeout(resolve, 2000);
+      const timer = setTimeout(() => {
+        console.warn('Server process did not close before timeout');
+        resolve(undefined);
+      }, 2000);
+      serverProcess?.once('close', () => {
+        clearTimeout(timer);
+        resolve(undefined);
+      });
     });
     serverProcess.kill('SIGINT');
     await exitPromise;

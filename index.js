@@ -50,7 +50,7 @@ const findManifestPath = () => {
 
 const loadManifest = () => {
   const now = Date.now();
-  if (manifestPayload && manifestSource) return manifestPayload;
+  if (manifestPayload) return manifestPayload;
   if (now - lastManifestLoadAttempt < 5000) return manifestPayload;
   lastManifestLoadAttempt = now;
   const file = findManifestPath();
@@ -120,9 +120,10 @@ app.get("/icons/*", (_req, res) => {
   const distIconPath = path.resolve(distDir, relativePath);
   const publicIconPath = path.resolve(publicDir, relativePath);
 
-  const isSafePath = (targetPath, baseDir) =>
-    targetPath === baseDir ||
-    targetPath.startsWith(baseDir + path.sep);
+  const isSafePath = (targetPath, baseDir) => {
+    const rel = path.relative(baseDir, targetPath);
+    return rel && !rel.startsWith("..") && !path.isAbsolute(rel);
+  };
 
   if (!isSafePath(distIconPath, distDir) && !isSafePath(publicIconPath, publicDir)) {
     return res.status(400).send("Invalid icon path");

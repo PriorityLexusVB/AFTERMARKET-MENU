@@ -38,6 +38,15 @@ const distDir = path.join(__dirname, "dist");
 const publicDir = path.join(__dirname, "public");
 const manifestPath = path.join(distDir, "manifest.webmanifest");
 const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
+const manifestFile = fs.existsSync(manifestPath) ? manifestPath : fs.existsSync(publicManifestPath) ? publicManifestPath : null;
+let manifestPayload = null;
+if (manifestFile) {
+  try {
+    manifestPayload = fs.readFileSync(manifestFile);
+  } catch (error) {
+    console.warn("[BOOT WARNING] Failed to read manifest:", error);
+  }
+}
 logStartupDiagnostics({ distPath: distDir, port: portNum });
 
 // Start memory monitoring for first 30 seconds
@@ -76,12 +85,9 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 app.use((req,res,next)=>{ if(req.path.endsWith(".html")||req.path==="/") res.setHeader("Cache-Control","no-store"); next(); });
 
 app.get("/manifest.webmanifest", (_req, res) => {
-  const distManifestExists = fs.existsSync(manifestPath);
-  const publicManifestExists = fs.existsSync(publicManifestPath);
-  const manifestFile = distManifestExists ? manifestPath : publicManifestExists ? publicManifestPath : null;
   res.type("application/manifest+json");
   res.setHeader("Cache-Control", "no-store");
-  if (manifestFile) return res.sendFile(manifestFile);
+  if (manifestPayload) return res.send(manifestPayload);
   return res.status(404).send("Manifest not found");
 });
 

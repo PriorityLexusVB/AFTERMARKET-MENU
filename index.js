@@ -137,7 +137,8 @@ app.get("/manifest.webmanifest", pwaAssetLimiter, (_req, res) => {
 
 // Serve icons safely (no user-controlled path resolution)
 app.get("/icons/*", pwaAssetLimiter, (req, res) => {
-  const rel = req.params[0] || ""; // wildcard part after /icons/
+  // Extract path after /icons/ prefix
+  const rel = req.path.substring("/icons/".length);
   // Basic validation: no traversal, no absolute paths, no backslashes
   if (
     !rel ||
@@ -159,7 +160,7 @@ app.get("/icons/*", pwaAssetLimiter, (req, res) => {
   res.sendFile(rel, { root: distIconsDir }, (err) => {
     if (!err) return;
     // Only fall back on "not found"
-    if (err && (err.code === "ENOENT" || err.statusCode === 404)) {
+    if (err.code === "ENOENT" || err.statusCode === 404) {
       return res.sendFile(rel, { root: publicIconsDir }, (err2) => {
         if (err2) return res.status(404).send("Icon not found");
       });

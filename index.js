@@ -161,11 +161,14 @@ app.get("/icons/*", pwaAssetLimiter, (req, res) => {
     if (!err) return;
     // Only fall back on "not found"
     if (err.code === "ENOENT" || err.statusCode === 404) {
-      return res.sendFile(rel, { root: publicIconsDir }, (err2) => {
-        if (err2) return res.status(404).send("Icon not found");
+      res.sendFile(rel, { root: publicIconsDir }, (err2) => {
+        if (err2) {
+          return res.status(404).send("Icon not found");
+        }
       });
+      return;
     }
-    return res.status(500).send("Failed to serve icon");
+    res.status(500).send("Failed to serve icon");
   });
 });
 

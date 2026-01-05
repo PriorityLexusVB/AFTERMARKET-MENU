@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
 import { logStartupDiagnostics, startMemoryMonitoring } from "./utils/runtime-checks.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,6 +36,43 @@ if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
 
 // Run comprehensive startup diagnostics
 const distDir = path.join(__dirname, "dist");
+const publicDir = path.join(__dirname, "public");
+const manifestPath = path.join(distDir, "manifest.webmanifest");
+const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
+let manifestPayload = null;
+let lastManifestLoadAttempt = 0;
+let manifestLoadFailed = false;
+
+const findManifestPath = () => {
+  if (fs.existsSync(manifestPath)) return manifestPath;
+  if (fs.existsSync(publicManifestPath)) return publicManifestPath;
+  return null;
+};
+
+const loadManifest = () => {
+  const now = Date.now();
+  if (manifestPayload) return manifestPayload;
+  if (manifestLoadFailed && now - lastManifestLoadAttempt < 30000) return null;
+  if (now - lastManifestLoadAttempt < 5000) return null;
+  lastManifestLoadAttempt = now;
+  const file = findManifestPath();
+  if (!file) {
+    manifestLoadFailed = true;
+    return null;
+  }
+  try {
+    manifestPayload = fs.readFileSync(file);
+    manifestLoadFailed = false;
+    console.log("[BOOT] Loaded manifest from", file);
+    return manifestPayload;
+  } catch (error) {
+    console.warn("[BOOT WARNING] Failed to read manifest from", file, ":", error);
+    manifestLoadFailed = true;
+    return null;
+  }
+};
+
+loadManifest();
 logStartupDiagnostics({ distPath: distDir, port: portNum });
 
 // Start memory monitoring for first 30 seconds
@@ -47,6 +85,18 @@ console.log("[BOOT] Working directory:", process.cwd());
 
 const app = express();
 app.use(express.json());
+
+// Rate limiter for PWA asset routes to prevent DoS attacks via file system operations
+// Allows 100 requests per 15 minutes per IP for manifest and icon routes
+const pwaAssetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: "Too many requests for PWA assets, please try again later.",
+  // Skip rate limiting for health check endpoints
+  skip: (req) => req.path === "/health-check" || req.path === "/ping",
+});
 
 const indexHtml = path.join(distDir, "index.html");
 const distExists = fs.existsSync(distDir);
@@ -71,6 +121,56 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 <p>We added <code>gcp-build</code> and <code>prestart</code> so Cloud Run builds before start.</p></body></html>`;
 
 app.use((req,res,next)=>{ if(req.path.endsWith(".html")||req.path==="/") res.setHeader("Cache-Control","no-store"); next(); });
+
+// PWA manifest route with rate limiting to prevent DoS attacks
+// The manifest is read from disk, so we limit requests to avoid file system abuse
+app.get("/manifest.webmanifest", pwaAssetLimiter, (_req, res) => {
+  const cacheControlHeader = process.env.NODE_ENV === "production"
+    ? "public, max-age=300"
+    : "no-store";
+  res.type("application/manifest+json");
+  res.setHeader("Cache-Control", cacheControlHeader);
+  const payload = manifestPayload || loadManifest();
+  if (payload) return res.send(payload);
+  return res.status(404).send("Manifest not found");
+});
+
+// Serve icons safely (no user-controlled path resolution)
+app.get("/icons/*", pwaAssetLimiter, (req, res) => {
+  // Extract path after /icons/ prefix
+  const rel = req.path.substring("/icons/".length);
+  // Basic validation: no traversal, no absolute paths, no backslashes
+  if (
+    !rel ||
+    rel.includes("..") ||
+    rel.startsWith("/") ||
+    rel.includes("\\") ||
+    rel.includes(":")
+  ) {
+    return res.status(400).send("Invalid icon path");
+  }
+
+  // Prefer dist icons if present, else public icons
+  const distIconsDir = path.join(distDir, "icons");
+  const publicIconsDir = path.join(publicDir, "icons");
+
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+
+  // Try dist first; if not found, fall back to public
+  res.sendFile(rel, { root: distIconsDir }, (err) => {
+    if (!err) return;
+    // Only fall back on "not found"
+    if (err.code === "ENOENT" || err.statusCode === 404) {
+      res.sendFile(rel, { root: publicIconsDir }, (err2) => {
+        if (err2) {
+          return res.status(404).send("Icon not found");
+        }
+      });
+      return;
+    }
+    res.status(500).send("Failed to serve icon");
+  });
+});
 
 if (distExists) app.use(express.static(distDir));
 

@@ -44,6 +44,8 @@ const COLUMNS = [
 ] as const;
 
 const FEATURE_COLUMNS = COLUMNS;
+const FEATURE_COLUMN_NUMBERS = [1, 2, 3] as const;
+const FEATURED_COLUMN_NUMBER = 4;
 
 
 // Sortable Feature Item Component
@@ -370,7 +372,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
           const data = typeof doc.data === 'function' ? (doc.data() as { isPublished?: boolean; column?: number }) : undefined;
           if (data?.isPublished === true) {
             acc.published += 1;
-            if (data.column === 4) acc.featured += 1;
+            if (data.column === FEATURED_COLUMN_NUMBER) acc.featured += 1;
           }
           return acc;
         },
@@ -537,7 +539,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const columnPart = id.replace('column-', '');
       if (columnPart === 'unassigned') return 'unassigned';
       const num = parseInt(columnPart, 10);
-      if (num === 1 || num === 2 || num === 3) return num;
+      if ((FEATURE_COLUMN_NUMBERS as readonly number[]).includes(num)) return num;
     }
     return null;
   };

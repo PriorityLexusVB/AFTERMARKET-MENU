@@ -593,7 +593,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           ) : (
             <ul className="space-y-2">
               {hiddenOptions.map((option) => {
-                const displayName = option.name?.trim() || `(Missing name) – doc id: ${option.id}`;
+                const displayName = option.name?.trim() || `(Missing name) - doc id: ${option.id}`;
                 return (
                   <li
                     key={option.id}

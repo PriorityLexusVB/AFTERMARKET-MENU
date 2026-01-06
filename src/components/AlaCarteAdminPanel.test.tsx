@@ -74,6 +74,17 @@ vi.mock('firebase/firestore/lite', () => {
                 column: 3,
               }),
             },
+            {
+              id: 'missing-name',
+              data: () => ({
+                price: 80,
+                cost: 40,
+                description: 'Missing name doc',
+                points: ['Point'],
+                isPublished: true,
+                column: 1,
+              }),
+            },
           ],
         };
       }
@@ -88,26 +99,28 @@ vi.mock('../data', () => ({
   updateAlaCarteOption: vi.fn().mockResolvedValue(undefined),
 }));
 
-describe('AlaCarteAdminPanel', () => {
-  it('defaults to published-only view with published lane', async () => {
-    render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
+  describe('AlaCarteAdminPanel', () => {
+    it('defaults to published-only view with published lane', async () => {
+      render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
-    expect(screen.getByText('Published Unplaced')).toBeInTheDocument();
-    expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
-    expect(screen.queryByText('Legacy Item')).not.toBeInTheDocument();
-    expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
+      await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
+      expect(screen.getByText('Published Unplaced')).toBeInTheDocument();
+      expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
+      expect(screen.queryByText('Legacy Item')).not.toBeInTheDocument();
+      expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
+      expect(screen.getByText(/Published 2 \/ Total 6/)).toBeInTheDocument();
+    });
+
+    it('reveals unpublished and legacy options when toggled on', async () => {
+      render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
+
+      const toggle = await screen.findByLabelText(/Show hidden/i);
+      await userEvent.click(toggle);
+
+      await waitFor(() => expect(screen.getByText('Unpublished Item')).toBeInTheDocument());
+      expect(screen.getByText('Legacy Item')).toBeInTheDocument();
+      expect(screen.getByText('Unpublished Unplaced')).toBeInTheDocument();
+      expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
+      expect(screen.getByText(/\(Missing name\).*missing-name/)).toBeInTheDocument();
+    });
   });
-
-  it('reveals unpublished and legacy options when toggled on', async () => {
-    render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
-
-    const toggle = await screen.findByLabelText(/Show legacy/i);
-    await userEvent.click(toggle);
-
-    await waitFor(() => expect(screen.getByText('Unpublished Item')).toBeInTheDocument());
-    expect(screen.getByText('Legacy Item')).toBeInTheDocument();
-    expect(screen.getByText('Unpublished Unplaced')).toBeInTheDocument();
-    expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
-  });
-});

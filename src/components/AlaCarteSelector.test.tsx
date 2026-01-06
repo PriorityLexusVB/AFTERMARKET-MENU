@@ -72,4 +72,23 @@ describe('AlaCarteSelector', () => {
 
     expect(screen.getByText('No add-ons configured')).toBeInTheDocument();
   });
-});
+
+  it('shows tap-to-add buttons and disables when already selected', () => {
+    const items: AlaCarteOption[] = [
+      createOption({ id: '1', name: 'Tap Add', isPublished: true, column: 1 }),
+    ];
+
+    render(
+      <AlaCarteSelector
+        items={items}
+        onViewItem={mockOnViewItem}
+        disableDrag
+        onToggleItem={vi.fn()}
+        selectedIds={['1']}
+      />
+    );
+
+    expect(screen.getByText('Tap Add')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ADDED/i })).toBeDisabled();
+  });
+}); 

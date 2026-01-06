@@ -409,9 +409,13 @@ const App: React.FC = () => {
     </div>
   );
 
+  const enableIpadMenuLayout = isIpadLandscape && currentView === 'menu';
+  const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === 'packages';
+  const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === 'alacarte';
+  const disableAlaCarteDrag = enableIpadMenuLayout || guestMode;
+
   const renderMenuContent = () => {
-    const enableIpadPackagesLayout = isIpadLandscape && currentPage === 'packages';
-    const wrapperClass = enableIpadPackagesLayout ? 'flex flex-col h-full min-h-0 gap-4' : 'space-y-6';
+    const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-4' : 'space-y-6';
     return (
       <div className={wrapperClass}>
         <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
@@ -460,24 +464,26 @@ const App: React.FC = () => {
         )}
 
         {currentPage === 'alacarte' && (
-           <div className="flex flex-col xl:flex-row gap-12">
-            <div className="xl:w-3/5">
+           <div className={enableIpadAlaCarteLayout ? 'flex flex-1 min-h-0 gap-6 overflow-hidden' : 'flex flex-col xl:flex-row gap-12'}>
+            <div className={enableIpadAlaCarteLayout ? 'flex-1 min-h-0 overflow-hidden' : 'xl:w-3/5'}>
                <h3 className="lux-title mb-4">Available Options</h3>
-              <AlaCarteSelector
-                items={availableAlaCarteItems}
-                onViewItem={handleViewDetail}
-                disableDrag={guestMode}
-                onToggleItem={handleToggleAlaCarteItem}
-                selectedIds={customPackageItems.map(item => item.id)}
-              />
+               <div className={enableIpadAlaCarteLayout ? 'h-full overflow-y-auto pr-1' : ''}>
+                <AlaCarteSelector
+                  items={availableAlaCarteItems}
+                  onViewItem={handleViewDetail}
+                  disableDrag={disableAlaCarteDrag}
+                  onToggleItem={handleToggleAlaCarteItem}
+                  selectedIds={customPackageItems.map(item => item.id)}
+                />
+               </div>
             </div>
-            <div className="xl:w-2/5 flex flex-col min-h-0">
+            <div className={enableIpadAlaCarteLayout ? 'w-[40%] min-w-[320px] flex flex-col min-h-0' : 'xl:w-2/5 flex flex-col min-h-0'}>
                <h3 className="lux-title mb-4">Your Custom Package</h3>
               <CustomPackageBuilder
                 items={displayCustomPackageItems}
                 onDropItem={handleDropAlaCarte}
                 onRemoveItem={handleRemoveAlaCarte}
-                enableDrop={!guestMode}
+                enableDrop={!disableAlaCarteDrag}
               />
             </div>
           </div>
@@ -487,8 +493,7 @@ const App: React.FC = () => {
   }
 
   const isMenuView = currentView === 'menu';
-  const enableIpadPackagesLayout = isIpadLandscape && currentPage === 'packages';
-  const mainStyle = enableIpadPackagesLayout && isMenuView
+  const mainStyle = enableIpadMenuLayout && isMenuView
     ? {
         height: 'calc(100vh - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px))',
         overflow: 'hidden',

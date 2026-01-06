@@ -197,7 +197,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showUnpublished, setShowUnpublished] = useState(false);
+  const [showHiddenLegacy, setShowHiddenLegacy] = useState(false);
   
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -238,23 +238,34 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     fetchOptions();
   }, [fetchOptions]);
 
-  // Organize options by column and sort by position using centralized utility
-  const filteredOptions = useMemo(() => {
-    return options.filter((option) => {
-      if (!showUnpublished && option.isPublished !== true) return false;
-      return true;
-    });
-  }, [options, showUnpublished]);
+  const hasDisplayFields = useCallback(
+    (option: AlaCarteOption) => Boolean(option.name),
+    []
+  );
+
+  const visibleOptions = useMemo(
+    () => options.filter((option) => option.isPublished === true && hasDisplayFields(option)),
+    [options, hasDisplayFields]
+  );
+
+  const hiddenOptions = useMemo(
+    () => options.filter((option) => option.isPublished !== true || !hasDisplayFields(option)),
+    [options, hasDisplayFields]
+  );
+
+  const totalDocs = options.length;
+  const visibleDocs = visibleOptions.length;
+  const hiddenCount = Math.max(totalDocs - visibleDocs, 0);
 
   const { featuredOptions, publishedOptions } = useMemo(() => {
-    const base = filteredOptions;
+    const base = visibleOptions;
     const featured = base.filter((option) => option.column === FEATURED_COLUMN.num);
     const published = base.filter((option) => option.column !== FEATURED_COLUMN.num);
     return {
       featuredOptions: sortOrderableItems(featured),
       publishedOptions: sortOrderableItems(published),
     };
-  }, [filteredOptions]);
+  }, [visibleOptions]);
 
   // Get the active option being dragged
   const activeOption = useMemo(() => {
@@ -486,8 +497,14 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-center">
-          <h3 className="text-2xl font-teko tracking-wider text-white">Manage A La Carte Options</h3>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h3 className="text-2xl font-teko tracking-wider text-white">Manage A La Carte Options</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Published {visibleDocs} / Total {totalDocs}
+              {hiddenCount > 0 && <span className="ml-2 text-yellow-300">(Hidden: {hiddenCount})</span>}
+            </p>
+          </div>
           {isSaving && (
             <span className="text-blue-400 text-sm flex items-center gap-2">
               <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -505,18 +522,18 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           <label className="flex items-center gap-2 text-sm text-gray-400">
             <input
               type="checkbox"
-              checked={showUnpublished}
-              onChange={(e) => setShowUnpublished(e.target.checked)}
+              checked={showHiddenLegacy}
+              onChange={(e) => setShowHiddenLegacy(e.target.checked)}
               className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
-            aria-label="Show legacy/unpublished"
+            aria-label="Show hidden/legacy"
           />
-            Show legacy/unpublished
+            Show hidden/legacy
           </label>
         </div>
       </div>
 
       <div className="border-t border-gray-700 pt-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h4 className="text-xl font-teko tracking-wider text-gray-300">A La Carte Options</h4>
           <p className="text-sm text-gray-500">Drag to reorder or move between lanes • Click AND/OR to toggle</p>
         </div>
@@ -556,9 +573,48 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
             <DragOverlay>
               {activeOption ? <DragOverlayItem option={activeOption} /> : null}
             </DragOverlay>
-          </DndContext>
+            </DndContext>
         )}
       </div>
+      {showHiddenLegacy && (
+        <div className="border-t border-gray-700 pt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xl font-teko tracking-wider text-gray-300">
+              Hidden / Legacy / Orphans ({hiddenOptions.length})
+            </h4>
+            {hiddenCount > 0 && (
+              <span className="text-xs text-yellow-300 bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-1">
+                {hiddenCount} hidden from main lanes
+              </span>
+            )}
+          </div>
+          {hiddenOptions.length === 0 ? (
+            <p className="text-sm text-gray-500">No hidden or legacy items.</p>
+          ) : (
+            <ul className="space-y-2">
+              {hiddenOptions.map((option) => {
+                const displayName = option.name?.trim() || `(Missing name) – doc id: ${option.id}`;
+                return (
+                  <li
+                    key={option.id}
+                    className="bg-gray-900/30 border border-gray-800 rounded-md px-3 py-2 flex flex-col gap-1"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm text-gray-200">{displayName}</span>
+                      <span className="text-xs text-gray-500">
+                        {option.isPublished === true ? 'Published' : 'Unpublished / Legacy'}
+                      </span>
+                    </div>
+                    {option.column && (
+                      <span className="text-xs text-gray-500">Column: {option.column}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 };

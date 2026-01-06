@@ -43,7 +43,6 @@ const COLUMNS = [
   { num: 1, label: 'Gold Package (Column 1)' },
 ] as const;
 
-const FEATURE_COLUMNS = COLUMNS;
 const FEATURE_COLUMN_NUMBERS = [1, 2, 3] as const;
 const FEATURED_COLUMN_NUMBER = 4;
 
@@ -1078,7 +1077,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {FEATURE_COLUMNS.map(({ num, label }) => (
+                      {COLUMNS.map(({ num, label }) => (
                         <div 
                           key={num} 
                           className="p-4 rounded-lg border bg-gray-900/30 border-gray-700"

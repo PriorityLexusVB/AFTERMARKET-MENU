@@ -106,15 +106,23 @@ const debugLimiter = rateLimit({
 
 const indexHtml = path.join(distDir, "index.html");
 const distExists = fs.existsSync(distDir);
-let indexExists = fs.existsSync(indexHtml);
+const indexExists = fs.existsSync(indexHtml);
 let indexHtmlPayload = null;
+let debugDistFiles = [];
 
 if (indexExists) {
   try {
     indexHtmlPayload = fs.readFileSync(indexHtml, "utf8");
   } catch (error) {
     console.warn("[BOOT WARNING] Failed to read index.html:", error);
-    indexExists = false;
+  }
+}
+
+if (distExists) {
+  try {
+    debugDistFiles = fs.readdirSync(distDir);
+  } catch (error) {
+    console.warn("[BOOT WARNING] Failed to read dist directory:", error);
   }
 }
 
@@ -174,28 +182,15 @@ app.use(
     setHeaders: (res) => {
       res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     },
-  })
-);
-
-app.use(
-  "/icons",
-  pwaAssetLimiter,
+  }),
   express.static(publicIconsPath, {
     fallthrough: true,
     setHeaders: (res) => {
       res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     },
-  })
+  }),
+  (_req, res) => res.status(404).send("Icon not found")
 );
-
-// If icon wasn't found in dist/icons or public/icons, return 404 (not SPA HTML)
-app.get("/icons/*", pwaAssetLimiter, (_req, res) => {
-  return res.status(404).send("Icon not found");
-});
-
-if (process.env.NODE_ENV === "test") {
-  app.get("/index.html", (_req, res) => res.status(404).send("Not found"));
-}
 
 // Static app build (js/css/assets)
 if (distExists) app.use(express.static(distDir));
@@ -206,12 +201,11 @@ app.get("/ping", (_req, res) => res.status(200).send("pong"));
 
 // Debug endpoint to confirm build presence
 app.get("/__debug", debugLimiter, (_req, res) => {
-  const files = distExists ? fs.readdirSync(distDir) : [];
   res.json({
     node: process.version,
     distExists,
     indexExists,
-    distFiles: files,
+    distFiles: debugDistFiles,
   });
 });
 
@@ -255,8 +249,7 @@ app.get("*", (_req, res) => {
   if (_req.path === "/index.html" && process.env.NODE_ENV === "test") {
     return res.status(404).send("Not found");
   }
-  if (indexExists && indexHtmlPayload) return res.type("html").send(indexHtmlPayload);
-  if (indexExists) return res.status(500).send("index.html unavailable");
+  if (indexHtmlPayload) return res.type("html").send(indexHtmlPayload);
   return res.status(200).send(splashHtml);
 });
 

@@ -46,7 +46,9 @@ vi.mock('firebase/firestore/lite', () => {
                 price: 100, 
                 cost: 50,
                 description: 'Test option',
-                points: ['Point 1']
+                points: ['Point 1'],
+                isPublished: true,
+                column: i % 2 === 0 ? 4 : 1,
               })
             }))
           };
@@ -212,13 +214,10 @@ describe('AdminPanel', () => {
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();
-    expect(screen.getByText(/Column\s+4/)).toBeInTheDocument();
     expect(screen.getByText('Elite Package (Column 2)')).toBeInTheDocument();
     expect(screen.getByText('Platinum Package (Column 3)')).toBeInTheDocument();
     expect(screen.getByText('Gold Package (Column 1)')).toBeInTheDocument();
-    // Popular Add-ons appears in both header and empty state message, so use getAllByText
-    const popularAddonsMatches = screen.getAllByText(/Popular Add-ons/);
-    expect(popularAddonsMatches.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Popular Add-Ons are managed/i)).toBeInTheDocument();
   });
 
   describe('with features loaded', () => {
@@ -474,7 +473,7 @@ describe('AdminPanel', () => {
       render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
       
       expect(screen.getByText('Package Features')).toBeInTheDocument();
-      expect(screen.getByText(/A La Carte Options/)).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /^A La Carte Options/ })[0]).toBeInTheDocument();
     });
 
     it('should display A La Carte count in tab label', async () => {
@@ -505,10 +504,8 @@ describe('AdminPanel', () => {
       
       // Wait for the count to load and be rendered
       await waitFor(() => {
-        const buttons = screen.getAllByRole('button');
-        const alaCarteButton = buttons.find(btn => btn.textContent?.includes('A La Carte Options'));
-        expect(alaCarteButton).toBeDefined();
-        expect(alaCarteButton?.textContent).toContain('5');
+        const alaCarteButton = screen.getAllByRole('button', { name: /^A La Carte Options/ })[0];
+        expect(alaCarteButton.textContent).toContain('5');
       }, { timeout: 3000 });
     });
 
@@ -521,7 +518,7 @@ describe('AdminPanel', () => {
       expect(screen.getByText('Manage Package Features')).toBeInTheDocument();
       
       // Click A La Carte Options tab
-      const alaCarteTab = screen.getByText(/A La Carte Options/);
+      const alaCarteTab = screen.getAllByRole('button', { name: /^A La Carte Options/ })[0];
       await user.click(alaCarteTab);
       
       // Should now show A La Carte heading
@@ -561,7 +558,7 @@ describe('AdminPanel', () => {
       render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
       
       // Click A La Carte Options tab
-      const alaCarteTab = screen.getByText(/A La Carte Options/);
+      const alaCarteTab = screen.getAllByRole('button', { name: /^A La Carte Options/ })[0];
       await user.click(alaCarteTab);
       
       // Check localStorage
@@ -599,7 +596,7 @@ describe('AdminPanel', () => {
       render(<AdminPanel onDataUpdate={mockOnDataUpdate} />);
       
       // Click A La Carte Options tab
-      const alaCarteTab = screen.getByText(/A La Carte Options/);
+      const alaCarteTab = screen.getAllByRole('button', { name: /^A La Carte Options/ })[0];
       await user.click(alaCarteTab);
       
       // Check URL was updated

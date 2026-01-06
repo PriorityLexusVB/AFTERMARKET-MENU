@@ -41,8 +41,9 @@ const COLUMNS = [
   { num: 2, label: 'Elite Package (Column 2)' },
   { num: 3, label: 'Platinum Package (Column 3)' },
   { num: 1, label: 'Gold Package (Column 1)' },
-  { num: 4, label: 'Popular Add-ons (Column 4)' },
 ] as const;
+
+const FEATURE_COLUMNS = COLUMNS;
 
 
 // Sortable Feature Item Component
@@ -268,7 +269,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [alaCarteCounts, setAlaCarteCounts] = useState<{ total: number; published: number }>({ total: 0, published: 0 });
+  const [alaCarteCounts, setAlaCarteCounts] = useState<{ total: number; published: number; featured: number }>({ total: 0, published: 0, featured: 0 });
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [showBanner, setShowBanner] = useState(!isBannerDismissed());
   const [showUnassigned, setShowUnassigned] = useState(false);
@@ -364,15 +365,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const querySnapshot = await getDocs(alaCarteQuery);
       const docs = querySnapshot.docs;
       const total = querySnapshot.size;
-      const published = docs.reduce((count: number, doc: any) => {
-        const data = typeof doc.data === 'function' ? (doc.data() as { isPublished?: boolean }) : undefined;
-        return data && data.isPublished === true ? count + 1 : count;
-      }, 0);
-      setAlaCarteCounts({ total, published });
+      const countResult = docs.reduce(
+        (acc: { published: number; featured: number }, doc: any) => {
+          const data = typeof doc.data === 'function' ? (doc.data() as { isPublished?: boolean; column?: number }) : undefined;
+          if (data?.isPublished === true) {
+            acc.published += 1;
+            if (data.column === 4) acc.featured += 1;
+          }
+          return acc;
+        },
+        { published: 0, featured: 0 }
+      );
+      setAlaCarteCounts({ total, published: countResult.published, featured: countResult.featured });
     } catch (err) {
       console.error("Error fetching A La Carte count:", err);
       // Silently fail - count is not critical
-      setAlaCarteCounts({ total: 0, published: 0 });
+      setAlaCarteCounts({ total: 0, published: 0, featured: 0 });
     } finally {
       setIsLoadingCount(false);
     }
@@ -525,12 +533,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   // Helper to parse column ID from droppable zone
   const parseColumnFromDroppableId = (id: string): number | 'unassigned' | null => {
-    const allowedColumns = [1, 2, 3, 4];
     if (typeof id === 'string' && id.startsWith('column-')) {
       const columnPart = id.replace('column-', '');
       if (columnPart === 'unassigned') return 'unassigned';
       const num = parseInt(columnPart, 10);
-      if (!isNaN(num) && allowedColumns.includes(num)) return num;
+      if (num === 1 || num === 2 || num === 3) return num;
     }
     return null;
   };
@@ -951,6 +958,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               </button>.
             </p>
 
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6 flex flex-col gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <p className="text-sm text-purple-200 font-semibold">Popular Add-Ons are managed in A La Carte Options tab.</p>
+                  <p className="text-xs text-purple-200/80">Featured add-ons (Column 4) shown to customers come from A La Carte options.</p>
+                </div>
+                <span className="text-sm text-purple-100 bg-purple-500/20 rounded-full px-3 py-1">
+                  Featured published: {alaCarteCounts.featured}
+                </span>
+              </div>
+              <button
+                onClick={() => handleTabChange('alacarte')}
+                className="btn-lux-primary w-fit"
+              >
+                Manage A La Carte Options
+              </button>
+            </div>
+
             <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
@@ -1050,20 +1075,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   <p className="text-gray-500">No features found. Click "Add New Feature" to create one.</p>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {COLUMNS.map(({ num, label }) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {FEATURE_COLUMNS.map(({ num, label }) => (
                         <div 
                           key={num} 
-                          className={`p-4 rounded-lg border ${
-                            num === 4 
-                              ? 'bg-purple-900/10 border-purple-700/50' 
-                              : 'bg-gray-900/30 border-gray-700'
-                          }`}
+                          className="p-4 rounded-lg border bg-gray-900/30 border-gray-700"
                           data-testid={`column-${num}`}
                         >
-                          <h5 className={`text-lg font-semibold mb-1 font-teko tracking-wider ${
-                            num === 4 ? 'text-purple-400' : 'text-blue-400'
-                          }`}>
+                          <h5 className="text-lg font-semibold mb-1 font-teko tracking-wider text-blue-400">
                             {label}
                           </h5>
                           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted mb-2">Package column {num}</p>

@@ -501,8 +501,8 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           <div>
             <h3 className="text-2xl font-teko tracking-wider text-white">Manage A La Carte Options</h3>
             <p className="text-sm text-gray-400 mt-1">
-              Published {visibleDocs} / Total {totalDocs}
-              {hiddenCount > 0 && <span className="ml-2 text-yellow-300">(Hidden: {hiddenCount})</span>}
+              Visible {visibleDocs} / Total {totalDocs}
+              {hiddenCount > 0 && <span className="ml-2 text-yellow-300">(Hidden {hiddenCount})</span>}
             </p>
           </div>
           {isSaving && (

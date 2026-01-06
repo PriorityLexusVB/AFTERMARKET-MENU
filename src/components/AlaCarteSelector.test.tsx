@@ -91,4 +91,4 @@ describe('AlaCarteSelector', () => {
     expect(screen.getByText('Tap Add')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /ADDED/i })).toBeDisabled();
   });
-}); 
+});

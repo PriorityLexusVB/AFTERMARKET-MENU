@@ -50,17 +50,13 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({ item, onViewItem, on
         </div>
         {onToggle && disableDrag && (
           <button
-            onClick={() => {
-              if (isSelected) return;
-              onToggle();
-            }}
+            onClick={onToggle}
             disabled={isSelected}
             className={`w-full sm:w-auto min-h-[44px] px-4 py-3 text-sm font-semibold rounded-md transition-colors ${
               isSelected
                 ? 'bg-gray-700 text-gray-300 cursor-not-allowed'
                 : 'btn-lux-primary'
             }`}
-            aria-pressed={isSelected}
           >
             {isSelected ? 'ADDED' : 'ADD'}
           </button>

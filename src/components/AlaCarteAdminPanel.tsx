@@ -573,7 +573,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
             <DragOverlay>
               {activeOption ? <DragOverlayItem option={activeOption} /> : null}
             </DragOverlay>
-            </DndContext>
+          </DndContext>
         )}
       </div>
       {showHiddenLegacy && (

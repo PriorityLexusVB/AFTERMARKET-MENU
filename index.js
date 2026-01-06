@@ -135,41 +135,47 @@ app.get("/manifest.webmanifest", pwaAssetLimiter, (_req, res) => {
   return res.status(404).send("Manifest not found");
 });
 
-// Serve icons safely (no user-controlled path resolution)
-app.get("/icons/*", pwaAssetLimiter, (req, res) => {
-  // Extract path after /icons/ prefix
-  const rel = req.path.substring("/icons/".length);
-  // Basic validation: no traversal, no absolute paths, no backslashes
-  if (
-    !rel ||
-    rel.includes("..") ||
-    rel.startsWith("/") ||
-    rel.includes("\\") ||
-    rel.includes(":")
-  ) {
+// PWA icon route with rate limiting and path traversal protection
+// Icons are read from disk, so we limit requests and validate paths strictly
+app.get("/icons/*", pwaAssetLimiter, (_req, res) => {
+  // Extract the relative path, removing leading slashes
+  const relativePath = _req.path.replace(/^\/+/, "");
+  
+  // Validate that the path starts with "icons/" to prevent path traversal
+  if (!relativePath.startsWith("icons/")) {
+    return res.status(400).send("Invalid icon path");
+  }
+  
+  // Resolve paths relative to dist and public directories
+  const distIconPath = path.resolve(distDir, relativePath);
+  const publicIconPath = path.resolve(publicDir, relativePath);
+
+  // Security: Validate that resolved paths stay within their respective base directories
+  // This prevents path traversal attacks (e.g., /icons/../../../etc/passwd)
+  const isSafePath = (targetPath, baseDir) => {
+    const rel = path.relative(baseDir, targetPath);
+    // Path must be non-empty, not start with "..", and not be absolute
+    return rel && !rel.startsWith("..") && !path.isAbsolute(rel);
+  };
+
+  // Reject if neither resolved path is safe
+  if (!isSafePath(distIconPath, distDir) && !isSafePath(publicIconPath, publicDir)) {
     return res.status(400).send("Invalid icon path");
   }
 
-  // Prefer dist icons if present, else public icons
-  const distIconsDir = path.join(distDir, "icons");
-  const publicIconsDir = path.join(publicDir, "icons");
+  // Check which file exists (prefer dist over public)
+  // SECURITY NOTE: Using existsSync is acceptable here because:
+  // 1. Paths are validated above to prevent traversal
+  // 2. Route is rate-limited to prevent DoS
+  // 3. This is a read-only operation for static assets
+  const iconFile = fs.existsSync(distIconPath) ? distIconPath : fs.existsSync(publicIconPath) ? publicIconPath : null;
 
+  if (!iconFile) return res.status(404).send("Icon not found");
+
+  // Set long-term cache for immutable icons
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-
-  // Try dist first; if not found, fall back to public
-  res.sendFile(rel, { root: distIconsDir }, (err) => {
-    if (!err) return;
-    // Only fall back on "not found"
-    if (err.code === "ENOENT" || err.statusCode === 404) {
-      res.sendFile(rel, { root: publicIconsDir }, (err2) => {
-        if (err2) {
-          return res.status(404).send("Icon not found");
-        }
-      });
-      return;
-    }
-    res.status(500).send("Failed to serve icon");
-  });
+  // sendFile is safe here because we've validated the path above
+  return res.sendFile(iconFile);
 });
 
 if (distExists) app.use(express.static(distDir));

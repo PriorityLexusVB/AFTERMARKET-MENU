@@ -134,7 +134,7 @@ describe('PWA asset routes', () => {
     const lastResponse = responses[responses.length - 1];
     expect(firstResponse).toBeDefined();
     expect(lastResponse).toBeDefined();
-    
+
     const firstRemaining = parseInt(firstResponse!.headers.get('ratelimit-remaining') || '100');
     const lastRemaining = parseInt(lastResponse!.headers.get('ratelimit-remaining') || '100');
     expect(lastRemaining).toBeLessThan(firstRemaining);

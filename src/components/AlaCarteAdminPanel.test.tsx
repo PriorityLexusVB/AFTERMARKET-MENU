@@ -103,13 +103,13 @@ vi.mock('../data', () => ({
     it('defaults to published-only view with published lane', async () => {
       render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
-      await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
-      expect(screen.getByText('Published Unplaced')).toBeInTheDocument();
-      expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
-      expect(screen.queryByText('Legacy Item')).not.toBeInTheDocument();
-      expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
-      expect(screen.getByText(/Published 2 \/ Total 6/)).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText('Published Item')).toBeInTheDocument());
+    expect(screen.getByText('Published Unplaced')).toBeInTheDocument();
+    expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
+    expect(screen.queryByText('Legacy Item')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unpublished Item')).not.toBeInTheDocument();
+    expect(screen.getByText(/Visible 2 \/ Total 6/)).toBeInTheDocument();
+  });
 
     it('reveals unpublished and legacy options when toggled on', async () => {
       render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);

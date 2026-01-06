@@ -588,6 +588,9 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
               </span>
             )}
           </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Hidden includes unpublished items and items missing required fields (e.g., name).
+          </p>
           {hiddenOptions.length === 0 ? (
             <p className="text-sm text-gray-500">No hidden or legacy items.</p>
           ) : (

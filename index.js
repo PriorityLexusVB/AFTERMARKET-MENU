@@ -135,7 +135,6 @@ app.get("/manifest.webmanifest", pwaAssetLimiter, (_req, res) => {
   return res.status(404).send("Manifest not found");
 });
 
-<<<<<<< copilot/add-pwa-manifest-icons
 // PWA icon route with rate limiting and path traversal protection
 // Icons are read from disk, so we limit requests and validate paths strictly
 app.get("/icons/*", pwaAssetLimiter, (_req, res) => {
@@ -177,43 +176,6 @@ app.get("/icons/*", pwaAssetLimiter, (_req, res) => {
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   // sendFile is safe here because we've validated the path above
   return res.sendFile(iconFile);
-=======
-// Serve icons safely (no user-controlled path resolution)
-app.get("/icons/*", pwaAssetLimiter, (req, res) => {
-  // Extract path after /icons/ prefix
-  const rel = req.path.substring("/icons/".length);
-  // Basic validation: no traversal, no absolute paths, no backslashes
-  if (
-    !rel ||
-    rel.includes("..") ||
-    rel.startsWith("/") ||
-    rel.includes("\\") ||
-    rel.includes(":")
-  ) {
-    return res.status(400).send("Invalid icon path");
-  }
-
-  // Prefer dist icons if present, else public icons
-  const distIconsDir = path.join(distDir, "icons");
-  const publicIconsDir = path.join(publicDir, "icons");
-
-  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-
-  // Try dist first; if not found, fall back to public
-  res.sendFile(rel, { root: distIconsDir }, (err) => {
-    if (!err) return;
-    // Only fall back on "not found"
-    if (err.code === "ENOENT" || err.statusCode === 404) {
-      res.sendFile(rel, { root: publicIconsDir }, (err2) => {
-        if (err2) {
-          return res.status(404).send("Icon not found");
-        }
-      });
-      return;
-    }
-    res.status(500).send("Failed to serve icon");
-  });
->>>>>>> main
 });
 
 if (distExists) app.use(express.static(distDir));

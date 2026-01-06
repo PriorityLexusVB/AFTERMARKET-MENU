@@ -130,18 +130,13 @@ describe('PWA asset routes', () => {
     }
     
     // Verify rate limit counter is decreasing
-<<<<<<< copilot/add-pwa-manifest-icons
-    const firstRemaining = parseInt(responses[0].headers.get('ratelimit-remaining') || '100');
-    const lastRemaining = parseInt(responses[responses.length - 1].headers.get('ratelimit-remaining') || '100');
-=======
     const firstResponse = responses[0];
     const lastResponse = responses[responses.length - 1];
     expect(firstResponse).toBeDefined();
     expect(lastResponse).toBeDefined();
-    
+
     const firstRemaining = parseInt(firstResponse!.headers.get('ratelimit-remaining') || '100');
     const lastRemaining = parseInt(lastResponse!.headers.get('ratelimit-remaining') || '100');
->>>>>>> main
     expect(lastRemaining).toBeLessThan(firstRemaining);
   });
 });

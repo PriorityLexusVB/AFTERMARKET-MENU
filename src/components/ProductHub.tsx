@@ -15,9 +15,9 @@ interface ProductHubProps {
 }
 
 const packageLaneOptions: Array<{ value: 1 | 2 | 3; label: string }> = [
+  { value: 1, label: 'Gold Package (Column 1)' },
   { value: 2, label: 'Elite Package (Column 2)' },
   { value: 3, label: 'Platinum Package (Column 3)' },
-  { value: 1, label: 'Gold Package (Column 1)' },
 ];
 const columnLabels: Record<1 | 2 | 3, string> = {
   1: 'Gold Package (Column 1)',
@@ -57,6 +57,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [positionInputs, setPositionInputs] = useState<Record<string, string>>({});
+  const [advancedOpenIds, setAdvancedOpenIds] = useState<Set<string>>(new Set());
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const bulkSelectRef = useRef<HTMLInputElement>(null);
@@ -83,6 +84,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const { [featureId]: _timer, ...rest } = saveTimers.current;
       saveTimers.current = rest;
     }
+  };
+
+  const toggleAdvanced = (featureId: string) => {
+    setAdvancedOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(featureId)) {
+        next.delete(featureId);
+      } else {
+        next.add(featureId);
+      }
+      return next;
+    });
   };
 
   const setRowErrorMessage = (featureId: string, message: string) => {
@@ -642,7 +655,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     return 'Not placed';
   };
 
-  const renderPlacementControls = (feature: ProductFeature, option: AlaCarteOption | undefined) => {
+  const renderPlacementControls = (feature: ProductFeature, option: AlaCarteOption | undefined, includeFeatured = true) => {
     const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const column = isPublished ? option?.column : undefined;
     const featured = isPublished && column === 4;
@@ -652,18 +665,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id={`featured-${feature.id}`}
-            checked={featured}
-            disabled={disabled}
-            onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
-          />
-          <label htmlFor={`featured-${feature.id}`} className="text-sm text-gray-200">
-            Featured (Popular Add-Ons)
-          </label>
-        </div>
+        {includeFeatured && (
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`featured-${feature.id}`}
+              checked={featured}
+              disabled={disabled}
+              onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
+            />
+            <label htmlFor={`featured-${feature.id}`} className="text-sm text-gray-200">
+              Featured (Popular Add-Ons)
+            </label>
+          </div>
+        )}
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">Category (columns 1-3)</label>
           <select
@@ -697,7 +712,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         </div>
         {!isPublished && (
           <p className="text-xs text-amber-400">
-            Publish first to enable Featured / Category / Position. Unpublished items won’t show to customers.
+            Publish first to enable Category / Position. Unpublished items won’t show to customers.
           </p>
         )}
         <p className="text-xs text-gray-500">Current: {getPlacementDisplay(isPublished ? option?.column : undefined)}</p>
@@ -733,15 +748,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <select
             value={packageLaneFilter}
             onChange={(e) => setPackageLaneFilter(e.target.value as typeof packageLaneFilter)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="all">All</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
-            <option value="1">Gold</option>
-            <option value="none">Not in packages</option>
-          </select>
-        </label>
+           className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+         >
+           <option value="all">All</option>
+           <option value="1">Gold</option>
+           <option value="2">Elite</option>
+           <option value="3">Platinum</option>
+           <option value="none">Not in packages</option>
+         </select>
+       </label>
         <label className="flex items-center gap-2">
           <span className="text-gray-400">Published</span>
           <select
@@ -771,16 +786,16 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="all">All</option>
-            <option value="featured">Featured</option>
-            <option value="1">Column 1 (Gold)</option>
-            <option value="2">Column 2 (Elite)</option>
-            <option value="3">Column 3 (Platinum)</option>
-            <option value="unplaced">Not placed</option>
-          </select>
-        </label>
+           className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+         >
+           <option value="all">All</option>
+           <option value="featured">Featured</option>
+           <option value="1">Column 1 (Gold)</option>
+           <option value="2">Column 2 (Elite)</option>
+           <option value="3">Column 3 (Platinum)</option>
+           <option value="unplaced">Not placed</option>
+         </select>
+       </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm bg-gray-900/60 border border-gray-800 rounded px-3 py-2">
@@ -898,6 +913,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               const isFeatured = option?.column === 4;
               const currentConnector = feature.connector || 'AND';
               const laneLabel = feature.column ? columnLabels[feature.column as 1 | 2 | 3] ?? 'Not in packages' : 'Not in packages';
+              const isAdvancedOpen = advancedOpenIds.has(feature.id);
               const categoryLabel = getCategoryLabel(option);
               const positionLabel =
                 option?.position !== undefined ? `Position ${option.position}` : 'Position —';
@@ -1008,40 +1024,63 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                         />
                         <span>Publish to A La Carte</span>
                       </label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div className="flex flex-col gap-1">
-                          <label className="text-xs text-gray-400">A La Carte Price (customer price)</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={priceValue}
-                            onChange={(e) => setPriceInputs((prev) => ({ ...prev, [feature.id]: e.target.value }))}
-                            onBlur={() => handlePriceBlur(feature)}
-                            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <label className="text-xs text-gray-400">Warranty override</label>
-                          <input
-                            type="text"
-                            value={warrantyValue}
-                            onChange={(e) => updateFeatureState(feature.id, { alaCarteWarranty: e.target.value })}
-                            onBlur={(e) => handleWarrantyBlur(feature, e.target.value)}
-                            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                          />
-                        </div>
-                      </div>
-                      <label className="flex items-center gap-2 text-xs">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-400">A La Carte Price (customer price)</label>
                         <input
-                          type="checkbox"
-                          checked={isNew}
-                          onChange={(e) => handleIsNewToggle(feature, e.target.checked)}
-                          disabled={!isPublished}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={priceValue}
+                          onChange={(e) => setPriceInputs((prev) => ({ ...prev, [feature.id]: e.target.value }))}
+                          onBlur={() => handlePriceBlur(feature)}
+                          className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
                         />
-                        <span>Mark as NEW</span>
-                      </label>
-                      {renderPlacementControls(feature, option)}
+                      </div>
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`featured-inline-${feature.id}`}
+                            checked={isFeatured}
+                            disabled={!isPublished}
+                            onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
+                          />
+                          <span>Featured (Popular Add-Ons)</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => toggleAdvanced(feature.id)}
+                          className="text-blue-300 hover:text-blue-100 underline"
+                        >
+                          {isAdvancedOpen ? 'Hide A La Carte advanced' : 'Show A La Carte advanced'}
+                        </button>
+                      </div>
+                      {isAdvancedOpen && (
+                        <div className="space-y-3 border border-gray-800 rounded-md p-3 bg-gray-900/30">
+                          {renderPlacementControls(feature, option, false)}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs text-gray-400">Warranty override</label>
+                              <input
+                                type="text"
+                                value={warrantyValue}
+                                onChange={(e) => updateFeatureState(feature.id, { alaCarteWarranty: e.target.value })}
+                                onBlur={(e) => handleWarrantyBlur(feature, e.target.value)}
+                                className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                checked={isNew}
+                                onChange={(e) => handleIsNewToggle(feature, e.target.checked)}
+                                disabled={!isPublished}
+                              />
+                              <span>Mark as NEW</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {rowErrors[feature.id] && <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>}
                       {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
                     </div>

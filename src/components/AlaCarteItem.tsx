@@ -44,21 +44,23 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({ item, onViewItem, on
           </ul>
         )}
       </div>
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <div className="text-xs text-lux-textMuted font-semibold uppercase tracking-wider">
-          {disableDrag ? 'Tap to add' : 'Drag to add'}
-        </div>
+      <div className="mt-6 flex flex-col gap-3">
+        {!disableDrag && (
+          <div className="text-xs text-lux-textMuted font-semibold uppercase tracking-wider">
+            Drag to add
+          </div>
+        )}
         {onToggle && disableDrag && (
           <button
             onClick={onToggle}
             disabled={isSelected}
-            className={`w-full sm:w-auto min-h-[44px] px-4 py-3 text-sm font-semibold rounded-md transition-colors ${
+            className={`w-full min-h-[48px] px-4 py-3 text-sm font-semibold rounded-md transition-colors ${
               isSelected
                 ? 'bg-gray-700 text-gray-300 cursor-not-allowed'
                 : 'btn-lux-primary'
             }`}
           >
-            {isSelected ? 'ADDED' : 'ADD'}
+            {isSelected ? 'ADDED' : '+ ADD'}
           </button>
         )}
       </div>

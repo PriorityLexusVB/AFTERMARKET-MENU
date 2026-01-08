@@ -56,6 +56,13 @@ const renderHub = async (
   return { feature, option, features };
 };
 
+const expandRow = async (featureName: string) => {
+  const row = screen.getByText(featureName).closest('tr') as HTMLElement;
+  const expandButton = within(row).getByRole('button', { name: /Expand/i });
+  await userEvent.click(expandButton);
+  return row;
+};
+
 describe('ProductHub inline editing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -66,7 +73,7 @@ describe('ProductHub inline editing', () => {
 
   it('orders package lane radios Gold, Elite, Platinum, Not in Packages', async () => {
     const { feature } = await renderHub({ column: 2 });
-    const row = screen.getByText(feature.name).closest('tr');
+    const row = await expandRow(feature.name);
     expect(row).toBeTruthy();
     const radios = within(row as HTMLElement).getAllByRole('radio');
     const labels = radios.map((radio) => (radio as HTMLInputElement).labels?.[0]?.textContent?.trim());
@@ -87,7 +94,7 @@ describe('ProductHub inline editing', () => {
 
   it('allows inline connector toggling for placed features', async () => {
     const { feature } = await renderHub({ column: 2, connector: 'AND' });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const orButton = within(row).getByRole('button', { name: /Set connector to OR/i });
 
     await userEvent.click(orButton);
@@ -110,7 +117,7 @@ describe('ProductHub inline editing', () => {
 
   it('publishes inline using the typed A La Carte price', async () => {
     const { feature } = await renderHub();
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const priceInput = within(row).getAllByRole('spinbutton')[0]!;
     await userEvent.clear(priceInput);
     await userEvent.type(priceInput, '125');
@@ -127,7 +134,7 @@ describe('ProductHub inline editing', () => {
 
   it('blocks publishing without a price and shows inline validation', async () => {
     const { feature } = await renderHub({ alaCartePrice: undefined });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
 
     await userEvent.click(publishToggle);
@@ -139,7 +146,7 @@ describe('ProductHub inline editing', () => {
 
   it('updates category and featured placement inline', async () => {
     const { feature } = await renderHub({ publishToAlaCarte: true }, { isPublished: true, column: undefined, price: 200 });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const advancedToggle = within(row).getByRole('button', { name: /Show A La Carte advanced/i });
     await userEvent.click(advancedToggle);
     const categorySelect = within(row).getAllByRole('combobox')[0]!;
@@ -161,7 +168,7 @@ describe('ProductHub inline editing', () => {
   it('shows row error when publish save fails', async () => {
     mockUpsert.mockRejectedValueOnce(new Error('boom'));
     const { feature } = await renderHub({ alaCartePrice: 150 });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
 
     await userEvent.click(publishToggle);
@@ -172,7 +179,7 @@ describe('ProductHub inline editing', () => {
   it('clears publish error on successful retry', async () => {
     mockUpsert.mockRejectedValueOnce(new Error('boom'));
     const { feature } = await renderHub({ alaCartePrice: 150 });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
 
     await userEvent.click(publishToggle);
@@ -188,7 +195,7 @@ describe('ProductHub inline editing', () => {
     const extraFeature = createMockFeature({ id: 'existing', name: 'Existing Feature', column: 2, position: 3 });
     mockAddDoc.mockResolvedValueOnce({ id: 'duplicate-id' });
     const { feature } = await renderHub({ column: 1, position: 1 }, undefined, [extraFeature]);
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     const duplicateButton = within(row).getByRole('button', { name: /Elite/i });
 
     await userEvent.click(duplicateButton);
@@ -204,7 +211,7 @@ describe('ProductHub inline editing', () => {
 
   it('allows removing a feature from a package lane (regression test)', async () => {
     const { feature } = await renderHub({ column: 3, position: 1 });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     
     // Verify feature is currently in Platinum Package
     expect(within(row).getByLabelText('Platinum Package (Column 3)')).toBeChecked();
@@ -226,7 +233,7 @@ describe('ProductHub inline editing', () => {
 
   it('can add a feature to a package lane and then remove it', async () => {
     const { feature } = await renderHub({ column: undefined, position: undefined });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
     
     // Start with "Not in Packages"
     expect(within(row).getByLabelText('Not in Packages')).toBeChecked();
@@ -255,7 +262,7 @@ describe('ProductHub inline editing', () => {
 
   it('removes a feature from packages via explicit action', async () => {
     const { feature } = await renderHub({ column: 2, position: 3 });
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
 
     await userEvent.click(within(row).getByRole('button', { name: /Remove from Packages/i }));
 
@@ -272,7 +279,7 @@ describe('ProductHub inline editing', () => {
       { column: 2, position: 1, publishToAlaCarte: true, alaCartePrice: 200 },
       { isPublished: true, column: 4, price: 200 }
     );
-    const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const row = await expandRow(feature.name);
 
     await userEvent.click(within(row).getByRole('button', { name: /Unpublish A La Carte/i }));
 

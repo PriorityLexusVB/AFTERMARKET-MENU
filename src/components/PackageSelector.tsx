@@ -50,6 +50,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           onViewFeature={onViewFeature}
           className="animate-card-entrance"
           style={{ animationDelay: `${index * 100}ms` }}
+          isCompact={isIpadLandscape}
         />
       ))}
       {addonColumn}

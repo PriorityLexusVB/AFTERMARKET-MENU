@@ -186,6 +186,21 @@ const App: React.FC = () => {
       setIsAdminView(false);
     }
   }, [guestMode, isAdminView]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    const root = document.documentElement;
+    const setViewportVars = () => {
+      root.style.setProperty('--app-vh', `${window.innerHeight}`);
+    };
+    setViewportVars();
+    window.addEventListener('resize', setViewportVars);
+    window.addEventListener('orientationchange', setViewportVars);
+    return () => {
+      window.removeEventListener('resize', setViewportVars);
+      window.removeEventListener('orientationchange', setViewportVars);
+    };
+  }, []);
   
   const handleLogout = useCallback(async () => {
     if (isDemoMode) {
@@ -415,17 +430,19 @@ const App: React.FC = () => {
   const disableAlaCarteDrag = enableIpadMenuLayout || guestMode;
 
   const renderMenuContent = () => {
-    const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-4' : 'space-y-6';
+    const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-3' : 'space-y-6';
+    const heroTitleClass = enableIpadMenuLayout ? 'lux-title text-3xl' : 'lux-title text-4xl md:text-5xl';
+    const heroSubtitleClass = enableIpadMenuLayout ? 'lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3' : 'lux-subtitle mt-1 max-w-3xl mx-auto clamp-3';
     return (
       <div className={wrapperClass}>
-        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
-          <h2 className="lux-title text-4xl md:text-5xl">Vehicle Protection Menu</h2>
-          <p className="lux-subtitle mt-1 max-w-3xl mx-auto clamp-3">
+        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0 ${enableIpadMenuLayout ? 'space-y-1' : ''}`}>
+          <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
+          <p className={heroSubtitleClass}>
             Select one of our expertly curated packages, or build a custom package from our a la carte options.
           </p>
         </div>
 
-        <div className={`flex flex-col sm:flex-row justify-center items-center gap-4 ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
+        <div className={`flex flex-col sm:flex-row justify-center items-center gap-3 ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
            {currentPage === 'packages' && (
@@ -457,7 +474,7 @@ const App: React.FC = () => {
                   className="h-full min-h-0"
                 />
               }
-              gridClassName={isIpadLandscape ? 'items-stretch h-full' : 'items-stretch'}
+              gridClassName={isIpadLandscape ? 'items-start h-full' : 'items-stretch'}
               isIpadLandscape={isIpadLandscape}
             />
           </div>
@@ -497,7 +514,7 @@ const App: React.FC = () => {
   const isMenuView = currentView === 'menu';
   const mainStyle = enableIpadMenuLayout && isMenuView
     ? {
-        height: 'calc(100vh - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px))',
+        height: 'calc(var(--app-height, 100vh) - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px))',
         overflow: 'hidden',
       }
     : { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' };
@@ -509,7 +526,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="lux-app antialiased flex flex-col">
+    <div className="lux-app antialiased flex flex-col" style={{ minHeight: 'var(--app-height, 100vh)' }}>
       <Header
         user={user}
         guestMode={guestMode}

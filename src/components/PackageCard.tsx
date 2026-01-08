@@ -9,6 +9,7 @@ interface PackageCardProps {
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
   className?: string;
   style?: React.CSSProperties;
+  isCompact?: boolean;
 }
 
 const Divider: React.FC<{text: string}> = ({ text }) => (
@@ -20,7 +21,7 @@ const Divider: React.FC<{text: string}> = ({ text }) => (
 );
 
 
-export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeaturesForDisplay: _allFeaturesForDisplay, isSelected, onSelect, onViewFeature, className = '', style }) => {
+export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeaturesForDisplay: _allFeaturesForDisplay, isSelected, onSelect, onViewFeature, className = '', style, isCompact = false }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
@@ -41,10 +42,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     `}
       style={style}
     >
-      <div className="p-6 lg:p-7 pb-4 flex items-start justify-between">
+      <div className={`${isCompact ? 'p-4 pb-3' : 'p-6 lg:p-7 pb-4'} flex items-start justify-between`}>
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
-          <h3 className="font-teko text-3xl sm:text-4xl font-bold uppercase tracking-wider text-lux-textStrong">
+          <h3 className={`font-teko ${isCompact ? 'text-2xl' : 'text-3xl sm:text-4xl'} font-bold uppercase tracking-wider text-lux-textStrong`}>
             {packageInfo.name}
           </h3>
         </div>
@@ -55,7 +56,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
 
       {/* Features section stretches with page scroll */}
       <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="p-6 lg:p-7 pt-2 space-y-3 flex-1 overflow-hidden">
+        <div className={`${isCompact ? 'p-4 pt-1' : 'p-6 lg:p-7 pt-2'} space-y-3 flex-1 overflow-hidden`}>
           {includedPackageFeatures.map((feature, index) => {
             let divider = null;
             // Add a divider before every feature except the first one
@@ -92,11 +93,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
         </div>
       </div>
       
-      <div className="p-5 lg:p-6 space-y-3 mt-auto">
+      <div className={`${isCompact ? 'p-4' : 'p-5 lg:p-6'} space-y-3 mt-auto`}>
         <div className="lux-price-plaque">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Investment</p>
-            <p className="text-4xl sm:text-5xl font-teko text-lux-textStrong">{formatPrice(packageInfo.price)}</p>
+            <p className={`${isCompact ? 'text-3xl' : 'text-4xl sm:text-5xl'} font-teko text-lux-textStrong`}>{formatPrice(packageInfo.price)}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-lux-textMuted">Includes listed coverage</p>

@@ -199,6 +199,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showHiddenReasons, setShowHiddenReasons] = useState(false);
+  const [showLegacyUnpublished, setShowLegacyUnpublished] = useState(false);
   
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -249,14 +250,23 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     []
   );
 
+  const isVisibleOption = useCallback(
+    (option: AlaCarteOption) => {
+      if (!hasDisplayFields(option) || !hasValidPrice(option)) return false;
+      if (option.isPublished === true) return true;
+      return showLegacyUnpublished;
+    },
+    [hasDisplayFields, hasValidPrice, showLegacyUnpublished]
+  );
+
   const visibleOptions = useMemo(
-    () => options.filter((option) => option.isPublished === true && hasDisplayFields(option) && hasValidPrice(option)),
-    [options, hasDisplayFields, hasValidPrice]
+    () => options.filter(isVisibleOption),
+    [options, isVisibleOption]
   );
 
   const hiddenOptions = useMemo(
-    () => options.filter((option) => option.isPublished !== true || !hasDisplayFields(option) || !hasValidPrice(option)),
-    [options, hasDisplayFields, hasValidPrice]
+    () => options.filter((option) => !isVisibleOption(option)),
+    [options, isVisibleOption]
   );
 
   const getHiddenReasons = useCallback((option: AlaCarteOption) => {
@@ -545,7 +555,17 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
         <div className="bg-blue-500/10 border border-blue-500/30 text-blue-200 text-sm rounded-md px-3 py-2">
           A La Carte items are created/edited in Product Hub. This screen is for ordering/placement only.
         </div>
-        <div className="flex flex-col md:flex-row gap-3 md:items-center">
+        <div className="flex flex-col md:flex-row gap-3 md:items-center md:flex-wrap">
+          <label className="flex items-center gap-2 text-sm text-gray-200 bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 hover:border-gray-500 transition-colors w-fit">
+            <input
+              type="checkbox"
+              checked={showLegacyUnpublished}
+              onChange={(e) => setShowLegacyUnpublished(e.target.checked)}
+              className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-800"
+              aria-label="Show legacy and unpublished items in lanes"
+            />
+            <span className="font-semibold">Show legacy/unpublished in lanes</span>
+          </label>
           <button
             type="button"
             onClick={() => setShowHiddenReasons((prev) => !prev)}

@@ -60,6 +60,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const [advancedOpenIds, setAdvancedOpenIds] = useState<Set<string>>(new Set());
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const bulkSelectRef = useRef<HTMLInputElement>(null);
   const headerSelectRef = useRef<HTMLInputElement>(null);
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
@@ -84,6 +85,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const { [featureId]: _timer, ...rest } = saveTimers.current;
       saveTimers.current = rest;
     }
+  };
+
+  const toggleRowExpanded = (featureId: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(featureId)) {
+        next.delete(featureId);
+      } else {
+        next.add(featureId);
+      }
+      return next;
+    });
   };
 
   const toggleAdvanced = (featureId: string) => {
@@ -888,19 +901,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         <table className="min-w-full divide-y divide-gray-800">
           <thead>
             <tr className="text-left text-sm text-gray-400">
-              <th className="px-3 py-2 font-semibold w-10">
-                <input
-                  type="checkbox"
-                  aria-label="Select all filtered"
-                  ref={headerSelectRef}
-                  checked={allFilteredSelected}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                />
+              <th className="px-3 py-2 font-semibold">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all filtered"
+                    ref={headerSelectRef}
+                    checked={allFilteredSelected}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
+                  <span className="uppercase tracking-wide text-xs text-gray-500">Products</span>
+                </div>
               </th>
-              <th className="px-3 py-2 font-semibold">Product</th>
-              <th className="px-3 py-2 font-semibold">Packages</th>
-              <th className="px-3 py-2 font-semibold">A La Carte</th>
-              <th className="px-3 py-2 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
@@ -917,6 +929,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               const categoryLabel = getCategoryLabel(option);
               const positionLabel =
                 option?.position !== undefined ? `Position ${option.position}` : 'Position —';
+              const isExpanded = expandedIds.has(feature.id);
               return (
                 <tr
                   key={feature.id}
@@ -925,218 +938,237 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     rowRefs.current[feature.id] = el;
                   }}
                 >
-                  <td className="px-3 py-3">
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${feature.name}`}
-                      checked={selectedIds.has(feature.id)}
-                      onChange={(e) => handleSelectFeature(feature.id, e.target.checked)}
-                    />
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="font-semibold">{feature.name}</div>
-                    <div className="text-xs text-gray-500">{feature.description}</div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                        Lane: {laneLabel}
-                      </span>
-                      <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                          isPublished ? 'bg-green-500/10 text-green-300 border-green-500/40' : 'bg-gray-700 text-gray-300 border-gray-600'
-                        }`}
-                      >
-                        {isPublished ? 'Published' : 'Unpublished'}
-                      </span>
-                      <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                          isFeatured ? 'bg-blue-500/10 text-blue-300 border-blue-500/40' : 'bg-gray-700 text-gray-300 border-gray-600'
-                        }`}
-                      >
-                        {isFeatured ? 'Featured' : 'Not featured'}
-                      </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                        Category: {categoryLabel}
-                      </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                        {positionLabel}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex flex-col gap-1 text-xs text-gray-200">
-                      <span className="text-[11px] uppercase text-gray-400">Package placement (choose one lane)</span>
-                      {packageLaneOptions.map(({ value: colNum, label }) => {
-                        return (
-                          <label key={colNum} className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name={`pkg-${feature.id}`}
-                              checked={feature.column === colNum}
-                              onChange={() => handlePackagePlacement(feature, colNum)}
-                            />
-                            <span>{label}</span>
-                          </label>
-                        );
-                      })}
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`pkg-${feature.id}`}
-                          checked={feature.column == null}
-                          onChange={() => handlePackagePlacement(feature, undefined)}
-                        />
-                        <span>Not in Packages</span>
-                      </label>
-                      {feature.column !== undefined && packageOrder.includes(feature.column as 1 | 2 | 3) && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[11px] uppercase text-gray-400">Connector:</span>
-                          <div className="flex gap-2">
-                            {(['AND', 'OR'] as const).map((optionConnector) => (
-                              <button
-                                key={optionConnector}
-                                type="button"
-                                onClick={() => handleConnectorChange(feature, optionConnector)}
-                                aria-label={`Set connector to ${optionConnector}`}
-                                aria-pressed={currentConnector === optionConnector}
-                                className={`px-2 py-1 rounded text-xs border ${
-                                  currentConnector === optionConnector
-                                    ? optionConnector === 'OR'
-                                      ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/60'
-                                      : 'bg-green-500/20 text-green-300 border-green-400/60'
-                                    : 'bg-gray-800 text-gray-200 border-gray-700'
-                                }`}
-                              >
-                                {optionConnector}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={isPublished}
-                          onChange={(e) => handlePublishToggle(feature, e.target.checked)}
-                        />
-                        <span>Publish to A La Carte</span>
-                      </label>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs text-gray-400">A La Carte Price (customer price)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={priceValue}
-                          onChange={(e) => setPriceInputs((prev) => ({ ...prev, [feature.id]: e.target.value }))}
-                          onBlur={() => handlePriceBlur(feature)}
-                          className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between gap-3 text-xs">
-                        <label className="flex items-center gap-2">
+                  <td className="px-3 py-4" colSpan={5}>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div className="flex items-start gap-3">
                           <input
                             type="checkbox"
-                            id={`featured-inline-${feature.id}`}
-                            checked={isFeatured}
-                            disabled={!isPublished}
-                            onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
+                            aria-label={`Select ${feature.name}`}
+                            checked={selectedIds.has(feature.id)}
+                            onChange={(e) => handleSelectFeature(feature.id, e.target.checked)}
+                            className="mt-1"
                           />
-                          <span>Featured (Popular Add-Ons)</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => toggleAdvanced(feature.id)}
-                          className="text-blue-300 hover:text-blue-100 underline"
-                        >
-                          {isAdvancedOpen ? 'Hide A La Carte advanced' : 'Show A La Carte advanced'}
-                        </button>
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="font-semibold text-base text-white">{feature.name}</div>
+                              {rowErrors[feature.id] && <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>}
+                              {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
+                            </div>
+                            <div className="text-xs text-gray-500 clamp-3">{feature.description}</div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
+                                Lane: {laneLabel}
+                              </span>
+                              <span
+                                className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                                  isPublished ? 'bg-green-500/10 text-green-300 border-green-500/40' : 'bg-gray-700 text-gray-300 border-gray-600'
+                                }`}
+                              >
+                                {isPublished ? 'Published' : 'Unpublished'}
+                              </span>
+                              <span
+                                className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                                  isFeatured ? 'bg-blue-500/10 text-blue-300 border-blue-500/40' : 'bg-gray-700 text-gray-300 border-gray-600'
+                                }`}
+                              >
+                                {isFeatured ? 'Featured' : 'Not featured'}
+                              </span>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
+                                Category: {categoryLabel}
+                              </span>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
+                                {positionLabel}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleRowExpanded(feature.id)}
+                            className="px-3 py-2 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 hover:border-blue-400 transition-colors text-sm"
+                          >
+                            {isExpanded ? 'Collapse' : 'Expand'}
+                          </button>
+                          <button
+                            onClick={() => handleEditDetails(feature)}
+                            className="px-3 py-2 rounded-lg bg-blue-600/80 text-white hover:bg-blue-500 text-sm transition-colors"
+                          >
+                            Edit details
+                          </button>
+                        </div>
                       </div>
-                      {isAdvancedOpen && (
-                        <div className="space-y-3 border border-gray-800 rounded-md p-3 bg-gray-900/30">
-                          {renderPlacementControls(feature, option, false)}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs text-gray-400">Warranty override</label>
+
+                      {isExpanded && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-900/40 border border-gray-800 rounded-lg p-4">
+                          <div className="space-y-2">
+                            <p className="text-[11px] uppercase text-gray-400">Package placement (choose one lane)</p>
+                            {packageLaneOptions.map(({ value: colNum, label }) => (
+                              <label key={colNum} className="flex items-center gap-2 text-sm text-gray-200">
+                                <input
+                                  type="radio"
+                                  name={`pkg-${feature.id}`}
+                                  checked={feature.column === colNum}
+                                  onChange={() => handlePackagePlacement(feature, colNum)}
+                                />
+                                <span>{label}</span>
+                              </label>
+                            ))}
+                            <label className="flex items-center gap-2 text-sm text-gray-200">
                               <input
-                                type="text"
-                                value={warrantyValue}
-                                onChange={(e) => updateFeatureState(feature.id, { alaCarteWarranty: e.target.value })}
-                                onBlur={(e) => handleWarrantyBlur(feature, e.target.value)}
+                                type="radio"
+                                name={`pkg-${feature.id}`}
+                                checked={feature.column == null}
+                                onChange={() => handlePackagePlacement(feature, undefined)}
+                              />
+                              <span>Not in Packages</span>
+                            </label>
+                            {feature.column !== undefined && packageOrder.includes(feature.column as 1 | 2 | 3) && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-[11px] uppercase text-gray-400">Connector:</span>
+                                <div className="flex gap-2">
+                                  {(['AND', 'OR'] as const).map((optionConnector) => (
+                                    <button
+                                      key={optionConnector}
+                                      type="button"
+                                      onClick={() => handleConnectorChange(feature, optionConnector)}
+                                      aria-label={`Set connector to ${optionConnector}`}
+                                      aria-pressed={currentConnector === optionConnector}
+                                      className={`px-2 py-1 rounded text-xs border ${
+                                        currentConnector === optionConnector
+                                          ? optionConnector === 'OR'
+                                            ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/60'
+                                            : 'bg-green-500/20 text-green-300 border-green-400/60'
+                                          : 'bg-gray-800 text-gray-200 border-gray-700'
+                                      }`}
+                                    >
+                                      {optionConnector}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={isPublished}
+                                onChange={(e) => handlePublishToggle(feature, e.target.checked)}
+                              />
+                              <span>Publish to A La Carte</span>
+                            </label>
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs text-gray-400">A La Carte Price (customer price)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={priceValue}
+                                onChange={(e) => setPriceInputs((prev) => ({ ...prev, [feature.id]: e.target.value }))}
+                                onBlur={() => handlePriceBlur(feature)}
                                 className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
                               />
                             </div>
-                            <div className="flex items-center gap-2 text-xs">
-                              <input
-                                type="checkbox"
-                                checked={isNew}
-                                onChange={(e) => handleIsNewToggle(feature, e.target.checked)}
+                            <div className="flex items-center justify-between gap-3 text-xs">
+                              <label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  id={`featured-inline-${feature.id}`}
+                                  checked={isFeatured}
+                                  disabled={!isPublished}
+                                  onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
+                                />
+                                <span>Featured (Popular Add-Ons)</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => toggleAdvanced(feature.id)}
+                                className="text-blue-300 hover:text-blue-100 underline"
+                              >
+                                {isAdvancedOpen ? 'Hide A La Carte advanced' : 'Show A La Carte advanced'}
+                              </button>
+                            </div>
+                            {isAdvancedOpen && (
+                              <div className="space-y-3 border border-gray-800 rounded-md p-3 bg-gray-900/30">
+                                {renderPlacementControls(feature, option, false)}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-gray-400">Warranty override</label>
+                                    <input
+                                      type="text"
+                                      value={warrantyValue}
+                                      onChange={(e) => updateFeatureState(feature.id, { alaCarteWarranty: e.target.value })}
+                                      onBlur={(e) => handleWarrantyBlur(feature, e.target.value)}
+                                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <input
+                                      type="checkbox"
+                                      checked={isNew}
+                                      onChange={(e) => handleIsNewToggle(feature, e.target.checked)}
+                                      disabled={!isPublished}
+                                    />
+                                    <span>Mark as NEW</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={() => handleRemoveFromPackages(feature)}
+                                className="text-sm text-red-300 hover:text-red-200 underline text-left disabled:opacity-50"
+                                disabled={feature.column === undefined}
+                              >
+                                Remove from Packages
+                              </button>
+                              <button
+                                onClick={() => handleUnpublishOnly(feature)}
+                                className="text-sm text-yellow-300 hover:text-yellow-200 underline text-left disabled:opacity-50"
                                 disabled={!isPublished}
-                              />
-                              <span>Mark as NEW</span>
+                              >
+                                Unpublish A La Carte
+                              </button>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-xs text-gray-400 font-semibold">Duplicate to Gold/Elite/Platinum</p>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
+                                  disabled={feature.column === 1}
+                                  onClick={() => handleDuplicateToLane(feature, 1)}
+                                >
+                                  Gold
+                                </button>
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
+                                  disabled={feature.column === 2}
+                                  onClick={() => handleDuplicateToLane(feature, 2)}
+                                >
+                                  Elite
+                                </button>
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
+                                  disabled={feature.column === 3}
+                                  onClick={() => handleDuplicateToLane(feature, 3)}
+                                >
+                                  Platinum
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       )}
-                      {rowErrors[feature.id] && <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>}
-                      {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
                     </div>
-                  </td>
-                  <td className="px-3 py-3">
-                     <div className="flex flex-col gap-2">
-                       <button
-                         onClick={() => handleEditDetails(feature)}
-                         className="text-blue-400 hover:text-blue-200 text-sm underline text-left"
-                       >
-                         Edit details
-                       </button>
-                       <button
-                         onClick={() => handleRemoveFromPackages(feature)}
-                         className="text-sm text-red-300 hover:text-red-200 underline text-left disabled:opacity-50"
-                         disabled={feature.column === undefined}
-                       >
-                         Remove from Packages
-                       </button>
-                       <button
-                         onClick={() => handleUnpublishOnly(feature)}
-                         className="text-sm text-yellow-300 hover:text-yellow-200 underline text-left disabled:opacity-50"
-                         disabled={!isPublished}
-                       >
-                         Unpublish A La Carte
-                       </button>
-                       <div className="mt-1 space-y-1">
-                         <p className="text-xs text-gray-400 font-semibold">Duplicate to Gold/Elite/Platinum</p>
-                         <div className="flex flex-wrap gap-2">
-                           <button
-                             type="button"
-                             className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
-                             disabled={feature.column === 1}
-                             onClick={() => handleDuplicateToLane(feature, 1)}
-                           >
-                             Gold
-                           </button>
-                           <button
-                             type="button"
-                             className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
-                             disabled={feature.column === 2}
-                             onClick={() => handleDuplicateToLane(feature, 2)}
-                           >
-                             Elite
-                           </button>
-                           <button
-                             type="button"
-                             className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
-                             disabled={feature.column === 3}
-                             onClick={() => handleDuplicateToLane(feature, 3)}
-                           >
-                             Platinum
-                           </button>
-                         </div>
-                       </div>
-                     </div>
                   </td>
                 </tr>
               );

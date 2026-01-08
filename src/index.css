@@ -85,6 +85,16 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   --touch-target-min: 44px;
   --touch-target-comfortable: 48px;
   --touch-target-luxury: 56px;
+
+  /* Viewport */
+  --app-vh: 100;
+  --app-height: calc(var(--app-vh) * 1px);
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
 }
 
 /* ========================================
@@ -461,7 +471,7 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
 
   .ipad-landscape-lock,
   .ipad-landscape-lock #root {
-    height: 100vh;
+    height: var(--app-height, 100vh);
     overflow: hidden;
     overscroll-behavior: none;
   }

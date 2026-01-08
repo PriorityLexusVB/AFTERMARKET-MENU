@@ -961,7 +961,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6 flex flex-col gap-3">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <p className="text-sm text-purple-200 font-semibold">Popular Add-Ons are managed in A La Carte Options → Featured Add-Ons (Column 4).</p>
+                  <p className="text-sm text-purple-200 font-semibold">Popular Add-ons are managed in A La Carte Options tab (Featured lane).</p>
                   <p className="text-xs text-purple-200/80">Featured add-ons (Column 4) shown to customers come from A La Carte options.</p>
                 </div>
               </div>

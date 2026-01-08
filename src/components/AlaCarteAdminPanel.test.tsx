@@ -114,15 +114,22 @@ vi.mock('../data', () => ({
     it('reveals unpublished and legacy options when toggled on', async () => {
       render(<AlaCarteAdminPanel onDataUpdate={vi.fn()} />);
 
-      const toggle = await screen.findByRole('button', { name: /Hidden items/i });
-      await userEvent.click(toggle);
+      const hiddenToggle = await screen.findByRole('button', { name: /Hidden items/i });
+      await userEvent.click(hiddenToggle);
 
       await waitFor(() => expect(screen.getByText('Unpublished Item')).toBeInTheDocument());
-      expect(screen.getAllByText(/Hidden items \(why not visible\)/i).length).toBeGreaterThan(0);
       expect(screen.getByText('Legacy Item')).toBeInTheDocument();
       expect(screen.getByText('Unpublished Unplaced')).toBeInTheDocument();
-      expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
       expect(screen.getByText(/\(Missing name\).*missing-name/)).toBeInTheDocument();
-      expect(screen.getAllByText(/unpublished/i).length).toBeGreaterThan(0);
+
+      const showLegacyCheckbox = screen.getByRole('checkbox', { name: /Show legacy/i });
+      await userEvent.click(showLegacyCheckbox);
+
+      await waitFor(() => expect(screen.getByText(/Visible 5 \/ Total 6/)).toBeInTheDocument());
+      expect(screen.getByText('Published (Not featured)')).toBeInTheDocument();
+      expect(screen.getByTestId('column-published')).toHaveTextContent('Unpublished Item');
+      expect(screen.getByTestId('column-published')).toHaveTextContent('Unpublished Unplaced');
+      expect(screen.getByTestId('column-published')).toHaveTextContent('Legacy Item');
+      expect(screen.getByText(/\(Missing name\).*missing-name/)).toBeInTheDocument();
     });
   });

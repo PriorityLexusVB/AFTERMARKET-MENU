@@ -190,15 +190,25 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
     const root = document.documentElement;
+
     const setViewportVars = () => {
-      root.style.setProperty('--app-vh', `${window.innerHeight}px`);
+      const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
+      root.style.setProperty('--app-vh', `${height}px`);
+      root.style.setProperty('--app-height', `${height}px`);
     };
+
     setViewportVars();
-    window.addEventListener('resize', setViewportVars);
-    window.addEventListener('orientationchange', setViewportVars);
+
+    const onResize = () => setViewportVars();
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
+
     return () => {
-      window.removeEventListener('resize', setViewportVars);
-      window.removeEventListener('orientationchange', setViewportVars);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
     };
   }, []);
   

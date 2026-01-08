@@ -438,13 +438,13 @@ export async function upsertAlaCarteFromFeature(
       sourceFeatureId: overrides.sourceFeatureId ?? feature.id,
       isPublished: overrides.isPublished ?? true,
     };
-    if (overrides.column !== undefined) {
+    if ('column' in overrides) {
       alaCarteData.column = overrides.column;
     }
-    if (overrides.position !== undefined) {
+    if ('position' in overrides) {
       alaCarteData.position = overrides.position;
     }
-    if (overrides.connector !== undefined) {
+    if ('connector' in overrides) {
       alaCarteData.connector = overrides.connector;
     }
 

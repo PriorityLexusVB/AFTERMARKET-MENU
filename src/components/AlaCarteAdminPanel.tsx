@@ -25,6 +25,7 @@ import { db } from '../firebase';
 import type { AlaCarteOption, FeatureConnector } from '../types';
 import { batchUpdateAlaCartePositions, updateAlaCarteOption } from '../data';
 import { sortOrderableItems } from '../utils/featureOrdering';
+import { VALID_ALACARTE_COLUMNS } from '../utils/alaCarte';
 
 interface AlaCarteAdminPanelProps {
   onDataUpdate: () => void;
@@ -197,7 +198,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showHiddenLegacy, setShowHiddenLegacy] = useState(false);
+  const [showHiddenReasons, setShowHiddenReasons] = useState(false);
   
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -243,15 +244,41 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
     []
   );
 
+  const hasValidPrice = useCallback(
+    (option: AlaCarteOption) => typeof option.price === 'number' && !Number.isNaN(option.price) && option.price > 0,
+    []
+  );
+
   const visibleOptions = useMemo(
-    () => options.filter((option) => option.isPublished === true && hasDisplayFields(option)),
-    [options, hasDisplayFields]
+    () => options.filter((option) => option.isPublished === true && hasDisplayFields(option) && hasValidPrice(option)),
+    [options, hasDisplayFields, hasValidPrice]
   );
 
   const hiddenOptions = useMemo(
-    () => options.filter((option) => option.isPublished !== true || !hasDisplayFields(option)),
-    [options, hasDisplayFields]
+    () => options.filter((option) => option.isPublished !== true || !hasDisplayFields(option) || !hasValidPrice(option)),
+    [options, hasDisplayFields, hasValidPrice]
   );
+
+  const getHiddenReasons = useCallback((option: AlaCarteOption) => {
+    const reasons: string[] = [];
+    if (option.isPublished !== true) {
+      reasons.push('unpublished');
+    }
+    if (!option.name?.trim()) {
+      reasons.push('missing name');
+    }
+    const invalidPrice = typeof option.price !== 'number' || Number.isNaN(option.price) || option.price <= 0;
+    if (invalidPrice) {
+      reasons.push('missing/invalid price');
+    }
+    if (option.column !== undefined && !VALID_ALACARTE_COLUMNS.includes(option.column)) {
+      reasons.push('invalid column assignment');
+    }
+    if (reasons.length === 0) {
+      reasons.push('not curated / legacy data');
+    }
+    return reasons;
+  }, []);
 
   const totalDocs = options.length;
   const visibleDocs = visibleOptions.length;
@@ -519,16 +546,24 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           A La Carte items are created/edited in Product Hub. This screen is for ordering/placement only.
         </div>
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
-          <label className="flex items-center gap-2 text-sm text-gray-400">
-            <input
-              type="checkbox"
-              checked={showHiddenLegacy}
-              onChange={(e) => setShowHiddenLegacy(e.target.checked)}
-              className="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-600 bg-gray-800"
-            aria-label="Show hidden/legacy"
-          />
-            Show hidden/legacy
-          </label>
+          <button
+            type="button"
+            onClick={() => setShowHiddenReasons((prev) => !prev)}
+            className="flex items-center gap-2 text-sm text-gray-200 bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 hover:border-gray-500 transition-colors"
+            aria-expanded={showHiddenReasons}
+            aria-controls="hidden-reasons-panel"
+          >
+            <span className="font-semibold">Hidden items (why not visible)</span>
+            <span className="text-xs text-gray-400">({hiddenOptions.length})</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className={`w-4 h-4 transition-transform ${showHiddenReasons ? 'rotate-180' : ''}`}
+            >
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.585l3.71-3.355a.75.75 0 111 1.115l-4.24 3.84a.75.75 0 01-1.04 0l-4.24-3.84a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -576,11 +611,11 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
           </DndContext>
         )}
       </div>
-      {showHiddenLegacy && (
-        <div className="border-t border-gray-700 pt-6">
+      {showHiddenReasons && (
+        <div className="border-t border-gray-700 pt-6" id="hidden-reasons-panel">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xl font-teko tracking-wider text-gray-300">
-              Hidden / Legacy / Orphans ({hiddenOptions.length})
+              Hidden items (why not visible) ({hiddenOptions.length})
             </h4>
             {hiddenCount > 0 && (
               <span className="text-xs text-yellow-300 bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-1">
@@ -589,7 +624,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
             )}
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            Hidden includes unpublished items and items missing required fields (e.g., name).
+            Items appear here when they do not meet visibility requirements (publish + name + valid price).
           </p>
           {hiddenOptions.length === 0 ? (
             <p className="text-sm text-gray-500">No hidden or legacy items.</p>
@@ -597,20 +632,26 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({ onDataUp
             <ul className="space-y-2">
               {hiddenOptions.map((option) => {
                 const displayName = option.name?.trim() || `(Missing name) - doc id: ${option.id}`;
+                const reasons = getHiddenReasons(option);
                 return (
                   <li
                     key={option.id}
-                    className="bg-gray-900/30 border border-gray-800 rounded-md px-3 py-2 flex flex-col gap-1"
+                    className="bg-gray-900/30 border border-gray-800 rounded-md px-3 py-2 flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm text-gray-200">{displayName}</span>
-                      <span className="text-xs text-gray-500">
-                        {option.isPublished === true ? 'Published' : 'Unpublished / Legacy'}
-                      </span>
+                      <span className="text-xs text-gray-500 break-words">id: {option.id}</span>
                     </div>
-                    {option.column && (
-                      <span className="text-xs text-gray-500">Column: {option.column}</span>
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {reasons.map((reason) => (
+                        <span
+                          key={reason}
+                          className="text-xs text-yellow-200 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-2 py-0.5"
+                        >
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
                   </li>
                 );
               })}

@@ -58,7 +58,7 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({ item, onViewItem, on
                 : 'btn-lux-primary'
             }`}
           >
-            {isSelected ? 'ADDED' : 'ADD'}
+            {isSelected ? 'ADDED' : '+ ADD'}
           </button>
         )}
       </div>

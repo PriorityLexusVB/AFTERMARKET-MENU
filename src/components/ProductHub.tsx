@@ -24,7 +24,7 @@ const columnLabels: Record<1 | 2 | 3, string> = {
   2: 'Elite Package (Column 2)',
   3: 'Platinum Package (Column 3)',
 };
-const TABLE_COLUMN_COUNT = 5;
+const TABLE_COLUMN_COUNT = 1;
 const packageOrder: (1 | 2 | 3)[] = packageLaneOptions.map((opt) => opt.value);
 
 const getPlacementDisplay = (column?: number) => {

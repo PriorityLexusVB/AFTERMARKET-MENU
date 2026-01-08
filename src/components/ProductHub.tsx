@@ -24,6 +24,7 @@ const columnLabels: Record<1 | 2 | 3, string> = {
   2: 'Elite Package (Column 2)',
   3: 'Platinum Package (Column 3)',
 };
+const TABLE_COLUMN_COUNT = 5;
 const packageOrder: (1 | 2 | 3)[] = packageLaneOptions.map((opt) => opt.value);
 
 const getPlacementDisplay = (column?: number) => {
@@ -938,7 +939,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     rowRefs.current[feature.id] = el;
                   }}
                 >
-                  <td className="px-3 py-4" colSpan={5}>
+                  <td className="px-3 py-4" colSpan={TABLE_COLUMN_COUNT}>
                     <div className="flex flex-col gap-3">
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                         <div className="flex items-start gap-3">

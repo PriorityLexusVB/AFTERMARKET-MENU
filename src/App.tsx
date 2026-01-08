@@ -191,7 +191,7 @@ const App: React.FC = () => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
     const root = document.documentElement;
     const setViewportVars = () => {
-      root.style.setProperty('--app-vh', `${window.innerHeight}`);
+      root.style.setProperty('--app-vh', `${window.innerHeight}px`);
     };
     setViewportVars();
     window.addEventListener('resize', setViewportVars);

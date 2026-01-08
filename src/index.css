@@ -87,8 +87,8 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   --touch-target-luxury: 56px;
 
   /* Viewport */
-  --app-vh: 100;
-  --app-height: calc(var(--app-vh) * 1px);
+  --app-vh: 100vh;
+  --app-height: var(--app-vh);
 }
 
 @supports (height: 100dvh) {

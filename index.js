@@ -87,6 +87,15 @@ console.log("[BOOT] Working directory:", process.cwd());
 const app = express();
 app.use(express.json());
 
+// Simple path traversal guard
+app.use((req, res, next) => {
+  const rawPath = req.originalUrl || req.url || "";
+  if (rawPath.includes("..")) {
+    return res.status(400).send("Bad Request");
+  }
+  next();
+});
+
 // Rate limiter for PWA asset routes (DoS guard)
 const pwaAssetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -176,6 +185,12 @@ const publicIconsPath = path.join(publicDir, "icons");
 
 app.use(
   "/icons",
+  (req, res, next) => {
+    if ((req.url || "").includes("..")) {
+      return res.status(400).send("Bad Request");
+    }
+    next();
+  },
   pwaAssetLimiter,
   express.static(distIconsPath, {
     fallthrough: true,
@@ -191,6 +206,9 @@ app.use(
   }),
   (_req, res) => res.status(404).send("Icon not found")
 );
+
+// Explicitly block direct index.html access to avoid traversal fallbacks
+app.get("/index.html", (_req, res) => res.status(404).send("Not Found"));
 
 // Static app build (js/css/assets)
 if (distExists) app.use(express.static(distDir));

@@ -10,9 +10,9 @@ import { sortFeatures, compareFeatures, normalizePositions } from '../utils/feat
  * rendered in the customer-facing menu.
  * 
  * Admin columns represent organizational groupings:
- * - Column 1: Elite Tier features (Elite package features)
- * - Column 2: Platinum Tier features (Platinum package features)
- * - Column 3: Gold Tier features (Gold package features)
+ * - Column 1: Gold Tier features (Gold package features)
+ * - Column 2: Elite Tier features (Elite package features)
+ * - Column 3: Platinum Tier features (Platinum package features)
  * - Column 4: Popular Add-ons
  * 
  * Features are sorted by column first, then by position within column.
@@ -245,8 +245,8 @@ describe('Admin to Customer Menu Mapping', () => {
   describe('Multi-Column Feature Rendering', () => {
     it('should correctly sort features from multiple columns', () => {
       // Simulate features as they would be organized in admin:
-      // Column 1 (Elite package): RustGuard, ToughGuard, Interior
-      // Column 2 (Platinum package): Diamond Shield
+      // Column 1 (Gold package): RustGuard, ToughGuard, Interior
+      // Column 2 (Elite package): Diamond Shield
       // Note: IDs follow the same kebab-case pattern as production mock data
       const rustGuard = createMockFeature({
         id: 'rustguard-pro',
@@ -540,43 +540,43 @@ describe('Admin to Customer Menu Mapping', () => {
 
   describe('Empty Admin Columns', () => {
     it('should show empty package when admin column is empty', () => {
-      // Simulate features only in Column 1 (Elite Tier)
-      const eliteFeature = createMockFeature({
-        id: 'elite-feature',
-        name: 'Elite Feature',
+      // Simulate features only in Column 1 (Gold Tier)
+      const goldFeature = createMockFeature({
+        id: 'gold-feature',
+        name: 'Gold Feature',
         column: 1,
         position: 0,
         points: ['Point 1'],
       });
 
-      // Platinum package with no features (column 2 is empty in admin)
+      // Platinum package with no features (column 3 is empty in admin)
       const platinumPackage = createMockPackageTier({
         name: 'Platinum',
         price: 3499,
         tier_color: 'gray-400',
-        features: [], // Empty because Platinum column (2) has no features
+        features: [], // Empty because Platinum column (3) has no features
       });
 
       const { container } = render(
         <PackageCard
           packageInfo={platinumPackage}
-          allFeaturesForDisplay={[eliteFeature]}
+          allFeaturesForDisplay={[goldFeature]}
           isSelected={false}
           onSelect={vi.fn()}
           onViewFeature={vi.fn()}
         />
       );
 
-      // Should not show Elite Feature in Platinum package
+      // Should not show Gold Feature in Platinum package
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       expect(featureButtons).toHaveLength(0);
     });
 
     it('should not auto-populate from other columns', () => {
       // Features in columns 1 and 4, but not in 2 or 3
-      const eliteFeature = createMockFeature({
-        id: 'elite-feature',
-        name: 'Elite Feature',
+      const goldFeature = createMockFeature({
+        id: 'gold-feature',
+        name: 'Gold Feature',
         column: 1,
         position: 0,
         points: ['Point'],
@@ -589,28 +589,28 @@ describe('Admin to Customer Menu Mapping', () => {
         points: ['Point'],
       });
 
-      // Elite package should only have Column 1 features
-      const elitePackage = createMockPackageTier({
-        name: 'Elite',
+      // Gold package should only have Column 1 features
+      const goldPackage = createMockPackageTier({
+        name: 'Gold',
         price: 2399,
         tier_color: 'yellow-400',
-        features: [eliteFeature], // Only Elite column features
+        features: [goldFeature], // Only Gold column features
       });
 
       const { container } = render(
         <PackageCard
-          packageInfo={elitePackage}
-          allFeaturesForDisplay={[eliteFeature, addonFeature]}
+          packageInfo={goldPackage}
+          allFeaturesForDisplay={[goldFeature, addonFeature]}
           isSelected={false}
           onSelect={vi.fn()}
           onViewFeature={vi.fn()}
         />
       );
 
-      // Should only show Elite Feature, not Add-on Feature
+      // Should only show Gold Feature, not Add-on Feature
       const featureButtons = container.querySelectorAll('button[aria-label^="Learn more about"]');
       expect(featureButtons).toHaveLength(1);
-      expect(featureButtons[0]?.textContent).toBe('Elite Feature');
+      expect(featureButtons[0]?.textContent).toBe('Gold Feature');
     });
   });
 });

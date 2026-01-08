@@ -64,16 +64,16 @@ describe('ProductHub inline editing', () => {
     mockAddDoc.mockResolvedValue({ id: 'new-feature' });
   });
 
-  it('orders package lane radios Elite, Platinum, Gold, Not in Packages', async () => {
+  it('orders package lane radios Gold, Elite, Platinum, Not in Packages', async () => {
     const { feature } = await renderHub({ column: 2 });
     const row = screen.getByText(feature.name).closest('tr');
     expect(row).toBeTruthy();
     const radios = within(row as HTMLElement).getAllByRole('radio');
     const labels = radios.map((radio) => (radio as HTMLInputElement).labels?.[0]?.textContent?.trim());
     expect(labels).toEqual([
+      'Gold Package (Column 1)',
       'Elite Package (Column 2)',
       'Platinum Package (Column 3)',
-      'Gold Package (Column 1)',
       'Not in Packages',
     ]);
 
@@ -140,6 +140,8 @@ describe('ProductHub inline editing', () => {
   it('updates category and featured placement inline', async () => {
     const { feature } = await renderHub({ publishToAlaCarte: true }, { isPublished: true, column: undefined, price: 200 });
     const row = screen.getByText(feature.name).closest('tr') as HTMLElement;
+    const advancedToggle = within(row).getByRole('button', { name: /Show A La Carte advanced/i });
+    await userEvent.click(advancedToggle);
     const categorySelect = within(row).getAllByRole('combobox')[0]!;
 
     await userEvent.selectOptions(categorySelect, '2');

@@ -13,6 +13,7 @@ This is an interactive digital menu for customers to explore and select vehicle 
 - ✅ **Type-Safe** - Full TypeScript with strict mode enabled
 - 🧪 **Tested** - Comprehensive test coverage with Vitest
 - 📱 **Responsive** - Mobile-friendly design with Tailwind CSS
+- ⭐ **Popular Add-Ons** come from A La Carte Featured (Column 4)
 
 ## Install on iPad
 

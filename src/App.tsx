@@ -464,11 +464,11 @@ const App: React.FC = () => {
         )}
 
         {currentPage === 'alacarte' && (
-           <div className={enableIpadAlaCarteLayout ? 'flex flex-1 min-h-0 gap-6 overflow-hidden' : 'flex flex-col xl:flex-row gap-12'}>
-            <div className={enableIpadAlaCarteLayout ? 'flex-1 min-h-0 overflow-hidden' : 'xl:w-3/5'}>
-               <h3 className="lux-title mb-4">Available Options</h3>
-               <div className={enableIpadAlaCarteLayout ? 'h-full overflow-y-auto pr-1' : ''}>
-                <AlaCarteSelector
+            <div className={enableIpadAlaCarteLayout ? 'flex flex-1 min-h-0 gap-6 overflow-hidden' : 'flex flex-col xl:flex-row gap-12'}>
+             <div className={enableIpadAlaCarteLayout ? 'flex-1 min-h-0 overflow-hidden' : 'xl:w-3/5'}>
+                <h3 className="lux-title mb-4">Available Options</h3>
+                <div className={enableIpadAlaCarteLayout ? 'h-full overflow-y-auto pr-1' : ''}>
+                 <AlaCarteSelector
                   items={availableAlaCarteItems}
                   onViewItem={handleViewDetail}
                   disableDrag={disableAlaCarteDrag}
@@ -476,15 +476,17 @@ const App: React.FC = () => {
                   selectedIds={customPackageItems.map(item => item.id)}
                 />
                </div>
-            </div>
-            <div className={enableIpadAlaCarteLayout ? 'w-[40%] min-w-[320px] flex flex-col min-h-0' : 'xl:w-2/5 flex flex-col min-h-0'}>
-               <h3 className="lux-title mb-4">Your Custom Package</h3>
-              <CustomPackageBuilder
-                items={displayCustomPackageItems}
-                onDropItem={handleDropAlaCarte}
-                onRemoveItem={handleRemoveAlaCarte}
-                enableDrop={!disableAlaCarteDrag}
-              />
+             </div>
+             <div className={enableIpadAlaCarteLayout ? 'w-[40%] min-w-[320px] flex flex-col min-h-0' : 'xl:w-2/5 flex flex-col min-h-0'}>
+                <h3 className="lux-title mb-4">Your Custom Package</h3>
+              <div className="flex-1 min-h-0">
+                <CustomPackageBuilder
+                  items={displayCustomPackageItems}
+                  onDropItem={handleDropAlaCarte}
+                  onRemoveItem={handleRemoveAlaCarte}
+                  enableDrop={!disableAlaCarteDrag}
+                />
+              </div>
             </div>
           </div>
         )}

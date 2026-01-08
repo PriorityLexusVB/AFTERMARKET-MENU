@@ -35,12 +35,12 @@ interface AdminPanelProps {
 
 type AdminTab = 'features' | 'alacarte' | 'product-hub';
 
-// Column configuration - strict 1:1 mapping (Gold=Column 1, Elite=Column 2, Platinum=Column 3)
-// Note: Admin panel display order shown here. Customer-facing order is Elite → Platinum → Gold.
+// Column configuration - strict 1:1 mapping and display order
+// Gold = Column 1, Elite = Column 2, Platinum = Column 3
 const COLUMNS = [
+  { num: 1, label: 'Gold Package (Column 1)' },
   { num: 2, label: 'Elite Package (Column 2)' },
   { num: 3, label: 'Platinum Package (Column 3)' },
-  { num: 1, label: 'Gold Package (Column 1)' },
 ] as const;
 
 const FEATURE_COLUMN_NUMBERS = [1, 2, 3] as const;
@@ -961,23 +961,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6 flex flex-col gap-3">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <p className="text-sm text-purple-200 font-semibold">
-                    Popular Add-Ons are managed in A La Carte Options → Featured Add-Ons.
-                  </p>
-                  <p className="text-xs text-purple-200/80">
-                    Customer Popular Add-Ons come directly from featured A La Carte items (Column 4).
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm">
-                  <span className="text-purple-100 bg-purple-500/20 rounded-full px-3 py-1">
-                    Featured {alaCarteCounts.featured}
-                  </span>
-                  <span className="text-purple-100 bg-purple-500/20 rounded-full px-3 py-1">
-                    Published {alaCarteCounts.published}
-                  </span>
-                  <span className="text-purple-100 bg-purple-500/20 rounded-full px-3 py-1">
-                    Total {alaCarteCounts.total}
-                  </span>
+                  <p className="text-sm text-purple-200 font-semibold">Popular Add-Ons are managed in A La Carte Options → Featured Add-Ons (Column 4).</p>
+                  <p className="text-xs text-purple-200/80">Featured add-ons (Column 4) shown to customers come from A La Carte options.</p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">

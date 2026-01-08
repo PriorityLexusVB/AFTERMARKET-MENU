@@ -798,7 +798,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       if (columnId === 2) return 'No Elite features yet - drag items here from unassigned or other columns';
       if (columnId === 3) return 'No Platinum features yet - drag items here from unassigned or other columns';
       if (columnId === 1) return 'No Gold features yet - drag items here from unassigned or other columns';
-      if (columnId === 4) return 'No Popular Add-ons yet - drag featured items here';
       return 'Drop items here to assign them';
     };
 
@@ -960,21 +959,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </p>
 
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6 flex flex-col gap-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <p className="text-sm text-purple-200 font-semibold">Popular Add-Ons are managed in A La Carte Options → Featured Add-Ons (Column 4).</p>
                   <p className="text-xs text-purple-200/80">Featured add-ons (Column 4) shown to customers come from A La Carte options.</p>
                 </div>
-                <span className="text-sm text-purple-100 bg-purple-500/20 rounded-full px-3 py-1">
-                  Featured published: {alaCarteCounts.featured}
-                </span>
               </div>
-              <button
-                onClick={() => handleTabChange('alacarte')}
-                className="btn-lux-primary w-fit"
-              >
-                Manage A La Carte Options
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => handleTabChange('alacarte')}
+                  className="btn-lux-primary w-fit"
+                >
+                  Go to A La Carte Options
+                </button>
+                <p className="text-xs text-purple-200/80">Edit featured items in A La Carte Options.</p>
+              </div>
             </div>
 
             <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4 mb-6">

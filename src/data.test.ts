@@ -300,6 +300,36 @@ describe('A La Carte Publishing', () => {
         { merge: true }
       );
     });
+
+    it('treats undefined placement overrides as field deletions', async () => {
+      const firebaseModule = await import('./firebase');
+      (firebaseModule as any).db = {} as any;
+      vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
+      vi.mocked(setDoc).mockResolvedValue(undefined as any);
+      vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+
+      const feature = createFeature({
+        publishToAlaCarte: true,
+        alaCartePrice: 150,
+      });
+
+      await upsertAlaCarteFromFeature(feature, {
+        price: 150,
+        column: undefined,
+        position: undefined,
+        connector: undefined,
+      });
+
+      expect(setDoc).toHaveBeenCalledWith(
+        { path: 'ala_carte_options/test-id' },
+        expect.objectContaining({
+          column: expect.objectContaining({ _type: 'deleteField' }),
+          position: expect.objectContaining({ _type: 'deleteField' }),
+          connector: expect.objectContaining({ _type: 'deleteField' }),
+        }),
+        { merge: true }
+      );
+    });
   });
 
   describe('unpublishAlaCarteFromFeature', () => {

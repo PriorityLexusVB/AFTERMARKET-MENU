@@ -35,15 +35,15 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     <div 
       data-testid="package-card"
       className={`
-      lux-card flex flex-col h-full min-h-0 relative overflow-hidden
+      lux-card am-package-card flex flex-col h-full min-h-0 relative overflow-hidden
       ${isSelected ? 'lux-card-selected' : ''}
       ${isRecommended ? 'lux-card-recommended' : ''}
       ${className}
     `}
       style={style}
     >
-      <div className={`${isCompact ? 'p-4 pb-3' : 'p-5 lg:p-6 pb-3'} flex items-start justify-between`}>
-        <div className="space-y-1">
+      <div className="flex items-start justify-between">
+        <div className="am-package-title-block space-y-1">
           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
           <h3 className={`font-teko ${isCompact ? 'text-2xl' : 'text-3xl sm:text-4xl'} font-bold uppercase tracking-wider text-lux-textStrong`}>
             {packageInfo.name}
@@ -56,7 +56,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
 
       {/* Features section stretches with page scroll */}
       <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className={`${isCompact ? 'p-4 pt-1' : 'p-5 lg:p-6 pt-1'} space-y-3 flex-1 overflow-hidden`}>
+        <div className={`am-package-first-feature space-y-3 flex-1 overflow-hidden`}>
           {includedPackageFeatures.map((feature, index) => {
             let divider = null;
             // Add a divider before every feature except the first one
@@ -93,7 +93,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
         </div>
       </div>
       
-      <div className={`${isCompact ? 'p-4' : 'p-5 lg:p-6'} space-y-3 mt-auto`}>
+      <div className="space-y-3 mt-auto pt-4">
         <div className="lux-price-plaque">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Investment</p>

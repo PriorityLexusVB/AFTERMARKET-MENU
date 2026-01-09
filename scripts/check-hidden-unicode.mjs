@@ -60,7 +60,12 @@ function getTrackedFiles() {
     // Split by null terminator and filter text files
     return output
       .split('\0')
-      .filter(file => file && TEXT_EXTENSIONS.has(file.substring(file.lastIndexOf('.'))));
+      .filter(file => {
+        if (!file) return false;
+        const lastDot = file.lastIndexOf('.');
+        if (lastDot === -1) return false; // No extension
+        return TEXT_EXTENSIONS.has(file.substring(lastDot));
+      });
   } catch (error) {
     console.error('Error getting tracked files:', error.message);
     process.exit(1);
@@ -136,7 +141,9 @@ function scanFile(filepath) {
  * Fix file by removing hidden unicode characters
  */
 function fixFile(filepath, content) {
-  const cleaned = content.replace(hiddenUnicodePattern, '');
+  // Create fresh regex to avoid stateful lastIndex issues
+  const cleanPattern = new RegExp(`[${HIDDEN_UNICODE.join('')}]`, 'g');
+  const cleaned = content.replace(cleanPattern, '');
   
   if (cleaned !== content) {
     try {

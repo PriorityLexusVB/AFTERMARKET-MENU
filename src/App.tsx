@@ -445,7 +445,7 @@ const App: React.FC = () => {
     const heroSubtitleClass = enableIpadMenuLayout ? 'lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3' : 'lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3';
     return (
       <div className={wrapperClass}>
-        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-4'} shrink-0 space-y-1`}>
+        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-4'} shrink-0 ${enableIpadMenuLayout ? 'space-y-1' : ''}`}>
           <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
           <p className={heroSubtitleClass}>
             Select one of our expertly curated packages, or build a custom package from our a la carte options.

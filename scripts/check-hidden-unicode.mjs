@@ -44,8 +44,15 @@ const TEXT_EXTENSIONS = new Set([
   '.yml', '.yaml', '.html', '.txt'
 ]);
 
+/**
+ * Create regex pattern to match any hidden unicode character
+ */
+export function createHiddenUnicodePattern() {
+  return new RegExp(`[${HIDDEN_UNICODE.join('')}]`, 'g');
+}
+
 // Create regex pattern to match any hidden unicode character
-const hiddenUnicodePattern = new RegExp(`[${HIDDEN_UNICODE.join('')}]`, 'g');
+const hiddenUnicodePattern = createHiddenUnicodePattern();
 
 /**
  * Get list of tracked files from git
@@ -75,7 +82,7 @@ function getTrackedFiles() {
 /**
  * Calculate line and column from string index
  */
-function getLineCol(content, index) {
+export function getLineCol(content, index) {
   const beforeIndex = content.substring(0, index);
   const line = (beforeIndex.match(/\n/g) || []).length + 1;
   const lastNewline = beforeIndex.lastIndexOf('\n');
@@ -86,7 +93,7 @@ function getLineCol(content, index) {
 /**
  * Get character name for display
  */
-function getCharName(char) {
+export function getCharName(char) {
   const codePoint = char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0');
   const names = {
     '\u200B': 'Zero Width Space',
@@ -142,7 +149,7 @@ function scanFile(filepath) {
  */
 function fixFile(filepath, content) {
   // Create fresh regex to avoid stateful lastIndex issues
-  const cleanPattern = new RegExp(`[${HIDDEN_UNICODE.join('')}]`, 'g');
+  const cleanPattern = createHiddenUnicodePattern();
   const cleaned = content.replace(cleanPattern, '');
   
   if (cleaned !== content) {
@@ -175,11 +182,16 @@ function main() {
   let totalIssues = 0;
   let filesWithIssues = 0;
   let filesFixed = 0;
+  let filesFailed = 0;
+  let filesWithErrors = 0;
+  const errorFiles = [];
   
   for (const file of files) {
     const result = scanFile(file);
     
     if (result.error) {
+      filesWithErrors++;
+      errorFiles.push(result.filepath);
       continue;
     }
     
@@ -192,6 +204,9 @@ function main() {
         if (fixed) {
           filesFixed++;
           console.log(`✓ Fixed: ${result.filepath} (${result.matches.length} character${result.matches.length > 1 ? 's' : ''} removed)`);
+        } else {
+          filesFailed++;
+          console.log(`✗ Failed to fix: ${result.filepath}`);
         }
       } else {
         // Report up to 3 matches per file to avoid noisy output
@@ -215,16 +230,34 @@ function main() {
     console.log(`Fixed ${filesFixed} file${filesFixed !== 1 ? 's' : ''}`);
     console.log(`Removed ${totalIssues} hidden unicode character${totalIssues !== 1 ? 's' : ''}`);
     
+    if (filesFailed > 0) {
+      console.log('');
+      console.log(`⚠ Failed to fix ${filesFailed} file${filesFailed !== 1 ? 's' : ''}`);
+    }
+    
+    if (filesWithErrors > 0) {
+      console.log('');
+      console.log(`⚠ Could not read ${filesWithErrors} file${filesWithErrors !== 1 ? 's' : ''}:`);
+      errorFiles.forEach(f => console.log(`  - ${f}`));
+    }
+    
     if (filesFixed > 0) {
       console.log('');
       console.log('✓ Files have been cleaned!');
-      process.exit(0);
+      // Exit with error if any fixes failed
+      process.exit(filesFailed > 0 || filesWithErrors > 0 ? 1 : 0);
     } else {
       console.log('');
       console.log('✓ No issues found!');
       process.exit(0);
     }
   } else {
+    if (filesWithErrors > 0) {
+      console.log(`⚠ Could not read ${filesWithErrors} file${filesWithErrors !== 1 ? 's' : ''}:`);
+      errorFiles.forEach(f => console.log(`  - ${f}`));
+      console.log('');
+    }
+    
     if (filesWithIssues > 0) {
       console.log(`Found ${totalIssues} hidden unicode character${totalIssues !== 1 ? 's' : ''} in ${filesWithIssues} file${filesWithIssues !== 1 ? 's' : ''}`);
       console.log('');
@@ -233,9 +266,17 @@ function main() {
       process.exit(1);
     } else {
       console.log('✓ No hidden unicode characters found!');
+      if (filesWithErrors > 0) {
+        console.log('');
+        console.log('⚠ Scan may be incomplete due to read errors');
+        process.exit(1);
+      }
       process.exit(0);
     }
   }
 }
 
-main();
+// Run main if executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}

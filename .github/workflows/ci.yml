@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check for hidden Unicode characters
+        run: npm run check:unicode
+
       - name: Run TypeScript type checking
         run: npm run typecheck
 

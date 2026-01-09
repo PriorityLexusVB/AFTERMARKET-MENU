@@ -42,7 +42,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     `}
       style={style}
     >
-      <div className={`${isCompact ? 'p-4 pb-2.5' : 'p-5 lg:p-6 pb-3'} flex items-start justify-between`}>
+      <div className={`${isCompact ? 'p-4 pb-3' : 'p-5 lg:p-6 pb-3'} flex items-start justify-between`}>
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
           <h3 className={`font-teko ${isCompact ? 'text-2xl' : 'text-3xl sm:text-4xl'} font-bold uppercase tracking-wider text-lux-textStrong`}>

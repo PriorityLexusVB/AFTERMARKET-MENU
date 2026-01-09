@@ -237,6 +237,35 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
     gap: 2rem;
   }
 
+  /* Aftermarket spacing standards */
+  .am-page-header {
+    @apply pt-6 pb-4 md:pt-8 md:pb-6;
+  }
+
+  .am-page-header-stack {
+    @apply space-y-3 md:space-y-4;
+  }
+
+  .am-page-tabs-row {
+    @apply mb-4 md:mb-5;
+  }
+
+  .am-grid-top {
+    @apply mt-4 md:mt-6;
+  }
+
+  .am-package-card {
+    @apply p-5 lg:p-6;
+  }
+
+  .am-package-title-block {
+    @apply mb-3;
+  }
+
+  .am-package-first-feature {
+    @apply pt-1;
+  }
+
   @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
     .packages-grid-ipad {
       grid-template-columns: 1fr;

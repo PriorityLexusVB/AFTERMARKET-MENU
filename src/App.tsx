@@ -440,19 +440,19 @@ const App: React.FC = () => {
   const disableAlaCarteDrag = enableIpadMenuLayout || guestMode;
 
   const renderMenuContent = () => {
-    const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-3' : 'space-y-6';
-    const heroTitleClass = enableIpadMenuLayout ? 'lux-title text-3xl' : 'lux-title text-4xl md:text-5xl';
-    const heroSubtitleClass = enableIpadMenuLayout ? 'lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3' : 'lux-subtitle mt-1 max-w-3xl mx-auto clamp-3';
+    const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-2.5' : 'space-y-4';
+    const heroTitleClass = enableIpadMenuLayout ? 'lux-title text-3xl' : 'lux-title text-3xl md:text-4xl';
+    const heroSubtitleClass = enableIpadMenuLayout ? 'lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3' : 'lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3';
     return (
       <div className={wrapperClass}>
-        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0 ${enableIpadMenuLayout ? 'space-y-1' : ''}`}>
+        <div className={`text-center ${enableIpadPackagesLayout ? '' : 'mb-4'} shrink-0 space-y-1`}>
           <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
           <p className={heroSubtitleClass}>
             Select one of our expertly curated packages, or build a custom package from our a la carte options.
           </p>
         </div>
 
-        <div className={`flex flex-col sm:flex-row justify-center items-center gap-3 ${enableIpadPackagesLayout ? '' : 'mb-6'} shrink-0`}>
+        <div className={`flex flex-col sm:flex-row justify-center items-center gap-3 ${enableIpadPackagesLayout ? '' : 'mb-4'} shrink-0`}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
            {currentPage === 'packages' && (

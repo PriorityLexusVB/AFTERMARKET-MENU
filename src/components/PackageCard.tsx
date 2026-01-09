@@ -42,7 +42,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
     `}
       style={style}
     >
-      <div className={`${isCompact ? 'p-4 pb-3' : 'p-6 lg:p-7 pb-4'} flex items-start justify-between`}>
+      <div className={`${isCompact ? 'p-4 pb-2.5' : 'p-5 lg:p-6 pb-3'} flex items-start justify-between`}>
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
           <h3 className={`font-teko ${isCompact ? 'text-2xl' : 'text-3xl sm:text-4xl'} font-bold uppercase tracking-wider text-lux-textStrong`}>
@@ -56,7 +56,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
 
       {/* Features section stretches with page scroll */}
       <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className={`${isCompact ? 'p-4 pt-1' : 'p-6 lg:p-7 pt-2'} space-y-3 flex-1 overflow-hidden`}>
+        <div className={`${isCompact ? 'p-4 pt-1' : 'p-5 lg:p-6 pt-1'} space-y-3 flex-1 overflow-hidden`}>
           {includedPackageFeatures.map((feature, index) => {
             let divider = null;
             // Add a divider before every feature except the first one
@@ -70,7 +70,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ packageInfo, allFeatur
             return (
               <div key={feature.id}>
                 {divider}
-                 <div className="text-center mt-3">
+                 <div className="text-center mt-2">
                      <button
                        onClick={() => onViewFeature(feature)}
                        className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"

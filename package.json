@@ -32,7 +32,9 @@
     "migrate:backfill-features-from-alacarte": "tsx scripts/migrate/backfill-features-from-alacarte.ts",
     "migrate:alacarte:publish-backfill": "tsx scripts/migrate/backfill-alacarte-isPublished.ts",
     "migrate:onehub:backfill-alacarte": "tsx scripts/migrate/backfill-onehub-alacarte.ts",
-    "seed:emulator": "tsx tools/seed-emulator.ts"
+    "seed:emulator": "tsx tools/seed-emulator.ts",
+    "check:unicode": "node scripts/check-hidden-unicode.mjs",
+    "fix:unicode": "node scripts/check-hidden-unicode.mjs --fix"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

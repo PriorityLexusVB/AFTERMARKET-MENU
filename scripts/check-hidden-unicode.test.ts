@@ -25,7 +25,7 @@ describe('check-hidden-unicode', () => {
 
     it('calculates line and column for multiline content', () => {
       const content = 'First line\nSecond line\nThird line';
-      const result = getLineCol(content, 15); // 'n' in Second (position 5)
+      const result = getLineCol(content, 15); // 'n' in "Second" (S=1, e=2, c=3, o=4, n=5)
       
       expect(result.line).toBe(2);
       expect(result.col).toBe(5);

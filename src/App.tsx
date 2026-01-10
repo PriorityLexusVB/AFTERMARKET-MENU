@@ -479,14 +479,11 @@ const App: React.FC = () => {
   }) => (
     <button
       onClick={() => setCurrentPage(page)}
-      className={`
-        w-full sm:w-auto px-6 py-3 rounded-xl text-lg font-teko tracking-wider transition-all duration-300 transform active:scale-98 border min-h-[48px]
-        ${
-          currentPage === page
-            ? "bg-lux-blue text-lux-textStrong border-lux-blue/70 shadow-luxury-lg"
-            : "bg-lux-bg2 text-lux-text border-lux-border/60 hover:border-lux-gold/60"
-        }
-      `}
+      className={`am-menu-tab-btn ${
+        currentPage === page
+          ? "bg-lux-blue text-lux-textStrong border-lux-blue/70 shadow-luxury-lg"
+          : "bg-lux-bg2 text-lux-text border-lux-border/60 hover:border-lux-gold/60"
+      }`}
     >
       {label}
     </button>
@@ -535,12 +532,12 @@ const App: React.FC = () => {
       ? "flex flex-col h-full min-h-0 gap-2.5"
       : "space-y-4";
     const heroTitleClass = enableIpadMenuLayout
-      ? "lux-title text-3xl"
+      ? "lux-title text-2xl"
       : "lux-title text-3xl md:text-4xl";
     const heroSubtitleClass = enableIpadMenuLayout
-      ? "lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3"
+      ? "lux-subtitle mt-0 text-sm max-w-2xl mx-auto clamp-3"
       : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
-    const tabsRowClass = `am-page-tabs-row flex flex-col sm:flex-row justify-center items-center gap-3 shrink-0 ${
+    const tabsRowClass = `am-page-tabs-row am-menu-tabs-row flex flex-col sm:flex-row justify-center items-center shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
     }`;
     const pageContent = (
@@ -640,7 +637,7 @@ const App: React.FC = () => {
           {currentPage === "packages" && (
             <button
               onClick={handleOpenCompareModal}
-              className="text-sm font-semibold text-blue-300 hover:text-white transition-colors bg-gray-700/50 px-3 py-1.5 rounded-md flex items-center gap-2"
+              className="am-menu-tab-btn am-menu-compare-btn flex items-center gap-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -31,11 +31,11 @@ export const SetupGuide: React.FC<SetupGuideProps> = ({ error }) => {
       </p>
 
       <div className="space-y-6">
-        <Step number="1" title="Create a .env file">
+        <Step number="1" title="Create a .env.local file">
           <p>
             In the root of the project, create a new file named{" "}
             <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">
-              .env
+              .env.local
             </code>
             . You can copy the template from the project's{" "}
             <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">
@@ -56,10 +56,11 @@ export const SetupGuide: React.FC<SetupGuideProps> = ({ error }) => {
             </h5>
             <p className="text-xs text-gray-400 mt-1">
               Paste your entire Firebase config object from your project
-              settings as the value for a single `FIREBASE_CONFIG` variable.
+              settings as the value for a single `VITE_FIREBASE_CONFIG`
+              variable.
             </p>
             <pre className="mt-2 text-xs bg-gray-900 p-3 rounded-md font-mono text-gray-300 whitespace-pre-wrap">
-              {`FIREBASE_CONFIG='{...}'`}
+              {`VITE_FIREBASE_CONFIG='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'`}
             </pre>
           </div>
 
@@ -98,7 +99,7 @@ VITE_FIREBASE_AUTH_DOMAIN=...`}
         <p>
           After creating the{" "}
           <code className="bg-gray-700 px-1 py-0.5 rounded text-yellow-300">
-            .env
+            .env.local
           </code>{" "}
           file, you must restart the development server.
         </p>

@@ -11,6 +11,7 @@ import { SelectionDrawer } from "./components/SelectionDrawer";
 import { AgreementView } from "./components/AgreementView";
 import { Login } from "./components/Login";
 import { AdminPanel } from "./components/AdminPanel";
+import { SetupGuide } from "./components/SetupGuide";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
@@ -270,10 +271,10 @@ const App: React.FC = () => {
   }, [user, isDemoMode, loadData]);
 
   useEffect(() => {
-    if (guestMode && isAdminView) {
+    if (guestMode && isAdminView && !isDemoMode) {
       setIsAdminView(false);
     }
-  }, [guestMode, isAdminView]);
+  }, [guestMode, isAdminView, isDemoMode]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined")
@@ -319,15 +320,9 @@ const App: React.FC = () => {
   }, [isDemoMode]);
 
   const handleToggleAdminView = useCallback(() => {
-    if (isDemoMode) {
-      alert(
-        "The Admin Panel is disabled in demo mode. Please configure a Firebase backend to use this feature."
-      );
-      return;
-    }
     setIsAdminView((prev) => {
       const newValue = !prev;
-      if (newValue) {
+      if (newValue && !isDemoMode) {
         trackAdminPanelAccess();
       }
       return newValue;
@@ -822,6 +817,7 @@ const App: React.FC = () => {
       <Header
         user={user}
         guestMode={guestMode}
+        isDemoMode={isDemoMode}
         onOpenSettings={handleOpenSettings}
         onLogout={handleLogout}
         onToggleAdminView={handleToggleAdminView}
@@ -829,9 +825,18 @@ const App: React.FC = () => {
         onPrint={handlePrint}
       />
 
-      {isAdminView && !isDemoMode && !guestMode ? (
+      {isAdminView && (isDemoMode || (!isDemoMode && !guestMode)) ? (
         <div className="h-[var(--app-height,100vh)] overflow-auto">
-          <AdminPanel onDataUpdate={loadData} />
+          {isDemoMode ? (
+            <div className="p-6 max-w-3xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl font-bold font-teko tracking-wider uppercase text-lux-textStrong mb-4">
+                Admin Setup
+              </h2>
+              <SetupGuide error={firebaseInitializationError} />
+            </div>
+          ) : (
+            <AdminPanel onDataUpdate={loadData} />
+          )}
         </div>
       ) : (
         <>

@@ -283,23 +283,23 @@ h6,
 
   /* iPad landscape: tighten header height without impacting desktop */
   .ipad-landscape-lock .am-page-header {
-    @apply pt-3 pb-2;
+    @apply pt-2 pb-2;
   }
 
   .ipad-landscape-lock .am-page-header-stack {
-    @apply space-y-1.5;
+    @apply space-y-1;
   }
 
   .ipad-landscape-lock .am-page-tabs-row {
-    @apply mb-2;
+    @apply mb-1;
   }
 
   .ipad-landscape-lock .am-grid-top {
-    @apply mt-2;
+    @apply mt-1;
   }
 
   .ipad-landscape-lock .am-menu-tab-btn {
-    @apply px-4 py-2 min-h-[40px];
+    @apply px-4 py-2 min-h-[44px];
   }
 
   .am-grid-top {

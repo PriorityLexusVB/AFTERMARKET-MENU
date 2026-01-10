@@ -532,7 +532,7 @@ const App: React.FC = () => {
       ? "flex flex-col h-full min-h-0 gap-2.5"
       : "space-y-4";
     const heroTitleClass = enableIpadMenuLayout
-      ? "lux-title text-2xl"
+      ? "lux-title text-xl leading-tight"
       : "lux-title text-3xl md:text-4xl";
     const heroSubtitleClass = enableIpadMenuLayout
       ? "lux-subtitle mt-0 text-sm max-w-2xl mx-auto clamp-3"

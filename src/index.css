@@ -287,13 +287,12 @@ h6,
   .am-package-header-compact {
     @apply p-4 pb-3;
   }
-
   .am-package-body {
-    @apply px-5 lg:px-6 pb-5 lg:pb-6 pt-1;
+    @apply p-5 lg:p-6 pt-1;
   }
 
   .am-package-body-compact {
-    @apply px-4 pb-4 pt-1;
+    @apply p-4 pt-1;
   }
 
   .am-package-footer {
@@ -302,6 +301,10 @@ h6,
 
   .am-package-footer-compact {
     @apply p-4;
+  }
+
+  .am-package-first-feature {
+    @apply pt-1;
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {

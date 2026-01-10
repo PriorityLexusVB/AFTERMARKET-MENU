@@ -430,7 +430,12 @@ const App: React.FC = () => {
       price += baseAddonPricesById[item.id] ?? item.price;
     });
     return price;
-  }, [selectedPackage, customPackageItems, basePackagePricesById, baseAddonPricesById]);
+  }, [
+    selectedPackage,
+    customPackageItems,
+    basePackagePricesById,
+    baseAddonPricesById,
+  ]);
 
   const baseCustomPackageSubtotal = useMemo(() => {
     let price = 0;

@@ -1,24 +1,29 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth';
-import { Header } from './components/Header';
-import { PackageSelector } from './components/PackageSelector';
-import { AlaCarteSelector } from './components/AlaCarteSelector';
-import { FeatureModal } from './components/FeatureModal';
-import { CustomPackageBuilder } from './components/CustomPackageBuilder';
-import { AddonSelector } from './components/AddonSelector';
-import { SettingsModal } from './components/SettingsModal';
-import { SelectionDrawer } from './components/SelectionDrawer';
-import { AgreementView } from './components/AgreementView';
-import { AIAssistant } from './components/AIAssistant';
-import { Login } from './components/Login';
-import { AdminPanel } from './components/AdminPanel';
-import { CompareModal } from './components/CompareModal';
-import { MAIN_PAGE_ADDON_IDS } from './constants';
-import { fetchAllData } from './data';
-import { auth, firebaseInitializationError } from './firebase';
-import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from './types';
-import { columnOrderValue, isCuratedOption } from './utils/alaCarte';
-import { sortPackagesForDisplay } from './utils/packageOrder';
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { User, onAuthStateChanged, signOut } from "firebase/auth";
+import { Header } from "./components/Header";
+import { PackageSelector } from "./components/PackageSelector";
+import { AlaCarteSelector } from "./components/AlaCarteSelector";
+import { FeatureModal } from "./components/FeatureModal";
+import { CustomPackageBuilder } from "./components/CustomPackageBuilder";
+import { AddonSelector } from "./components/AddonSelector";
+import { SettingsModal } from "./components/SettingsModal";
+import { SelectionDrawer } from "./components/SelectionDrawer";
+import { AgreementView } from "./components/AgreementView";
+import { AIAssistant } from "./components/AIAssistant";
+import { Login } from "./components/Login";
+import { AdminPanel } from "./components/AdminPanel";
+import { CompareModal } from "./components/CompareModal";
+import { MAIN_PAGE_ADDON_IDS } from "./constants";
+import { fetchAllData } from "./data";
+import { auth, firebaseInitializationError } from "./firebase";
+import type {
+  PackageTier,
+  AlaCarteOption,
+  ProductFeature,
+  PriceOverrides,
+} from "./types";
+import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
+import { sortPackagesForDisplay } from "./utils/packageOrder";
 import {
   initializeAnalytics,
   trackPackageSelect,
@@ -29,10 +34,10 @@ import {
   trackSettingsOpen,
   trackAdminPanelAccess,
   trackUserLogout,
-} from './analytics';
+} from "./analytics";
 
-type Page = 'packages' | 'alacarte';
-type View = 'menu' | 'agreement';
+type Page = "packages" | "alacarte";
+type View = "menu" | "agreement";
 
 interface CustomerInfo {
   name: string;
@@ -45,35 +50,47 @@ const App: React.FC = () => {
   // Data state
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [allFeatures, setAllFeatures] = useState<ProductFeature[]>([]);
-  const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<AlaCarteOption[]>([]);
+  const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<
+    AlaCarteOption[]
+  >([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // UI State
-  const [currentView, setCurrentView] = useState<View>('menu');
-  const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(null);
-  const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
-  const [viewingDetailItem, setViewingDetailItem] = useState<ProductFeature | AlaCarteOption | null>(null);
-  const [currentPage, setCurrentPage] = useState<Page>('packages');
+  const [currentView, setCurrentView] = useState<View>("menu");
+  const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(
+    null
+  );
+  const [customPackageItems, setCustomPackageItems] = useState<
+    AlaCarteOption[]
+  >([]);
+  const [viewingDetailItem, setViewingDetailItem] = useState<
+    ProductFeature | AlaCarteOption | null
+  >(null);
+  const [currentPage, setCurrentPage] = useState<Page>("packages");
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
-  const ipadLandscapeQuery = '(min-width: 1024px) and (max-width: 1367px) and (orientation: landscape)';
+  const ipadLandscapeQuery =
+    "(min-width: 1024px) and (max-width: 1367px) and (orientation: landscape)";
   const computeIsIpadLandscape = useCallback(() => {
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+    if (typeof window === "undefined" || typeof navigator === "undefined")
+      return false;
     const isIpadUA =
       /iPad/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (!isIpadUA) return false;
     return window.matchMedia(ipadLandscapeQuery).matches;
   }, [ipadLandscapeQuery]);
-  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => computeIsIpadLandscape());
+  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() =>
+    computeIsIpadLandscape()
+  );
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
-    name: '',
-    year: '',
-    make: '',
-    model: '',
+    name: "",
+    year: "",
+    make: "",
+    model: "",
   });
 
   // Auth State
@@ -92,25 +109,25 @@ const App: React.FC = () => {
       return;
     }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setIsAuthLoading(false);
+      setUser(currentUser);
+      setIsAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const mediaQuery = window.matchMedia(ipadLandscapeQuery);
     const updateMatches = () => setIsIpadLandscape(computeIsIpadLandscape());
-    mediaQuery.addEventListener('change', updateMatches);
+    mediaQuery.addEventListener("change", updateMatches);
     return () => {
-      mediaQuery.removeEventListener('change', updateMatches);
+      mediaQuery.removeEventListener("change", updateMatches);
     };
   }, [computeIsIpadLandscape, ipadLandscapeQuery]);
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const className = 'ipad-landscape-lock';
+    if (typeof document === "undefined") return;
+    const className = "ipad-landscape-lock";
     if (isIpadLandscape) {
       document.body.classList.add(className);
     } else {
@@ -120,19 +137,24 @@ const App: React.FC = () => {
   }, [isIpadLandscape]);
 
   useEffect(() => {
-    if (!isIpadLandscape || typeof document === 'undefined' || typeof window === 'undefined') return;
+    if (
+      !isIpadLandscape ||
+      typeof document === "undefined" ||
+      typeof window === "undefined"
+    )
+      return;
     const root = document.documentElement;
-    let header: Element | null = document.querySelector('header');
+    let header: Element | null = document.querySelector("header");
 
     const updateHeaderHeight = () => {
       if (!header) {
-        header = document.querySelector('header');
+        header = document.querySelector("header");
       }
       if (header) {
         const height = (header as HTMLElement).getBoundingClientRect().height;
-        root.style.setProperty('--ipad-header-h', `${height}px`);
+        root.style.setProperty("--ipad-header-h", `${height}px`);
       }
-      root.style.setProperty('--ipad-bottom-bar-h', '84px');
+      root.style.setProperty("--ipad-bottom-bar-h", "84px");
     };
 
     updateHeaderHeight();
@@ -140,7 +162,7 @@ const App: React.FC = () => {
     let resizeObserver: ResizeObserver | null = null;
     let handleResize: (() => void) | null = null;
 
-    if (typeof ResizeObserver !== 'undefined' && header) {
+    if (typeof ResizeObserver !== "undefined" && header) {
       resizeObserver = new ResizeObserver(() => {
         updateHeaderHeight();
       });
@@ -149,7 +171,7 @@ const App: React.FC = () => {
       handleResize = () => {
         updateHeaderHeight();
       };
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
     }
 
     return () => {
@@ -158,13 +180,13 @@ const App: React.FC = () => {
         resizeObserver.disconnect();
       }
       if (handleResize) {
-        window.removeEventListener('resize', handleResize);
+        window.removeEventListener("resize", handleResize);
       }
-      root.style.removeProperty('--ipad-header-h');
-      root.style.removeProperty('--ipad-bottom-bar-h');
+      root.style.removeProperty("--ipad-header-h");
+      root.style.removeProperty("--ipad-bottom-bar-h");
     };
   }, [isIpadLandscape]);
-  
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     const { packages, features, alaCarteOptions } = await fetchAllData();
@@ -188,30 +210,33 @@ const App: React.FC = () => {
   }, [guestMode, isAdminView]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (typeof window === "undefined" || typeof document === "undefined")
+      return;
     const root = document.documentElement;
 
     const setViewportVars = () => {
-      const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
-      root.style.setProperty('--app-vh', `${height}px`);
-      root.style.setProperty('--app-height', `${height}px`);
+      const height = Math.round(
+        window.visualViewport?.height ?? window.innerHeight
+      );
+      root.style.setProperty("--app-vh", `${height}px`);
+      root.style.setProperty("--app-height", `${height}px`);
     };
 
     setViewportVars();
 
     const onResize = () => setViewportVars();
 
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    window.visualViewport?.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
 
     return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-      window.visualViewport?.removeEventListener('resize', onResize);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
     };
   }, []);
-  
+
   const handleLogout = useCallback(async () => {
     if (isDemoMode) {
       alert("Logout is disabled in demo mode.");
@@ -226,13 +251,15 @@ const App: React.FC = () => {
       console.error("Logout failed:", error);
     }
   }, [isDemoMode]);
-  
+
   const handleToggleAdminView = useCallback(() => {
     if (isDemoMode) {
-      alert("The Admin Panel is disabled in demo mode. Please configure a Firebase backend to use this feature.");
+      alert(
+        "The Admin Panel is disabled in demo mode. Please configure a Firebase backend to use this feature."
+      );
       return;
     }
-    setIsAdminView(prev => {
+    setIsAdminView((prev) => {
       const newValue = !prev;
       if (newValue) {
         trackAdminPanelAccess();
@@ -246,15 +273,23 @@ const App: React.FC = () => {
     setIsSettingsOpen(true);
   }, []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
-  const handleSaveSettings = useCallback((data: { customerInfo: CustomerInfo; priceOverrides: PriceOverrides }) => {
-    setCustomerInfo(data.customerInfo);
-    setPriceOverrides(data.priceOverrides);
-    setIsSettingsOpen(false);
-  }, []);
+  const handleSaveSettings = useCallback(
+    (data: { customerInfo: CustomerInfo; priceOverrides: PriceOverrides }) => {
+      setCustomerInfo(data.customerInfo);
+      setPriceOverrides(data.priceOverrides);
+      setIsSettingsOpen(false);
+    },
+    []
+  );
 
   // Price calculations and display data (must be before handleShowAgreement)
-  const applyOverrides = <T extends { id: string; price: number; cost: number }>(items: T[], overrides: PriceOverrides): T[] => {
-    return items.map(item => {
+  const applyOverrides = <
+    T extends { id: string; price: number; cost: number }
+  >(
+    items: T[],
+    overrides: PriceOverrides
+  ): T[] => {
+    return items.map((item) => {
       const override = overrides[item.id];
       if (!override) return item;
       return {
@@ -270,7 +305,10 @@ const App: React.FC = () => {
     const sorted = sortPackagesForDisplay(packages);
     return applyOverrides(sorted, priceOverrides);
   }, [packages, priceOverrides]);
-  const displayAllAlaCarteOptions = useMemo(() => applyOverrides(allAlaCarteOptions, priceOverrides), [allAlaCarteOptions, priceOverrides]);
+  const displayAllAlaCarteOptions = useMemo(
+    () => applyOverrides(allAlaCarteOptions, priceOverrides),
+    [allAlaCarteOptions, priceOverrides]
+  );
   const curatedSelectedItems = useMemo(
     () => customPackageItems.filter(isCuratedOption),
     [customPackageItems]
@@ -285,13 +323,15 @@ const App: React.FC = () => {
     let price = 0;
     let cost = 0;
     if (selectedPackage) {
-      const currentPackage = displayPackages.find(p => p.id === selectedPackage.id);
+      const currentPackage = displayPackages.find(
+        (p) => p.id === selectedPackage.id
+      );
       if (currentPackage) {
         price += currentPackage.price;
         cost += currentPackage.cost;
       }
     }
-    displayCustomPackageItems.forEach(item => {
+    displayCustomPackageItems.forEach((item) => {
       price += item.price;
       cost += item.cost;
     });
@@ -302,7 +342,8 @@ const App: React.FC = () => {
     return [...displayAllAlaCarteOptions]
       .filter(isCuratedOption)
       .sort((a, b) => {
-        const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
+        const columnDiff =
+          columnOrderValue(a.column) - columnOrderValue(b.column);
         if (columnDiff !== 0) return columnDiff;
         const posA = a.position ?? Number.MAX_SAFE_INTEGER;
         const posB = b.position ?? Number.MAX_SAFE_INTEGER;
@@ -312,7 +353,7 @@ const App: React.FC = () => {
 
   const mainPageAddons = useMemo(() => {
     const byColumn = curatedAlaCarteOptions
-      .filter(option => option.column === 4)
+      .filter((option) => option.column === 4)
       .sort(
         (a, b) =>
           (a.position ?? Number.MAX_SAFE_INTEGER) -
@@ -321,16 +362,26 @@ const App: React.FC = () => {
 
     if (byColumn.length > 0) return byColumn;
 
-    return curatedAlaCarteOptions.filter(option => MAIN_PAGE_ADDON_IDS.includes(option.id));
+    return curatedAlaCarteOptions.filter((option) =>
+      MAIN_PAGE_ADDON_IDS.includes(option.id)
+    );
   }, [curatedAlaCarteOptions]);
 
   const availableAlaCarteItems = useMemo(() => {
-    return curatedAlaCarteOptions.filter(option => !curatedSelectedItems.some(item => item.id === option.id));
+    return curatedAlaCarteOptions.filter(
+      (option) => !curatedSelectedItems.some((item) => item.id === option.id)
+    );
   }, [curatedSelectedItems, curatedAlaCarteOptions]);
 
   const handleShowAgreement = useCallback(() => {
     // Track quote finalization
-    const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model].filter(Boolean).join(' ');
+    const vehicleString = [
+      customerInfo.year,
+      customerInfo.make,
+      customerInfo.model,
+    ]
+      .filter(Boolean)
+      .join(" ");
     trackQuoteFinalize({
       selectedPackage,
       customItems: customPackageItems,
@@ -338,12 +389,12 @@ const App: React.FC = () => {
       customerName: customerInfo.name,
       vehicleInfo: vehicleString,
     });
-    setCurrentView('agreement');
+    setCurrentView("agreement");
   }, [selectedPackage, customPackageItems, totalPrice, customerInfo]);
-  const handleShowMenu = useCallback(() => setCurrentView('menu'), []);
+  const handleShowMenu = useCallback(() => setCurrentView("menu"), []);
 
   const handleSelectPackage = useCallback((pkg: PackageTier) => {
-    setSelectedPackage(prev => {
+    setSelectedPackage((prev) => {
       const isSelecting = prev?.id !== pkg.id;
       if (isSelecting) {
         trackPackageSelect(pkg);
@@ -351,21 +402,30 @@ const App: React.FC = () => {
       return prev?.id === pkg.id ? null : pkg;
     });
   }, []);
-  
-  const handleOpenCompareModal = useCallback(() => setIsCompareModalOpen(true), []);
-  const handleCloseCompareModal = useCallback(() => setIsCompareModalOpen(false), []);
 
-  const handleSelectPackageFromCompare = useCallback((pkg: PackageTier) => {
-    handleSelectPackage(pkg);
-    handleCloseCompareModal();
-  }, [handleSelectPackage, handleCloseCompareModal]);
+  const handleOpenCompareModal = useCallback(
+    () => setIsCompareModalOpen(true),
+    []
+  );
+  const handleCloseCompareModal = useCallback(
+    () => setIsCompareModalOpen(false),
+    []
+  );
+
+  const handleSelectPackageFromCompare = useCallback(
+    (pkg: PackageTier) => {
+      handleSelectPackage(pkg);
+      handleCloseCompareModal();
+    },
+    [handleSelectPackage, handleCloseCompareModal]
+  );
 
   const handleToggleAlaCarteItem = useCallback((item: AlaCarteOption) => {
-    setCustomPackageItems(prev => {
-      const isSelected = prev.some(i => i.id === item.id);
+    setCustomPackageItems((prev) => {
+      const isSelected = prev.some((i) => i.id === item.id);
       if (isSelected) {
         trackAlaCarteRemove(item);
-        return prev.filter(i => i.id !== item.id);
+        return prev.filter((i) => i.id !== item.id);
       } else {
         trackAlaCarteAdd(item);
         return [...prev, item];
@@ -374,8 +434,8 @@ const App: React.FC = () => {
   }, []);
 
   const handleDropAlaCarte = useCallback((item: AlaCarteOption) => {
-    setCustomPackageItems(prev => {
-      if (prev.find(i => i.id === item.id)) {
+    setCustomPackageItems((prev) => {
+      if (prev.find((i) => i.id === item.id)) {
         return prev;
       }
       trackAlaCarteAdd(item);
@@ -384,21 +444,26 @@ const App: React.FC = () => {
   }, []);
 
   const handleRemoveAlaCarte = useCallback((itemId: string) => {
-    setCustomPackageItems(prev => {
-      const item = prev.find(i => i.id === itemId);
+    setCustomPackageItems((prev) => {
+      const item = prev.find((i) => i.id === itemId);
       if (item) {
         trackAlaCarteRemove(item);
       }
-      return prev.filter(i => i.id !== itemId);
+      return prev.filter((i) => i.id !== itemId);
     });
   }, []);
 
-  const handleViewDetail = useCallback((item: ProductFeature | AlaCarteOption) => {
-    // Determine if it's a package feature or a la carte option
-    const isAlaCarteOption = allAlaCarteOptions.some(opt => opt.id === item.id);
-    trackFeatureView(item.name, isAlaCarteOption ? 'alacarte' : 'package');
-    setViewingDetailItem(item);
-  }, [allAlaCarteOptions]);
+  const handleViewDetail = useCallback(
+    (item: ProductFeature | AlaCarteOption) => {
+      // Determine if it's a package feature or a la carte option
+      const isAlaCarteOption = allAlaCarteOptions.some(
+        (opt) => opt.id === item.id
+      );
+      trackFeatureView(item.name, isAlaCarteOption ? "alacarte" : "package");
+      setViewingDetailItem(item);
+    },
+    [allAlaCarteOptions]
+  );
 
   const handleCloseModal = useCallback(() => {
     setViewingDetailItem(null);
@@ -408,49 +473,83 @@ const App: React.FC = () => {
     window.print();
   }, []);
 
-  const NavButton: React.FC<{page: Page, label: string}> = ({ page, label }) => (
+  const NavButton: React.FC<{ page: Page; label: string }> = ({
+    page,
+    label,
+  }) => (
     <button
       onClick={() => setCurrentPage(page)}
       className={`
         w-full sm:w-auto px-6 py-3 rounded-xl text-lg font-teko tracking-wider transition-all duration-300 transform active:scale-98 border min-h-[48px]
-        ${currentPage === page 
-          ? 'bg-lux-blue text-lux-textStrong border-lux-blue/70 shadow-luxury-lg' 
-          : 'bg-lux-bg2 text-lux-text border-lux-border/60 hover:border-lux-gold/60'}
+        ${
+          currentPage === page
+            ? "bg-lux-blue text-lux-textStrong border-lux-blue/70 shadow-luxury-lg"
+            : "bg-lux-bg2 text-lux-text border-lux-border/60 hover:border-lux-gold/60"
+        }
       `}
     >
       {label}
     </button>
   );
-  
+
   const LoadingSpinner: React.FC = () => (
     <div className="flex-grow flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <svg className="animate-spin h-12 w-12 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <svg
+          className="animate-spin h-12 w-12 text-blue-500"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
         </svg>
-        <p className="text-xl font-teko tracking-wider text-gray-300">Loading Protection Plans...</p>
+        <p className="text-xl font-teko tracking-wider text-gray-300">
+          Loading Protection Plans...
+        </p>
       </div>
     </div>
   );
 
-  const enableIpadMenuLayout = isIpadLandscape && currentView === 'menu';
-  const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === 'packages';
-  const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === 'alacarte';
+  const enableIpadMenuLayout = isIpadLandscape && currentView === "menu";
+  const enableIpadPackagesLayout =
+    enableIpadMenuLayout && currentPage === "packages";
+  const enableIpadAlaCarteLayout =
+    enableIpadMenuLayout && currentPage === "alacarte";
   const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
 
   const renderMenuContent = () => {
-    const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-2.5' : 'space-y-4';
-    const heroTitleClass = enableIpadMenuLayout ? 'lux-title text-3xl' : 'lux-title text-3xl md:text-4xl';
-    const heroSubtitleClass = enableIpadMenuLayout ? 'lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3' : 'lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3';
-    const tabsRowClass = `am-page-tabs-row flex flex-col sm:flex-row justify-center items-center gap-3 shrink-0 ${enableIpadPackagesLayout ? '' : ''}`;
+    const wrapperClass = enableIpadMenuLayout
+      ? "flex flex-col h-full min-h-0 gap-2.5"
+      : "space-y-4";
+    const heroTitleClass = enableIpadMenuLayout
+      ? "lux-title text-3xl"
+      : "lux-title text-3xl md:text-4xl";
+    const heroSubtitleClass = enableIpadMenuLayout
+      ? "lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3"
+      : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
+    const tabsRowClass = `am-page-tabs-row flex flex-col sm:flex-row justify-center items-center gap-3 shrink-0 ${
+      enableIpadPackagesLayout ? "" : ""
+    }`;
     return (
       <div className={wrapperClass}>
         <div className="am-page-header shrink-0">
           <div className="am-page-header-stack text-center">
             <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
             <p className={heroSubtitleClass}>
-              Select one of our expertly curated packages, or build a custom package from our a la carte options.
+              Select one of our expertly curated packages, or build a custom
+              package from our a la carte options.
             </p>
           </div>
         </div>
@@ -458,19 +557,30 @@ const App: React.FC = () => {
         <div className={tabsRowClass}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
-           {currentPage === 'packages' && (
+          {currentPage === "packages" && (
             <button
               onClick={handleOpenCompareModal}
               className="text-sm font-semibold text-blue-300 hover:text-white transition-colors bg-gray-700/50 px-3 py-1.5 rounded-md flex items-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+                />
               </svg>
               Compare Packages
             </button>
           )}
         </div>
-        {currentPage === 'packages' && (
+        {currentPage === "packages" && (
           <div className="am-grid-top flex-1 min-h-0">
             <PackageSelector
               packages={displayPackages}
@@ -487,28 +597,52 @@ const App: React.FC = () => {
                   className="h-full min-h-0"
                 />
               }
-              gridClassName={isIpadLandscape ? 'items-start h-full' : 'items-stretch'}
+              gridClassName={
+                isIpadLandscape ? "items-start h-full" : "items-stretch"
+              }
               isIpadLandscape={isIpadLandscape}
             />
           </div>
         )}
 
-        {currentPage === 'alacarte' && (
-            <div className={enableIpadAlaCarteLayout ? 'flex flex-1 min-h-0 gap-6 overflow-hidden' : 'flex flex-col xl:flex-row gap-12'}>
-             <div className={enableIpadAlaCarteLayout ? 'flex-1 min-h-0 overflow-hidden' : 'xl:w-3/5'}>
-                <h3 className="lux-title mb-4">Available Options</h3>
-                <div className={enableIpadAlaCarteLayout ? 'h-full overflow-y-auto pr-1' : ''}>
-                 <AlaCarteSelector
+        {currentPage === "alacarte" && (
+          <div
+            className={
+              enableIpadAlaCarteLayout
+                ? "flex flex-1 min-h-0 gap-6 overflow-hidden"
+                : "flex flex-col xl:flex-row gap-12"
+            }
+          >
+            <div
+              className={
+                enableIpadAlaCarteLayout
+                  ? "flex-1 min-h-0 overflow-hidden"
+                  : "xl:w-3/5"
+              }
+            >
+              <h3 className="lux-title mb-4">Available Options</h3>
+              <div
+                className={
+                  enableIpadAlaCarteLayout ? "h-full overflow-y-auto pr-1" : ""
+                }
+              >
+                <AlaCarteSelector
                   items={availableAlaCarteItems}
                   onViewItem={handleViewDetail}
                   disableDrag={disableAlaCarteDrag}
                   onToggleItem={handleToggleAlaCarteItem}
-                  selectedIds={customPackageItems.map(item => item.id)}
+                  selectedIds={customPackageItems.map((item) => item.id)}
                 />
-               </div>
-             </div>
-             <div className={enableIpadAlaCarteLayout ? 'w-[40%] min-w-[320px] flex flex-col min-h-0' : 'xl:w-2/5 flex flex-col min-h-0'}>
-                <h3 className="lux-title mb-4">Your Custom Package</h3>
+              </div>
+            </div>
+            <div
+              className={
+                enableIpadAlaCarteLayout
+                  ? "w-[40%] min-w-[320px] flex flex-col min-h-0"
+                  : "xl:w-2/5 flex flex-col min-h-0"
+              }
+            >
+              <h3 className="lux-title mb-4">Your Custom Package</h3>
               <div className="flex-1 min-h-0">
                 <CustomPackageBuilder
                   items={displayCustomPackageItems}
@@ -522,24 +656,27 @@ const App: React.FC = () => {
         )}
       </div>
     );
-  }
+  };
 
-  const isMenuView = currentView === 'menu';
-  const mainStyle = enableIpadMenuLayout && isMenuView
-    ? {
-        height: 'calc(var(--app-height, 100vh) - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 84px))',
-        overflow: 'hidden',
-      }
-    : { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)' };
+  const isMenuView = currentView === "menu";
+  const mainLayoutClass =
+    enableIpadMenuLayout && isMenuView
+      ? "am-main-ipad-menu"
+      : "am-main-default";
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
   if (!user && !isDemoMode) {
-    return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
+    return (
+      <Login
+        isAuthLoading={isAuthLoading}
+        firebaseError={firebaseInitializationError}
+      />
+    );
   }
 
   return (
-    <div className="lux-app antialiased flex flex-col" style={{ minHeight: 'var(--app-height, 100vh)' }}>
+    <div className="lux-app am-app-min-h antialiased flex flex-col">
       <Header
         user={user}
         guestMode={guestMode}
@@ -549,41 +686,60 @@ const App: React.FC = () => {
         isAdminView={isAdminView}
         onPrint={handlePrint}
       />
-      
+
       {isAdminView && !isDemoMode && !guestMode ? (
         <AdminPanel onDataUpdate={loadData} />
       ) : (
-          <>
+        <>
           <main
-            className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col min-h-0"
-            style={mainStyle}
+            className={`container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col min-h-0 ${mainLayoutClass}`}
           >
             {isLoading ? (
               <LoadingSpinner />
-            ) : currentView === 'agreement' ? (
+            ) : currentView === "agreement" ? (
               <AgreementView
                 onBack={handleShowMenu}
-                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
+                selectedPackage={
+                  selectedPackage
+                    ? displayPackages.find(
+                        (p) => p.id === selectedPackage.id
+                      ) || null
+                    : null
+                }
                 customPackageItems={displayCustomPackageItems}
                 totalPrice={totalPrice}
                 totalCost={totalCost}
                 customerInfo={customerInfo}
               />
             ) : (
-              <div className={`lux-no-select ${isIpadLandscape ? 'flex-1 flex flex-col min-h-0' : 'space-y-4'}`}>
+              <div
+                className={`lux-no-select ${
+                  isIpadLandscape ? "flex-1 flex flex-col min-h-0" : "space-y-4"
+                }`}
+              >
                 {renderMenuContent()}
               </div>
             )}
           </main>
-          {currentView === 'menu' && !isLoading && (
+          {currentView === "menu" && !isLoading && (
             <>
               <SelectionDrawer
-                selectedPackage={selectedPackage ? displayPackages.find(p => p.id === selectedPackage.id) || null : null}
+                selectedPackage={
+                  selectedPackage
+                    ? displayPackages.find(
+                        (p) => p.id === selectedPackage.id
+                      ) || null
+                    : null
+                }
                 customItems={displayCustomPackageItems}
                 totalPrice={totalPrice}
                 onRemoveItem={handleRemoveAlaCarte}
                 onPrint={handlePrint}
-                onDeselectPackage={selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined}
+                onDeselectPackage={
+                  selectedPackage
+                    ? () => handleSelectPackage(selectedPackage)
+                    : undefined
+                }
                 onShowAgreement={handleShowAgreement}
                 variant="bar"
               />
@@ -596,7 +752,9 @@ const App: React.FC = () => {
         </>
       )}
 
-      {viewingDetailItem && <FeatureModal feature={viewingDetailItem} onClose={handleCloseModal} />}
+      {viewingDetailItem && (
+        <FeatureModal feature={viewingDetailItem} onClose={handleCloseModal} />
+      )}
       <CompareModal
         isOpen={isCompareModalOpen}
         onClose={handleCloseCompareModal}
@@ -604,7 +762,7 @@ const App: React.FC = () => {
         allFeatures={allFeatures}
         onSelectPackage={handleSelectPackageFromCompare}
       />
-      <SettingsModal 
+      <SettingsModal
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}

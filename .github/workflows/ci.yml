@@ -71,16 +71,37 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Only enable Firebase-backed mode when secrets are actually present.
           # Fork PRs do not receive secrets; exporting empty VITE_* vars would fail prebuild validation.
-          if [ -n "${FIREBASE_API_KEY:-}" ] && [ -n "${TEST_FIRESTORE_PROJECT_ID:-}" ] && [ -n "${FIREBASE_AUTH_DOMAIN:-}" ]; then
-            echo "Firebase secrets detected; exporting VITE_FIREBASE_* for E2E build."
+          # Export only non-empty secrets to avoid "empty required env var" failures.
+          has_firebase_secrets=false
+
+          if [ -n "${FIREBASE_API_KEY:-}" ]; then
             export VITE_FIREBASE_API_KEY="$FIREBASE_API_KEY"
+            has_firebase_secrets=true
+          fi
+          if [ -n "${FIREBASE_AUTH_DOMAIN:-}" ]; then
             export VITE_FIREBASE_AUTH_DOMAIN="$FIREBASE_AUTH_DOMAIN"
+            has_firebase_secrets=true
+          fi
+          if [ -n "${TEST_FIRESTORE_PROJECT_ID:-}" ]; then
             export VITE_FIREBASE_PROJECT_ID="$TEST_FIRESTORE_PROJECT_ID"
+            has_firebase_secrets=true
+          fi
+          if [ -n "${FIREBASE_STORAGE_BUCKET:-}" ]; then
             export VITE_FIREBASE_STORAGE_BUCKET="$FIREBASE_STORAGE_BUCKET"
+            has_firebase_secrets=true
+          fi
+          if [ -n "${FIREBASE_MESSAGING_SENDER_ID:-}" ]; then
             export VITE_FIREBASE_MESSAGING_SENDER_ID="$FIREBASE_MESSAGING_SENDER_ID"
+            has_firebase_secrets=true
+          fi
+          if [ -n "${FIREBASE_APP_ID:-}" ]; then
             export VITE_FIREBASE_APP_ID="$FIREBASE_APP_ID"
+            has_firebase_secrets=true
+          fi
+
+          if [ "$has_firebase_secrets" = true ]; then
+            echo "Firebase secrets detected; running E2E with VITE_FIREBASE_* exported (only non-empty values)."
           else
             echo "Firebase secrets not available; running E2E in demo/mock mode."
           fi

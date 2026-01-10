@@ -280,6 +280,29 @@ h6,
     @apply mb-3;
   }
 
+  .am-package-header {
+    @apply p-5 lg:p-6 pb-3;
+  }
+
+  .am-package-header-compact {
+    @apply p-4 pb-3;
+  }
+  .am-package-body {
+    @apply p-5 lg:p-6 pt-1;
+  }
+
+  .am-package-body-compact {
+    @apply p-4 pt-1;
+  }
+
+  .am-package-footer {
+    @apply p-5 lg:p-6;
+  }
+
+  .am-package-footer-compact {
+    @apply p-4;
+  }
+
   .am-package-first-feature {
     @apply pt-1;
   }

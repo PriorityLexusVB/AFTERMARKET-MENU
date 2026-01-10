@@ -435,13 +435,15 @@ const App: React.FC = () => {
   );
 
   const enableIpadMenuLayout = isIpadLandscape && currentView === 'menu';
+  const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === 'packages';
   const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === 'alacarte';
-  const disableAlaCarteDrag = enableIpadMenuLayout || guestMode;
+  const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
 
   const renderMenuContent = () => {
     const wrapperClass = enableIpadMenuLayout ? 'flex flex-col h-full min-h-0 gap-2.5' : 'space-y-4';
     const heroTitleClass = enableIpadMenuLayout ? 'lux-title text-3xl' : 'lux-title text-3xl md:text-4xl';
     const heroSubtitleClass = enableIpadMenuLayout ? 'lux-subtitle mt-0.5 text-base max-w-2xl mx-auto clamp-3' : 'lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3';
+    const tabsRowClass = `am-page-tabs-row flex flex-col sm:flex-row justify-center items-center gap-3 shrink-0 ${enableIpadPackagesLayout ? '' : ''}`;
     return (
       <div className={wrapperClass}>
         <div className="am-page-header shrink-0">
@@ -453,7 +455,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className={`am-page-tabs-row flex flex-col sm:flex-row justify-center items-center gap-3 shrink-0`}>
+        <div className={tabsRowClass}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
            {currentPage === 'packages' && (

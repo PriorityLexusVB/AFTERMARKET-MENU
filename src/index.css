@@ -255,7 +255,7 @@ h1, h2, h3, h4, h5, h6, .font-teko, .font-display {
   }
 
   .am-package-card {
-    @apply p-5 lg:p-6;
+    @apply px-5 lg:px-6;
   }
 
   .am-package-title-block {

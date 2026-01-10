@@ -112,3 +112,18 @@ After enabling the settings above:
 ### Secret scanning not working
 - May require GitHub Advanced Security for private repositories
 - Ensure "Secret scanning" is enabled in settings
+
+## CI secrets (Playwright E2E)
+
+The CI workflow [.github/workflows/ci.yml](../.github/workflows/ci.yml) can run Playwright E2E tests using Firebase credentials when available.
+
+Add these as GitHub repository secrets (Settings → Secrets and variables → Actions) if you want E2E to run against a real Firebase config:
+
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `TEST_FIRESTORE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_APP_ID`
+
+If these secrets are not set (or the workflow is running from a fork PR), the workflow will still run and will execute E2E in demo/mock mode.

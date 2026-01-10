@@ -7,6 +7,8 @@ interface CustomPackageBuilderProps {
   onRemoveItem: (itemId: string) => void;
   enableDrop?: boolean;
   isCompact?: boolean;
+  basePricesById?: Record<string, number>;
+  baseSubtotal?: number;
 }
 
 export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
@@ -15,6 +17,8 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
   onRemoveItem,
   enableDrop = true,
   isCompact = false,
+  basePricesById,
+  baseSubtotal,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(
@@ -51,6 +55,8 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
   };
 
   const subtotal = items.reduce((acc, item) => acc + item.price, 0);
+  const showDiscountSubtotal =
+    typeof baseSubtotal === "number" && baseSubtotal > subtotal;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -167,9 +173,21 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
               >
                 <div>
                   <p className="font-semibold text-lux-text">{item.name}</p>
-                  <p className="text-sm text-lux-textMuted">
-                    {formatPrice(item.price)}
-                  </p>
+                  {typeof basePricesById?.[item.id] === "number" &&
+                  basePricesById[item.id] > item.price ? (
+                    <div className="text-sm">
+                      <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                        {formatPrice(basePricesById[item.id])}
+                      </div>
+                      <div className="text-lux-textStrong">
+                        {formatPrice(item.price)}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-lux-textMuted">
+                      {formatPrice(item.price)}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => onRemoveItem(item.id)}
@@ -203,9 +221,16 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
           >
             <div className="flex justify-between items-center text-lg">
               <p className="font-semibold text-gray-300">Subtotal:</p>
-              <p className="font-bold font-teko text-3xl text-white">
-                {formatPrice(subtotal)}
-              </p>
+              <div className="text-right">
+                {showDiscountSubtotal && (
+                  <p className="text-sm text-gray-300 line-through decoration-2 decoration-gray-400/60">
+                    {formatPrice(baseSubtotal)}
+                  </p>
+                )}
+                <p className="font-bold font-teko text-3xl text-white">
+                  {formatPrice(subtotal)}
+                </p>
+              </div>
             </div>
           </div>
         </div>

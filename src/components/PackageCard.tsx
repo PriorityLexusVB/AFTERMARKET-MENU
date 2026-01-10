@@ -7,6 +7,7 @@ interface PackageCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
+  basePrice?: number;
   className?: string;
   isCompact?: boolean;
 }
@@ -31,6 +32,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   isSelected,
   onSelect,
   onViewFeature,
+  basePrice,
   className = "",
   isCompact = false,
 }) => {
@@ -44,6 +46,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   const isRecommended =
     packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
+
+  const isDiscounted =
+    typeof basePrice === "number" && basePrice > packageInfo.price;
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
@@ -168,6 +173,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
               Investment
             </p>
+            {isDiscounted && (
+              <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                {formatPrice(basePrice)}
+              </p>
+            )}
             <p
               className={`${
                 isCompact ? "text-2xl" : "text-4xl sm:text-5xl"

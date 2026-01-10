@@ -10,6 +10,7 @@ interface AlaCarteSelectorProps {
   onToggleItem?: (item: AlaCarteOption) => void;
   selectedIds?: string[];
   isCompact?: boolean;
+  basePricesById?: Record<string, number>;
 }
 
 export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
@@ -19,6 +20,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
   onToggleItem,
   selectedIds = [],
   isCompact = false,
+  basePricesById,
 }) => {
   const [compactPage, setCompactPage] = React.useState(1);
   const curatedItems = items.filter(isCuratedOption);
@@ -135,6 +137,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
             <AlaCarteItem
               key={item.id}
               item={item}
+              basePrice={basePricesById?.[item.id]}
               onViewItem={() => onViewItem(item)}
               onDragStart={(e) => handleDragStart(e, item)}
               disableDrag={disableDrag}
@@ -160,6 +163,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
               <AlaCarteItem
                 key={item.id}
                 item={item}
+                basePrice={basePricesById?.[item.id]}
                 onViewItem={() => onViewItem(item)}
                 onDragStart={(e) => handleDragStart(e, item)}
                 disableDrag={disableDrag}
@@ -179,6 +183,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
               <AlaCarteItem
                 key={item.id}
                 item={item}
+                basePrice={basePricesById?.[item.id]}
                 onViewItem={() => onViewItem(item)}
                 onDragStart={(e) => handleDragStart(e, item)}
                 disableDrag={disableDrag}

@@ -17,6 +17,9 @@ interface AgreementViewProps {
   totalPrice: number;
   totalCost: number;
   customerInfo: CustomerInfo;
+  baseTotalPrice?: number;
+  basePackagePricesById?: Record<string, number>;
+  baseAddonPricesById?: Record<string, number>;
 }
 
 const LexusLogo: React.FC<{isPrint?: boolean}> = ({ isPrint }) => (
@@ -27,7 +30,17 @@ const LexusLogo: React.FC<{isPrint?: boolean}> = ({ isPrint }) => (
 );
 
 
-export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPackage, customPackageItems, totalPrice, totalCost, customerInfo }) => {
+export const AgreementView: React.FC<AgreementViewProps> = ({
+  onBack,
+  selectedPackage,
+  customPackageItems,
+  totalPrice,
+  totalCost,
+  customerInfo,
+  baseTotalPrice,
+  basePackagePricesById,
+  baseAddonPricesById,
+}) => {
   const [isManagerView, setIsManagerView] = useState(false);
   
   const handlePrint = () => {
@@ -51,8 +64,18 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
   const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model].filter(Boolean).join(' ');
   const todayDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const grossProfit = totalPrice - totalCost;
+  const showDiscountTotal =
+    typeof baseTotalPrice === 'number' && baseTotalPrice > totalPrice;
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+
+  const getBaseRetailPrice = (itemId: string, currentRetail: number) => {
+    const baseFromPackages = basePackagePricesById?.[itemId];
+    if (typeof baseFromPackages === 'number') return baseFromPackages;
+    const baseFromAddons = baseAddonPricesById?.[itemId];
+    if (typeof baseFromAddons === 'number') return baseFromAddons;
+    return currentRetail;
+  };
 
   const renderScreenTable = () => (
     <table className="w-full text-sm">
@@ -67,7 +90,21 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
         {allItems.map(item => (
           <tr key={item.id} className="border-b border-gray-800">
             <td className="py-3 pr-2">{item.name}</td>
-            <td className="text-right font-mono pr-2">{formatCurrency(item.price)}</td>
+            <td className="text-right font-mono pr-2">
+              {(() => {
+                const baseRetail = getBaseRetailPrice(item.id, item.price);
+                const isDiscounted = baseRetail > item.price;
+                if (!isDiscounted) return formatCurrency(item.price);
+                return (
+                  <div className="inline-flex flex-col items-end">
+                    <span className="text-xs text-gray-400 line-through decoration-2 decoration-gray-500/60">
+                      {formatCurrency(baseRetail)}
+                    </span>
+                    <span className="text-white">{formatCurrency(item.price)}</span>
+                  </div>
+                );
+              })()}
+            </td>
             {isManagerView && <td className="text-right font-mono">{formatCurrency(item.cost)}</td>}
           </tr>
         ))}
@@ -75,7 +112,18 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
       <tfoot>
         <tr className="font-bold">
           <td className={`text-right pt-4 ${isManagerView ? 'col-span-2' : ''}`}>Total Retail Price:</td>
-          <td className="text-right pt-4 font-mono text-lg">{formatCurrency(totalPrice)}</td>
+          <td className="text-right pt-4 font-mono text-lg">
+            {showDiscountTotal ? (
+              <div className="inline-flex flex-col items-end">
+                <span className="text-sm text-gray-400 line-through decoration-2 decoration-gray-500/60">
+                  {formatCurrency(baseTotalPrice)}
+                </span>
+                <span className="text-white">{formatCurrency(totalPrice)}</span>
+              </div>
+            ) : (
+              formatCurrency(totalPrice)
+            )}
+          </td>
         </tr>
         {isManagerView && (
           <>
@@ -106,7 +154,13 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
              <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-gray-400">MANAGER VIEW</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={isManagerView} onChange={() => setIsManagerView(!isManagerView)} className="sr-only peer" />
+                  <input
+                    type="checkbox"
+                    checked={isManagerView}
+                    onChange={() => setIsManagerView(!isManagerView)}
+                    className="sr-only peer"
+                    aria-label="Manager view"
+                  />
                   <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
              </div>
@@ -161,6 +215,9 @@ export const AgreementView: React.FC<AgreementViewProps> = ({ onBack, selectedPa
           totalCost={totalCost}
           customerInfo={customerInfo}
           isManagerView={isManagerView}
+          baseTotalPrice={baseTotalPrice}
+          basePackagePricesById={basePackagePricesById}
+          baseAddonPricesById={baseAddonPricesById}
         />
       </div>
     </>

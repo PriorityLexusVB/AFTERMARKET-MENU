@@ -3,6 +3,7 @@ import type { AlaCarteOption } from "../types";
 
 interface AlaCarteItemProps {
   item: AlaCarteOption;
+  basePrice?: number;
   onViewItem: () => void;
   onDragStart: (e: React.DragEvent) => void;
   disableDrag?: boolean;
@@ -13,6 +14,7 @@ interface AlaCarteItemProps {
 
 export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
   item,
+  basePrice,
   onViewItem,
   onDragStart,
   disableDrag = false,
@@ -27,6 +29,8 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
       minimumFractionDigits: 0,
     }).format(price);
   };
+
+  const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
   if (isCompact) {
     return (
@@ -64,6 +68,11 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
             <div className="text-[10px] uppercase tracking-[0.2em] text-lux-textMuted">
               Price
             </div>
+            {isDiscounted && (
+              <div className="text-base font-teko leading-none text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                {formatPrice(basePrice)}
+              </div>
+            )}
             <div className="text-4xl font-teko leading-none text-lux-textStrong">
               {formatPrice(item.price)}
             </div>
@@ -126,15 +135,22 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
           <span className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
             Price
           </span>
-          <span
-            className={
-              isCompact
-                ? "text-3xl font-teko text-lux-textStrong"
-                : "text-2xl font-teko text-lux-textStrong"
-            }
-          >
-            {formatPrice(item.price)}
-          </span>
+          <div className="flex flex-col items-start">
+            {isDiscounted && (
+              <span className="text-xs text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                {formatPrice(basePrice)}
+              </span>
+            )}
+            <span
+              className={
+                isCompact
+                  ? "text-3xl font-teko text-lux-textStrong"
+                  : "text-2xl font-teko text-lux-textStrong"
+              }
+            >
+              {formatPrice(item.price)}
+            </span>
+          </div>
         </div>
 
         {!isCompact && (

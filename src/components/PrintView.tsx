@@ -15,6 +15,9 @@ interface PrintViewProps {
   totalCost: number;
   customerInfo: CustomerInfo;
   isManagerView: boolean;
+  baseTotalPrice?: number;
+  basePackagePricesById?: Record<string, number>;
+  baseAddonPricesById?: Record<string, number>;
 }
 
 const LexusLogo: React.FC = () => (
@@ -32,7 +35,10 @@ export const PrintView: React.FC<PrintViewProps> = ({
   totalPrice,
   totalCost,
   customerInfo,
-  isManagerView
+  isManagerView,
+  baseTotalPrice,
+  basePackagePricesById,
+  baseAddonPricesById,
 }) => {
   const allItems = [
     ...(selectedPackage ? [{ ...selectedPackage, name: `${selectedPackage.name} Package` }] : []),
@@ -41,6 +47,15 @@ export const PrintView: React.FC<PrintViewProps> = ({
   const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model].filter(Boolean).join(' ');
   const todayDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const grossProfit = totalPrice - totalCost;
+  const showDiscountTotal = typeof baseTotalPrice === 'number' && baseTotalPrice > totalPrice;
+
+  const getBaseRetailPrice = (itemId: string, currentRetail: number) => {
+    const baseFromPackages = basePackagePricesById?.[itemId];
+    if (typeof baseFromPackages === 'number') return baseFromPackages;
+    const baseFromAddons = baseAddonPricesById?.[itemId];
+    if (typeof baseFromAddons === 'number') return baseFromAddons;
+    return currentRetail;
+  };
 
   return (
     <div className="bg-white text-black p-8 font-sans">
@@ -74,7 +89,21 @@ export const PrintView: React.FC<PrintViewProps> = ({
           {allItems.map(item => (
             <tr key={item.id} className="border-b border-gray-300">
               <td className="py-3 pr-2">{item.name}</td>
-              <td className="text-right font-mono pr-2">{formatCurrency(item.price)}</td>
+              <td className="text-right font-mono pr-2">
+                {(() => {
+                  const baseRetail = getBaseRetailPrice(item.id, item.price);
+                  const isDiscounted = baseRetail > item.price;
+                  if (!isDiscounted) return formatCurrency(item.price);
+                  return (
+                    <div className="inline-flex flex-col items-end">
+                      <span className="text-xs text-gray-500 line-through decoration-2 decoration-gray-400/60">
+                        {formatCurrency(baseRetail)}
+                      </span>
+                      <span className="text-black">{formatCurrency(item.price)}</span>
+                    </div>
+                  );
+                })()}
+              </td>
               {isManagerView && <td className="text-right font-mono">{formatCurrency(item.cost)}</td>}
             </tr>
           ))}
@@ -82,7 +111,18 @@ export const PrintView: React.FC<PrintViewProps> = ({
         <tfoot>
           <tr className="font-bold">
             <td className={`text-right pt-4 ${isManagerView ? 'col-span-2' : ''}`}>Total Retail Price:</td>
-            <td className="text-right pt-4 font-mono text-lg">{formatCurrency(totalPrice)}</td>
+            <td className="text-right pt-4 font-mono text-lg">
+              {showDiscountTotal ? (
+                <div className="inline-flex flex-col items-end">
+                  <span className="text-sm text-gray-500 line-through decoration-2 decoration-gray-400/60">
+                    {formatCurrency(baseTotalPrice)}
+                  </span>
+                  <span className="text-black">{formatCurrency(totalPrice)}</span>
+                </div>
+              ) : (
+                formatCurrency(totalPrice)
+              )}
+            </td>
           </tr>
           {isManagerView && (
             <>

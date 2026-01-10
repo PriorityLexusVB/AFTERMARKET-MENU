@@ -7,6 +7,7 @@ interface AddonSelectorProps {
   selectedItems: AlaCarteOption[];
   onToggleItem: (item: AlaCarteOption) => void;
   onViewItem: (item: ProductFeature | AlaCarteOption) => void;
+  basePricesById?: Record<string, number>;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
   selectedItems,
   onToggleItem,
   onViewItem,
+  basePricesById,
   className,
 }) => {
   return (
@@ -37,6 +39,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
             <AddonItem
               key={item.id}
               item={item}
+              basePrice={basePricesById?.[item.id]}
               isSelected={selectedItems.some(
                 (selected) => selected.id === item.id
               )}

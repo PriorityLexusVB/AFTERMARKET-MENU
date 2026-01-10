@@ -4,6 +4,8 @@
 - [ ] Toggle **Hidden items** in A La Carte Admin and verify unpublished/legacy rows appear when **Show legacy/unpublished in lanes** is enabled.
 - [ ] Expand a Product Hub row and confirm inline controls (Expand, Publish to A La Carte) render with normal labels.
 - [ ] Packages page (iPad Safari landscape): no scroll; all package lanes visible and clickable.
+- [ ] A La Carte page (iPad Safari landscape): no scroll; shows **Page X / Y** indicator and **Prev/Next** controls.
 - [ ] Popular Add-ons ordering: reordering A La Carte Featured (Column 4) updates Popular Add-ons order in customer view.
 - [ ] Rotate or resize the viewport and confirm CSS vars `--app-vh` and `--app-height` update together.
+- [ ] Desktop preview tip: if DevTools emulation doesn’t trigger iPad layout, append `?forceIpad=1` to the URL.
 - [ ] Run the repo's test script (npm/pnpm/yarn as configured) and ensure tests pass.

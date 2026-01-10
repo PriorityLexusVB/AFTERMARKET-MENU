@@ -29,6 +29,7 @@ import {
   trackAlaCarteRemove,
   trackFeatureView,
   trackQuoteFinalize,
+  trackQuotePrint,
   trackSettingsOpen,
   trackAdminPanelAccess,
   trackUserLogout,
@@ -55,6 +56,9 @@ const App: React.FC = () => {
 
   // UI State
   const [currentView, setCurrentView] = useState<View>("menu");
+  const [pendingPrint, setPendingPrint] = useState<null | {
+    returnToMenu: boolean;
+  }>(null);
   const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(
     null
   );
@@ -68,7 +72,10 @@ const App: React.FC = () => {
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isAdminView, setIsAdminView] = useState(false);
   const ipadLandscapeQuery =
-    "(min-width: 1024px) and (max-width: 1367px) and (orientation: landscape)";
+    // iPad “paper mode” should stay enabled on 12.9" iPads even if iPadOS
+    // changes the effective width (e.g. Display Zoom / More Space / windowed).
+    // Prefer a height bound over a tight max-width bound.
+    "(min-width: 1024px) and (max-height: 1100px) and (orientation: landscape)";
   const computeIsIpadLandscape = useCallback(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined")
       return false;
@@ -81,11 +88,21 @@ const App: React.FC = () => {
       return true;
     }
 
-    const isIpadUA =
-      /iPad/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (!isIpadUA) return false;
-    return window.matchMedia(ipadLandscapeQuery).matches;
+    // Prefer layout-based detection over user agent parsing.
+    // This keeps the iPad “paper mode” lock stable across iOS/Safari UA changes.
+    const matchesLayout = window.matchMedia(ipadLandscapeQuery).matches;
+    if (!matchesLayout) return false;
+
+    // Heuristic to avoid applying iPad-specific layout on typical desktop browsers.
+    // Note: Chrome's device emulation may not report touch/coarse-pointer correctly,
+    // so we keep a narrow iPad UA fallback to preserve the paged “paper mode” preview.
+    const hasTouch = navigator.maxTouchPoints > 0;
+    const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    if (hasTouch || hasCoarsePointer) return true;
+
+    const ua = navigator.userAgent || "";
+    const looksLikeIpad = /\biPad\b/i.test(ua);
+    return looksLikeIpad;
   }, [ipadLandscapeQuery]);
   const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() =>
     computeIsIpadLandscape()
@@ -349,6 +366,22 @@ const App: React.FC = () => {
     });
   };
 
+  const basePackagePricesById = useMemo(() => {
+    const record: Record<string, number> = {};
+    packages.forEach((pkg) => {
+      record[pkg.id] = pkg.price;
+    });
+    return record;
+  }, [packages]);
+
+  const baseAddonPricesById = useMemo(() => {
+    const record: Record<string, number> = {};
+    allAlaCarteOptions.forEach((opt) => {
+      record[opt.id] = opt.price;
+    });
+    return record;
+  }, [allAlaCarteOptions]);
+
   const displayPackages = useMemo(() => {
     // Deterministic customer-facing order: Elite → Platinum → Gold (matches requested layout).
     const sorted = sortPackagesForDisplay(packages);
@@ -386,6 +419,26 @@ const App: React.FC = () => {
     });
     return { totalPrice: price, totalCost: cost };
   }, [selectedPackage, displayPackages, displayCustomPackageItems]);
+
+  const baseTotalPrice = useMemo(() => {
+    let price = 0;
+    if (selectedPackage) {
+      price +=
+        basePackagePricesById[selectedPackage.id] ?? selectedPackage.price;
+    }
+    customPackageItems.forEach((item) => {
+      price += baseAddonPricesById[item.id] ?? item.price;
+    });
+    return price;
+  }, [selectedPackage, customPackageItems, basePackagePricesById, baseAddonPricesById]);
+
+  const baseCustomPackageSubtotal = useMemo(() => {
+    let price = 0;
+    curatedSelectedItems.forEach((item) => {
+      price += baseAddonPricesById[item.id] ?? item.price;
+    });
+    return price;
+  }, [curatedSelectedItems, baseAddonPricesById]);
 
   const curatedAlaCarteOptions = useMemo(() => {
     return [...displayAllAlaCarteOptions]
@@ -497,8 +550,50 @@ const App: React.FC = () => {
   }, []);
 
   const handlePrint = useCallback(() => {
+    // Printing is styled to only show `.print-mount`, which is rendered by AgreementView.
+    // If the user prints from the menu, switch to AgreementView first so printing is not blank.
+    trackQuotePrint(totalPrice);
+    if (currentView === "menu") {
+      setPendingPrint({ returnToMenu: true });
+      setCurrentView("agreement");
+      return;
+    }
     window.print();
-  }, []);
+  }, [currentView, totalPrice]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!pendingPrint) return;
+    if (currentView !== "agreement") return;
+
+    const handleAfterPrint = () => {
+      if (pendingPrint.returnToMenu) {
+        setCurrentView("menu");
+      }
+    };
+
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    // Let AgreementView mount `.print-mount` before printing.
+    let raf2: number | null = null;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        try {
+          window.print();
+        } finally {
+          setPendingPrint(null);
+        }
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      if (raf2 != null) {
+        window.cancelAnimationFrame(raf2);
+      }
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, [pendingPrint, currentView]);
 
   const NavButton: React.FC<{ page: Page; label: string }> = ({
     page,
@@ -577,12 +672,14 @@ const App: React.FC = () => {
               selectedPackage={selectedPackage}
               onSelectPackage={handleSelectPackage}
               onViewFeature={handleViewDetail}
+              basePackagePricesById={basePackagePricesById}
               addonColumn={
                 <AddonSelector
                   items={mainPageAddons}
                   selectedItems={customPackageItems}
                   onToggleItem={handleToggleAlaCarteItem}
                   onViewItem={handleViewDetail}
+                  basePricesById={baseAddonPricesById}
                   className="h-full min-h-0"
                 />
               }
@@ -626,6 +723,7 @@ const App: React.FC = () => {
                   onToggleItem={handleToggleAlaCarteItem}
                   selectedIds={customPackageItems.map((item) => item.id)}
                   isCompact={enableIpadAlaCarteLayout}
+                  basePricesById={baseAddonPricesById}
                 />
               </div>
             </div>
@@ -652,6 +750,8 @@ const App: React.FC = () => {
                   onRemoveItem={handleRemoveAlaCarte}
                   enableDrop={!disableAlaCarteDrag}
                   isCompact={enableIpadAlaCarteLayout}
+                  basePricesById={baseAddonPricesById}
+                  baseSubtotal={baseCustomPackageSubtotal}
                 />
               </div>
             </div>
@@ -703,8 +803,17 @@ const App: React.FC = () => {
     );
   }
 
+  const shouldLockIpadMenuScroll =
+    isIpadLandscape && currentView === "menu" && !isAdminView;
+
   return (
-    <div className="lux-app am-app-min-h antialiased flex flex-col">
+    <div
+      className={`lux-app am-app-min-h antialiased flex flex-col ${
+        shouldLockIpadMenuScroll
+          ? "h-[var(--app-height,100vh)] overflow-hidden"
+          : ""
+      }`}
+    >
       <Header
         user={user}
         guestMode={guestMode}
@@ -740,6 +849,9 @@ const App: React.FC = () => {
                 totalPrice={totalPrice}
                 totalCost={totalCost}
                 customerInfo={customerInfo}
+                baseTotalPrice={baseTotalPrice}
+                basePackagePricesById={basePackagePricesById}
+                baseAddonPricesById={baseAddonPricesById}
               />
             ) : (
               <div
@@ -763,6 +875,9 @@ const App: React.FC = () => {
                 }
                 customItems={displayCustomPackageItems}
                 totalPrice={totalPrice}
+                baseTotalPrice={baseTotalPrice}
+                basePackagePricesById={basePackagePricesById}
+                baseAddonPricesById={baseAddonPricesById}
                 onRemoveItem={handleRemoveAlaCarte}
                 onPrint={handlePrint}
                 onDeselectPackage={
@@ -787,6 +902,12 @@ const App: React.FC = () => {
         onSave={handleSaveSettings}
         currentInfo={customerInfo}
         currentPriceOverrides={priceOverrides}
+        selectedPackage={
+          selectedPackage
+            ? displayPackages.find((p) => p.id === selectedPackage.id) || null
+            : null
+        }
+        selectedAddOns={displayCustomPackageItems}
       />
     </div>
   );

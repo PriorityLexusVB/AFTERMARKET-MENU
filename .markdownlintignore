@@ -1,0 +1,7 @@
+# Markdownlint ignore
+# These docs are legacy/notes and don’t need strict linting.
+LUXURY_IPAD_COMPONENTS.md
+docs/CLOUD_RUN_TROUBLESHOOTING.md
+docs/CLOUD_DEPLOYMENT.md
+docs/PR_REVIEW_39_51.md
+docs/PR_DEPLOYMENT_FIX.md

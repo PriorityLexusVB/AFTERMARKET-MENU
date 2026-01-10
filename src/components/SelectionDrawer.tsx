@@ -5,6 +5,9 @@ interface SelectionDrawerProps {
   selectedPackage: PackageTier | null;
   customItems: AlaCarteOption[];
   totalPrice: number;
+  baseTotalPrice?: number;
+  basePackagePricesById?: Record<string, number>;
+  baseAddonPricesById?: Record<string, number>;
   onRemoveItem: (itemId: string) => void;
   onPrint: () => void;
   onDeselectPackage?: () => void;
@@ -25,12 +28,25 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   totalPrice,
   onRemoveItem,
   onPrint,
+  baseTotalPrice,
+  basePackagePricesById,
+  baseAddonPricesById,
   onDeselectPackage,
   onShowAgreement,
   variant = "panel",
 }) => {
   if (variant === "bar") {
     return (
+  const showDiscountTotal =
+    typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
+  const basePackagePrice = selectedPackage
+    ? basePackagePricesById?.[selectedPackage.id]
+    : undefined;
+  const showDiscountPackage =
+    selectedPackage &&
+    typeof basePackagePrice === "number" &&
+    basePackagePrice > selectedPackage.price;
+
       <div
         className="am-selection-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden"
         data-testid="selection-drawer-bar"
@@ -55,6 +71,11 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap justify-end">
+                {showDiscountTotal && (
+                  <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                    {formatPrice(baseTotalPrice)}
+                  </p>
+                )}
               <div className="text-left sm:text-right">
                 <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
                   Total
@@ -130,9 +151,16 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                   <span className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
                     Price
                   </span>
-                  <span className="text-2xl font-teko text-lux-textStrong">
-                    {formatPrice(selectedPackage.price)}
-                  </span>
+                  <div className="flex flex-col items-start">
+                    {showDiscountPackage && (
+                      <span className="text-xs text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                        {formatPrice(basePackagePrice)}
+                      </span>
+                    )}
+                    <span className="text-2xl font-teko text-lux-textStrong">
+                      {formatPrice(selectedPackage.price)}
+                    </span>
+                  </div>
                 </div>
               </>
             ) : (
@@ -165,6 +193,9 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
         </div>
         {customItems.length === 0 ? (
           <p className="text-sm text-lux-textMuted">No add-ons selected</p>
+              const baseItemPrice = baseAddonPricesById?.[item.id];
+              const showDiscountItem =
+                typeof baseItemPrice === "number" && baseItemPrice > item.price;
         ) : (
           <div className="space-y-2">
             {customItems.map((item) => (
@@ -174,9 +205,20 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
               >
                 <div>
                   <p className="text-sm font-semibold text-lux-text">
-                    {item.name}
-                  </p>
-                  <p className="text-xs text-lux-textMuted">
+                    {showDiscountItem ? (
+                      <div className="text-xs">
+                        <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                          {formatPrice(baseItemPrice)}
+                        </div>
+                        <div className="text-lux-textStrong">
+                          {formatPrice(item.price)}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-lux-textMuted">
+                        {formatPrice(item.price)}
+                      </p>
+                    )}
                     {formatPrice(item.price)}
                   </p>
                 </div>
@@ -212,6 +254,11 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
             <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
               Total
             </p>
+            {showDiscountTotal && (
+              <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                {formatPrice(baseTotalPrice)}
+              </p>
+            )}
             <p className="text-3xl font-teko text-lux-textStrong">
               {formatPrice(totalPrice)}
             </p>

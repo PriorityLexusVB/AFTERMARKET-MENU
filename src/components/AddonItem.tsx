@@ -3,6 +3,7 @@ import type { AlaCarteOption } from '../types';
 
 interface AddonItemProps {
   item: AlaCarteOption;
+  basePrice?: number;
   isSelected: boolean;
   onToggle: () => void;
   onView: () => void;
@@ -21,10 +22,12 @@ const CheckIcon: React.FC = () => (
 );
 
 
-export const AddonItem: React.FC<AddonItemProps> = ({ item, isSelected, onToggle, onView }) => {
+export const AddonItem: React.FC<AddonItemProps> = ({ item, basePrice, isSelected, onToggle, onView }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
   };
+
+  const isDiscounted = typeof basePrice === 'number' && basePrice > item.price;
 
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex flex-col transition-shadow hover:shadow-md">
@@ -36,7 +39,12 @@ export const AddonItem: React.FC<AddonItemProps> = ({ item, isSelected, onToggle
         >
           {item.name}
         </button>
-        <p className="text-xs text-gray-400">{formatPrice(item.price)}</p>
+        {isDiscounted && (
+          <p className="text-[11px] text-gray-400 line-through decoration-2 decoration-gray-500/60">
+            {formatPrice(basePrice)}
+          </p>
+        )}
+        <p className="text-xs text-gray-300">{formatPrice(item.price)}</p>
       </div>
       <div className="mt-3">
         <button

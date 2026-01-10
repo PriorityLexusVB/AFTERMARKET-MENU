@@ -8,6 +8,7 @@ interface PackageSelectorProps {
   selectedPackage: PackageTier | null;
   onSelectPackage: (pkg: PackageTier) => void;
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
+  basePackagePricesById?: Record<string, number>;
   addonColumn?: React.ReactNode;
   gridClassName?: string;
   isIpadLandscape?: boolean;
@@ -19,6 +20,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   selectedPackage,
   onSelectPackage,
   onViewFeature,
+  basePackagePricesById,
   addonColumn,
   gridClassName,
   isIpadLandscape = false,
@@ -41,6 +43,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           key={pkg.id}
           packageInfo={pkg}
           allFeaturesForDisplay={allFeaturesForDisplay}
+          basePrice={basePackagePricesById?.[pkg.id]}
           isSelected={selectedPackage?.id === pkg.id}
           onSelect={() => onSelectPackage(pkg)}
           onViewFeature={onViewFeature}

@@ -77,6 +77,21 @@ npm start            # Build and start production server
 npm run serve        # Start production server (requires build)
 ```
 
+## CI / GitHub Actions notes
+
+### Optional E2E secrets
+
+The CI workflow runs Playwright E2E tests. If Firebase secrets are present, CI exports them as `VITE_FIREBASE_*` for the E2E run; if not, CI runs E2E in demo/mock mode.
+
+Optional GitHub repository secrets used by [.github/workflows/ci.yml](.github/workflows/ci.yml):
+
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `TEST_FIRESTORE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_APP_ID`
+
 ## Deploying to Google Cloud Run
 
 ### The Problem: Build-Time vs. Run-Time Variables

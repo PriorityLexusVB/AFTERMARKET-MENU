@@ -173,21 +173,30 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
               >
                 <div>
                   <p className="font-semibold text-lux-text">{item.name}</p>
-                  {typeof basePricesById?.[item.id] === "number" &&
-                  basePricesById[item.id] > item.price ? (
-                    <div className="text-sm">
-                      <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
-                        {formatPrice(basePricesById[item.id])}
-                      </div>
-                      <div className="text-lux-textStrong">
+                  {(() => {
+                    const basePrice = basePricesById?.[item.id];
+                    const showDiscount =
+                      typeof basePrice === "number" && basePrice > item.price;
+
+                    if (showDiscount) {
+                      return (
+                        <div className="text-sm">
+                          <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                            {formatPrice(basePrice)}
+                          </div>
+                          <div className="text-lux-textStrong">
+                            {formatPrice(item.price)}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <p className="text-sm text-lux-textMuted">
                         {formatPrice(item.price)}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-lux-textMuted">
-                      {formatPrice(item.price)}
-                    </p>
-                  )}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <button
                   onClick={() => onRemoveItem(item.id)}

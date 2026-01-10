@@ -35,18 +35,20 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   onShowAgreement,
   variant = "panel",
 }) => {
-  if (variant === "bar") {
-    return (
   const showDiscountTotal =
     typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
+
   const basePackagePrice = selectedPackage
     ? basePackagePricesById?.[selectedPackage.id]
     : undefined;
+
   const showDiscountPackage =
     selectedPackage &&
     typeof basePackagePrice === "number" &&
     basePackagePrice > selectedPackage.price;
 
+  if (variant === "bar") {
+    return (
       <div
         className="am-selection-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden"
         data-testid="selection-drawer-bar"
@@ -71,11 +73,11 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap justify-end">
-                {showDiscountTotal && (
-                  <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
-                    {formatPrice(baseTotalPrice)}
-                  </p>
-                )}
+              {showDiscountTotal && (
+                <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                  {formatPrice(baseTotalPrice)}
+                </p>
+              )}
               <div className="text-left sm:text-right">
                 <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
                   Total
@@ -193,55 +195,61 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
         </div>
         {customItems.length === 0 ? (
           <p className="text-sm text-lux-textMuted">No add-ons selected</p>
-              const baseItemPrice = baseAddonPricesById?.[item.id];
-              const showDiscountItem =
-                typeof baseItemPrice === "number" && baseItemPrice > item.price;
         ) : (
           <div className="space-y-2">
-            {customItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between bg-lux-bg2/70 border border-lux-border/60 rounded-lg px-3 py-2"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-lux-text">
-                    {showDiscountItem ? (
-                      <div className="text-xs">
-                        <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
-                          {formatPrice(baseItemPrice)}
-                        </div>
-                        <div className="text-lux-textStrong">
-                          {formatPrice(item.price)}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-lux-textMuted">
-                        {formatPrice(item.price)}
-                      </p>
-                    )}
-                    {formatPrice(item.price)}
-                  </p>
-                </div>
-                <button
-                  onClick={() => onRemoveItem(item.id)}
-                  className="text-lux-textMuted hover:text-lux-red transition-colors"
-                  aria-label={`Remove ${item.name}`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="w-5 h-5"
+            {customItems.map((item) =>
+              (() => {
+                const baseItemPrice = baseAddonPricesById?.[item.id];
+                const showDiscountItem =
+                  typeof baseItemPrice === "number" &&
+                  baseItemPrice > item.price;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between bg-lux-bg2/70 border border-lux-border/60 rounded-lg px-3 py-2"
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm2.28-11.28a.75.75 0 0 0-1.06 0L10 7.94 8.78 6.72a.75.75 0 1 0-1.06 1.06L8.94 9l-1.22 1.22a.75.75 0 1 0 1.06 1.06L10 10.06l1.22 1.22a.75.75 0 1 0 1.06-1.06L11.06 9l1.22-1.22a.75.75 0 0 0 0-1.06Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ))}
+                    <div>
+                      <p className="text-sm font-semibold text-lux-text">
+                        {item.name}
+                      </p>
+                      {showDiscountItem ? (
+                        <div className="text-xs mt-0.5">
+                          <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                            {formatPrice(baseItemPrice)}
+                          </div>
+                          <div className="text-lux-textStrong">
+                            {formatPrice(item.price)}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-lux-textMuted mt-0.5">
+                          {formatPrice(item.price)}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => onRemoveItem(item.id)}
+                      className="text-lux-textMuted hover:text-lux-red transition-colors"
+                      aria-label={`Remove ${item.name}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-5 h-5"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm2.28-11.28a.75.75 0 0 0-1.06 0L10 7.94 8.78 6.72a.75.75 0 1 0-1.06 1.06L8.94 9l-1.22 1.22a.75.75 0 1 0 1.06 1.06L10 10.06l1.22 1.22a.75.75 0 1 0 1.06-1.06L11.06 9l1.22-1.22a.75.75 0 0 0 0-1.06Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })()
+            )}
           </div>
         )}
       </div>

@@ -91,4 +91,4 @@ Preferred order:
 
 1. Keep “paper mode” (no scroll) and **paginate** (A La Carte already does).
 2. Clamp text and reduce non-essential whitespace.
-3. Only as a last resort, allow scrolling inside a *contained sub-panel* — never the full page.
+3. Only as a last resort, allow scrolling inside a _contained sub-panel_ — never the full page.

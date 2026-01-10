@@ -1,5 +1,5 @@
-import type { PackageTier, ProductFeature, AlaCarteOption } from './types';
-import { deriveTierFeatures } from './utils/featureOrdering';
+import type { PackageTier, ProductFeature, AlaCarteOption } from "./types";
+import { deriveTierFeatures } from "./utils/featureOrdering";
 
 // MOCK FEATURES (these would be in the 'features' table)
 // These are the individual services that make up the packages.
@@ -23,194 +23,204 @@ import { deriveTierFeatures } from './utils/featureOrdering';
 // - Gold has 3 features (Column 1)
 // - Diamond Shield is assigned to Column 4 for admin organization
 export const MOCK_FEATURES: ProductFeature[] = [
-// Elite Base features (Column 2) - included in Elite package only
+  // Elite Base features (Column 2) - included in Elite package only
   {
-    id: 'rustguard-pro',
-    name: 'RustGuard Pro',
-    description: 'Underbody protection to prevent corrosion and structural damage.',
+    id: "rustguard-pro",
+    name: "RustGuard Pro",
+    description:
+      "Underbody protection to prevent corrosion and structural damage.",
     points: [
-      'Prolongs the life of vehicle',
-      'Reduce repair/replacement costs',
-      'Prevent structural weakness',
+      "Prolongs the life of vehicle",
+      "Reduce repair/replacement costs",
+      "Prevent structural weakness",
     ],
     useCases: [
-      'Protects against road salt in winter.',
-      'Prevents rust from forming on the chassis.',
+      "Protects against road salt in winter.",
+      "Prevents rust from forming on the chassis.",
     ],
     price: 0, // Price is included in package
     cost: 300,
-    warranty: 'Lifetime coverage',
+    warranty: "Lifetime coverage",
     column: 2, // Elite Base (included in Elite package only)
     position: 0, // First position in column
-    connector: 'AND', // Default connector
+    connector: "AND", // Default connector
   },
   {
-    id: 'toughguard-premium',
-    name: 'ToughGuard Premium',
-    description: 'A premium paint sealant that protects against environmental damage.',
+    id: "toughguard-premium",
+    name: "ToughGuard Premium",
+    description:
+      "A premium paint sealant that protects against environmental damage.",
     points: [
-      'One Time Application',
-      'Eliminates waxing',
-      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+      "One Time Application",
+      "Eliminates waxing",
+      "Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.",
     ],
     useCases: [
-      'Keeps your car looking glossy and new.',
-      'Makes washing easier as dirt and grime slide off.',
+      "Keeps your car looking glossy and new.",
+      "Makes washing easier as dirt and grime slide off.",
     ],
     price: 0, // Price is included in package
     cost: 250,
     column: 2, // Elite Base (included in Elite package only)
     position: 1, // Second position in column
-    connector: 'AND', // Default connector
+    connector: "AND", // Default connector
   },
   {
-    id: 'interior-protection',
-    name: 'Interior Leather & Fabric Protection',
-    description: 'A complete interior treatment to protect against stains and damage.',
+    id: "interior-protection",
+    name: "Interior Leather & Fabric Protection",
+    description:
+      "A complete interior treatment to protect against stains and damage.",
     points: [
-      'Protects against stains such as: coffee, juices, crayons, chocolate, gum',
-      'Prevents cracking, covers rips, tears & burns',
+      "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
+      "Prevents cracking, covers rips, tears & burns",
     ],
     useCases: [
-      'Ideal for families with children or pets.',
-      'Maintains the value and appearance of your interior.',
+      "Ideal for families with children or pets.",
+      "Maintains the value and appearance of your interior.",
     ],
     price: 0, // Price is included in package
     cost: 200,
     column: 2, // Elite Base (included in Elite package only)
     position: 2, // Third position in column
-    connector: 'OR', // Special connector for Elite package display
+    connector: "OR", // Special connector for Elite package display
   },
-// Platinum Additions (Column 3) - included in Platinum only
+  // Platinum Additions (Column 3) - included in Platinum only
   {
-    id: 'platinum-rustguard',
-    name: 'RustGuard Pro',
-    description: 'Underbody protection to prevent corrosion and structural damage.',
+    id: "platinum-rustguard",
+    name: "RustGuard Pro",
+    description:
+      "Underbody protection to prevent corrosion and structural damage.",
     points: [
-      'Prolongs the life of vehicle',
-      'Reduce repair/replacement costs',
-      'Prevent structural weakness',
+      "Prolongs the life of vehicle",
+      "Reduce repair/replacement costs",
+      "Prevent structural weakness",
     ],
     useCases: [
-      'Protects against road salt in winter.',
-      'Prevents rust from forming on the chassis.',
+      "Protects against road salt in winter.",
+      "Prevents rust from forming on the chassis.",
     ],
     price: 0,
     cost: 300,
-    warranty: 'Lifetime coverage',
+    warranty: "Lifetime coverage",
     column: 3, // Platinum Additions (Platinum only)
     position: 0,
-    connector: 'AND',
+    connector: "AND",
   },
   {
-    id: 'platinum-toughguard',
-    name: 'ToughGuard Premium',
-    description: 'A premium paint sealant that protects against environmental damage.',
+    id: "platinum-toughguard",
+    name: "ToughGuard Premium",
+    description:
+      "A premium paint sealant that protects against environmental damage.",
     points: [
-      'One Time Application',
-      'Eliminates waxing',
-      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+      "One Time Application",
+      "Eliminates waxing",
+      "Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.",
     ],
     useCases: [
-      'Keeps your car looking glossy and new.',
-      'Makes washing easier as dirt and grime slide off.',
+      "Keeps your car looking glossy and new.",
+      "Makes washing easier as dirt and grime slide off.",
     ],
     price: 0,
     cost: 250,
     column: 3, // Platinum Additions (Platinum only)
     position: 1,
-    connector: 'AND',
+    connector: "AND",
   },
   {
-    id: 'platinum-diamond-shield',
-    name: 'Diamond Shield Windshield Protection',
-    description: 'A treatment that improves visibility and protects your windshield.',
+    id: "platinum-diamond-shield",
+    name: "Diamond Shield Windshield Protection",
+    description:
+      "A treatment that improves visibility and protects your windshield.",
     points: [
-      'Increase visibility in rain',
-      'Protects against night glare',
-      'Help against chipping, cracking, clouding, sand, salt',
+      "Increase visibility in rain",
+      "Protects against night glare",
+      "Help against chipping, cracking, clouding, sand, salt",
     ],
     useCases: [
-      'Safer driving in bad weather conditions.',
-      'Prevents minor chips from turning into large cracks.',
+      "Safer driving in bad weather conditions.",
+      "Prevents minor chips from turning into large cracks.",
     ],
     price: 0,
     cost: 150,
     column: 3, // Platinum Additions (Platinum only)
     position: 2,
-    connector: 'AND',
+    connector: "AND",
   },
   // Gold Additions (Column 1) - included in Gold only
   {
-    id: 'gold-rustguard',
-    name: 'RustGuard Pro',
-    description: 'Underbody protection to prevent corrosion and structural damage.',
+    id: "gold-rustguard",
+    name: "RustGuard Pro",
+    description:
+      "Underbody protection to prevent corrosion and structural damage.",
     points: [
-      'Prolongs the life of vehicle',
-      'Reduce repair/replacement costs',
-      'Prevent structural weakness',
+      "Prolongs the life of vehicle",
+      "Reduce repair/replacement costs",
+      "Prevent structural weakness",
     ],
     useCases: [
-      'Protects against road salt in winter.',
-      'Prevents rust from forming on the chassis.',
+      "Protects against road salt in winter.",
+      "Prevents rust from forming on the chassis.",
     ],
     price: 0,
     cost: 300,
-    warranty: 'Lifetime coverage',
+    warranty: "Lifetime coverage",
     column: 1, // Gold Additions (Gold only)
     position: 0,
-    connector: 'AND',
+    connector: "AND",
   },
   {
-    id: 'gold-toughguard',
-    name: 'ToughGuard Premium',
-    description: 'A premium paint sealant that protects against environmental damage.',
+    id: "gold-toughguard",
+    name: "ToughGuard Premium",
+    description:
+      "A premium paint sealant that protects against environmental damage.",
     points: [
-      'One Time Application',
-      'Eliminates waxing',
-      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
+      "One Time Application",
+      "Eliminates waxing",
+      "Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.",
     ],
     useCases: [
-      'Keeps your car looking glossy and new.',
-      'Makes washing easier as dirt and grime slide off.',
+      "Keeps your car looking glossy and new.",
+      "Makes washing easier as dirt and grime slide off.",
     ],
     price: 0,
     cost: 250,
     column: 1, // Gold Additions (Gold only)
     position: 1,
-    connector: 'AND',
+    connector: "AND",
   },
   {
-    id: 'gold-interior',
-    name: 'Interior Leather & Fabric Protection',
-    description: 'A complete interior treatment to protect against stains and damage.',
+    id: "gold-interior",
+    name: "Interior Leather & Fabric Protection",
+    description:
+      "A complete interior treatment to protect against stains and damage.",
     points: [
-      'Protects against stains such as: coffee, juices, crayons, chocolate, gum',
-      'Prevents cracking, covers rips, tears & burns',
+      "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
+      "Prevents cracking, covers rips, tears & burns",
     ],
     useCases: [
-      'Ideal for families with children or pets.',
-      'Maintains the value and appearance of your interior.',
+      "Ideal for families with children or pets.",
+      "Maintains the value and appearance of your interior.",
     ],
     price: 0,
     cost: 200,
     column: 1, // Gold Additions (Gold only)
     position: 2,
-    connector: 'OR',
+    connector: "OR",
   },
   // Column 4 (admin organization)
   {
-    id: 'diamond-shield',
-    name: 'Diamond Shield Windshield Protection',
-    description: 'A treatment that improves visibility and protects your windshield.',
+    id: "diamond-shield",
+    name: "Diamond Shield Windshield Protection",
+    description:
+      "A treatment that improves visibility and protects your windshield.",
     points: [
-      'Increase visibility in rain',
-      'Protects against night glare',
-      'Help against chipping, cracking, clouding, sand, salt',
+      "Increase visibility in rain",
+      "Protects against night glare",
+      "Help against chipping, cracking, clouding, sand, salt",
     ],
     useCases: [
-      'Safer driving in bad weather conditions.',
-      'Prevents minor chips from turning into large cracks.',
+      "Safer driving in bad weather conditions.",
+      "Prevents minor chips from turning into large cracks.",
     ],
     price: 0, // Price is included in package
     cost: 150,
@@ -220,7 +230,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
     // so it will NOT appear in the customer's "Popular Add-ons" section.
     column: 4, // Admin organization column (NOT displayed in customer Popular Add-ons)
     position: 0, // First position in column 4
-    connector: 'AND', // Default connector
+    connector: "AND", // Default connector
   },
 ];
 
@@ -232,319 +242,328 @@ export const MOCK_FEATURES: ProductFeature[] = [
 // - Gold:     Column 3
 export const MOCK_PACKAGES: PackageTier[] = [
   {
-    id: 'package-elite',
-    name: 'Elite',
+    id: "package-elite",
+    name: "Elite",
     price: 3499,
     cost: 900,
     // Elite = Column 1 only
-    features: deriveTierFeatures('Elite', MOCK_FEATURES),
-    tier_color: 'gray-400',
+    features: deriveTierFeatures("Elite", MOCK_FEATURES),
+    tier_color: "gray-400",
   },
   {
-    id: 'package-platinum',
-    name: 'Platinum',
+    id: "package-platinum",
+    name: "Platinum",
     price: 2899,
     cost: 750,
     // Platinum = Column 2 only
-    features: deriveTierFeatures('Platinum', MOCK_FEATURES),
+    features: deriveTierFeatures("Platinum", MOCK_FEATURES),
     isRecommended: true,
-    tier_color: 'blue-400',
+    tier_color: "blue-400",
   },
   {
-    id: 'package-gold',
-    name: 'Gold',
+    id: "package-gold",
+    name: "Gold",
     price: 2399,
     cost: 550,
     // Gold = Column 3 only
-    features: deriveTierFeatures('Gold', MOCK_FEATURES),
-    tier_color: 'yellow-400',
+    features: deriveTierFeatures("Gold", MOCK_FEATURES),
+    tier_color: "yellow-400",
   },
 ];
 
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)
 // Column 4 = Popular Add-ons
 export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
-[
-  {
-    id: 'suntek-complete',
-    name: 'Suntek Pro Complete Package',
-    price: 1195,
-    cost: 550,
-    description: 'Protects the most vulnerable parts of your vehicle from rock chips and scratches.',
-    points: [
-      'Prevents Rock Chips',
-      'Protects 18"-24" Hood',
-      'Front Bumper',
-      'Fenders',
-      'Mirrors',
-      'Door Cups',
-    ],
-    warranty: '10 Year Warranty',
-    column: 4, // Popular add-on
-    position: 0,
-    connector: 'AND',
-  },
-  {
-    id: 'suntek-standard',
-    name: 'Suntek Pro Standard Package',
-    price: 795,
-    cost: 350,
-    description: 'Essential protection for the front-facing areas of your car.',
-    points: ['Protects 18"-24" Hood', 'Fenders', 'Mirrors'],
-    warranty: '10 Year Warranty',
-    column: 4, // Popular add-on
-    position: 1,
-    connector: 'AND',
-  },
-  {
-    id: 'headlights',
-    name: 'Headlights Protection',
-    price: 295,
-    cost: 125,
-    description: 'A durable film to prevent hazing, yellowing, and cracking of headlight lenses.',
-    points: ['Maintains clarity for optimal night visibility.'],
-    column: 4, // Popular add-on
-    position: 2,
-    connector: 'AND',
-  },
-  {
-    id: 'doorcups',
-    name: 'Door Cups Only',
-    price: 195,
-    cost: 75,
-    description: 'Invisible film applied behind door handles to prevent scratches from keys and fingernails.',
-    points: ['Protects a high-wear area from daily use.'],
-    column: 4, // Popular add-on
-    position: 3,
-    connector: 'AND',
-  },
-  {
-    id: 'evernew',
-    name: 'EverNew Appearance Protection',
-    price: 899,
-    cost: 400,
-    description: 'Mobile cosmetic repair service for minor damages.',
-    points: [
-      'Scratch, Chip, & Dent Repair',
-      'Eliminate Insurance Claims',
-      'Eliminate Bad Carfax',
-      'Covered for 5 years',
-      'We Come to You!',
-    ],
-    isNew: true,
-    column: 4, // Popular add-on
-    position: 4,
-    connector: 'AND',
-  },
-  {
-    id: 'screen-defender',
-    name: 'Screen Defender',
-    price: 149,
-    cost: 50,
-    description: 'Premium protection film for your vehicle\'s touchscreen display.',
-    points: [
-      'Anti-glare coating',
-      'Scratch resistant',
-      'Easy installation',
-      'Crystal clear visibility',
-    ],
-    column: 4, // Popular add-on
-    position: 5,
-    connector: 'AND',
-  },
-  {
-    id: 'diamond-shield',
-    name: 'Diamond Shield Windshield Protection',
-    price: 150,
-    cost: 150,
-    description: 'A treatment that improves visibility and protects your windshield.',
-    points: [
-      'Increase visibility in rain',
-      'Protects against night glare',
-      'Help against chipping, cracking, clouding, sand, salt',
-    ],
-    useCases: [
-      'Safer driving in bad weather conditions.',
-      'Prevents minor chips from turning into large cracks.',
-    ],
-    warranty: 'Lifetime coverage',
-    column: 4,
-    position: 6,
-    connector: 'AND',
-  },
-  {
-    id: 'rustguard-pro-alacarte',
-    name: 'RustGuard Pro',
-    price: 300,
-    cost: 300,
-    description: 'Underbody protection to prevent corrosion and structural damage.',
-    points: [
-      'Prolongs the life of vehicle',
-      'Reduce repair/replacement costs',
-      'Prevent structural weakness',
-    ],
-    useCases: [
-      'Protects against road salt in winter.',
-      'Prevents rust from forming on the chassis.',
-    ],
-    warranty: 'Lifetime coverage',
-    column: 4,
-    position: 7,
-    connector: 'AND',
-  },
-  {
-    id: 'toughguard-premium-alacarte',
-    name: 'ToughGuard Premium',
-    price: 250,
-    cost: 250,
-    description: 'A premium paint sealant that protects against environmental damage.',
-    points: [
-      'One Time Application',
-      'Eliminates waxing',
-      'Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.',
-    ],
-    useCases: [
-      'Keeps your car looking glossy and new.',
-      'Makes washing easier as dirt and grime slide off.',
-    ],
-    column: 4,
-    position: 8,
-    connector: 'AND',
-  },
-  {
-    id: 'interior-protection-alacarte',
-    name: 'Interior Leather & Fabric Protection',
-    price: 200,
-    cost: 200,
-    description: 'A complete interior treatment to protect against stains and damage.',
-    points: [
-      'Protects against stains such as: coffee, juices, crayons, chocolate, gum',
-      'Prevents cracking, covers rips, tears & burns',
-    ],
-    useCases: [
-      'Ideal for families with children or pets.',
-      'Maintains the value and appearance of your interior.',
-    ],
-    column: 4,
-    position: 9,
-    connector: 'AND',
-  },
-  {
-    id: 'elite-ceramic-coating',
-    name: 'Elite Ceramic Coating',
-    price: 500,
-    cost: 500,
-    description: 'Advanced ceramic protection with superior durability and shine.',
-    points: [
-      '9H hardness rating',
-      'Hydrophobic water repellency',
-      'UV protection for paint longevity',
-    ],
-    useCases: [
-      'Provides showroom-quality shine for years.',
-      'Reduces need for frequent washing and waxing.',
-    ],
-    warranty: '5 Year Warranty',
-    column: 4,
-    position: 10,
-    connector: 'AND',
-  },
-  {
-    id: 'elite-paint-correction',
-    name: 'Elite Paint Correction',
-    price: 400,
-    cost: 400,
-    description: 'Professional-grade paint restoration and polishing.',
-    points: [
-      'Removes swirl marks and scratches',
-      'Restores original paint clarity',
-      'Multi-stage polishing process',
-    ],
-    useCases: [
-      'Eliminates imperfections from daily driving.',
-      'Prepares surface for maximum coating adhesion.',
-    ],
-    column: 4,
-    position: 11,
-    connector: 'AND',
-  },
-  {
-    id: 'elite-interior-detail',
-    name: 'Elite Interior Detailing',
-    price: 300,
-    cost: 300,
-    description: 'Comprehensive interior cleaning and protection treatment.',
-    points: [
-      'Deep cleaning of all surfaces',
-      'Leather conditioning and protection',
-      'Fabric stain guard application',
-    ],
-    useCases: [
-      'Restores interior to like-new condition.',
-      'Extends life of leather and fabric surfaces.',
-    ],
-    column: 4,
-    position: 12,
-    connector: 'AND',
-  },
-  {
-    id: 'platinum-ppf-full',
-    name: 'Platinum Full PPF Coverage',
-    price: 800,
-    cost: 800,
-    description: 'Complete paint protection film coverage for maximum protection.',
-    points: [
-      'Full body PPF installation',
-      'Self-healing technology',
-      'Invisible protection barrier',
-    ],
-    useCases: [
-      'Ultimate protection against rock chips and debris.',
-      'Maintains resale value with pristine paint condition.',
-    ],
-    warranty: '10 Year Warranty',
-    column: 4,
-    position: 13,
-    connector: 'AND',
-  },
-  {
-    id: 'platinum-graphene-coating',
-    name: 'Platinum Graphene Coating',
-    price: 600,
-    cost: 600,
-    description: 'Next-generation graphene-infused ceramic coating.',
-    points: [
-      'Superior hardness and durability',
-      'Anti-static dust repellency',
-      'Enhanced heat dissipation',
-    ],
-    useCases: [
-      'Top-tier protection for luxury vehicles.',
-      'Lasts longer than traditional ceramic coatings.',
-    ],
-    warranty: '7 Year Warranty',
-    column: 4,
-    position: 14,
-    connector: 'AND',
-  },
-  {
-    id: 'platinum-wheel-coating',
-    name: 'Platinum Wheel & Caliper Coating',
-    price: 350,
-    cost: 350,
-    description: 'Protective coating for wheels and brake calipers.',
-    points: [
-      'Heat-resistant ceramic coating',
-      'Repels brake dust and contaminants',
-      'Easy cleaning and maintenance',
-    ],
-    useCases: [
-      'Keeps wheels looking clean longer.',
-      'Protects against corrosion and oxidation.',
-    ],
-    column: 4,
-    position: 15,
-    connector: 'AND',
-  },
- ] as AlaCarteOption[]
-).map(option => ({ ...option, isPublished: option.isPublished ?? true }));
+  [
+    {
+      id: "suntek-complete",
+      name: "Suntek Pro Complete Package",
+      price: 1195,
+      cost: 550,
+      description:
+        "Protects the most vulnerable parts of your vehicle from rock chips and scratches.",
+      points: [
+        "Prevents Rock Chips",
+        'Protects 18"-24" Hood',
+        "Front Bumper",
+        "Fenders",
+        "Mirrors",
+        "Door Cups",
+      ],
+      warranty: "10 Year Warranty",
+      column: 4, // Popular add-on
+      position: 0,
+      connector: "AND",
+    },
+    {
+      id: "suntek-standard",
+      name: "Suntek Protective Film (Standard Package)",
+      price: 1695,
+      cost: 350,
+      description:
+        "10 Year Warranty — essential protection for the most vulnerable front-facing areas.",
+      points: ['Protects 18"-24" Hood', "Fenders", "Mirrors"],
+      warranty: "10 Year Warranty",
+      column: 4, // Popular add-on
+      position: 1,
+      connector: "AND",
+    },
+    {
+      id: "headlights",
+      name: "Headlights Protection",
+      price: 295,
+      cost: 125,
+      description:
+        "A durable film to prevent hazing, yellowing, and cracking of headlight lenses.",
+      points: ["Maintains clarity for optimal night visibility."],
+      column: 4, // Popular add-on
+      position: 2,
+      connector: "AND",
+    },
+    {
+      id: "doorcups",
+      name: "Door Cups Only",
+      price: 195,
+      cost: 75,
+      description:
+        "Invisible film applied behind door handles to prevent scratches from keys and fingernails.",
+      points: ["Protects a high-wear area from daily use."],
+      column: 4, // Popular add-on
+      position: 3,
+      connector: "AND",
+    },
+    {
+      id: "evernew",
+      name: "EverNew Appearance Package",
+      price: 1899,
+      cost: 400,
+      description:
+        "Mobile cosmetic repair service for minor damages — we come to you.",
+      points: [
+        "Scratch, Chip, & Dent Repair",
+        "Eliminate Insurance Claims",
+        "Eliminate Bad Carfax Reports",
+        "Covered for 5 years",
+        "We Come to You!",
+      ],
+      isNew: true,
+      column: 4, // Popular add-on
+      position: 4,
+      connector: "AND",
+    },
+    {
+      id: "screen-defender",
+      name: "Screen Defender",
+      price: 799,
+      cost: 50,
+      description:
+        "Warrantied protections against chipping, cracking, breaking and scratching.",
+      points: [
+        "Warrantied protections against chipping, cracking, breaking and scratching",
+      ],
+      column: 4, // Popular add-on
+      position: 5,
+      connector: "AND",
+    },
+    {
+      id: "diamond-shield",
+      name: "Diamond Shield Windshield Protection",
+      price: 150,
+      cost: 150,
+      description:
+        "A treatment that improves visibility and protects your windshield.",
+      points: [
+        "Increase visibility in rain",
+        "Protects against night glare",
+        "Help against chipping, cracking, clouding, sand, salt",
+      ],
+      useCases: [
+        "Safer driving in bad weather conditions.",
+        "Prevents minor chips from turning into large cracks.",
+      ],
+      warranty: "Lifetime coverage",
+      column: 4,
+      position: 6,
+      connector: "AND",
+    },
+    {
+      id: "rustguard-pro-alacarte",
+      name: "RustGuard Pro",
+      price: 300,
+      cost: 300,
+      description:
+        "Underbody protection to prevent corrosion and structural damage.",
+      points: [
+        "Prolongs the life of vehicle",
+        "Reduce repair/replacement costs",
+        "Prevent structural weakness",
+      ],
+      useCases: [
+        "Protects against road salt in winter.",
+        "Prevents rust from forming on the chassis.",
+      ],
+      warranty: "Lifetime coverage",
+      column: 4,
+      position: 7,
+      connector: "AND",
+    },
+    {
+      id: "toughguard-premium-alacarte",
+      name: "ToughGuard Premium",
+      price: 250,
+      cost: 250,
+      description:
+        "A premium paint sealant that protects against environmental damage.",
+      points: [
+        "One Time Application",
+        "Eliminates waxing",
+        "Covers damage from road tar, well water, bird droppings, tree sap, acid rain, etc.",
+      ],
+      useCases: [
+        "Keeps your car looking glossy and new.",
+        "Makes washing easier as dirt and grime slide off.",
+      ],
+      column: 4,
+      position: 8,
+      connector: "AND",
+    },
+    {
+      id: "interior-protection-alacarte",
+      name: "Interior Leather & Fabric Protection",
+      price: 200,
+      cost: 200,
+      description:
+        "A complete interior treatment to protect against stains and damage.",
+      points: [
+        "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
+        "Prevents cracking, covers rips, tears & burns",
+      ],
+      useCases: [
+        "Ideal for families with children or pets.",
+        "Maintains the value and appearance of your interior.",
+      ],
+      column: 4,
+      position: 9,
+      connector: "AND",
+    },
+    {
+      id: "elite-ceramic-coating",
+      name: "Elite Ceramic Coating",
+      price: 500,
+      cost: 500,
+      description:
+        "Advanced ceramic protection with superior durability and shine.",
+      points: [
+        "9H hardness rating",
+        "Hydrophobic water repellency",
+        "UV protection for paint longevity",
+      ],
+      useCases: [
+        "Provides showroom-quality shine for years.",
+        "Reduces need for frequent washing and waxing.",
+      ],
+      warranty: "5 Year Warranty",
+      column: 4,
+      position: 10,
+      connector: "AND",
+    },
+    {
+      id: "elite-paint-correction",
+      name: "Elite Paint Correction",
+      price: 400,
+      cost: 400,
+      description: "Professional-grade paint restoration and polishing.",
+      points: [
+        "Removes swirl marks and scratches",
+        "Restores original paint clarity",
+        "Multi-stage polishing process",
+      ],
+      useCases: [
+        "Eliminates imperfections from daily driving.",
+        "Prepares surface for maximum coating adhesion.",
+      ],
+      column: 4,
+      position: 11,
+      connector: "AND",
+    },
+    {
+      id: "elite-interior-detail",
+      name: "Elite Interior Detailing",
+      price: 300,
+      cost: 300,
+      description: "Comprehensive interior cleaning and protection treatment.",
+      points: [
+        "Deep cleaning of all surfaces",
+        "Leather conditioning and protection",
+        "Fabric stain guard application",
+      ],
+      useCases: [
+        "Restores interior to like-new condition.",
+        "Extends life of leather and fabric surfaces.",
+      ],
+      column: 4,
+      position: 12,
+      connector: "AND",
+    },
+    {
+      id: "platinum-ppf-full",
+      name: "Platinum Full PPF Coverage",
+      price: 800,
+      cost: 800,
+      description:
+        "Complete paint protection film coverage for maximum protection.",
+      points: [
+        "Full body PPF installation",
+        "Self-healing technology",
+        "Invisible protection barrier",
+      ],
+      useCases: [
+        "Ultimate protection against rock chips and debris.",
+        "Maintains resale value with pristine paint condition.",
+      ],
+      warranty: "10 Year Warranty",
+      column: 4,
+      position: 13,
+      connector: "AND",
+    },
+    {
+      id: "platinum-graphene-coating",
+      name: "Platinum Graphene Coating",
+      price: 600,
+      cost: 600,
+      description: "Next-generation graphene-infused ceramic coating.",
+      points: [
+        "Superior hardness and durability",
+        "Anti-static dust repellency",
+        "Enhanced heat dissipation",
+      ],
+      useCases: [
+        "Top-tier protection for luxury vehicles.",
+        "Lasts longer than traditional ceramic coatings.",
+      ],
+      warranty: "7 Year Warranty",
+      column: 4,
+      position: 14,
+      connector: "AND",
+    },
+    {
+      id: "platinum-wheel-coating",
+      name: "Platinum Wheel & Caliper Coating",
+      price: 350,
+      cost: 350,
+      description: "Protective coating for wheels and brake calipers.",
+      points: [
+        "Heat-resistant ceramic coating",
+        "Repels brake dust and contaminants",
+        "Easy cleaning and maintenance",
+      ],
+      useCases: [
+        "Keeps wheels looking clean longer.",
+        "Protects against corrosion and oxidation.",
+      ],
+      column: 4,
+      position: 15,
+      connector: "AND",
+    },
+  ] as AlaCarteOption[]
+).map((option) => ({ ...option, isPublished: option.isPublished ?? true }));

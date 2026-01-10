@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Zod schemas for runtime data validation.
@@ -6,60 +6,89 @@ import { z } from 'zod';
  */
 
 // Connector Schema
-export const FeatureConnectorSchema = z.enum(['AND', 'OR']);
+export const FeatureConnectorSchema = z.enum(["AND", "OR"]);
 export type FeatureConnector = z.infer<typeof FeatureConnectorSchema>;
 
 // Product Feature Schema
-export const ProductFeatureSchema = z.object({
-  id: z.string().min(1, 'ID is required'),
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
-  points: z.array(z.string()),
-  useCases: z.array(z.string()),
-  price: z.number().nonnegative('Price must be non-negative'), // Allow 0 for features included in packages
-  cost: z.number().nonnegative('Cost must be non-negative'),
-  warranty: z.string().optional(),
-  imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
-  thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
-  videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
-  column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
-  position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
-  connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
-  // A La Carte publishing fields
-  publishToAlaCarte: z.boolean().optional().default(false),
-  alaCartePrice: z.number().nonnegative('A La Carte price must be non-negative').optional(),
-  alaCarteWarranty: z.string().optional(),
-  alaCarteIsNew: z.boolean().optional(),
-}).refine(
-  (data) => {
-    // If publishToAlaCarte is true, alaCartePrice is required
-    if (data.publishToAlaCarte === true) {
-      return data.alaCartePrice !== undefined && data.alaCartePrice !== null;
+export const ProductFeatureSchema = z
+  .object({
+    id: z.string().min(1, "ID is required"),
+    name: z.string().min(1, "Name is required"),
+    description: z.string().min(1, "Description is required"),
+    points: z.array(z.string()),
+    useCases: z.array(z.string()),
+    price: z.number().nonnegative("Price must be non-negative"), // Allow 0 for features included in packages
+    cost: z.number().nonnegative("Cost must be non-negative"),
+    warranty: z.string().optional(),
+    imageUrl: z
+      .string()
+      .url("Image URL must be valid")
+      .optional()
+      .or(z.literal("")),
+    thumbnailUrl: z
+      .string()
+      .url("Thumbnail URL must be valid")
+      .optional()
+      .or(z.literal("")),
+    videoUrl: z
+      .string()
+      .url("Video URL must be valid")
+      .optional()
+      .or(z.literal("")),
+    column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
+    position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
+    connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
+    // A La Carte publishing fields
+    publishToAlaCarte: z.boolean().optional().default(false),
+    alaCartePrice: z
+      .number()
+      .nonnegative("A La Carte price must be non-negative")
+      .optional(),
+    alaCarteWarranty: z.string().optional(),
+    alaCarteIsNew: z.boolean().optional(),
+  })
+  .refine(
+    (data) => {
+      // If publishToAlaCarte is true, alaCartePrice is required
+      if (data.publishToAlaCarte === true) {
+        return data.alaCartePrice !== undefined && data.alaCartePrice !== null;
+      }
+      return true;
+    },
+    {
+      message: "A La Carte price is required when publishing to A La Carte",
+      path: ["alaCartePrice"],
     }
-    return true;
-  },
-  {
-    message: 'A La Carte price is required when publishing to A La Carte',
-    path: ['alaCartePrice'],
-  }
-);
+  );
 
 export type ProductFeature = z.infer<typeof ProductFeatureSchema>;
 
 // A La Carte Option Schema
 export const AlaCarteOptionSchema = z.object({
-  id: z.string().min(1, 'ID is required'),
-  name: z.string().min(1, 'Name is required'),
-  price: z.number().nonnegative('Price must be non-negative'),
-  cost: z.number().nonnegative('Cost must be non-negative'),
-  description: z.string().min(1, 'Description is required'),
+  id: z.string().min(1, "ID is required"),
+  name: z.string().min(1, "Name is required"),
+  price: z.number().nonnegative("Price must be non-negative"),
+  cost: z.number().nonnegative("Cost must be non-negative"),
+  description: z.string().min(1, "Description is required"),
   points: z.array(z.string()),
   isNew: z.boolean().optional(),
   warranty: z.string().optional(),
   useCases: z.array(z.string()).optional(),
-  imageUrl: z.string().url('Image URL must be valid').optional().or(z.literal('')),
-  thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional().or(z.literal('')),
-  videoUrl: z.string().url('Video URL must be valid').optional().or(z.literal('')),
+  imageUrl: z
+    .string()
+    .url("Image URL must be valid")
+    .optional()
+    .or(z.literal("")),
+  thumbnailUrl: z
+    .string()
+    .url("Thumbnail URL must be valid")
+    .optional()
+    .or(z.literal("")),
+  videoUrl: z
+    .string()
+    .url("Video URL must be valid")
+    .optional()
+    .or(z.literal("")),
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
   position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
@@ -72,14 +101,14 @@ export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;
 
 // Package Tier Schema
 export const PackageTierSchema = z.object({
-  id: z.string().min(1, 'ID is required'),
-  name: z.string().min(1, 'Name is required'),
-  price: z.number().nonnegative('Price must be non-negative'),
-  cost: z.number().nonnegative('Cost must be non-negative'),
+  id: z.string().min(1, "ID is required"),
+  name: z.string().min(1, "Name is required"),
+  price: z.number().nonnegative("Price must be non-negative"),
+  cost: z.number().nonnegative("Cost must be non-negative"),
   features: z.array(ProductFeatureSchema),
   isRecommended: z.boolean().optional(),
   is_recommended: z.boolean().optional(),
-  tier_color: z.string().min(1, 'Tier color is required'),
+  tier_color: z.string().min(1, "Tier color is required"),
 });
 
 export type PackageTier = z.infer<typeof PackageTierSchema>;
@@ -96,10 +125,10 @@ export type PriceOverrides = z.infer<typeof PriceOverridesSchema>;
 
 // Customer Info Schema
 export const CustomerInfoSchema = z.object({
-  name: z.string().min(1, 'Customer name is required'),
-  year: z.string().min(4, 'Year must be valid'),
-  make: z.string().min(1, 'Make is required'),
-  model: z.string().min(1, 'Model is required'),
+  name: z.string().min(1, "Customer name is required"),
+  year: z.string().min(4, "Year must be valid"),
+  make: z.string().min(1, "Make is required"),
+  model: z.string().min(1, "Model is required"),
 });
 
 export type CustomerInfo = z.infer<typeof CustomerInfoSchema>;
@@ -112,8 +141,6 @@ export const EnvSchema = z.object({
   VITE_FIREBASE_STORAGE_BUCKET: z.string().optional(),
   VITE_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
   VITE_FIREBASE_APP_ID: z.string().optional(),
-  VITE_GEMINI_API_KEY: z.string().min(1).optional(),
-  VITE_USE_AI_PROXY: z.enum(['true', 'false']).optional(),
 });
 
 /**
@@ -129,7 +156,7 @@ export function safeParseData<T>(
 
   if (!result.success) {
     console.error(
-      `Validation error${context ? ` in ${context}` : ''}:`,
+      `Validation error${context ? ` in ${context}` : ""}:`,
       result.error.format()
     );
     return null;
@@ -156,7 +183,7 @@ export function validateDataArray<T>(
       validItems.push(result.data);
     } else {
       console.error(
-        `Validation error${context ? ` in ${context}` : ''} for item ${index}:`,
+        `Validation error${context ? ` in ${context}` : ""} for item ${index}:`,
         result.error.format()
       );
     }

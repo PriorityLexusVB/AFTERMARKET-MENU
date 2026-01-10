@@ -9,10 +9,8 @@ import { AddonSelector } from "./components/AddonSelector";
 import { SettingsModal } from "./components/SettingsModal";
 import { SelectionDrawer } from "./components/SelectionDrawer";
 import { AgreementView } from "./components/AgreementView";
-import { AIAssistant } from "./components/AIAssistant";
 import { Login } from "./components/Login";
 import { AdminPanel } from "./components/AdminPanel";
-import { CompareModal } from "./components/CompareModal";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
@@ -68,13 +66,21 @@ const App: React.FC = () => {
   >(null);
   const [currentPage, setCurrentPage] = useState<Page>("packages");
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
-  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
   const ipadLandscapeQuery =
     "(min-width: 1024px) and (max-width: 1367px) and (orientation: landscape)";
   const computeIsIpadLandscape = useCallback(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined")
       return false;
+
+    // Local override to help validate iPad-only layout in desktop emulation.
+    // Example: http://localhost:5174/?forceIpad=1
+    const forceIpad =
+      new URLSearchParams(window.location.search).get("forceIpad") === "1";
+    if (forceIpad) {
+      return true;
+    }
+
     const isIpadUA =
       /iPad/.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -132,10 +138,15 @@ const App: React.FC = () => {
       isIpadLandscape && currentView === "menu" && !isAdminView;
     if (shouldLock) {
       document.body.classList.add(className);
+      document.documentElement.classList.add(className);
     } else {
       document.body.classList.remove(className);
+      document.documentElement.classList.remove(className);
     }
-    return () => document.body.classList.remove(className);
+    return () => {
+      document.body.classList.remove(className);
+      document.documentElement.classList.remove(className);
+    };
   }, [isIpadLandscape, currentView, isAdminView]);
 
   useEffect(() => {
@@ -149,28 +160,56 @@ const App: React.FC = () => {
     if (!shouldLock) return;
     const root = document.documentElement;
     let header: Element | null = document.querySelector("header");
+    let selectionBar: Element | null =
+      document.querySelector(".am-selection-bar");
+
+    let resizeObserver: ResizeObserver | null = null;
+    let handleResize: (() => void) | null = null;
+    let observedHeader = false;
+    let observedSelectionBar = false;
 
     const updateHeaderHeight = () => {
       if (!header) {
         header = document.querySelector("header");
       }
+      if (!selectionBar) {
+        selectionBar = document.querySelector(".am-selection-bar");
+      }
+
+      if (resizeObserver && header && !observedHeader) {
+        resizeObserver.observe(header);
+        observedHeader = true;
+      }
+      if (resizeObserver && selectionBar && !observedSelectionBar) {
+        resizeObserver.observe(selectionBar);
+        observedSelectionBar = true;
+      }
+
       if (header) {
         const height = (header as HTMLElement).getBoundingClientRect().height;
         root.style.setProperty("--ipad-header-h", `${height}px`);
       }
-      root.style.setProperty("--ipad-bottom-bar-h", "84px");
+      const barHeight = selectionBar
+        ? (selectionBar as HTMLElement).getBoundingClientRect().height
+        : 112;
+      root.style.setProperty(
+        "--ipad-bottom-bar-h",
+        `${Math.round(barHeight)}px`
+      );
     };
 
     updateHeaderHeight();
 
-    let resizeObserver: ResizeObserver | null = null;
-    let handleResize: (() => void) | null = null;
+    const rafId = window.requestAnimationFrame(() => {
+      updateHeaderHeight();
+    });
 
-    if (typeof ResizeObserver !== "undefined" && header) {
+    if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
         updateHeaderHeight();
       });
-      resizeObserver.observe(header);
+      // Observe elements lazily once they exist.
+      updateHeaderHeight();
     } else {
       handleResize = () => {
         updateHeaderHeight();
@@ -179,8 +218,14 @@ const App: React.FC = () => {
     }
 
     return () => {
+      window.cancelAnimationFrame(rafId);
       if (resizeObserver && header) {
         resizeObserver.unobserve(header);
+      }
+      if (resizeObserver && selectionBar) {
+        resizeObserver.unobserve(selectionBar);
+      }
+      if (resizeObserver) {
         resizeObserver.disconnect();
       }
       if (handleResize) {
@@ -402,23 +447,6 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleOpenCompareModal = useCallback(
-    () => setIsCompareModalOpen(true),
-    []
-  );
-  const handleCloseCompareModal = useCallback(
-    () => setIsCompareModalOpen(false),
-    []
-  );
-
-  const handleSelectPackageFromCompare = useCallback(
-    (pkg: PackageTier) => {
-      handleSelectPackage(pkg);
-      handleCloseCompareModal();
-    },
-    [handleSelectPackage, handleCloseCompareModal]
-  );
-
   const handleToggleAlaCarteItem = useCallback((item: AlaCarteOption) => {
     setCustomPackageItems((prev) => {
       const isSelected = prev.some((i) => i.id === item.id);
@@ -550,15 +578,13 @@ const App: React.FC = () => {
               onSelectPackage={handleSelectPackage}
               onViewFeature={handleViewDetail}
               addonColumn={
-                enableIpadMenuLayout ? undefined : (
-                  <AddonSelector
-                    items={mainPageAddons}
-                    selectedItems={customPackageItems}
-                    onToggleItem={handleToggleAlaCarteItem}
-                    onViewItem={handleViewDetail}
-                    className="h-full min-h-0"
-                  />
-                )
+                <AddonSelector
+                  items={mainPageAddons}
+                  selectedItems={customPackageItems}
+                  onToggleItem={handleToggleAlaCarteItem}
+                  onViewItem={handleViewDetail}
+                  className="h-full min-h-0"
+                />
               }
               gridClassName={
                 isIpadLandscape ? "items-stretch h-full" : "items-stretch"
@@ -649,28 +675,6 @@ const App: React.FC = () => {
         <div className={tabsRowClass}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
-          {currentPage === "packages" && (
-            <button
-              onClick={handleOpenCompareModal}
-              className="am-menu-tab-btn am-menu-compare-btn flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
-                />
-              </svg>
-              Compare Packages
-            </button>
-          )}
         </div>
 
         {enableIpadMenuLayout ? (
@@ -769,10 +773,6 @@ const App: React.FC = () => {
                 onShowAgreement={handleShowAgreement}
                 variant="bar"
               />
-              <AIAssistant
-                packages={displayPackages}
-                alaCarteOptions={curatedAlaCarteOptions}
-              />
             </>
           )}
         </>
@@ -781,13 +781,6 @@ const App: React.FC = () => {
       {viewingDetailItem && (
         <FeatureModal feature={viewingDetailItem} onClose={handleCloseModal} />
       )}
-      <CompareModal
-        isOpen={isCompareModalOpen}
-        onClose={handleCloseCompareModal}
-        packages={displayPackages}
-        allFeatures={allFeatures}
-        onSelectPackage={handleSelectPackageFromCompare}
-      />
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}

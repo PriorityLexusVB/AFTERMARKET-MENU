@@ -78,6 +78,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
 
   if (isCompact) {
     const orderedItems = [...featuredItems, ...otherItems];
+    // iPad "paper mode": a single-column "menu row" layout reads faster than a grid.
     const itemsPerPage = 6;
     const totalPages = Math.max(
       1,
@@ -97,16 +98,22 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
             <h4 className="text-base font-semibold text-lux-text">
               Available Add-Ons
             </h4>
-            <p className="text-xs text-lux-textMuted">
-              Page {safePage} of {totalPages}
+            <p className="text-xs text-lux-textMuted mt-0.5">
+              Tap an option name for details.
             </p>
+            <div className="mt-1 inline-flex items-center gap-2">
+              <span className="text-xs text-lux-textMuted">Page</span>
+              <span className="text-xs font-semibold bg-gray-800/70 text-gray-200 px-2 py-1 rounded-md">
+                {safePage} / {totalPages}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={handlePrev}
               disabled={safePage <= 1}
-              className="btn-lux-ghost px-3 py-2 min-h-[44px] disabled:opacity-50"
+              className="btn-lux-ghost px-4 py-2 min-h-[44px] min-w-[88px] disabled:opacity-50"
               aria-label="Previous add-ons page"
             >
               Prev
@@ -115,7 +122,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
               type="button"
               onClick={handleNext}
               disabled={safePage >= totalPages}
-              className="btn-lux-ghost px-3 py-2 min-h-[44px] disabled:opacity-50"
+              className="btn-lux-primary px-4 py-2 min-h-[44px] min-w-[88px] disabled:opacity-50"
               aria-label="Next add-ons page"
             >
               Next
@@ -123,7 +130,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
+        <div className="flex flex-col gap-3 flex-1 min-h-0">
           {pageItems.map((item) => (
             <AlaCarteItem
               key={item.id}

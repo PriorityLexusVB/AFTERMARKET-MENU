@@ -8,7 +8,6 @@ interface PackageCardProps {
   onSelect: () => void;
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
   className?: string;
-  style?: React.CSSProperties;
   isCompact?: boolean;
 }
 
@@ -33,7 +32,6 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   onSelect,
   onViewFeature,
   className = "",
-  style,
   isCompact = false,
 }) => {
   const formatPrice = (price: number) => {
@@ -49,9 +47,20 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
-  const featuresToRender = isCompact
-    ? includedPackageFeatures.slice(0, 1)
-    : includedPackageFeatures;
+
+  const CompactDivider: React.FC<{ text: string }> = ({ text }) => (
+    <div className="flex items-center justify-center my-2">
+      <div className="h-px bg-white/10 flex-grow"></div>
+      <span
+        className={`font-bold px-2 text-[11px] uppercase tracking-wider ${
+          text === "OR" ? "text-yellow-400" : "text-green-400"
+        }`}
+      >
+        {text}
+      </span>
+      <div className="h-px bg-white/10 flex-grow"></div>
+    </div>
+  );
 
   return (
     <div
@@ -62,7 +71,6 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       ${isRecommended ? "lux-card-recommended" : ""}
       ${className}
     `}
-      style={style}
     >
       <div
         className={`${
@@ -97,17 +105,21 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             isCompact ? "am-package-body-compact" : "am-package-body"
           } ${isCompact ? "space-y-2" : "space-y-3"} flex-1 overflow-hidden`}
         >
-          {featuresToRender.map((feature, index) => {
-            let divider = null;
-            if (!isCompact && index > 0) {
-              const connector = feature.connector || "AND";
-              divider = <Divider text={connector} />;
-            }
+          {includedPackageFeatures.map((feature, index) => {
+            const connector = feature.connector || "AND";
+            const divider =
+              index > 0 ? (
+                isCompact ? (
+                  <CompactDivider text={connector} />
+                ) : (
+                  <Divider text={connector} />
+                )
+              ) : null;
 
             return (
               <div key={feature.id}>
                 {divider}
-                <div className={`text-center ${isCompact ? "mt-1" : "mt-2"}`}>
+                <div className={`text-center ${isCompact ? "mt-0" : "mt-2"}`}>
                   <button
                     onClick={() => onViewFeature(feature)}
                     className={`min-h-[44px] font-semibold ${
@@ -116,20 +128,29 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
-                    <span className="clamp-2">{feature.name}</span>
+                    <span className={isCompact ? "clamp-1" : "clamp-2"}>
+                      {feature.name}
+                    </span>
                   </button>
-                  {!isCompact && (
-                    <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
-                      {feature.points.map((p, idx) => (
-                        <li
-                          key={`${feature.id}-point-${idx}`}
-                          className="clamp-3"
-                        >
-                          *{p}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <ul
+                    className={`text-lux-textMuted ${
+                      isCompact
+                        ? "text-xs mt-1 space-y-0.5"
+                        : "text-sm sm:text-base mt-2 space-y-1"
+                    }`}
+                  >
+                    {(isCompact
+                      ? feature.points.slice(0, 3)
+                      : feature.points
+                    ).map((p, idx) => (
+                      <li
+                        key={`${feature.id}-point-${idx}`}
+                        className={isCompact ? "clamp-1" : "clamp-3"}
+                      >
+                        *{p}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             );

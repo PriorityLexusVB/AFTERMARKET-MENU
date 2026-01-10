@@ -1,4 +1,5 @@
 # Luxury iPad Optimized Components
+
 ## Code Examples for Implementation
 
 This document provides complete, production-ready component code optimized for luxury iPad experience.
@@ -22,10 +23,12 @@ This document provides complete, production-ready component code optimized for l
 **File:** `src/components/Header.luxury-ipad.tsx`
 
 ```tsx
-import React from 'react';
-import { User } from 'firebase/auth';
+import React from "react";
+import { User } from "firebase/auth";
 
-const SettingsIcon: React.FC<{ className?: string }> = ({ className = "w-7 h-7" }) => (
+const SettingsIcon: React.FC<{ className?: string }> = ({
+  className = "w-7 h-7",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -34,8 +37,16 @@ const SettingsIcon: React.FC<{ className?: string }> = ({ className = "w-7 h-7" 
     stroke="currentColor"
     className={className}
   >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a6.759 6.759 0 0 1 0 1.905c-.008.379.137.752.43.992l1.004.827a1.125 1.125 0 0 1 .26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.759 6.759 0 0 1 0-1.905c.008-.379-.137-.752-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a6.759 6.759 0 0 1 0 1.905c-.008.379.137.752.43.992l1.004.827a1.125 1.125 0 0 1 .26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.759 6.759 0 0 1 0-1.905c.008-.379-.137-.752-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+    />
   </svg>
 );
 
@@ -52,38 +63,42 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onLogout,
   onToggleAdminView,
-  isAdminView
+  isAdminView,
 }) => {
   return (
-    <header className="
+    <header
+      className="
       bg-luxury-black/90 backdrop-blur-xl
       py-6 ipad-p:py-8
       border-b border-white/10
       sticky top-0 z-header
       shadow-luxury-xl
-    ">
+    "
+    >
       <div className="container-ipad flex flex-col ipad-p:flex-row justify-between items-center gap-6">
-
         {/* Logo Section - Larger, more prominent */}
         <div className="text-center ipad-p:text-left">
-          <h1 className="
+          <h1
+            className="
             text-4xl ipad-p:text-5xl ipad-l:text-6xl
             font-bold tracking-luxury-widest font-display text-white
             text-shadow-lg
-          ">
+          "
+          >
             PRIORITY <span className="text-luxury-silver/70">LEXUS</span>
           </h1>
-          <p className="
+          <p
+            className="
             text-sm ipad-p:text-base
             text-luxury-silver/60 tracking-luxury-widest mt-1
-          ">
+          "
+          >
             VIRGINIA BEACH
           </p>
         </div>
 
         {/* Actions Section - Larger touch targets */}
         <div className="flex items-center gap-4 ipad-p:gap-6">
-
           {/* Admin Panel Toggle */}
           <button
             onClick={onToggleAdminView}
@@ -97,9 +112,9 @@ export const Header: React.FC<HeaderProps> = ({
               active:scale-95
               focus-visible-luxury
             "
-            aria-label={isAdminView ? 'View Menu' : 'Open Admin Panel'}
+            aria-label={isAdminView ? "View Menu" : "Open Admin Panel"}
           >
-            {isAdminView ? 'View Menu' : 'Admin Panel'}
+            {isAdminView ? "View Menu" : "Admin Panel"}
           </button>
 
           {/* Logout Button */}
@@ -122,12 +137,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="h-12 w-px bg-white/20 hidden ipad-p:block"></div>
 
           {/* Tagline - Hidden on smaller iPads */}
-          <p className="
+          <p
+            className="
             text-xl ipad-l:text-2xl
             text-luxury-silver/80 font-light
             tracking-luxury-wider
             hidden ipad-l:block
-          ">
+          "
+          >
             PRIORITIES FOR LIFE
           </p>
 
@@ -163,9 +180,9 @@ export const Header: React.FC<HeaderProps> = ({
 **File:** `src/components/PackageCard.luxury-ipad.tsx`
 
 ```tsx
-import React from 'react';
-import type { PackageTier, ProductFeature, AlaCarteOption } from '../types';
-import { sortFeatures } from '../utils/featureOrdering';
+import React from "react";
+import type { PackageTier, ProductFeature, AlaCarteOption } from "../types";
+import { sortFeatures } from "../utils/featureOrdering";
 
 interface PackageCardProps {
   packageInfo: PackageTier;
@@ -178,12 +195,14 @@ interface PackageCardProps {
 const Divider: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex items-center justify-center my-4">
     <div className="h-px bg-white/20 flex-grow"></div>
-    <span className={`
+    <span
+      className={`
       font-bold px-4
       text-xs ipad-p:text-sm
       uppercase tracking-luxury-widest
-      ${text === 'OR' ? 'text-yellow-400' : 'text-green-400'}
-    `}>
+      ${text === "OR" ? "text-yellow-400" : "text-green-400"}
+    `}
+    >
       {text}
     </span>
     <div className="h-px bg-white/20 flex-grow"></div>
@@ -195,19 +214,19 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   allFeaturesForDisplay,
   isSelected,
   onSelect,
-  onViewFeature
+  onViewFeature,
 }) => {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
   const includedPackageFeatures = sortFeatures(
-    allFeaturesForDisplay.filter(feature =>
-      packageInfo.features.some(pkgFeature => pkgFeature.id === feature.id)
+    allFeaturesForDisplay.filter((feature) =>
+      packageInfo.features.some((pkgFeature) => pkgFeature.id === feature.id)
     )
   );
 
@@ -220,38 +239,40 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         transition-all duration-600 ease-luxury
         h-full
         border-2
-        ${isSelected
-          ? 'scale-105 ring-4 ring-offset-4 ring-offset-luxury-black ring-lexus-blue-500 border-lexus-blue-500'
-          : 'border-white/10 hover:border-white/20 hover:shadow-luxury-xl'
+        ${
+          isSelected
+            ? "scale-105 ring-4 ring-offset-4 ring-offset-luxury-black ring-lexus-blue-500 border-lexus-blue-500"
+            : "border-white/10 hover:border-white/20 hover:shadow-luxury-xl"
         }
-        ${packageInfo.is_recommended
-          ? 'ring-2 ring-lexus-blue-400/50'
-          : ''
-        }
+        ${packageInfo.is_recommended ? "ring-2 ring-lexus-blue-400/50" : ""}
       `}
     >
       {/* Recommended Badge - Larger, more elegant */}
       {packageInfo.is_recommended && (
-        <div className="
+        <div
+          className="
           absolute -top-4 left-1/2 -translate-x-1/2
           bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500
           text-white px-6 py-2 rounded-full
           text-sm ipad-p:text-base font-bold shadow-luxury-lg
           uppercase tracking-luxury-widest
-        ">
+        "
+        >
           Most Popular
         </div>
       )}
 
       {/* Header - More spacious */}
       <div className="p-6 ipad-p:p-8 pb-4">
-        <h3 className={`
+        <h3
+          className={`
           font-display
           text-4xl ipad-p:text-5xl ipad-l:text-6xl
           font-bold uppercase tracking-wider text-center
           text-${packageInfo.tier_color}
           text-shadow-lg
-        `}>
+        `}
+        >
           {packageInfo.name}
         </h3>
       </div>
@@ -261,7 +282,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         {includedPackageFeatures.map((feature, index) => {
           let divider = null;
           if (index > 0) {
-            const connector = feature.connector || 'AND';
+            const connector = feature.connector || "AND";
             divider = <Divider text={connector} />;
           }
 
@@ -289,14 +310,16 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                 </button>
 
                 {/* Feature Points - Better spacing */}
-                <ul className="
+                <ul
+                  className="
                   text-base ipad-p:text-lg
                   mt-3
                   text-luxury-silver/80
                   space-y-1
                   leading-relaxed
-                ">
-                  {feature.points.map(p => (
+                "
+                >
+                  {feature.points.map((p) => (
                     <li key={p}>*{p}</li>
                   ))}
                 </ul>
@@ -309,17 +332,21 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       {/* Footer - Prominent pricing and CTA */}
       <div className="p-6 ipad-p:p-8 space-y-4">
         {/* Price Display - Much larger */}
-        <div className="
+        <div
+          className="
           py-4 ipad-p:py-6
           rounded-luxury-2xl text-center
           bg-gradient-to-br from-luxury-red-600 to-luxury-red-500
           shadow-luxury-xl
-        ">
-          <p className="
+        "
+        >
+          <p
+            className="
             text-5xl ipad-p:text-6xl ipad-l:text-7xl
             font-bold font-display text-white
             text-shadow-lg
-          ">
+          "
+          >
             {formatPrice(packageInfo.price)}
           </p>
         </div>
@@ -336,14 +363,15 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             transition-all duration-300 ease-luxury
             active:scale-95
             focus-visible-luxury
-            ${isSelected
-              ? 'bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500 text-white shadow-luxury-xl ring-2 ring-white/20'
-              : 'bg-white/10 text-luxury-silver hover:bg-lexus-blue-500 hover:text-white border-2 border-white/20'
+            ${
+              isSelected
+                ? "bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500 text-white shadow-luxury-xl ring-2 ring-white/20"
+                : "bg-white/10 text-luxury-silver hover:bg-lexus-blue-500 hover:text-white border-2 border-white/20"
             }
           `}
-          aria-label={isSelected ? 'Package selected' : 'Select package'}
+          aria-label={isSelected ? "Package selected" : "Select package"}
         >
-          {isSelected ? '✓ Selected' : 'Select Plan'}
+          {isSelected ? "✓ Selected" : "Select Plan"}
         </button>
       </div>
     </div>
@@ -359,7 +387,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
 ```tsx
 // Enhanced navigation button component for iPad
-const NavButton: React.FC<{ page: Page; label: string }> = ({ page, label }) => (
+const NavButton: React.FC<{ page: Page; label: string }> = ({
+  page,
+  label,
+}) => (
   <button
     onClick={() => setCurrentPage(page)}
     className={`
@@ -373,13 +404,14 @@ const NavButton: React.FC<{ page: Page; label: string }> = ({ page, label }) => 
       transition-all duration-300 ease-luxury
       active:scale-95
       focus-visible-luxury
-      ${currentPage === page
-        ? 'bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500 text-white shadow-luxury-xl ring-2 ring-white/20'
-        : 'bg-white/5 text-luxury-silver hover:bg-white/10 hover:text-white border-2 border-white/10'
+      ${
+        currentPage === page
+          ? "bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500 text-white shadow-luxury-xl ring-2 ring-white/20"
+          : "bg-white/5 text-luxury-silver hover:bg-white/10 hover:text-white border-2 border-white/10"
       }
     `}
     aria-label={`Navigate to ${label}`}
-    aria-current={currentPage === page ? 'page' : undefined}
+    aria-current={currentPage === page ? "page" : undefined}
   >
     {label}
   </button>
@@ -389,38 +421,7 @@ const NavButton: React.FC<{ page: Page; label: string }> = ({ page, label }) => 
 <div className="flex flex-col ipad-p:flex-row justify-center items-center gap-4 ipad-p:gap-6 mb-6 ipad-p:mb-8">
   <NavButton page="packages" label="Protection Packages" />
   <NavButton page="alacarte" label="A La Carte Options" />
-
-  {currentPage === 'packages' && (
-    <button
-      onClick={handleOpenCompareModal}
-      className="
-        min-h-touch
-        text-base ipad-p:text-lg font-semibold
-        text-blue-300 hover:text-white
-        transition-colors duration-300
-        bg-gray-700/50 hover:bg-gray-600/50
-        px-4 ipad-p:px-6 py-3
-        rounded-luxury-xl
-        flex items-center gap-2
-        active:scale-95
-        focus-visible-luxury
-      "
-      aria-label="Compare packages"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        className="w-5 h-5 ipad-p:w-6 ipad-p:h-6"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
-      </svg>
-      Compare Packages
-    </button>
-  )}
-</div>
+</div>;
 ```
 
 ---
@@ -430,8 +431,8 @@ const NavButton: React.FC<{ page: Page; label: string }> = ({ page, label }) => 
 **File:** `src/components/Summary.luxury-ipad.tsx`
 
 ```tsx
-import React from 'react';
-import type { PackageTier, AlaCarteOption } from '../types';
+import React from "react";
+import type { PackageTier, AlaCarteOption } from "../types";
 
 interface CustomerInfo {
   name: string;
@@ -448,7 +449,9 @@ interface SummaryProps {
   onShowAgreement: () => void;
 }
 
-const CheckmarkIcon: React.FC<{ className?: string }> = ({ className = "w-7 h-7" }) => (
+const CheckmarkIcon: React.FC<{ className?: string }> = ({
+  className = "w-7 h-7",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -457,7 +460,11 @@ const CheckmarkIcon: React.FC<{ className?: string }> = ({ className = "w-7 h-7"
     stroke="currentColor"
     className={className}
   >
-    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m4.5 12.75 6 6 9-13.5"
+    />
   </svg>
 );
 
@@ -466,96 +473,115 @@ export const Summary: React.FC<SummaryProps> = ({
   customPackageItems,
   totalPrice,
   customerInfo,
-  onShowAgreement
+  onShowAgreement,
 }) => {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
     }).format(price);
   };
 
   const hasSelection = selectedPackage || customPackageItems.length > 0;
   const hasCustomerInfo = customerInfo && customerInfo.name;
-  const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model]
+  const vehicleString = [
+    customerInfo.year,
+    customerInfo.make,
+    customerInfo.model,
+  ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
-    <footer className={`
+    <footer
+      className={`
       sticky bottom-0 left-0 right-0
       bg-luxury-black/95 backdrop-blur-2xl
       border-t border-white/10
       transition-transform duration-500 ease-luxury
       shadow-[0_-10px_40px_rgba(0,0,0,0.5)]
-      ${hasSelection ? 'translate-y-0' : 'translate-y-full'}
-    `}>
+      ${hasSelection ? "translate-y-0" : "translate-y-full"}
+    `}
+    >
       <div className="container-ipad py-6 ipad-p:py-8">
-        <div className="
+        <div
+          className="
           flex flex-col ipad-l:flex-row
           items-center justify-between
           gap-6 ipad-p:gap-8
-        ">
-
+        "
+        >
           {/* Customer Info Section */}
           <div className="flex-1 text-center ipad-l:text-left">
             {hasCustomerInfo ? (
               <>
-                <p className="
+                <p
+                  className="
                   text-base ipad-p:text-lg
                   text-luxury-silver/70 tracking-wide
-                ">
+                "
+                >
                   Custom quote prepared for:
                 </p>
-                <h4 className="
+                <h4
+                  className="
                   text-2xl ipad-p:text-3xl ipad-l:text-4xl
                   font-bold font-display tracking-wider
                   text-white mt-1
                   text-shadow-lg
-                ">
+                "
+                >
                   {customerInfo.name}
                 </h4>
                 {vehicleString && (
-                  <p className="
+                  <p
+                    className="
                     text-lg ipad-p:text-xl
                     font-semibold text-lexus-blue-400 mt-2
-                  ">
+                  "
+                  >
                     {vehicleString}
                   </p>
                 )}
               </>
             ) : (
-              <h4 className="
+              <h4
+                className="
                 text-2xl ipad-p:text-3xl
                 font-bold font-display tracking-wider
                 text-luxury-silver
                 text-shadow
-              ">
+              "
+              >
                 Your Custom Quote
               </h4>
             )}
 
             {/* Selected Items Chips */}
-            <div className="
+            <div
+              className="
               flex flex-wrap
               gap-3 ipad-p:gap-4
               text-base ipad-p:text-lg
               mt-4
               justify-center ipad-l:justify-start
-            ">
+            "
+            >
               {selectedPackage && (
-                <span className="
+                <span
+                  className="
                   font-semibold text-white
                   bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500
                   px-4 py-2 ipad-p:px-5 ipad-p:py-3
                   rounded-luxury-xl shadow-luxury-lg
                   animate-summary-item-in
-                ">
+                "
+                >
                   {selectedPackage.name} Package
                 </span>
               )}
-              {customPackageItems.map(item => (
+              {customPackageItems.map((item) => (
                 <span
                   key={item.id}
                   className="
@@ -573,21 +599,24 @@ export const Summary: React.FC<SummaryProps> = ({
 
           {/* Price & CTA Section */}
           <div className="flex items-center gap-6 ipad-p:gap-8">
-
             {/* Total Price Display */}
             <div className="text-center ipad-l:text-right">
-              <p className="
+              <p
+                className="
                 text-base ipad-p:text-lg
                 text-luxury-silver/70
                 font-display tracking-luxury-widest uppercase
-              ">
+              "
+              >
                 Total Purchase Price
               </p>
-              <p className="
+              <p
+                className="
                 text-5xl ipad-p:text-6xl ipad-l:text-7xl
                 font-bold font-display text-white mt-1
                 text-shadow-lg
-              ">
+              "
+              >
                 {formatPrice(totalPrice)}
               </p>
             </div>
@@ -631,45 +660,79 @@ export const Summary: React.FC<SummaryProps> = ({
 **File:** `src/components/FeatureModal.luxury-ipad.tsx`
 
 ```tsx
-import React, { useEffect } from 'react';
-import type { ProductFeature, AlaCarteOption } from '../types';
+import React, { useEffect } from "react";
+import type { ProductFeature, AlaCarteOption } from "../types";
 
 interface FeatureModalProps {
   feature: ProductFeature | AlaCarteOption;
   onClose: () => void;
 }
 
-const CheckIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clipRule="evenodd" />
+const CheckIcon: React.FC<{ className?: string }> = ({
+  className = "w-6 h-6",
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    className={className}
+  >
+    <path
+      fillRule="evenodd"
+      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
-const LightbulbIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+const LightbulbIcon: React.FC<{ className?: string }> = ({
+  className = "w-6 h-6",
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    className={className}
+  >
     <path d="M10 1a6 6 0 00-3.815 10.631C7.237 12.5 8 13.443 8 14.456v.644a.75.75 0 00.572.729 6.016 6.016 0 002.856 0A.75.75 0 0012 15.1v-.644c0-1.013.762-1.957 1.815-2.825A6 6 0 0010 1zM8.863 17.414a.75.75 0 00-.226 1.483 9.066 9.066 0 002.726 0 .75.75 0 00-.226-1.483 7.553 7.553 0 01-2.274 0z" />
   </svg>
 );
 
-const CloseIcon: React.FC<{ className?: string }> = ({ className = "h-8 w-8" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+const CloseIcon: React.FC<{ className?: string }> = ({
+  className = "h-8 w-8",
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
   </svg>
 );
 
-export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) => {
+export const FeatureModal: React.FC<FeatureModalProps> = ({
+  feature,
+  onClose,
+}) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleEsc);
-    document.body.style.overflow = 'hidden';
+    window.addEventListener("keydown", handleEsc);
+    document.body.style.overflow = "hidden";
 
     return () => {
-      window.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'unset';
+      window.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "unset";
     };
   }, [onClose]);
 
@@ -698,14 +761,16 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
           max-h-[85vh] overflow-y-auto
           scrollbar-luxury
         "
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="
+        <div
+          className="
           p-8 ipad-p:p-10 ipad-l:p-12
           border-b border-white/10
           flex justify-between items-start gap-6
-        ">
+        "
+        >
           <div className="flex-1">
             <h2
               id="feature-modal-title"
@@ -717,15 +782,18 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
             >
               {feature.name}
             </h2>
-            <p className="
+            <p
+              className="
               text-lg ipad-p:text-xl
               text-luxury-silver/80 mt-4
               leading-luxury-relaxed
-            ">
+            "
+            >
               {feature.description}
             </p>
-            {'warranty' in feature && feature.warranty && (
-              <p className="
+            {"warranty" in feature && feature.warranty && (
+              <p
+                className="
                 mt-4
                 text-base ipad-p:text-lg font-bold
                 bg-yellow-400/10 text-yellow-300
@@ -733,7 +801,8 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
                 rounded-luxury-xl
                 inline-block
                 border border-yellow-400/30
-              ">
+              "
+              >
                 {feature.warranty}
               </p>
             )}
@@ -760,30 +829,35 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
 
         {/* Content */}
         <div className="p-8 ipad-p:p-10 ipad-l:p-12 space-y-10">
-
           {/* Key Features */}
           {feature.points && feature.points.length > 0 && (
             <div>
-              <h3 className="
+              <h3
+                className="
                 text-2xl ipad-p:text-3xl
                 font-bold font-display tracking-wider
                 text-lexus-blue-400 mb-6
-              ">
+              "
+              >
                 Key Features
               </h3>
               <ul className="space-y-4">
                 {feature.points.map((point, index) => (
                   <li key={index} className="flex items-start space-x-4">
-                    <CheckIcon className="
+                    <CheckIcon
+                      className="
                       text-green-400
                       w-6 h-6 ipad-p:w-7 ipad-p:h-7
                       flex-shrink-0 mt-1
-                    " />
-                    <span className="
+                    "
+                    />
+                    <span
+                      className="
                       text-lg ipad-p:text-xl
                       text-luxury-silver
                       leading-luxury-relaxed
-                    ">
+                    "
+                    >
                       {point}
                     </span>
                   </li>
@@ -795,26 +869,32 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
           {/* Use Cases */}
           {feature.useCases && feature.useCases.length > 0 && (
             <div>
-              <h3 className="
+              <h3
+                className="
                 text-2xl ipad-p:text-3xl
                 font-bold font-display tracking-wider
                 text-yellow-400 mb-6
-              ">
+              "
+              >
                 Real-World Scenarios
               </h3>
               <ul className="space-y-4">
                 {feature.useCases.map((useCase, index) => (
                   <li key={index} className="flex items-start space-x-4">
-                    <LightbulbIcon className="
+                    <LightbulbIcon
+                      className="
                       text-yellow-400
                       w-6 h-6 ipad-p:w-7 ipad-p:h-7
                       flex-shrink-0 mt-1
-                    " />
-                    <span className="
+                    "
+                    />
+                    <span
+                      className="
                       text-lg ipad-p:text-xl
                       text-luxury-silver
                       leading-luxury-relaxed
-                    ">
+                    "
+                    >
                       {useCase}
                     </span>
                   </li>
@@ -836,7 +916,7 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) 
 **File:** `src/components/LoadingSpinner.luxury-ipad.tsx`
 
 ```tsx
-import React from 'react';
+import React from "react";
 
 export const LoadingSpinner: React.FC = () => (
   <div className="flex-grow flex items-center justify-center">
@@ -864,12 +944,14 @@ export const LoadingSpinner: React.FC = () => (
       </svg>
 
       {/* Loading Text */}
-      <p className="
+      <p
+        className="
         text-2xl ipad-p:text-3xl
         font-display tracking-wider
         text-luxury-silver
         text-shadow
-      ">
+      "
+      >
         Loading Protection Plans...
       </p>
     </div>
@@ -884,21 +966,21 @@ export const LoadingSpinner: React.FC = () => (
 **File:** `src/components/Buttons.luxury-ipad.tsx`
 
 ```tsx
-import React from 'react';
+import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'success' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "success" | "ghost";
+  size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
 }
 
 export const LuxuryButton: React.FC<ButtonProps> = ({
   children,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   fullWidth = false,
-  className = '',
+  className = "",
   ...props
 }) => {
   const baseClasses = `
@@ -933,12 +1015,12 @@ export const LuxuryButton: React.FC<ButtonProps> = ({
   };
 
   const sizeClasses = {
-    sm: 'min-h-touch px-6 py-3 text-base ipad-p:text-lg',
-    md: 'min-h-touch px-8 py-4 text-lg ipad-p:text-xl',
-    lg: 'min-h-touch-lg px-10 py-5 text-xl ipad-p:text-2xl',
+    sm: "min-h-touch px-6 py-3 text-base ipad-p:text-lg",
+    md: "min-h-touch px-8 py-4 text-lg ipad-p:text-xl",
+    lg: "min-h-touch-lg px-10 py-5 text-xl ipad-p:text-2xl",
   };
 
-  const widthClass = fullWidth ? 'w-full' : '';
+  const widthClass = fullWidth ? "w-full" : "";
 
   return (
     <button
@@ -957,7 +1039,8 @@ export const LuxuryButton: React.FC<ButtonProps> = ({
 };
 
 // Icon Button Component
-interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface IconButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: React.ReactNode;
   label: string;
 }
@@ -965,7 +1048,7 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
 export const LuxuryIconButton: React.FC<IconButtonProps> = ({
   icon,
   label,
-  className = '',
+  className = "",
   ...props
 }) => {
   return (
@@ -997,6 +1080,7 @@ export const LuxuryIconButton: React.FC<IconButtonProps> = ({
 ### 1. File Structure
 
 Create these files in your project:
+
 ```
 src/
 ├── components/
@@ -1013,18 +1097,21 @@ src/
 ### 2. Gradual Migration Strategy
 
 **Phase 1:** Test one component
+
 - Start with `Header.luxury-ipad.tsx`
 - Import and use alongside existing Header
 - Compare on physical iPad
 - Iterate based on feedback
 
 **Phase 2:** Roll out incrementally
+
 - Replace components one at a time
 - Test each thoroughly
 - Monitor performance
 - Gather user feedback
 
 **Phase 3:** Full migration
+
 - Replace all components
 - Update tailwind.config.js
 - Update index.css
@@ -1033,6 +1120,7 @@ src/
 ### 3. Testing Checklist
 
 For each component:
+
 - [ ] Test on iPad 10.2" (portrait & landscape)
 - [ ] Test on iPad Pro 12.9" (portrait & landscape)
 - [ ] Verify touch targets (minimum 44px)
@@ -1063,10 +1151,11 @@ const FeatureModal = lazy(() => import('./components/FeatureModal.luxury-ipad'))
 ### 5. CSS Custom Properties
 
 Add to your CSS for easy theming:
+
 ```css
 :root {
-  --color-brand-primary: #0066FF;
-  --color-brand-secondary: #00B67A;
+  --color-brand-primary: #0066ff;
+  --color-brand-secondary: #00b67a;
   --spacing-touch-min: 44px;
   --font-size-ipad-base: 1.125rem;
   --transition-luxury: 600ms cubic-bezier(0.25, 0.1, 0.25, 1);

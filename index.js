@@ -3,7 +3,10 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
-import { logStartupDiagnostics, startMemoryMonitoring } from "./utils/runtime-checks.js";
+import {
+  logStartupDiagnostics,
+  startMemoryMonitoring,
+} from "./utils/runtime-checks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,7 +70,12 @@ const loadManifest = () => {
     console.log("[BOOT] Loaded manifest from", file);
     return manifestPayload;
   } catch (error) {
-    console.warn("[BOOT WARNING] Failed to read manifest from", file, ":", error);
+    console.warn(
+      "[BOOT WARNING] Failed to read manifest from",
+      file,
+      ":",
+      error
+    );
     manifestLoadFailed = true;
     return null;
   }
@@ -139,7 +147,9 @@ console.log("[BOOT] distDir:", distDir, "exists?", distExists);
 console.log("[BOOT] indexHtml:", indexHtml, "exists?", indexExists);
 
 if (!distExists || !indexExists) {
-  console.warn("[BOOT WARNING] Build artifacts missing - app will show splash page");
+  console.warn(
+    "[BOOT WARNING] Build artifacts missing - app will show splash page"
+  );
   console.warn("[BOOT WARNING] This may indicate:");
   console.warn("[BOOT WARNING]   1. Build step was skipped or failed");
   console.warn("[BOOT WARNING]   2. GCS volume mount overwrote /app/dist");
@@ -154,7 +164,8 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 
 // Never cache HTML (SPA)
 app.use((req, res, next) => {
-  if (req.path.endsWith(".html") || req.path === "/") res.setHeader("Cache-Control", "no-store");
+  if (req.path.endsWith(".html") || req.path === "/")
+    res.setHeader("Cache-Control", "no-store");
   next();
 });
 
@@ -225,41 +236,6 @@ app.get("/__debug", debugLimiter, (_req, res) => {
     indexExists,
     distFiles: debugDistFiles,
   });
-});
-
-// Gemini AI proxy endpoint
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { message, history, systemInstruction } = req.body;
-
-    if (!message) return res.status(400).json({ error: "Message is required" });
-
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("[AI] Gemini API key not configured");
-      return res.status(500).json({
-        error: "AI service not configured. Please contact support.",
-      });
-    }
-
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey });
-
-    const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
-      config: systemInstruction ? { systemInstruction } : undefined,
-    });
-
-    const response = await chat.sendMessage({ message });
-
-    res.json({ text: response.text, success: true });
-  } catch (error) {
-    console.error("[AI] Error processing chat request:", error);
-    res.status(500).json({
-      error: "An error occurred while processing your request. Please try again.",
-      success: false,
-    });
-  }
 });
 
 // SPA fallback

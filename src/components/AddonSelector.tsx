@@ -1,6 +1,6 @@
-import React from 'react';
-import type { AlaCarteOption, ProductFeature } from '../types';
-import { AddonItem } from './AddonItem';
+import React from "react";
+import type { AlaCarteOption, ProductFeature } from "../types";
+import { AddonItem } from "./AddonItem";
 
 interface AddonSelectorProps {
   items: AlaCarteOption[];
@@ -10,22 +10,36 @@ interface AddonSelectorProps {
   className?: string;
 }
 
-export const AddonSelector: React.FC<AddonSelectorProps> = ({ items, selectedItems, onToggleItem, onViewItem, className }) => {
+export const AddonSelector: React.FC<AddonSelectorProps> = ({
+  items,
+  selectedItems,
+  onToggleItem,
+  onViewItem,
+  className,
+}) => {
   return (
-    <div className={`bg-gray-800/50 border border-gray-700 rounded-lg p-4 h-full min-h-0 flex flex-col ${className ?? ''}`}>
-      <h3 className="text-2xl font-teko font-bold tracking-wider text-gray-200 mb-4 text-center">Popular Add-Ons</h3>
+    <div
+      className={`bg-gray-800/50 border border-gray-700 rounded-lg p-4 h-full min-h-0 flex flex-col ${
+        className ?? ""
+      }`}
+    >
+      <h3 className="text-2xl font-teko font-bold tracking-wider text-gray-200 mb-4 text-center">
+        Add-Ons
+      </h3>
       <div className="space-y-3 flex-grow pr-2 min-h-0 overflow-hidden">
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
             <p>No featured add-ons configured yet.</p>
-            <p>Publish in Product Hub, then mark Featured (Column 4) to show here.</p>
+            <p>Set the Packages-page add-ons list via MAIN_PAGE_ADDON_IDS.</p>
           </div>
         ) : (
           items.map((item) => (
             <AddonItem
               key={item.id}
               item={item}
-              isSelected={selectedItems.some(selected => selected.id === item.id)}
+              isSelected={selectedItems.some(
+                (selected) => selected.id === item.id
+              )}
               onToggle={() => onToggleItem(item)}
               onView={() => onViewItem(item)}
             />

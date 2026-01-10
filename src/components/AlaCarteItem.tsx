@@ -28,6 +28,65 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
     }).format(price);
   };
 
+  if (isCompact) {
+    return (
+      <div
+        draggable={!disableDrag}
+        onDragStart={disableDrag ? undefined : onDragStart}
+        className={`lux-card p-3 flex items-center justify-between gap-4 transition-all duration-200 ${
+          isSelected ? "ring-1 ring-lux-blue/70 bg-lux-blue/5" : ""
+        } ${
+          disableDrag
+            ? ""
+            : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5"
+        }`}
+      >
+        <button
+          onClick={onViewItem}
+          className="flex-1 min-w-0 text-left min-h-[44px]"
+          aria-label={`Learn more about ${item.name}`}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-2xl leading-tight font-bold font-teko tracking-wider text-lux-textStrong hover:text-lux-blue transition-colors clamp-1">
+              {item.name}
+            </span>
+            {item.isNew && <span className="lux-chip-gold">New</span>}
+          </div>
+          {item.warranty && (
+            <div className="text-sm font-bold text-lux-gold mt-0.5">
+              {item.warranty}
+            </div>
+          )}
+        </button>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-lux-textMuted">
+              Price
+            </div>
+            <div className="text-4xl font-teko leading-none text-lux-textStrong">
+              {formatPrice(item.price)}
+            </div>
+          </div>
+
+          {onToggle && disableDrag && (
+            <button
+              onClick={onToggle}
+              disabled={isSelected}
+              className={`min-h-[48px] min-w-[120px] px-5 py-3 text-lg font-semibold rounded-md transition-colors ${
+                isSelected
+                  ? "bg-gray-700 text-gray-300 cursor-not-allowed"
+                  : "btn-lux-primary"
+              }`}
+            >
+              {isSelected ? "ADDED" : "ADD"}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       draggable={!disableDrag}
@@ -45,29 +104,39 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
           New
         </div>
       )}
+
       <div className="flex-grow">
         <button
           onClick={onViewItem}
           className={`${
-            isCompact ? "text-lg min-h-[44px]" : "text-xl"
+            isCompact ? "text-xl leading-tight min-h-[44px]" : "text-xl"
           } font-bold font-teko tracking-wider text-left text-lux-textStrong hover:text-lux-blue transition-colors w-full`}
           aria-label={`Learn more about ${item.name}`}
         >
           <span className={isCompact ? "clamp-2" : ""}>{item.name}</span>
         </button>
+
         {item.warranty && (
           <p className="text-sm font-bold text-lux-gold mb-2">
             {item.warranty}
           </p>
         )}
+
         <div className="lux-price-plaque mt-2">
           <span className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
             Price
           </span>
-          <span className="text-2xl font-teko text-lux-textStrong">
+          <span
+            className={
+              isCompact
+                ? "text-3xl font-teko text-lux-textStrong"
+                : "text-2xl font-teko text-lux-textStrong"
+            }
+          >
             {formatPrice(item.price)}
           </span>
         </div>
+
         {!isCompact && (
           <>
             <p className="text-sm text-lux-textMuted mt-3 mb-4">
@@ -83,6 +152,7 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
           </>
         )}
       </div>
+
       <div className={`${isCompact ? "mt-4" : "mt-6"} flex flex-col gap-3`}>
         {!disableDrag && !isCompact && (
           <div className="text-xs text-lux-textMuted font-semibold uppercase tracking-wider">
@@ -93,13 +163,15 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
           <button
             onClick={onToggle}
             disabled={isSelected}
-            className={`w-full min-h-[48px] px-4 py-3 text-sm font-semibold rounded-md transition-colors ${
+            className={`w-full min-h-[48px] px-4 py-3 ${
+              isCompact ? "text-base" : "text-sm"
+            } font-semibold rounded-md transition-colors ${
               isSelected
                 ? "bg-gray-700 text-gray-300 cursor-not-allowed"
                 : "btn-lux-primary"
             }`}
           >
-            {isSelected ? "ADDED" : "+ ADD"}
+            {isSelected ? "ADDED" : "ADD"}
           </button>
         )}
       </div>

@@ -277,10 +277,6 @@ h6,
     @apply w-full sm:w-auto px-5 py-2.5 rounded-xl text-lg font-teko tracking-wider transition-all duration-300 transform active:scale-98 border min-h-[44px];
   }
 
-  .am-menu-compare-btn {
-    @apply rounded-md text-sm font-semibold bg-gray-700/50 text-blue-300 hover:text-white border-lux-border/60 hover:border-lux-gold/60;
-  }
-
   /* iPad landscape: tighten header height without impacting desktop */
   .ipad-landscape-lock .am-page-header {
     @apply pt-2 pb-2;
@@ -601,6 +597,15 @@ h6,
     overflow: hidden;
   }
 
+  .clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    /* autoprefixer: ignore next */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -611,6 +616,8 @@ h6,
   }
 
   .ipad-landscape-lock,
+  html.ipad-landscape-lock,
+  body.ipad-landscape-lock,
   .ipad-landscape-lock #root {
     height: var(--app-height, 100vh);
     overflow: hidden;

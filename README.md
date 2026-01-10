@@ -6,7 +6,6 @@ This is an interactive digital menu for customers to explore and select vehicle 
 
 - 🎨 **Interactive Package Selection** - Browse and select from curated protection packages
 - 🛒 **A La Carte Options** - Build custom packages with individual options
-- 🤖 **AI Assistant** - Get help choosing the right protection with Google Gemini AI
 - 📊 **Analytics Tracking** - Comprehensive Firebase Analytics integration
 - 📸 **Image Upload** - Firebase Storage integration for product images
 - 🔒 **Admin Panel** - Secure admin interface for managing products
@@ -35,12 +34,11 @@ npm install
 
 ### Step 3: Set Up Environment Variables
 
-The application connects to a Firebase project and uses the Gemini API. You need to provide credentials for both.
+The application connects to a Firebase project. You need to provide Firebase credentials.
 
 1.  Create a new file named `.env.local` in the root of the project.
 2.  Copy the contents of `.env.example` into your new `.env.local` file.
-3.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key. All variables must start with `VITE_` to be recognized by the application.
-4.  Fill in the values with your actual Firebase Web App configuration and your Gemini API key.
+3.  Fill in the values with your actual Firebase Web App configuration. All variables must start with `VITE_` to be recognized by the application.
 
 ### Step 4: Run the Development Server
 
@@ -100,7 +98,7 @@ gcloud run deploy YOUR_SERVICE_NAME \
   --source . \
   --region YOUR_REGION \
   --allow-unauthenticated \
-  --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=YOUR_APP_ID,VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY"
+  --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=YOUR_APP_ID"
 ```
 
 **Command Breakdown:**
@@ -135,14 +133,13 @@ After deploying, you need to configure the environment variables in the Google C
 1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
 2.  Navigate to your Cloud Run service.
 3.  Click **"Edit & Deploy New Revision"**.
-4.  Under the **"Variables & Secrets"** tab, add the following environment variables with their corresponding values from your Firebase project and Google AI Studio:
+4.  Under the **"Variables & Secrets"** tab, add the following environment variables with their corresponding values from your Firebase project:
     - `VITE_FIREBASE_API_KEY`
     - `VITE_FIREBASE_AUTH_DOMAIN`
     - `VITE_FIREBASE_PROJECT_ID`
     - `VITE_FIREBASE_STORAGE_BUCKET`
     - `VITE_FIREBASE_MESSAGING_SENDER_ID`
     - `VITE_FIREBASE_APP_ID`
-    - `VITE_GEMINI_API_KEY`
 5.  Click **"Deploy"** to apply the changes.
 
 ## Firebase Backend Setup
@@ -364,7 +361,6 @@ The application includes comprehensive **Firebase Analytics** tracking:
 - **Feature Views** - Which features users click to learn more
 - **Quote Finalization** - When users finalize their selection
 - **Print Actions** - Quote printing behavior
-- **AI Assistant Usage** - Assistant opens, messages sent, engagement
 - **Admin Actions** - Admin panel access and feature management
 
 ### Viewing Analytics
@@ -538,7 +534,6 @@ npm run dev
 - **Build Tool**: Vite 5.2.0
 - **Styling**: Tailwind CSS 3.4.3
 - **Backend**: Firebase 12.6.0 (Firestore, Auth, Analytics, Storage)
-- **AI**: Google Gemini AI
 - **Testing**: Vitest 4.0.10 + React Testing Library + Playwright
 - **Drag & Drop**: @dnd-kit/core + @dnd-kit/sortable
 - **Validation**: Zod 4.1.12

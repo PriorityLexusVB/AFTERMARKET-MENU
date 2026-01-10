@@ -9,7 +9,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env["CI"],
   retries: process.env["CI"] ? 2 : 0,
-  workers: process.env["CI"] ? 1 : undefined,
+  // Defaulting to Playwright's max worker count can be unstable on some Windows setups.
+  // Keep CI deterministic (1 worker) and cap local runs to a small number.
+  workers: process.env["CI"] ? 1 : 2,
   reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
   use: {
     baseURL: "http://localhost:4173",
@@ -25,7 +27,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run build && npm run preview -- --host 0.0.0.0 --port 4173 --strictPort",
+    command:
+      "npm run build && npm run preview -- --host 0.0.0.0 --port 4173 --strictPort",
     url: "http://localhost:4173",
     reuseExistingServer: !process.env["CI"],
     timeout: 120000,

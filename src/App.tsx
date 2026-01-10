@@ -522,7 +522,8 @@ const App: React.FC = () => {
     </div>
   );
 
-  const enableIpadMenuLayout = isIpadLandscape && currentView === "menu";
+  const enableIpadMenuLayout =
+    isIpadLandscape && currentView === "menu" && !isAdminView;
   const enableIpadPackagesLayout =
     enableIpadMenuLayout && currentPage === "packages";
   const enableIpadAlaCarteLayout =
@@ -542,44 +543,8 @@ const App: React.FC = () => {
     const tabsRowClass = `am-page-tabs-row flex flex-col sm:flex-row justify-center items-center gap-3 shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
     }`;
-    return (
-      <div className={wrapperClass}>
-        <div className="am-page-header shrink-0">
-          <div className="am-page-header-stack text-center">
-            <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
-            <p className={heroSubtitleClass}>
-              Select one of our expertly curated packages, or build a custom
-              package from our a la carte options.
-            </p>
-          </div>
-        </div>
-
-        <div className={tabsRowClass}>
-          <NavButton page="packages" label="Protection Packages" />
-          <NavButton page="alacarte" label="A La Carte Options" />
-          {currentPage === "packages" && (
-            <button
-              onClick={handleOpenCompareModal}
-              className="text-sm font-semibold text-blue-300 hover:text-white transition-colors bg-gray-700/50 px-3 py-1.5 rounded-md flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
-                />
-              </svg>
-              Compare Packages
-            </button>
-          )}
-        </div>
+    const pageContent = (
+      <>
         {currentPage === "packages" && (
           <div className="am-grid-top flex-1 min-h-0">
             <PackageSelector
@@ -654,6 +619,53 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+      </>
+    );
+
+    return (
+      <div className={wrapperClass}>
+        <div className="am-page-header shrink-0">
+          <div className="am-page-header-stack text-center">
+            <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
+            <p className={heroSubtitleClass}>
+              Select one of our expertly curated packages, or build a custom
+              package from our a la carte options.
+            </p>
+          </div>
+        </div>
+
+        <div className={tabsRowClass}>
+          <NavButton page="packages" label="Protection Packages" />
+          <NavButton page="alacarte" label="A La Carte Options" />
+          {currentPage === "packages" && (
+            <button
+              onClick={handleOpenCompareModal}
+              className="text-sm font-semibold text-blue-300 hover:text-white transition-colors bg-gray-700/50 px-3 py-1.5 rounded-md flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+                />
+              </svg>
+              Compare Packages
+            </button>
+          )}
+        </div>
+
+        {enableIpadMenuLayout ? (
+          <div className="flex-1 min-h-0 overflow-auto">{pageContent}</div>
+        ) : (
+          pageContent
+        )}
       </div>
     );
   };
@@ -688,7 +700,9 @@ const App: React.FC = () => {
       />
 
       {isAdminView && !isDemoMode && !guestMode ? (
-        <AdminPanel onDataUpdate={loadData} />
+        <div className="h-[var(--app-height,100vh)] overflow-auto">
+          <AdminPanel onDataUpdate={loadData} />
+        </div>
       ) : (
         <>
           <main

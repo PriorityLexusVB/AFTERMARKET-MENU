@@ -257,19 +257,19 @@ h6,
 
   /* Aftermarket spacing standards */
   .am-page-header {
-    @apply pt-6 pb-4 md:pt-8 md:pb-6;
+    @apply pt-4 pb-3 md:pt-6 md:pb-4;
   }
 
   .am-page-header-stack {
-    @apply space-y-3 md:space-y-4;
+    @apply space-y-2 md:space-y-3;
   }
 
   .am-page-tabs-row {
-    @apply mb-4 md:mb-5;
+    @apply mb-3 md:mb-4;
   }
 
   .am-grid-top {
-    @apply mt-4 md:mt-6;
+    @apply mt-3 md:mt-5;
   }
 
   .am-package-card {

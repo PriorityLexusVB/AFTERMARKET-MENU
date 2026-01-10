@@ -49,6 +49,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
+  const featuresToRender = isCompact
+    ? includedPackageFeatures.slice(0, 1)
+    : includedPackageFeatures;
 
   return (
     <div
@@ -66,13 +69,17 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           isCompact ? "am-package-header-compact" : "am-package-header"
         } flex items-start justify-between`}
       >
-        <div className="am-package-title-block space-y-1">
+        <div
+          className={`am-package-title-block ${
+            isCompact ? "space-y-0.5" : "space-y-1"
+          }`}
+        >
           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">
             Plan
           </p>
           <h3
             className={`font-teko ${
-              isCompact ? "text-2xl" : "text-3xl sm:text-4xl"
+              isCompact ? "text-xl leading-none" : "text-3xl sm:text-4xl"
             } font-bold uppercase tracking-wider text-lux-textStrong`}
           >
             {packageInfo.name}
@@ -88,14 +95,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         <div
           className={`am-package-first-feature ${
             isCompact ? "am-package-body-compact" : "am-package-body"
-          } space-y-3 flex-1 overflow-hidden`}
+          } ${isCompact ? "space-y-2" : "space-y-3"} flex-1 overflow-hidden`}
         >
-          {includedPackageFeatures.map((feature, index) => {
+          {featuresToRender.map((feature, index) => {
             let divider = null;
-            // Add a divider before every feature except the first one
-            if (index > 0) {
-              // Use the connector from the current feature (it indicates how this feature connects to the previous one)
-              // Default to 'AND' if not specified
+            if (!isCompact && index > 0) {
               const connector = feature.connector || "AND";
               divider = <Divider text={connector} />;
             }
@@ -103,25 +107,29 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             return (
               <div key={feature.id}>
                 {divider}
-                <div className="text-center mt-2">
+                <div className={`text-center ${isCompact ? "mt-1" : "mt-2"}`}>
                   <button
                     onClick={() => onViewFeature(feature)}
-                    className="min-h-[44px] font-semibold text-lg sm:text-xl text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1"
+                    className={`min-h-[44px] font-semibold ${
+                      isCompact ? "text-base" : "text-lg sm:text-xl"
+                    } text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
                     <span className="clamp-2">{feature.name}</span>
                   </button>
-                  <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
-                    {feature.points.map((p, idx) => (
-                      <li
-                        key={`${feature.id}-point-${idx}`}
-                        className="clamp-3"
-                      >
-                        *{p}
-                      </li>
-                    ))}
-                  </ul>
+                  {!isCompact && (
+                    <ul className="text-sm sm:text-base mt-2 text-lux-textMuted space-y-1">
+                      {feature.points.map((p, idx) => (
+                        <li
+                          key={`${feature.id}-point-${idx}`}
+                          className="clamp-3"
+                        >
+                          *{p}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             );
@@ -130,7 +138,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       </div>
 
       <div
-        className={`space-y-3 mt-auto ${
+        className={`${isCompact ? "space-y-2" : "space-y-3"} mt-auto ${
           isCompact ? "am-package-footer-compact" : "am-package-footer"
         }`}
       >
@@ -141,7 +149,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             </p>
             <p
               className={`${
-                isCompact ? "text-3xl" : "text-4xl sm:text-5xl"
+                isCompact ? "text-2xl" : "text-4xl sm:text-5xl"
               } font-teko text-lux-textStrong`}
             >
               {formatPrice(packageInfo.price)}

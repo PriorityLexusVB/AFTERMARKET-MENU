@@ -302,6 +302,31 @@ h6,
     @apply px-4 py-2 min-h-[44px];
   }
 
+  /* iPad landscape: compact package cards so the grid can fit without scrolling */
+  .ipad-landscape-lock .am-package-card {
+    @apply px-4;
+  }
+
+  .ipad-landscape-lock .am-package-title-block {
+    @apply mb-2;
+  }
+
+  .ipad-landscape-lock .am-package-header-compact {
+    @apply p-3 pb-2;
+  }
+
+  .ipad-landscape-lock .am-package-body-compact {
+    @apply p-3 pt-0;
+  }
+
+  .ipad-landscape-lock .am-package-footer-compact {
+    @apply p-3 pt-2;
+  }
+
+  .ipad-landscape-lock .lux-price-plaque {
+    @apply px-3 py-2;
+  }
+
   .am-grid-top {
     @apply mt-3 md:mt-5;
   }

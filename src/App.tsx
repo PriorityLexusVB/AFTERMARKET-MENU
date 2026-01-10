@@ -128,13 +128,15 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const className = "ipad-landscape-lock";
-    if (isIpadLandscape) {
+    const shouldLock =
+      isIpadLandscape && currentView === "menu" && !isAdminView;
+    if (shouldLock) {
       document.body.classList.add(className);
     } else {
       document.body.classList.remove(className);
     }
     return () => document.body.classList.remove(className);
-  }, [isIpadLandscape]);
+  }, [isIpadLandscape, currentView, isAdminView]);
 
   useEffect(() => {
     if (
@@ -143,6 +145,8 @@ const App: React.FC = () => {
       typeof window === "undefined"
     )
       return;
+    const shouldLock = currentView === "menu" && !isAdminView;
+    if (!shouldLock) return;
     const root = document.documentElement;
     let header: Element | null = document.querySelector("header");
 
@@ -185,7 +189,7 @@ const App: React.FC = () => {
       root.style.removeProperty("--ipad-header-h");
       root.style.removeProperty("--ipad-bottom-bar-h");
     };
-  }, [isIpadLandscape]);
+  }, [isIpadLandscape, currentView, isAdminView]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -352,18 +356,13 @@ const App: React.FC = () => {
   }, [displayAllAlaCarteOptions]);
 
   const mainPageAddons = useMemo(() => {
-    const byColumn = curatedAlaCarteOptions
-      .filter((option) => option.column === 4)
-      .sort(
-        (a, b) =>
-          (a.position ?? Number.MAX_SAFE_INTEGER) -
-          (b.position ?? Number.MAX_SAFE_INTEGER)
-      );
-
-    if (byColumn.length > 0) return byColumn;
-
-    return curatedAlaCarteOptions.filter((option) =>
-      MAIN_PAGE_ADDON_IDS.includes(option.id)
+    // The Packages page "Add Ons" column should be a tight, explicit whitelist
+    // (matching the printed menu), not "everything in Column 4".
+    const byId = new Map(
+      curatedAlaCarteOptions.map((option) => [option.id, option])
+    );
+    return MAIN_PAGE_ADDON_IDS.map((id) => byId.get(id)).filter(
+      (option): option is AlaCarteOption => Boolean(option)
     );
   }, [curatedAlaCarteOptions]);
 
@@ -551,16 +550,18 @@ const App: React.FC = () => {
               onSelectPackage={handleSelectPackage}
               onViewFeature={handleViewDetail}
               addonColumn={
-                <AddonSelector
-                  items={mainPageAddons}
-                  selectedItems={customPackageItems}
-                  onToggleItem={handleToggleAlaCarteItem}
-                  onViewItem={handleViewDetail}
-                  className="h-full min-h-0"
-                />
+                enableIpadMenuLayout ? undefined : (
+                  <AddonSelector
+                    items={mainPageAddons}
+                    selectedItems={customPackageItems}
+                    onToggleItem={handleToggleAlaCarteItem}
+                    onViewItem={handleViewDetail}
+                    className="h-full min-h-0"
+                  />
+                )
               }
               gridClassName={
-                isIpadLandscape ? "items-start h-full" : "items-stretch"
+                isIpadLandscape ? "items-stretch h-full" : "items-stretch"
               }
               isIpadLandscape={isIpadLandscape}
             />
@@ -582,18 +583,23 @@ const App: React.FC = () => {
                   : "xl:w-3/5"
               }
             >
-              <h3 className="lux-title mb-4">Available Options</h3>
-              <div
+              <h3
                 className={
-                  enableIpadAlaCarteLayout ? "h-full overflow-y-auto pr-1" : ""
+                  enableIpadAlaCarteLayout
+                    ? "font-teko font-semibold tracking-wider text-lux-textStrong text-2xl mb-2"
+                    : "lux-title mb-4"
                 }
               >
+                Available Options
+              </h3>
+              <div className={enableIpadAlaCarteLayout ? "h-full min-h-0" : ""}>
                 <AlaCarteSelector
                   items={availableAlaCarteItems}
                   onViewItem={handleViewDetail}
                   disableDrag={disableAlaCarteDrag}
                   onToggleItem={handleToggleAlaCarteItem}
                   selectedIds={customPackageItems.map((item) => item.id)}
+                  isCompact={enableIpadAlaCarteLayout}
                 />
               </div>
             </div>
@@ -604,13 +610,22 @@ const App: React.FC = () => {
                   : "xl:w-2/5 flex flex-col min-h-0"
               }
             >
-              <h3 className="lux-title mb-4">Your Custom Package</h3>
+              <h3
+                className={
+                  enableIpadAlaCarteLayout
+                    ? "font-teko font-semibold tracking-wider text-lux-textStrong text-2xl mb-2"
+                    : "lux-title mb-4"
+                }
+              >
+                Your Custom Package
+              </h3>
               <div className="flex-1 min-h-0">
                 <CustomPackageBuilder
                   items={displayCustomPackageItems}
                   onDropItem={handleDropAlaCarte}
                   onRemoveItem={handleRemoveAlaCarte}
                   enableDrop={!disableAlaCarteDrag}
+                  isCompact={enableIpadAlaCarteLayout}
                 />
               </div>
             </div>
@@ -659,7 +674,7 @@ const App: React.FC = () => {
         </div>
 
         {enableIpadMenuLayout ? (
-          <div className="flex-1 min-h-0 overflow-auto">{pageContent}</div>
+          <div className="flex-1 min-h-0 overflow-hidden">{pageContent}</div>
         ) : (
           pageContent
         )}

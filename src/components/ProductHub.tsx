@@ -1,9 +1,26 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { addDoc, collection, getDocs, orderBy, query } from 'firebase/firestore/lite';
-import { db } from '../firebase';
-import type { AlaCarteOption, ProductFeature } from '../types';
-import { updateFeature, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature, updateAlaCarteOption } from '../data';
-import { FeatureForm } from './FeatureForm';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  orderBy,
+  query,
+} from "firebase/firestore/lite";
+import { db } from "../firebase";
+import type { AlaCarteOption, ProductFeature } from "../types";
+import {
+  updateFeature,
+  upsertAlaCarteFromFeature,
+  unpublishAlaCarteFromFeature,
+  updateAlaCarteOption,
+} from "../data";
+import { FeatureForm } from "./FeatureForm";
 
 interface ProductHubProps {
   onDataUpdate: () => void;
@@ -15,24 +32,24 @@ interface ProductHubProps {
 }
 
 const packageLaneOptions: Array<{ value: 1 | 2 | 3; label: string }> = [
-  { value: 1, label: 'Gold Package (Column 1)' },
-  { value: 2, label: 'Elite Package (Column 2)' },
-  { value: 3, label: 'Platinum Package (Column 3)' },
+  { value: 1, label: "Gold Package (Column 1)" },
+  { value: 2, label: "Elite Package (Column 2)" },
+  { value: 3, label: "Platinum Package (Column 3)" },
 ];
 const columnLabels: Record<1 | 2 | 3, string> = {
-  1: 'Gold Package (Column 1)',
-  2: 'Elite Package (Column 2)',
-  3: 'Platinum Package (Column 3)',
+  1: "Gold Package (Column 1)",
+  2: "Elite Package (Column 2)",
+  3: "Platinum Package (Column 3)",
 };
 const TABLE_COLUMN_COUNT = 1;
 const packageOrder: (1 | 2 | 3)[] = packageLaneOptions.map((opt) => opt.value);
 
 const getPlacementDisplay = (column?: number) => {
-  if (column === 4) return 'Featured (Popular Add-ons)';
-  if (column === 2) return 'Elite';
-  if (column === 3) return 'Platinum';
-  if (column === 1) return 'Gold';
-  return 'Unplaced';
+  if (column === 4) return "Featured (Popular Add-ons)";
+  if (column === 2) return "Elite";
+  if (column === 3) return "Platinum";
+  if (column === 1) return "Gold";
+  return "Unplaced";
 };
 
 export const ProductHub: React.FC<ProductHubProps> = ({
@@ -43,22 +60,40 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   scrollTargetId,
   onScrollHandled,
 }) => {
-  const [features, setFeatures] = useState<ProductFeature[]>(initialFeatures ?? []);
-  const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>(initialAlaCarteOptions ?? []);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [packageLaneFilter, setPackageLaneFilter] = useState<'all' | '1' | '2' | '3' | 'none'>('all');
-  const [publishFilter, setPublishFilter] = useState<'all' | 'published' | 'unpublished'>('all');
-  const [featuredFilter, setFeaturedFilter] = useState<'all' | 'featured' | 'not-featured'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<'all' | '1' | '2' | '3' | 'unplaced' | 'featured'>('all');
+  const [features, setFeatures] = useState<ProductFeature[]>(
+    initialFeatures ?? []
+  );
+  const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>(
+    initialAlaCarteOptions ?? []
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [packageLaneFilter, setPackageLaneFilter] = useState<
+    "all" | "1" | "2" | "3" | "none"
+  >("all");
+  const [publishFilter, setPublishFilter] = useState<
+    "all" | "published" | "unpublished"
+  >("all");
+  const [featuredFilter, setFeaturedFilter] = useState<
+    "all" | "featured" | "not-featured"
+  >("all");
+  const [categoryFilter, setCategoryFilter] = useState<
+    "all" | "1" | "2" | "3" | "unplaced" | "featured"
+  >("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkWorking, setIsBulkWorking] = useState(false);
   const [isLoading, setIsLoading] = useState(initialFeatures ? false : true);
   const [error, setError] = useState<string | null>(null);
-  const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(null);
+  const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(
+    null
+  );
   const [showForm, setShowForm] = useState(false);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
-  const [positionInputs, setPositionInputs] = useState<Record<string, string>>({});
-  const [advancedOpenIds, setAdvancedOpenIds] = useState<Set<string>>(new Set());
+  const [positionInputs, setPositionInputs] = useState<Record<string, string>>(
+    {}
+  );
+  const [advancedOpenIds, setAdvancedOpenIds] = useState<Set<string>>(
+    new Set()
+  );
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -141,7 +176,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
   const fetchData = useCallback(async () => {
     if (!db) {
-      setError('Firebase is not connected.');
+      setError("Firebase is not connected.");
       setIsLoading(false);
       return;
     }
@@ -149,15 +184,25 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     setError(null);
     try {
       const [featuresSnap, alaCarteSnap] = await Promise.all([
-        getDocs(query(collection(db, 'features'), orderBy('name'))),
-        getDocs(query(collection(db, 'ala_carte_options'), orderBy('name'))),
+        getDocs(query(collection(db, "features"), orderBy("name"))),
+        getDocs(query(collection(db, "ala_carte_options"), orderBy("name"))),
       ]);
 
-      setFeatures(featuresSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as ProductFeature)));
-      setAlaCarteOptions(alaCarteSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as AlaCarteOption)));
+      setFeatures(
+        featuresSnap.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as ProductFeature)
+        )
+      );
+      setAlaCarteOptions(
+        alaCarteSnap.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as AlaCarteOption)
+        )
+      );
     } catch (err) {
-      console.error('Error loading Product Hub data:', err);
-      setError('Failed to load Product Hub data. Please check your Firestore rules and connection.');
+      console.error("Error loading Product Hub data:", err);
+      setError(
+        "Failed to load Product Hub data. Please check your Firestore rules and connection."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -188,11 +233,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
   useEffect(() => {
     if (!scrollTargetId) return;
-    setSearchTerm('');
-    setPackageLaneFilter('all');
-    setPublishFilter('all');
-    setFeaturedFilter('all');
-    setCategoryFilter('all');
+    setSearchTerm("");
+    setPackageLaneFilter("all");
+    setPublishFilter("all");
+    setFeaturedFilter("all");
+    setCategoryFilter("all");
   }, [scrollTargetId]);
 
   const alaCarteMap = useMemo(() => {
@@ -209,34 +254,54 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         feature.description?.toLowerCase().includes(queryText);
       if (!matchesSearch) return false;
 
-      const lane = feature.column ? String(feature.column) : 'none';
-      if (packageLaneFilter !== 'all' && packageLaneFilter !== lane) return false;
+      const lane = feature.column ? String(feature.column) : "none";
+      if (packageLaneFilter !== "all" && packageLaneFilter !== lane)
+        return false;
 
-      const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
-      if (publishFilter === 'published' && !isPublished) return false;
-      if (publishFilter === 'unpublished' && isPublished) return false;
+      const isPublished =
+        option?.isPublished ?? feature.publishToAlaCarte ?? false;
+      if (publishFilter === "published" && !isPublished) return false;
+      if (publishFilter === "unpublished" && isPublished) return false;
 
       const isFeatured = option?.column === 4;
-      if (featuredFilter === 'featured' && !isFeatured) return false;
-      if (featuredFilter === 'not-featured' && isFeatured) return false;
+      if (featuredFilter === "featured" && !isFeatured) return false;
+      if (featuredFilter === "not-featured" && isFeatured) return false;
 
-      const categoryValue = isFeatured ? 'featured' : option?.column ? String(option.column) : 'unplaced';
-      if (categoryFilter !== 'all') {
-        if (categoryFilter === 'unplaced' && categoryValue !== 'unplaced') return false;
-        if (categoryFilter === 'featured' && categoryValue !== 'featured') return false;
-        if (!['unplaced', 'featured'].includes(categoryFilter) && categoryFilter !== categoryValue) return false;
+      const categoryValue = isFeatured
+        ? "featured"
+        : option?.column
+        ? String(option.column)
+        : "unplaced";
+      if (categoryFilter !== "all") {
+        if (categoryFilter === "unplaced" && categoryValue !== "unplaced")
+          return false;
+        if (categoryFilter === "featured" && categoryValue !== "featured")
+          return false;
+        if (
+          !["unplaced", "featured"].includes(categoryFilter) &&
+          categoryFilter !== categoryValue
+        )
+          return false;
       }
 
       return true;
     });
-  }, [alaCarteMap, categoryFilter, features, featuredFilter, packageLaneFilter, publishFilter, searchTerm]);
+  }, [
+    alaCarteMap,
+    categoryFilter,
+    features,
+    featuredFilter,
+    packageLaneFilter,
+    publishFilter,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     if (!scrollTargetId || isLoading) return;
     const attemptScroll = () => {
       const row = rowRefs.current[scrollTargetId];
       if (row) {
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
         onScrollHandled?.();
         return true;
       }
@@ -250,7 +315,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   }, [filteredFeatures, isLoading, onScrollHandled, scrollTargetId]);
 
   const allFilteredSelected = useMemo(
-    () => filteredFeatures.length > 0 && filteredFeatures.every((f) => selectedIds.has(f.id)),
+    () =>
+      filteredFeatures.length > 0 &&
+      filteredFeatures.every((f) => selectedIds.has(f.id)),
     [filteredFeatures, selectedIds]
   );
   const someSelected = selectedIds.size > 0;
@@ -265,15 +332,25 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   }, [allFilteredSelected, someSelected]);
 
-  const updateFeatureState = (featureId: string, updates: Partial<ProductFeature>) => {
-    setFeatures((prev) => prev.map((f) => (f.id === featureId ? { ...f, ...updates } : f)));
+  const updateFeatureState = (
+    featureId: string,
+    updates: Partial<ProductFeature>
+  ) => {
+    setFeatures((prev) =>
+      prev.map((f) => (f.id === featureId ? { ...f, ...updates } : f))
+    );
   };
 
-  const upsertOptionState = (feature: ProductFeature, updates: Partial<AlaCarteOption>) => {
+  const upsertOptionState = (
+    feature: ProductFeature,
+    updates: Partial<AlaCarteOption>
+  ) => {
     setAlaCarteOptions((prev) => {
       const existing = prev.find((o) => o.id === feature.id);
       if (existing) {
-        return prev.map((o) => (o.id === feature.id ? { ...o, ...updates } : o));
+        return prev.map((o) =>
+          o.id === feature.id ? { ...o, ...updates } : o
+        );
       }
       const base: AlaCarteOption = {
         id: feature.id,
@@ -288,12 +365,17 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   };
 
   const getNextPosition = (column: 1 | 2 | 3) => {
-    const positions = features.filter((f) => f.column === column).map((f) => f.position ?? 0);
+    const positions = features
+      .filter((f) => f.column === column)
+      .map((f) => f.position ?? 0);
     if (positions.length === 0) return 0;
     return Math.max(...positions) + 1;
   };
 
-  const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
+  const handlePackagePlacement = async (
+    feature: ProductFeature,
+    column: 1 | 2 | 3 | undefined
+  ) => {
     if ((feature.column ?? null) === (column ?? null)) return;
     const prevColumn = feature.column;
     const prevPosition = feature.position;
@@ -306,7 +388,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               .map((f) => f.position ?? 0);
             if (positions.length === 0) return 0;
             return Math.max(...positions) + 1;
-      })();
+          })();
 
     const payload: Partial<ProductFeature> = { column, position: newPosition };
 
@@ -317,23 +399,30 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       onDataUpdate();
       markSaved(feature.id);
     } catch (err) {
-      console.error('Failed to update package placement', err);
-      setRowErrorMessage(feature.id, 'Failed to update package lane.');
-      updateFeatureState(feature.id, { column: prevColumn, position: prevPosition });
+      console.error("Failed to update package placement", err);
+      setRowErrorMessage(feature.id, "Failed to update package lane.");
+      updateFeatureState(feature.id, {
+        column: prevColumn,
+        position: prevPosition,
+      });
       clearSaved(feature.id);
     }
   };
 
   const handlePriceBlur = async (feature: ProductFeature) => {
-    const rawValue = priceInputs[feature.id] ?? (feature.alaCartePrice !== undefined ? feature.alaCartePrice.toString() : '');
-    if (rawValue === '') return;
+    const rawValue =
+      priceInputs[feature.id] ??
+      (feature.alaCartePrice !== undefined
+        ? feature.alaCartePrice.toString()
+        : "");
+    if (rawValue === "") return;
     const parsed = Number(rawValue);
     setPriceInputs((prev) => {
       const { [feature.id]: _removed, ...rest } = prev;
       return rest;
     });
     if (Number.isNaN(parsed) || parsed < 0) {
-      setRowErrorMessage(feature.id, 'Enter a valid A La Carte price to save.');
+      setRowErrorMessage(feature.id, "Enter a valid A La Carte price to save.");
       return;
     }
     clearRowError(feature.id);
@@ -343,15 +432,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const option = alaCarteMap.get(feature.id);
       if (option?.isPublished) {
         await upsertAlaCarteFromFeature(
-          { ...feature, alaCartePrice: parsed, publishToAlaCarte: feature.publishToAlaCarte ?? true },
+          {
+            ...feature,
+            alaCartePrice: parsed,
+            publishToAlaCarte: feature.publishToAlaCarte ?? true,
+          },
           { isPublished: true, price: parsed }
         );
         upsertOptionState(feature, { price: parsed });
       }
       markSaved(feature.id);
     } catch (err) {
-      console.error('Failed to update A La Carte price', err);
-      setRowErrorMessage(feature.id, 'Failed to save price.');
+      console.error("Failed to update A La Carte price", err);
+      setRowErrorMessage(feature.id, "Failed to save price.");
     }
   };
 
@@ -360,11 +453,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     try {
       await updateFeature(feature.id, { alaCarteWarranty: value });
     } catch (err) {
-      console.error('Failed to update warranty override', err);
+      console.error("Failed to update warranty override", err);
     }
   };
 
-  const handleIsNewToggle = async (feature: ProductFeature, checked: boolean) => {
+  const handleIsNewToggle = async (
+    feature: ProductFeature,
+    checked: boolean
+  ) => {
     updateFeatureState(feature.id, { alaCarteIsNew: checked });
     const option = alaCarteMap.get(feature.id);
     try {
@@ -372,35 +468,60 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       await updateFeature(feature.id, { alaCarteIsNew: checked });
       if (option) {
         await upsertAlaCarteFromFeature(
-          { ...feature, alaCarteIsNew: checked, publishToAlaCarte: feature.publishToAlaCarte ?? option.isPublished ?? false },
+          {
+            ...feature,
+            alaCarteIsNew: checked,
+            publishToAlaCarte:
+              feature.publishToAlaCarte ?? option.isPublished ?? false,
+          },
           { isPublished: option.isPublished, isNew: checked }
         );
         upsertOptionState(feature, { isNew: checked });
       }
       markSaved(feature.id);
     } catch (err) {
-      console.error('Failed to update NEW flag', err);
-      setRowErrorMessage(feature.id, 'Failed to update NEW flag.');
+      console.error("Failed to update NEW flag", err);
+      setRowErrorMessage(feature.id, "Failed to update NEW flag.");
     }
   };
 
-  const handlePlacementUpdate = async (feature: ProductFeature, column: number | null, position?: number) => {
+  const handlePlacementUpdate = async (
+    feature: ProductFeature,
+    column: number | null,
+    position?: number
+  ) => {
     const option = alaCarteMap.get(feature.id);
-    const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const isPublished =
+      option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const price = option?.price ?? feature.alaCartePrice;
     const isNew = option?.isNew ?? feature.alaCarteIsNew ?? false;
-    const warranty = option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
+    const warranty =
+      option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
     const desiredColumn = column === null ? undefined : column;
-    const desiredPosition = desiredColumn === undefined ? undefined : (position ?? option?.position);
+    const desiredPosition =
+      desiredColumn === undefined ? undefined : position ?? option?.position;
 
     try {
       clearRowError(feature.id);
       if (desiredColumn === undefined) {
-        await updateAlaCarteOption(feature.id, { column: undefined, position: undefined, connector: undefined });
-        upsertOptionState(feature, { column: undefined, position: undefined, connector: undefined, isPublished });
+        await updateAlaCarteOption(feature.id, {
+          column: undefined,
+          position: undefined,
+          connector: undefined,
+        });
+        upsertOptionState(feature, {
+          column: undefined,
+          position: undefined,
+          connector: undefined,
+          isPublished,
+        });
       } else {
         await upsertAlaCarteFromFeature(
-          { ...feature, publishToAlaCarte: feature.publishToAlaCarte ?? isPublished, alaCartePrice: price ?? feature.alaCartePrice },
+          {
+            ...feature,
+            publishToAlaCarte: feature.publishToAlaCarte ?? isPublished,
+            alaCartePrice: price ?? feature.alaCartePrice,
+          },
           {
             isPublished,
             column: desiredColumn,
@@ -410,28 +531,42 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             warranty,
           }
         );
-        upsertOptionState(feature, { column: desiredColumn, position: desiredPosition, isPublished });
+        upsertOptionState(feature, {
+          column: desiredColumn,
+          position: desiredPosition,
+          isPublished,
+        });
       }
       onAlaCarteChange?.();
       markSaved(feature.id);
     } catch (err) {
-      console.error('Failed to update placement', err);
-      setRowErrorMessage(feature.id, 'Failed to update placement.');
+      console.error("Failed to update placement", err);
+      setRowErrorMessage(feature.id, "Failed to update placement.");
     }
   };
 
-  const handlePublishToggle = async (feature: ProductFeature, publish: boolean) => {
+  const handlePublishToggle = async (
+    feature: ProductFeature,
+    publish: boolean
+  ) => {
     clearRowError(feature.id);
     const option = alaCarteMap.get(feature.id);
     const inputValue = priceInputs[feature.id];
-    const parsedInputPrice = inputValue !== undefined && inputValue !== '' ? Number(inputValue) : undefined;
+    const parsedInputPrice =
+      inputValue !== undefined && inputValue !== ""
+        ? Number(inputValue)
+        : undefined;
     const price = option?.price ?? feature.alaCartePrice ?? parsedInputPrice;
     if (publish && (price === undefined || Number.isNaN(price) || price <= 0)) {
-      setRowErrorMessage(feature.id, 'Enter an A La Carte price before publishing.');
+      setRowErrorMessage(
+        feature.id,
+        "Enter an A La Carte price before publishing."
+      );
       return;
     }
 
-    const previousPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const previousPublished =
+      option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const previousPrice = option?.price ?? feature.alaCartePrice;
 
     try {
@@ -444,18 +579,34 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         clearRowError(feature.id);
       } else {
         const resolvedPrice = Number(price);
-        const featurePayload = { ...feature, publishToAlaCarte: true, alaCartePrice: resolvedPrice };
-        await updateFeature(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
+        const featurePayload = {
+          ...feature,
+          publishToAlaCarte: true,
+          alaCartePrice: resolvedPrice,
+        };
+        await updateFeature(feature.id, {
+          publishToAlaCarte: true,
+          alaCartePrice: resolvedPrice,
+        });
         await upsertAlaCarteFromFeature(featurePayload, {
           isPublished: true,
           column: option?.column,
           position: option?.position,
           price: resolvedPrice,
           isNew: option?.isNew ?? feature.alaCarteIsNew,
-          warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
+          warranty:
+            option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
         });
-        updateFeatureState(feature.id, { publishToAlaCarte: true, alaCartePrice: resolvedPrice });
-        upsertOptionState(feature, { isPublished: true, price: resolvedPrice, column: option?.column, position: option?.position });
+        updateFeatureState(feature.id, {
+          publishToAlaCarte: true,
+          alaCartePrice: resolvedPrice,
+        });
+        upsertOptionState(feature, {
+          isPublished: true,
+          price: resolvedPrice,
+          column: option?.column,
+          position: option?.position,
+        });
         setPriceInputs((prev) => {
           const { [feature.id]: _removed, ...rest } = prev;
           return rest;
@@ -467,9 +618,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       onDataUpdate();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('Failed to update publish status', err);
+      console.error("Failed to update publish status", err);
       setRowErrorMessage(feature.id, message);
-      updateFeatureState(feature.id, { publishToAlaCarte: previousPublished, alaCartePrice: previousPrice });
+      updateFeatureState(feature.id, {
+        publishToAlaCarte: previousPublished,
+        alaCartePrice: previousPrice,
+      });
       upsertOptionState(feature, {
         isPublished: previousPublished,
         price: previousPrice,
@@ -488,9 +642,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     return handlePublishToggle(feature, false);
   };
 
-  const handleDuplicateToLane = async (feature: ProductFeature, targetColumn: 1 | 2 | 3) => {
+  const handleDuplicateToLane = async (
+    feature: ProductFeature,
+    targetColumn: 1 | 2 | 3
+  ) => {
     if (!db) {
-      setRowErrorMessage(feature.id, 'Firebase is not connected.');
+      setRowErrorMessage(feature.id, "Firebase is not connected.");
       return;
     }
 
@@ -498,21 +655,28 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
     try {
       const nextPosition = getNextPosition(targetColumn);
-      const { id: _id, publishToAlaCarte: _publish, alaCartePrice: _price, alaCarteWarranty: _warranty, alaCarteIsNew: _isNew, ...rest } = feature;
+      const {
+        id: _id,
+        publishToAlaCarte: _publish,
+        alaCartePrice: _price,
+        alaCarteWarranty: _warranty,
+        alaCarteIsNew: _isNew,
+        ...rest
+      } = feature;
 
-      const payload: Omit<ProductFeature, 'id'> = {
+      const payload: Omit<ProductFeature, "id"> = {
         ...rest,
         column: targetColumn,
         position: nextPosition,
       };
 
-      const docRef = await addDoc(collection(db, 'features'), payload);
+      const docRef = await addDoc(collection(db, "features"), payload);
       setFeatures((prev) => [...prev, { ...payload, id: docRef.id }]);
       onDataUpdate();
       markSaved(docRef.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('Failed to duplicate feature to lane', err);
+      console.error("Failed to duplicate feature to lane", err);
       setRowErrorMessage(feature.id, `Failed to duplicate: ${message}`);
       clearSaved(feature.id);
     }
@@ -521,7 +685,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const handlePositionBlur = (feature: ProductFeature) => {
     const option = alaCarteMap.get(feature.id);
     const raw = positionInputs[feature.id];
-    const parsed = raw === '' || raw === undefined ? undefined : Number(raw);
+    const parsed = raw === "" || raw === undefined ? undefined : Number(raw);
     setPositionInputs((prev) => {
       const { [feature.id]: _removed, ...rest } = prev;
       return rest;
@@ -531,8 +695,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const handleConnectorChange = async (feature: ProductFeature, connector: 'AND' | 'OR') => {
-    const previousConnector = feature.connector || 'AND';
+  const handleConnectorChange = async (
+    feature: ProductFeature,
+    connector: "AND" | "OR"
+  ) => {
+    const previousConnector = feature.connector || "AND";
     if (previousConnector === connector) return;
     updateFeatureState(feature.id, { connector });
     clearRowError(feature.id);
@@ -540,8 +707,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       await updateFeature(feature.id, { connector });
       markSaved(feature.id);
     } catch (err) {
-      console.error('Failed to update connector', err);
-      setRowErrorMessage(feature.id, 'Failed to update connector.');
+      console.error("Failed to update connector", err);
+      setRowErrorMessage(feature.id, "Failed to update connector.");
       updateFeatureState(feature.id, { connector: previousConnector });
       clearSaved(feature.id);
     }
@@ -550,9 +717,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const handleEditDetails = (feature: ProductFeature) => {
     const rowEl = rowRefs.current[feature.id];
     const scheduleFrame =
-      typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb: FrameRequestCallback) => setTimeout(cb, 0);
+      typeof requestAnimationFrame === "function"
+        ? requestAnimationFrame
+        : (cb: FrameRequestCallback) => setTimeout(cb, 0);
     if (rowEl) {
-      rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      rowEl.scrollIntoView({ behavior: "smooth", block: "center" });
       scheduleFrame(() => {
         setEditingFeature(feature);
         setShowForm(true);
@@ -609,13 +778,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           try {
             await action(feature);
           } catch (err) {
-            console.error('Bulk action failed for feature', feature.id, err);
+            console.error("Bulk action failed for feature", feature.id, err);
             failures.push(feature.name);
           }
         })
       );
       if (failures.length > 0) {
-        setError(`Some items failed to update: ${failures.join(', ')}`);
+        setError(`Some items failed to update: ${failures.join(", ")}`);
       } else {
         setError(null);
       }
@@ -635,21 +804,27 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     });
     const missingPrice = selectedFeatures.filter((f) => !priced.includes(f));
     if (priced.length === 0) {
-      setError('Selected items need an A La Carte price before publishing.');
+      setError("Selected items need an A La Carte price before publishing.");
       return;
     }
     if (missingPrice.length > 0) {
-      setError('Some selected items are missing A La Carte prices and were skipped.');
+      setError(
+        "Some selected items are missing A La Carte prices and were skipped."
+      );
     } else {
       setError(null);
     }
-    return runBulkAction((feature) => handlePublishToggle(feature, publish), priced);
+    return runBulkAction(
+      (feature) => handlePublishToggle(feature, publish),
+      priced
+    );
   };
 
   const bulkSetFeatured = (featured: boolean) =>
     runBulkAction((feature) => {
       const option = alaCarteMap.get(feature.id);
-      const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+      const isPublished =
+        option?.isPublished ?? feature.publishToAlaCarte ?? false;
       if (!isPublished) return;
       return handlePlacementUpdate(feature, featured ? 4 : null, undefined);
     });
@@ -657,25 +832,37 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const bulkSetCategory = (column: 1 | 2 | 3 | null) =>
     runBulkAction((feature) => {
       const option = alaCarteMap.get(feature.id);
-      const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+      const isPublished =
+        option?.isPublished ?? feature.publishToAlaCarte ?? false;
       if (!isPublished) return;
       return handlePlacementUpdate(feature, column, undefined);
     });
 
   const getCategoryLabel = (option?: AlaCarteOption) => {
-    if (!option) return 'Not placed';
-    if (option.column === 4) return 'Featured';
-    if (option.column) return columnLabels[option.column as 1 | 2 | 3] ?? 'Placed';
-    return 'Not placed';
+    if (!option) return "Not placed";
+    if (option.column === 4) return "Featured";
+    if (option.column)
+      return columnLabels[option.column as 1 | 2 | 3] ?? "Placed";
+    return "Not placed";
   };
 
-  const renderPlacementControls = (feature: ProductFeature, option: AlaCarteOption | undefined, includeFeatured = true) => {
-    const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+  const renderPlacementControls = (
+    feature: ProductFeature,
+    option: AlaCarteOption | undefined,
+    includeFeatured = true
+  ) => {
+    const isPublished =
+      option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const column = isPublished ? option?.column : undefined;
     const featured = isPublished && column === 4;
-    const category = !featured && column ? String(column) : '';
-    const positionValue = isPublished ? positionInputs[feature.id] ?? (option?.position ?? '') : '';
+    const category = !featured && column ? String(column) : "";
+    const positionValue = isPublished
+      ? positionInputs[feature.id] ?? option?.position ?? ""
+      : "";
     const disabled = !isPublished;
+
+    const categoryInputId = `alacarte-category-${feature.id}`;
+    const positionInputId = `alacarte-position-${feature.id}`;
 
     return (
       <div className="space-y-2">
@@ -686,22 +873,35 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               id={`featured-${feature.id}`}
               checked={featured}
               disabled={disabled}
-              onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
+              onChange={(e) =>
+                handlePlacementUpdate(
+                  feature,
+                  e.target.checked ? 4 : null,
+                  undefined
+                )
+              }
             />
-            <label htmlFor={`featured-${feature.id}`} className="text-sm text-gray-200">
+            <label
+              htmlFor={`featured-${feature.id}`}
+              className="text-sm text-gray-200"
+            >
               Featured (Popular Add-Ons)
             </label>
           </div>
         )}
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-400">Category (columns 1-3)</label>
+          <label htmlFor={categoryInputId} className="text-xs text-gray-400">
+            Category (columns 1-3)
+          </label>
           <select
+            id={categoryInputId}
             value={category}
             disabled={disabled || featured}
             onChange={(e) => {
               const value = e.target.value;
               const newColumn = value ? Number(value) : null;
-              const newPosition = newColumn === null ? undefined : option?.position;
+              const newPosition =
+                newColumn === null ? undefined : option?.position;
               handlePlacementUpdate(feature, newColumn, newPosition);
             }}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
@@ -713,23 +913,35 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-400">Position</label>
+          <label htmlFor={positionInputId} className="text-xs text-gray-400">
+            Position
+          </label>
           <input
+            id={positionInputId}
             type="number"
             min="0"
             disabled={disabled}
             value={positionValue}
-            onChange={(e) => setPositionInputs((prev) => ({ ...prev, [feature.id]: e.target.value }))}
+            onChange={(e) =>
+              setPositionInputs((prev) => ({
+                ...prev,
+                [feature.id]: e.target.value,
+              }))
+            }
             onBlur={() => handlePositionBlur(feature)}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           />
         </div>
         {!isPublished && (
           <p className="text-xs text-amber-400">
-            Publish first to enable Category / Position. Unpublished items won’t show to customers.
+            Publish first to enable Category / Position. Unpublished items won’t
+            show to customers.
           </p>
         )}
-        <p className="text-xs text-gray-500">Current: {getPlacementDisplay(isPublished ? option?.column : undefined)}</p>
+        <p className="text-xs text-gray-500">
+          Current:{" "}
+          {getPlacementDisplay(isPublished ? option?.column : undefined)}
+        </p>
       </div>
     );
   };
@@ -742,8 +954,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h3 className="text-2xl font-teko tracking-wider text-white">Product Hub</h3>
-          <p className="text-sm text-gray-400">Manage package placement and A La Carte visibility from one place.</p>
+          <h3 className="text-2xl font-teko tracking-wider text-white">
+            Product Hub
+          </h3>
+          <p className="text-sm text-gray-400">
+            Manage package placement and A La Carte visibility from one place.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -761,21 +977,25 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">Package lane</span>
           <select
             value={packageLaneFilter}
-            onChange={(e) => setPackageLaneFilter(e.target.value as typeof packageLaneFilter)}
-           className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-         >
-           <option value="all">All</option>
-           <option value="1">Gold</option>
-           <option value="2">Elite</option>
-           <option value="3">Platinum</option>
-           <option value="none">Not in packages</option>
-         </select>
-       </label>
+            onChange={(e) =>
+              setPackageLaneFilter(e.target.value as typeof packageLaneFilter)
+            }
+            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+          >
+            <option value="all">All</option>
+            <option value="1">Gold</option>
+            <option value="2">Elite</option>
+            <option value="3">Platinum</option>
+            <option value="none">Not in packages</option>
+          </select>
+        </label>
         <label className="flex items-center gap-2">
           <span className="text-gray-400">Published</span>
           <select
             value={publishFilter}
-            onChange={(e) => setPublishFilter(e.target.value as typeof publishFilter)}
+            onChange={(e) =>
+              setPublishFilter(e.target.value as typeof publishFilter)
+            }
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
@@ -787,7 +1007,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">Featured</span>
           <select
             value={featuredFilter}
-            onChange={(e) => setFeaturedFilter(e.target.value as typeof featuredFilter)}
+            onChange={(e) =>
+              setFeaturedFilter(e.target.value as typeof featuredFilter)
+            }
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
@@ -799,17 +1021,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">A La Carte Category</span>
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
-           className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-         >
-           <option value="all">All</option>
-           <option value="featured">Featured</option>
-           <option value="1">Column 1 (Gold)</option>
-           <option value="2">Column 2 (Elite)</option>
-           <option value="3">Column 3 (Platinum)</option>
-           <option value="unplaced">Not placed</option>
-         </select>
-       </label>
+            onChange={(e) =>
+              setCategoryFilter(e.target.value as typeof categoryFilter)
+            }
+            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+          >
+            <option value="all">All</option>
+            <option value="featured">Featured</option>
+            <option value="1">Column 1 (Gold)</option>
+            <option value="2">Column 2 (Elite)</option>
+            <option value="3">Column 3 (Platinum)</option>
+            <option value="unplaced">Not placed</option>
+          </select>
+        </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm bg-gray-900/60 border border-gray-800 rounded px-3 py-2">
@@ -821,9 +1045,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             onChange={(e) => handleSelectAll(e.target.checked)}
             aria-label="Select all filtered products"
           />
-          <span className="text-gray-300">
-            {selectedIds.size} selected
-          </span>
+          <span className="text-gray-300">{selectedIds.size} selected</span>
         </label>
         <span className="text-gray-600">|</span>
         <button
@@ -870,7 +1092,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             onChange={(e) => {
               const val = e.target.value;
               if (!val) return;
-              if (val === 'none') {
+              if (val === "none") {
                 bulkSetCategory(null);
               } else {
                 bulkSetCategory(Number(val) as 1 | 2 | 3);
@@ -890,11 +1112,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         </label>
       </div>
 
-      {error && <p className="text-red-400 bg-red-500/10 border border-red-500/30 p-3 rounded">{error}</p>}
+      {error && (
+        <p className="text-red-400 bg-red-500/10 border border-red-500/30 p-3 rounded">
+          {error}
+        </p>
+      )}
 
       {showForm && (
         <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-          <FeatureForm onSaveSuccess={handleFormSaved} editingFeature={editingFeature ?? undefined} onCancelEdit={() => setShowForm(false)} />
+          <FeatureForm
+            onSaveSuccess={handleFormSaved}
+            editingFeature={editingFeature ?? undefined}
+            onCancelEdit={() => setShowForm(false)}
+          />
         </div>
       )}
 
@@ -911,7 +1141,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     checked={allFilteredSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                   />
-                  <span className="uppercase tracking-wide text-xs text-gray-500">Products</span>
+                  <span className="uppercase tracking-wide text-xs text-gray-500">
+                    Products
+                  </span>
                 </div>
               </th>
             </tr>
@@ -919,17 +1151,24 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <tbody className="divide-y divide-gray-800">
             {filteredFeatures.map((feature) => {
               const option = alaCarteMap.get(feature.id);
-              const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
-              const priceValue = priceInputs[feature.id] ?? (feature.alaCartePrice ?? '').toString();
-              const warrantyValue = feature.alaCarteWarranty ?? '';
+              const isPublished =
+                option?.isPublished ?? feature.publishToAlaCarte ?? false;
+              const priceValue =
+                priceInputs[feature.id] ??
+                (feature.alaCartePrice ?? "").toString();
+              const warrantyValue = feature.alaCarteWarranty ?? "";
               const isNew = feature.alaCarteIsNew ?? option?.isNew ?? false;
               const isFeatured = option?.column === 4;
-              const currentConnector = feature.connector || 'AND';
-              const laneLabel = feature.column ? columnLabels[feature.column as 1 | 2 | 3] ?? 'Not in packages' : 'Not in packages';
+              const currentConnector = feature.connector || "AND";
+              const laneLabel = feature.column
+                ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
+                : "Not in packages";
               const isAdvancedOpen = advancedOpenIds.has(feature.id);
               const categoryLabel = getCategoryLabel(option);
               const positionLabel =
-                option?.position !== undefined ? `Position ${option.position}` : 'Position —';
+                option?.position !== undefined
+                  ? `Position ${option.position}`
+                  : "Position —";
               const isExpanded = expandedIds.has(feature.id);
               return (
                 <tr
@@ -947,33 +1186,49 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                             type="checkbox"
                             aria-label={`Select ${feature.name}`}
                             checked={selectedIds.has(feature.id)}
-                            onChange={(e) => handleSelectFeature(feature.id, e.target.checked)}
+                            onChange={(e) =>
+                              handleSelectFeature(feature.id, e.target.checked)
+                            }
                             className="mt-1"
                           />
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <div className="font-semibold text-base text-white">{feature.name}</div>
-                              {rowErrors[feature.id] && <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>}
-                              {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
+                              <div className="font-semibold text-base text-white">
+                                {feature.name}
+                              </div>
+                              {rowErrors[feature.id] && (
+                                <p className="text-xs text-red-400">
+                                  {rowErrors[feature.id]}
+                                </p>
+                              )}
+                              {savedIds.has(feature.id) && (
+                                <p className="text-xs text-green-400">Saved</p>
+                              )}
                             </div>
-                            <div className="text-xs text-gray-500 clamp-3">{feature.description}</div>
+                            <div className="text-xs text-gray-500 clamp-3">
+                              {feature.description}
+                            </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                               <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
                                 Lane: {laneLabel}
                               </span>
                               <span
                                 className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                                  isPublished ? 'bg-green-500/10 text-green-300 border-green-500/40' : 'bg-gray-700 text-gray-300 border-gray-600'
+                                  isPublished
+                                    ? "bg-green-500/10 text-green-300 border-green-500/40"
+                                    : "bg-gray-700 text-gray-300 border-gray-600"
                                 }`}
                               >
-                                {isPublished ? 'Published' : 'Unpublished'}
+                                {isPublished ? "Published" : "Unpublished"}
                               </span>
                               <span
                                 className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                                  isFeatured ? 'bg-blue-500/10 text-blue-300 border-blue-500/40' : 'bg-gray-700 text-gray-300 border-gray-600'
+                                  isFeatured
+                                    ? "bg-blue-500/10 text-blue-300 border-blue-500/40"
+                                    : "bg-gray-700 text-gray-300 border-gray-600"
                                 }`}
                               >
-                                {isFeatured ? 'Featured' : 'Not featured'}
+                                {isFeatured ? "Featured" : "Not featured"}
                               </span>
                               <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
                                 Category: {categoryLabel}
@@ -990,7 +1245,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                             onClick={() => toggleRowExpanded(feature.id)}
                             className="px-3 py-2 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 hover:border-blue-400 transition-colors text-sm"
                           >
-                            {isExpanded ? 'Collapse' : 'Expand'}
+                            {isExpanded ? "Collapse" : "Expand"}
                           </button>
                           <button
                             onClick={() => handleEditDetails(feature)}
@@ -1004,52 +1259,77 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                       {isExpanded && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-900/40 border border-gray-800 rounded-lg p-4">
                           <div className="space-y-2">
-                            <p className="text-[11px] uppercase text-gray-400">Package placement (choose one lane)</p>
-                            {packageLaneOptions.map(({ value: colNum, label }) => (
-                              <label key={colNum} className="flex items-center gap-2 text-sm text-gray-200">
-                                <input
-                                  type="radio"
-                                  name={`pkg-${feature.id}`}
-                                  checked={feature.column === colNum}
-                                  onChange={() => handlePackagePlacement(feature, colNum)}
-                                />
-                                <span>{label}</span>
-                              </label>
-                            ))}
+                            <p className="text-[11px] uppercase text-gray-400">
+                              Package placement (choose one lane)
+                            </p>
+                            {packageLaneOptions.map(
+                              ({ value: colNum, label }) => (
+                                <label
+                                  key={colNum}
+                                  className="flex items-center gap-2 text-sm text-gray-200"
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`pkg-${feature.id}`}
+                                    checked={feature.column === colNum}
+                                    onChange={() =>
+                                      handlePackagePlacement(feature, colNum)
+                                    }
+                                  />
+                                  <span>{label}</span>
+                                </label>
+                              )
+                            )}
                             <label className="flex items-center gap-2 text-sm text-gray-200">
                               <input
                                 type="radio"
                                 name={`pkg-${feature.id}`}
                                 checked={feature.column == null}
-                                onChange={() => handlePackagePlacement(feature, undefined)}
+                                onChange={() =>
+                                  handlePackagePlacement(feature, undefined)
+                                }
                               />
                               <span>Not in Packages</span>
                             </label>
-                            {feature.column !== undefined && packageOrder.includes(feature.column as 1 | 2 | 3) && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="text-[11px] uppercase text-gray-400">Connector:</span>
-                                <div className="flex gap-2">
-                                  {(['AND', 'OR'] as const).map((optionConnector) => (
-                                    <button
-                                      key={optionConnector}
-                                      type="button"
-                                      onClick={() => handleConnectorChange(feature, optionConnector)}
-                                      aria-label={`Set connector to ${optionConnector}`}
-                                      aria-pressed={currentConnector === optionConnector}
-                                      className={`px-2 py-1 rounded text-xs border ${
-                                        currentConnector === optionConnector
-                                          ? optionConnector === 'OR'
-                                            ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/60'
-                                            : 'bg-green-500/20 text-green-300 border-green-400/60'
-                                          : 'bg-gray-800 text-gray-200 border-gray-700'
-                                      }`}
-                                    >
-                                      {optionConnector}
-                                    </button>
-                                  ))}
+                            {feature.column !== undefined &&
+                              packageOrder.includes(
+                                feature.column as 1 | 2 | 3
+                              ) && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className="text-[11px] uppercase text-gray-400">
+                                    Connector:
+                                  </span>
+                                  <div className="flex gap-2">
+                                    {(["AND", "OR"] as const).map(
+                                      (optionConnector) => (
+                                        <button
+                                          key={optionConnector}
+                                          type="button"
+                                          onClick={() =>
+                                            handleConnectorChange(
+                                              feature,
+                                              optionConnector
+                                            )
+                                          }
+                                          aria-label={`Set connector to ${optionConnector}`}
+                                          aria-pressed={
+                                            currentConnector === optionConnector
+                                          }
+                                          className={`px-2 py-1 rounded text-xs border ${
+                                            currentConnector === optionConnector
+                                              ? optionConnector === "OR"
+                                                ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/60"
+                                                : "bg-green-500/20 text-green-300 border-green-400/60"
+                                              : "bg-gray-800 text-gray-200 border-gray-700"
+                                          }`}
+                                        >
+                                          {optionConnector}
+                                        </button>
+                                      )
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                           </div>
 
                           <div className="space-y-2">
@@ -1057,18 +1337,31 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                               <input
                                 type="checkbox"
                                 checked={isPublished}
-                                onChange={(e) => handlePublishToggle(feature, e.target.checked)}
+                                onChange={(e) =>
+                                  handlePublishToggle(feature, e.target.checked)
+                                }
                               />
                               <span>Publish to A La Carte</span>
                             </label>
                             <div className="flex flex-col gap-1">
-                              <label className="text-xs text-gray-400">A La Carte Price (customer price)</label>
+                              <label
+                                htmlFor={`alacarte-price-${feature.id}`}
+                                className="text-xs text-gray-400"
+                              >
+                                A La Carte Price (customer price)
+                              </label>
                               <input
+                                id={`alacarte-price-${feature.id}`}
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 value={priceValue}
-                                onChange={(e) => setPriceInputs((prev) => ({ ...prev, [feature.id]: e.target.value }))}
+                                onChange={(e) =>
+                                  setPriceInputs((prev) => ({
+                                    ...prev,
+                                    [feature.id]: e.target.value,
+                                  }))
+                                }
                                 onBlur={() => handlePriceBlur(feature)}
                                 className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
                               />
@@ -1080,7 +1373,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                   id={`featured-inline-${feature.id}`}
                                   checked={isFeatured}
                                   disabled={!isPublished}
-                                  onChange={(e) => handlePlacementUpdate(feature, e.target.checked ? 4 : null, undefined)}
+                                  onChange={(e) =>
+                                    handlePlacementUpdate(
+                                      feature,
+                                      e.target.checked ? 4 : null,
+                                      undefined
+                                    )
+                                  }
                                 />
                                 <span>Featured (Popular Add-Ons)</span>
                               </label>
@@ -1089,20 +1388,41 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                 onClick={() => toggleAdvanced(feature.id)}
                                 className="text-blue-300 hover:text-blue-100 underline"
                               >
-                                {isAdvancedOpen ? 'Hide A La Carte advanced' : 'Show A La Carte advanced'}
+                                {isAdvancedOpen
+                                  ? "Hide A La Carte advanced"
+                                  : "Show A La Carte advanced"}
                               </button>
                             </div>
                             {isAdvancedOpen && (
                               <div className="space-y-3 border border-gray-800 rounded-md p-3 bg-gray-900/30">
-                                {renderPlacementControls(feature, option, false)}
+                                {renderPlacementControls(
+                                  feature,
+                                  option,
+                                  false
+                                )}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                   <div className="flex flex-col gap-1">
-                                    <label className="text-xs text-gray-400">Warranty override</label>
+                                    <label
+                                      htmlFor={`alacarte-warranty-${feature.id}`}
+                                      className="text-xs text-gray-400"
+                                    >
+                                      Warranty override
+                                    </label>
                                     <input
+                                      id={`alacarte-warranty-${feature.id}`}
                                       type="text"
                                       value={warrantyValue}
-                                      onChange={(e) => updateFeatureState(feature.id, { alaCarteWarranty: e.target.value })}
-                                      onBlur={(e) => handleWarrantyBlur(feature, e.target.value)}
+                                      onChange={(e) =>
+                                        updateFeatureState(feature.id, {
+                                          alaCarteWarranty: e.target.value,
+                                        })
+                                      }
+                                      onBlur={(e) =>
+                                        handleWarrantyBlur(
+                                          feature,
+                                          e.target.value
+                                        )
+                                      }
                                       className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
                                     />
                                   </div>
@@ -1110,7 +1430,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                     <input
                                       type="checkbox"
                                       checked={isNew}
-                                      onChange={(e) => handleIsNewToggle(feature, e.target.checked)}
+                                      onChange={(e) =>
+                                        handleIsNewToggle(
+                                          feature,
+                                          e.target.checked
+                                        )
+                                      }
                                       disabled={!isPublished}
                                     />
                                     <span>Mark as NEW</span>
@@ -1123,7 +1448,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                           <div className="space-y-2">
                             <div className="flex flex-col gap-2">
                               <button
-                                onClick={() => handleRemoveFromPackages(feature)}
+                                onClick={() =>
+                                  handleRemoveFromPackages(feature)
+                                }
                                 className="text-sm text-red-300 hover:text-red-200 underline text-left disabled:opacity-50"
                                 disabled={feature.column === undefined}
                               >
@@ -1138,13 +1465,17 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                               </button>
                             </div>
                             <div className="space-y-2">
-                              <p className="text-xs text-gray-400 font-semibold">Duplicate to Gold/Elite/Platinum</p>
+                              <p className="text-xs text-gray-400 font-semibold">
+                                Duplicate to Gold/Elite/Platinum
+                              </p>
                               <div className="flex flex-wrap gap-2">
                                 <button
                                   type="button"
                                   className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
                                   disabled={feature.column === 1}
-                                  onClick={() => handleDuplicateToLane(feature, 1)}
+                                  onClick={() =>
+                                    handleDuplicateToLane(feature, 1)
+                                  }
                                 >
                                   Gold
                                 </button>
@@ -1152,7 +1483,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                   type="button"
                                   className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
                                   disabled={feature.column === 2}
-                                  onClick={() => handleDuplicateToLane(feature, 2)}
+                                  onClick={() =>
+                                    handleDuplicateToLane(feature, 2)
+                                  }
                                 >
                                   Elite
                                 </button>
@@ -1160,7 +1493,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                   type="button"
                                   className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
                                   disabled={feature.column === 3}
-                                  onClick={() => handleDuplicateToLane(feature, 3)}
+                                  onClick={() =>
+                                    handleDuplicateToLane(feature, 3)
+                                  }
                                 >
                                   Platinum
                                 </button>

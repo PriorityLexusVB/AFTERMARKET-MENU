@@ -70,6 +70,13 @@ npm run test:run     # Run all tests once (CI mode)
 npm run test:coverage # Generate test coverage report
 ```
 
+### Linting
+
+```bash
+npm run lint         # Run ESLint across the repo
+npm run lint:fix     # Auto-fix what ESLint can
+```
+
 ### Deployment
 
 ```bash

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface ProductImageProps {
   src?: string;
@@ -15,7 +15,7 @@ interface ProductImageProps {
 export const ProductImage: React.FC<ProductImageProps> = ({
   src,
   alt,
-  className = '',
+  className = "",
   fallbackSrc,
   showPlaceholder = true,
 }) => {
@@ -119,10 +119,13 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       )}
 
       {/* Actual image */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <img
         src={currentSrc}
         alt={alt}
-        className={`w-full h-full object-cover ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        className={`w-full h-full object-cover ${
+          isLoading ? "opacity-0" : "opacity-100"
+        } transition-opacity duration-300`}
         onLoad={handleLoad}
         onError={handleError}
         loading="lazy"

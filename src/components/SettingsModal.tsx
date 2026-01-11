@@ -196,16 +196,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-start p-4 animate-fade-in overflow-y-auto"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-modal-title"
-    >
+    <div className="fixed inset-0 z-50 flex justify-center items-start p-4 overflow-y-auto">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black bg-opacity-70 animate-fade-in"
+        onClick={onClose}
+        aria-label="Close settings"
+      />
       <div
-        className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl border border-gray-600 animate-slide-up my-8"
-        onClick={(e) => e.stopPropagation()}
+        className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl border border-gray-600 animate-slide-up my-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
       >
         <div className="p-6 border-b border-gray-700 flex justify-between items-center sticky top-0 bg-gray-800 rounded-t-xl z-10">
           <div>
@@ -490,10 +492,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full md:w-auto">
                               <div>
-                                <label className="block text-xs uppercase tracking-[0.2em] text-gray-400 mb-1">
+                                <label
+                                  htmlFor={`override-price-${item.id}`}
+                                  className="block text-xs uppercase tracking-[0.2em] text-gray-400 mb-1"
+                                >
                                   Override price
                                 </label>
                                 <input
+                                  id={`override-price-${item.id}`}
                                   inputMode="numeric"
                                   value={override.price ?? ""}
                                   onChange={(e) =>
@@ -509,10 +515,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               </div>
 
                               <div>
-                                <label className="block text-xs uppercase tracking-[0.2em] text-gray-400 mb-1">
+                                <label
+                                  htmlFor={`override-cost-${item.id}`}
+                                  className="block text-xs uppercase tracking-[0.2em] text-gray-400 mb-1"
+                                >
                                   Override cost (optional)
                                 </label>
                                 <input
+                                  id={`override-cost-${item.id}`}
                                   inputMode="numeric"
                                   value={override.cost ?? ""}
                                   onChange={(e) =>

@@ -1,6 +1,12 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { app } from '../firebase';
+import React, { useState, useCallback, useRef } from "react";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import { app } from "../firebase";
 
 interface ImageUploaderProps {
   onUploadComplete: (urls: { imageUrl: string; thumbnailUrl: string }) => void;
@@ -11,41 +17,46 @@ interface ImageUploaderProps {
 }
 
 const DEFAULT_MAX_SIZE_MB = 5;
-const DEFAULT_ACCEPTED_FORMATS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const DEFAULT_ACCEPTED_FORMATS = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 
 /**
  * Sanitizes and encodes an image URL to prevent XSS attacks.
  * Returns a safe, encoded URL string or null if invalid.
  * Only allows blob, http, and https protocols.
- * 
+ *
  * This function uses URL normalization and encodeURI to ensure meta-characters
  * are properly escaped, which prevents DOM-based XSS vulnerabilities.
  */
 const getSafeImageSrc = (input: string | null | undefined): string | null => {
   if (!input) return null;
-  
+
   const trimmed = input.trim();
   if (!trimmed) return null;
-  
+
   // Allow blob URLs for file preview (created by URL.createObjectURL)
-  if (trimmed.startsWith('blob:')) {
+  if (trimmed.startsWith("blob:")) {
     // Blob URLs are safe as they're created locally by the browser
     // Just escape single quotes for attribute safety
-    return trimmed.replace(/'/g, '%27');
+    return trimmed.replace(/'/g, "%27");
   }
-  
+
   // Validate and normalize http/https URLs
   try {
     const parsed = new URL(trimmed);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
       // Use the normalized href from URL object (already encoded)
       // URL constructor handles encoding, just escape single quotes
-      return parsed.href.replace(/'/g, '%27');
+      return parsed.href.replace(/'/g, "%27");
     }
   } catch {
     // Invalid URL format
   }
-  
+
   return null;
 };
 
@@ -60,107 +71,122 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   // Store raw URL but only render sanitized version
-  const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    existingImageUrl || null
+  );
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Validate file
-  const validateFile = (file: File): string | null => {
-    // Check file type
-    if (!acceptedFormats.includes(file.type)) {
-      return `Invalid file type. Accepted formats: ${acceptedFormats.join(', ')}`;
-    }
+  const validateFile = useCallback(
+    (file: File): string | null => {
+      // Check file type
+      if (!acceptedFormats.includes(file.type)) {
+        return `Invalid file type. Accepted formats: ${acceptedFormats.join(
+          ", "
+        )}`;
+      }
 
-    // Check file size
-    const sizeMB = file.size / (1024 * 1024);
-    if (sizeMB > maxSizeMB) {
-      return `File size (${sizeMB.toFixed(2)}MB) exceeds maximum allowed size (${maxSizeMB}MB)`;
-    }
+      // Check file size
+      const sizeMB = file.size / (1024 * 1024);
+      if (sizeMB > maxSizeMB) {
+        return `File size (${sizeMB.toFixed(
+          2
+        )}MB) exceeds maximum allowed size (${maxSizeMB}MB)`;
+      }
 
-    return null;
-  };
+      return null;
+    },
+    [acceptedFormats, maxSizeMB]
+  );
 
   // Handle file upload
-  const handleFileUpload = useCallback(async (file: File) => {
-    setError(null);
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      setError(null);
 
-    // Validate file
-    const validationError = validateFile(file);
-    if (validationError) {
-      setError(validationError);
-      if (onUploadError) onUploadError(validationError);
-      return;
-    }
+      // Validate file
+      const validationError = validateFile(file);
+      if (validationError) {
+        setError(validationError);
+        if (onUploadError) onUploadError(validationError);
+        return;
+      }
 
-    if (!app) {
-      const error = 'Firebase is not configured. Image upload requires Firebase Storage.';
-      setError(error);
-      if (onUploadError) onUploadError(error);
-      return;
-    }
+      if (!app) {
+        const error =
+          "Firebase is not configured. Image upload requires Firebase Storage.";
+        setError(error);
+        if (onUploadError) onUploadError(error);
+        return;
+      }
 
-    setUploading(true);
-    setUploadProgress(0);
+      setUploading(true);
+      setUploadProgress(0);
 
-    try {
-      const storage = getStorage(app);
+      try {
+        const storage = getStorage(app);
 
-      // Create a unique filename with timestamp
-      const timestamp = Date.now();
-      const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-      const filename = `product_images/${timestamp}_${sanitizedFilename}`;
+        // Create a unique filename with timestamp
+        const timestamp = Date.now();
+        const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+        const filename = `product_images/${timestamp}_${sanitizedFilename}`;
 
-      const storageRef = ref(storage, filename);
+        const storageRef = ref(storage, filename);
 
-      // Create upload task
-      const uploadTask = uploadBytesResumable(storageRef, file);
+        // Create upload task
+        const uploadTask = uploadBytesResumable(storageRef, file);
 
-      // Monitor upload progress
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('Upload error:', error);
-          const errorMessage = `Upload failed: ${error.message}`;
-          setError(errorMessage);
-          setUploading(false);
-          if (onUploadError) onUploadError(errorMessage);
-        },
-        async () => {
-          // Upload completed successfully
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-            // For now, use the same URL for both image and thumbnail
-            // In a production app, you'd generate a thumbnail server-side
-            onUploadComplete({
-              imageUrl: downloadURL,
-              thumbnailUrl: downloadURL,
-            });
-
-            setPreviewUrl(downloadURL);
-            setUploading(false);
-            setUploadProgress(100);
-          } catch (error) {
-            console.error('Error getting download URL:', error);
-            const errorMessage = 'Failed to get image URL after upload';
+        // Monitor upload progress
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          },
+          (error) => {
+            console.error("Upload error:", error);
+            const errorMessage = `Upload failed: ${error.message}`;
             setError(errorMessage);
             setUploading(false);
             if (onUploadError) onUploadError(errorMessage);
+          },
+          async () => {
+            // Upload completed successfully
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+              // For now, use the same URL for both image and thumbnail
+              // In a production app, you'd generate a thumbnail server-side
+              onUploadComplete({
+                imageUrl: downloadURL,
+                thumbnailUrl: downloadURL,
+              });
+
+              setPreviewUrl(downloadURL);
+              setUploading(false);
+              setUploadProgress(100);
+            } catch (error) {
+              console.error("Error getting download URL:", error);
+              const errorMessage = "Failed to get image URL after upload";
+              setError(errorMessage);
+              setUploading(false);
+              if (onUploadError) onUploadError(errorMessage);
+            }
           }
-        }
-      );
-    } catch (error) {
-      console.error('Upload initialization error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
-      setError(errorMessage);
-      setUploading(false);
-      if (onUploadError) onUploadError(errorMessage);
-    }
-  }, [maxSizeMB, acceptedFormats, onUploadComplete, onUploadError]);
+        );
+      } catch (error) {
+        console.error("Upload initialization error:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown upload error";
+        setError(errorMessage);
+        setUploading(false);
+        if (onUploadError) onUploadError(errorMessage);
+      }
+    },
+    [onUploadComplete, onUploadError, validateFile]
+  );
 
   // Handle drag events
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -180,30 +206,36 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
 
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file) {
-        handleFileUpload(file);
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file) {
+          handleFileUpload(file);
+        }
       }
-    }
-  }, [handleFileUpload]);
+    },
+    [handleFileUpload]
+  );
 
   // Handle file input change
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file) {
-        handleFileUpload(file);
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file) {
+          handleFileUpload(file);
+        }
       }
-    }
-  }, [handleFileUpload]);
+    },
+    [handleFileUpload]
+  );
 
   // Handle click to open file picker
   const handleClick = useCallback(() => {
@@ -220,7 +252,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         const imageRef = ref(storage, previewUrl);
         await deleteObject(imageRef);
       } catch (error) {
-        console.warn('Failed to delete image from storage:', error);
+        console.warn("Failed to delete image from storage:", error);
         // Continue even if deletion fails
       }
     }
@@ -229,7 +261,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setUploadProgress(0);
     setError(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   }, [previewUrl]);
 
@@ -239,19 +271,34 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-          ${isDragging ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'}
-          ${uploading ? 'cursor-not-allowed opacity-60' : ''}
+          ${
+            isDragging
+              ? "border-blue-500 bg-blue-500/10"
+              : "border-gray-600 hover:border-gray-500"
+          }
+          ${uploading ? "cursor-not-allowed opacity-60" : ""}
         `}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleClick}
+        onKeyDown={(e) => {
+          if (uploading) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
+        role="button"
+        tabIndex={uploading ? -1 : 0}
+        aria-disabled={uploading}
+        aria-label={uploading ? "Upload in progress" : "Upload image"}
       >
         <input
           ref={fileInputRef}
           type="file"
-          accept={acceptedFormats.join(',')}
+          accept={acceptedFormats.join(",")}
           onChange={handleFileInputChange}
           className="hidden"
           disabled={uploading}
@@ -281,28 +328,34 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               </button>
             </div>
           ) : (
-          <div className="space-y-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-12 h-12 mx-auto text-gray-400"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-              />
-            </svg>
-            <p className="text-gray-300 font-medium">
-              {uploading ? 'Uploading...' : 'Drag & drop an image, or click to browse'}
-            </p>
-            <p className="text-sm text-gray-500">
-              Max {maxSizeMB}MB • {acceptedFormats.map(f => f.split('/')[1]).join(', ').toUpperCase()}
-            </p>
-          </div>
+            <div className="space-y-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-12 h-12 mx-auto text-gray-400"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                />
+              </svg>
+              <p className="text-gray-300 font-medium">
+                {uploading
+                  ? "Uploading..."
+                  : "Drag & drop an image, or click to browse"}
+              </p>
+              <p className="text-sm text-gray-500">
+                Max {maxSizeMB}MB •{" "}
+                {acceptedFormats
+                  .map((f) => f.split("/")[1])
+                  .join(", ")
+                  .toUpperCase()}
+              </p>
+            </div>
           );
         })()}
 
@@ -315,7 +368,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 mt-2">{uploadProgress.toFixed(0)}%</p>
+            <p className="text-sm text-gray-400 mt-2">
+              {uploadProgress.toFixed(0)}%
+            </p>
           </div>
         )}
       </div>

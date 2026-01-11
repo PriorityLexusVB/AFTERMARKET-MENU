@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </p>
                   <button
                     onClick={onOpenSettings}
-                    className="text-lux-textMuted hover:text-lux-textStrong hover:rotate-90 transition-all duration-300"
+                    className="btn-lux-ghost p-2 text-lux-textMuted hover:text-lux-textStrong hover:rotate-90 transition-all duration-300"
                     aria-label="Open Settings"
                   >
                     <SettingsIcon />

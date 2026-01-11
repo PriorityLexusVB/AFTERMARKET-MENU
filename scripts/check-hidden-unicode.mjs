@@ -54,7 +54,12 @@ const TEXT_EXTENSIONS = new Set([
  * Create regex pattern to match any hidden unicode character
  */
 export function createHiddenUnicodePattern() {
-  return new RegExp(`[${HIDDEN_UNICODE.join("")}]`, "g");
+  // Avoid character classes here; some Unicode chars (e.g. joiners) can form
+  // confusing sequences that trigger `no-misleading-character-class`.
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const pattern = HIDDEN_UNICODE.map(escapeRegExp).join("|");
+  return new RegExp(pattern, "g");
 }
 
 // Create regex pattern to match any hidden unicode character

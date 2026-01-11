@@ -78,16 +78,18 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({
   const isNew = "isNew" in feature ? feature.isNew : false;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 animate-fade-in"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="feature-modal-title"
-    >
+    <div className="fixed inset-0 z-50 flex justify-center items-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black bg-opacity-70 animate-fade-in"
+        onClick={onClose}
+        aria-label="Close feature details (backdrop)"
+      />
       <div
-        className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-600 animate-slide-up max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-600 animate-slide-up max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feature-modal-title"
       >
         <div className="p-4 sm:p-6 lg:p-8 border-b border-gray-700 flex justify-between items-start gap-4">
           <div className="min-w-0">

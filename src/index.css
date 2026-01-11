@@ -485,14 +485,20 @@ h6,
 
   .btn-lux-primary {
     @apply bg-lux-blue text-lux-textStrong font-semibold rounded-xl px-4 py-3 min-h-[48px] shadow-luxury hover:shadow-luxury-lg transition-colors duration-200;
+    @apply active:scale-98;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/70 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
   }
 
   .btn-lux-secondary {
     @apply bg-lux-bg2 text-lux-text font-semibold rounded-xl px-4 py-3 min-h-[48px] border border-lux-border/70 hover:border-lux-gold/60 transition-colors duration-200;
+    @apply active:scale-98;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/60 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
   }
 
   .btn-lux-ghost {
     @apply text-lux-textMuted rounded-xl px-4 py-3 min-h-[48px] border border-transparent hover:border-lux-border/70 transition-colors duration-200;
+    @apply active:scale-98;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/50 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
   }
 }
 

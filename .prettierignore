@@ -1,0 +1,17 @@
+dist
+coverage
+playwright-report
+test-results
+node_modules
+.vite
+
+# Firebase / tooling artifacts
+.firebase
+firestore-debug.log
+ui-debug.log
+
+# Generated / vendor
+public/icons
+
+# Snapshots / large assets
+e2e/**/packages.spec.ts-snapshots

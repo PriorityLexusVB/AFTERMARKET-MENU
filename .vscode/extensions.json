@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "rvest.vs-code-prettier-eslint",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-playwright.playwright",
+    "vitest.explorer",
+    "EditorConfig.EditorConfig"
+  ]
+}

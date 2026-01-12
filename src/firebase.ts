@@ -1,5 +1,9 @@
 import { initializeApp, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore/lite";
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+  Firestore,
+} from "firebase/firestore/lite";
 import { getAuth, Auth } from "firebase/auth";
 
 // This is the standard Vite way to access environment variables.
@@ -26,7 +30,7 @@ const firebaseConfigFromJson = (() => {
     const errorMessage =
       error instanceof Error ? error.message : "Failed to parse JSON.";
     console.error(
-      `Firebase initialization was skipped because VITE_FIREBASE_CONFIG is not valid JSON: ${errorMessage}`
+      `Firebase initialization was skipped because VITE_FIREBASE_CONFIG is not valid JSON: ${errorMessage}`,
     );
     return { __parseError: true } as const;
   }
@@ -41,12 +45,26 @@ const firebaseConfigFromKeys = {
   appId: import.meta.env["VITE_FIREBASE_APP_ID"],
 };
 
+const useFirestoreEmulator =
+  import.meta.env.DEV &&
+  String(import.meta.env["VITE_USE_FIRESTORE_EMULATOR"]).toLowerCase() ===
+    "true";
+
 const firebaseConfig = {
   ...firebaseConfigFromKeys,
   ...(firebaseConfigFromJson && !("__parseError" in firebaseConfigFromJson)
     ? firebaseConfigFromJson
     : {}),
 };
+
+// If we're explicitly using the emulator in dev, allow a minimal config so
+// local development doesn't require real Firebase credentials.
+if (useFirestoreEmulator) {
+  if (!firebaseConfig.projectId)
+    firebaseConfig.projectId = "demo-aftermarket-menu";
+  if (!firebaseConfig.apiKey) firebaseConfig.apiKey = "demo";
+  if (!firebaseConfig.authDomain) firebaseConfig.authDomain = "localhost";
+}
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
@@ -71,6 +89,17 @@ if (firebaseConfigFromJson && "__parseError" in firebaseConfigFromJson) {
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+
+    if (useFirestoreEmulator && db) {
+      const host =
+        (import.meta.env["VITE_FIRESTORE_EMULATOR_HOST"] as string) ||
+        "127.0.0.1";
+      const port =
+        Number(import.meta.env["VITE_FIRESTORE_EMULATOR_PORT"]) || 8081;
+      connectFirestoreEmulator(db, host, port);
+      console.info(`Firestore emulator enabled at ${host}:${port}`);
+    }
+
     auth = getAuth(app);
   } catch (error) {
     const errorMessage =
@@ -83,7 +112,7 @@ if (firebaseConfigFromJson && "__parseError" in firebaseConfigFromJson) {
 } else {
   // Create a more informative error message if variables are missing.
   const missingKeyNames = requiredKeys.filter(
-    (key) => !firebaseConfig[key] || typeof firebaseConfig[key] !== "string"
+    (key) => !firebaseConfig[key] || typeof firebaseConfig[key] !== "string",
   );
 
   const missingVars = missingKeyNames.map((key) => {
@@ -96,7 +125,7 @@ if (firebaseConfigFromJson && "__parseError" in firebaseConfigFromJson) {
   });
 
   const errorMessage = `Firebase initialization was skipped because the following required environment variables are missing (or VITE_FIREBASE_CONFIG is missing required keys): ${missingVars.join(
-    ", "
+    ", ",
   )}. Please ensure they are set in your .env.local file for local development or in your hosting provider's environment settings.`;
   console.error(errorMessage);
   firebaseInitializationError = errorMessage;

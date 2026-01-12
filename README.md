@@ -40,6 +40,43 @@ The application connects to a Firebase project. You need to provide Firebase cre
 2.  Copy the contents of `.env.example` into your new `.env.local` file.
 3.  Fill in the values with your actual Firebase Web App configuration. All variables must start with `VITE_` to be recognized by the application.
 
+#### Option: Use the Firestore Emulator (recommended for local dev)
+
+This repo supports an emulator-first workflow so you can run the app locally without real Firebase credentials.
+
+1. Start the emulators:
+
+```bash
+npm run emulators:start
+```
+
+2. Seed the emulator with demo data (in a separate terminal):
+
+```bash
+npm run emulators:seed
+```
+
+3. Start the app in emulator mode:
+
+```bash
+npm run dev:emulator
+```
+
+Notes:
+
+- Firestore Emulator may require Java. If you see Java-related errors, install a recent JDK (11+).
+- The seed data lives in `tools/firestore-seed.json` and is loaded by `tools/seed-emulator.ts`.
+- `npm run emulators:seed` waits for the Firestore emulator port to be reachable before seeding.
+
+#### Optional: Firebase MCP Server (AI tooling)
+
+Firebase CLI includes an MCP server that some AI tools can connect to for Firebase operations (query Firestore, validate rules, manage Auth users, etc.). This is optional and not required for running the app.
+
+- Start it via VS Code task: `Firebase: MCP Server (stdio)`
+- Or via npm: `npm run firebase:mcp`
+
+Important: the MCP server uses your Firebase CLI credentials. Prefer using it against emulators or a dedicated non-production Firebase project.
+
 ### Step 4: Run the Development Server
 
 Start the Vite development server.
@@ -56,9 +93,17 @@ The application will now be running on your local machine, typically at `http://
 
 ```bash
 npm run dev          # Start development server
+npm run dev:emulator # Start dev server connected to Firebase emulators
 npm run build        # Build for production
 npm run preview      # Preview production build locally
 npm run typecheck    # Run TypeScript type checking
+```
+
+### Firebase Emulators
+
+```bash
+npm run emulators:start # Start Firestore + Auth emulators
+npm run emulators:seed  # Seed Firestore emulator with demo data
 ```
 
 ### Testing

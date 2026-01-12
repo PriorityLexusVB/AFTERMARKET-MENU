@@ -31,11 +31,7 @@ import {
   updateFeature,
   setRecommendedPackage,
 } from "../data";
-import {
-  groupFeaturesByColumn,
-  normalizePositions,
-  sortFeatures,
-} from "../utils/featureOrdering";
+import { groupFeaturesByColumn, normalizePositions, sortFeatures } from "../utils/featureOrdering";
 import { ProductHub } from "./ProductHub";
 
 interface AdminPanelProps {
@@ -133,9 +129,7 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
               />
             </svg>
           </button>
-          <span className="font-semibold text-gray-200 text-sm">
-            {feature.name}
-          </span>
+          <span className="font-semibold text-gray-200 text-sm">{feature.name}</span>
         </div>
         <div className="flex items-center gap-1">
           {/* Keyboard accessible reorder controls */}
@@ -204,9 +198,7 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
             {connector}
           </button>
         ) : (
-          <span className="text-[11px] text-gray-500 italic">
-            End of column
-          </span>
+          <span className="text-[11px] text-gray-500 italic">End of column</span>
         )}
       </div>
     </div>
@@ -214,9 +206,7 @@ const SortableFeatureItem: React.FC<SortableFeatureItemProps> = ({
 };
 
 // Drag overlay item (shown while dragging)
-const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({
-  feature,
-}) => (
+const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({ feature }) => (
   <div className="bg-gray-800 p-3 rounded-md border border-blue-500 shadow-lg">
     <div className="flex items-center gap-2">
       <svg
@@ -231,9 +221,7 @@ const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({
           clipRule="evenodd"
         />
       </svg>
-      <span className="font-semibold text-gray-200 text-sm">
-        {feature.name}
-      </span>
+      <span className="font-semibold text-gray-200 text-sm">{feature.name}</span>
     </div>
   </div>
 );
@@ -244,10 +232,7 @@ interface DroppableColumnProps {
   children: React.ReactNode;
 }
 
-const DroppableColumn: React.FC<DroppableColumnProps> = ({
-  columnId,
-  children,
-}) => {
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: `column-${columnId}`,
   });
@@ -271,9 +256,7 @@ const STORAGE_KEY_BANNER_DISMISSED = "adminPanel_alaCarteBannerDismissed";
 const getStoredTab = (): AdminTab | null => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY_TAB);
-    return stored === "features" ||
-      stored === "alacarte" ||
-      stored === "product-hub"
+    return stored === "features" || stored === "alacarte" || stored === "product-hub"
       ? (stored as AdminTab)
       : null;
   } catch {
@@ -310,11 +293,7 @@ const getInitialTab = (): AdminTab => {
   // Check query string first
   const params = new URLSearchParams(window.location.search);
   const tabParam = params.get("tab");
-  if (
-    tabParam === "alacarte" ||
-    tabParam === "features" ||
-    tabParam === "product-hub"
-  ) {
+  if (tabParam === "alacarte" || tabParam === "features" || tabParam === "product-hub") {
     return tabParam as AdminTab;
   }
 
@@ -344,16 +323,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [showBanner, setShowBanner] = useState(!isBannerDismissed());
   const [showUnassigned, setShowUnassigned] = useState(false);
   const [packages, setPackages] = useState<PackageTier[]>([]);
-  const [recommendedSelection, setRecommendedSelection] =
-    useState<string>("none");
+  const [recommendedSelection, setRecommendedSelection] = useState<string>("none");
   const [isSavingRecommended, setIsSavingRecommended] = useState(false);
-  const [recommendedMessage, setRecommendedMessage] = useState<string | null>(
-    null
-  );
+  const [recommendedMessage, setRecommendedMessage] = useState<string | null>(null);
   const [recommendedError, setRecommendedError] = useState<string | null>(null);
-  const [productHubScrollTarget, setProductHubScrollTarget] = useState<
-    string | null
-  >(null);
+  const [productHubScrollTarget, setProductHubScrollTarget] = useState<string | null>(null);
 
   // Backup state for rollback on error
   const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
@@ -386,7 +360,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const featuresQuery = query(collection(db, "features"), orderBy("name"));
       const querySnapshot = await getDocs(featuresQuery);
       const featuresData = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as ProductFeature)
+        (doc) => ({ ...(doc.data() as object), id: doc.id }) as ProductFeature
       );
       setFeatures(featuresData);
     } catch (err) {
@@ -410,8 +384,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const packagesSnapshot = await getDocs(collection(db, "packages"));
       const packageData: PackageTier[] = packagesSnapshot.docs.map((pkgDoc) => {
         const data = pkgDoc.data() as Partial<PackageTier>;
-        const isRecommended =
-          data.isRecommended ?? data.is_recommended ?? false;
+        const isRecommended = data.isRecommended ?? data.is_recommended ?? false;
         return {
           id: pkgDoc.id,
           name: data.name ?? "",
@@ -425,8 +398,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       });
       setPackages(packageData);
       setRecommendedSelection(
-        packageData.find((pkg) => pkg.isRecommended ?? pkg.is_recommended)
-          ?.id ?? "none"
+        packageData.find((pkg) => pkg.isRecommended ?? pkg.is_recommended)?.id ?? "none"
       );
       setRecommendedError(null);
     } catch (err) {
@@ -484,10 +456,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   useEffect(() => {
     if (!recommendedMessage) return;
-    const timeoutId = window.setTimeout(
-      () => setRecommendedMessage(null),
-      3000
-    );
+    const timeoutId = window.setTimeout(() => setRecommendedMessage(null), 3000);
     return () => window.clearTimeout(timeoutId);
   }, [recommendedMessage]);
 
@@ -543,9 +512,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       } catch (err) {
         console.error("Error updating recommended package:", err);
         const message =
-          err instanceof Error
-            ? err.message
-            : "Failed to update recommended package.";
+          err instanceof Error ? err.message : "Failed to update recommended package.";
         setRecommendedError(message);
         setRecommendedSelection(previousSelection);
         await fetchPackages();
@@ -571,8 +538,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     [packages]
   );
   const platinumPackageId = useMemo(
-    () =>
-      packages.find((pkg) => pkg.name.toLowerCase().includes("platinum"))?.id,
+    () => packages.find((pkg) => pkg.name.toLowerCase().includes("platinum"))?.id,
     [packages]
   );
   const goldPackageId = useMemo(
@@ -598,29 +564,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
 
   // Persist position changes to Firestore with normalization
   const persistPositionChanges = useCallback(
-    async (
-      updatedFeatures: ProductFeature[],
-      column: number | "unassigned"
-    ) => {
+    async (updatedFeatures: ProductFeature[], column: number | "unassigned") => {
       // Filter features in the affected column and sort by position
       const columnFeatures = sortFeatures(
-        updatedFeatures.filter((f) =>
-          column === "unassigned" ? !f.column : f.column === column
-        )
+        updatedFeatures.filter((f) => (column === "unassigned" ? !f.column : f.column === column))
       );
 
       // Normalize positions (0..n-1) to ensure deterministic ordering
       const normalizedFeatures = normalizePositions(columnFeatures);
 
       // Build position updates with normalized positions
-      const updates: FeaturePositionUpdate[] = normalizedFeatures.map(
-        (feature) => ({
-          id: feature.id,
-          position: feature.position!, // position is guaranteed by normalizePositions
-          column: column === "unassigned" ? undefined : column,
-          connector: feature.connector,
-        })
-      );
+      const updates: FeaturePositionUpdate[] = normalizedFeatures.map((feature) => ({
+        id: feature.id,
+        position: feature.position!, // position is guaranteed by normalizePositions
+        column: column === "unassigned" ? undefined : column,
+        connector: feature.connector,
+      }));
 
       if (updates.length === 0) return;
 
@@ -632,9 +591,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         console.error("Error saving position changes:", err);
         // Rollback to backup
         setFeatures(featuresBackup);
-        setError(
-          "Failed to save position changes. Changes have been rolled back."
-        );
+        setError("Failed to save position changes. Changes have been rolled back.");
       } finally {
         setIsSaving(false);
       }
@@ -650,15 +607,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   };
 
   // Helper to parse column ID from droppable zone
-  const parseColumnFromDroppableId = (
-    id: string
-  ): number | "unassigned" | null => {
+  const parseColumnFromDroppableId = (id: string): number | "unassigned" | null => {
     if (typeof id === "string" && id.startsWith("column-")) {
       const columnPart = id.replace("column-", "");
       if (columnPart === "unassigned") return "unassigned";
       const num = parseInt(columnPart, 10);
-      if ((FEATURE_COLUMN_NUMBERS as readonly number[]).includes(num))
-        return num;
+      if ((FEATURE_COLUMN_NUMBERS as readonly number[]).includes(num)) return num;
     }
     return null;
   };
@@ -711,9 +665,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         const oldColumnFeatures =
           activeColumn === "unassigned"
             ? featuresByColumn.unassigned.filter((f) => f.id !== active.id)
-            : featuresByColumn[activeColumn as 1 | 2 | 3 | 4].filter(
-                (f) => f.id !== active.id
-              );
+            : featuresByColumn[activeColumn as 1 | 2 | 3 | 4].filter((f) => f.id !== active.id);
 
         const updatedOldColumnFeatures = oldColumnFeatures.map((f, idx) => ({
           ...f,
@@ -758,9 +710,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
         } catch (err) {
           console.error("Error saving cross-column move:", err);
           setFeatures(featuresBackup);
-          setError(
-            "Failed to move feature to new column. Changes have been rolled back."
-          );
+          setError("Failed to move feature to new column. Changes have been rolled back.");
         } finally {
           setIsSaving(false);
         }
@@ -783,18 +733,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       const newIndex = columnFeatures.length - 1;
       if (newIndex === oldIndex) return;
 
-      const reorderedColumnFeatures = arrayMove(
-        columnFeatures,
-        oldIndex,
-        newIndex
-      );
+      const reorderedColumnFeatures = arrayMove(columnFeatures, oldIndex, newIndex);
 
-      const updatedColumnFeatures = reorderedColumnFeatures.map(
-        (feature, index) => ({
-          ...feature,
-          position: index,
-        })
-      );
+      const updatedColumnFeatures = reorderedColumnFeatures.map((feature, index) => ({
+        ...feature,
+        position: index,
+      }));
 
       const updatedFeatures = features.map((f) => {
         const updated = updatedColumnFeatures.find((uf) => uf.id === f.id);
@@ -807,9 +751,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
       } catch (err) {
         console.error("Error saving same-column drop:", err);
         setFeatures(backupFeatures);
-        setError(
-          "Failed to save position changes. Changes have been rolled back."
-        );
+        setError("Failed to save position changes. Changes have been rolled back.");
       }
       return;
     }
@@ -841,19 +783,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     }
 
     // Reorder the column features
-    const reorderedColumnFeatures = arrayMove(
-      columnFeatures,
-      oldIndex,
-      newIndex
-    );
+    const reorderedColumnFeatures = arrayMove(columnFeatures, oldIndex, newIndex);
 
     // Update positions in the reordered array
-    const updatedColumnFeatures = reorderedColumnFeatures.map(
-      (feature, index) => ({
-        ...feature,
-        position: index,
-      })
-    );
+    const updatedColumnFeatures = reorderedColumnFeatures.map((feature, index) => ({
+      ...feature,
+      position: index,
+    }));
 
     // Optimistic UI update
     const updatedFeatures = features.map((f) => {
@@ -868,10 +804,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   };
 
   // Handle keyboard reorder (up/down buttons)
-  const handleKeyboardReorder = async (
-    featureId: string,
-    direction: "up" | "down"
-  ) => {
+  const handleKeyboardReorder = async (featureId: string, direction: "up" | "down") => {
     const column = findColumnForFeature(featureId);
     if (column === null) return;
 
@@ -891,17 +824,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     setFeaturesBackup([...features]);
 
     // Reorder
-    const reorderedColumnFeatures = arrayMove(
-      columnFeatures,
-      currentIndex,
-      newIndex
-    );
-    const updatedColumnFeatures = reorderedColumnFeatures.map(
-      (feature, index) => ({
-        ...feature,
-        position: index,
-      })
-    );
+    const reorderedColumnFeatures = arrayMove(columnFeatures, currentIndex, newIndex);
+    const updatedColumnFeatures = reorderedColumnFeatures.map((feature, index) => ({
+      ...feature,
+      position: index,
+    }));
 
     // Optimistic UI update
     const updatedFeatures = features.map((f) => {
@@ -921,8 +848,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     if (!feature) return;
 
     const currentConnector = feature.connector || "AND";
-    const newConnector: FeatureConnector =
-      currentConnector === "AND" ? "OR" : "AND";
+    const newConnector: FeatureConnector = currentConnector === "AND" ? "OR" : "AND";
 
     // Store backup for rollback
     setFeaturesBackup([...features]);
@@ -967,9 +893,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     if (columnFeatures.length === 0) {
       return (
         <DroppableColumn columnId={columnId}>
-          <p className="text-gray-500 text-sm italic p-2">
-            {getEmptyMessage()}
-          </p>
+          <p className="text-gray-500 text-sm italic p-2">{getEmptyMessage()}</p>
         </DroppableColumn>
       );
     }
@@ -988,9 +912,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 onMoveUp={() => handleKeyboardReorder(feature.id, "up")}
                 onMoveDown={() => handleKeyboardReorder(feature.id, "down")}
                 onToggleConnector={() => handleToggleConnector(feature.id)}
-                onEdit={
-                  onEditFeature ? () => onEditFeature(feature) : undefined
-                }
+                onEdit={onEditFeature ? () => onEditFeature(feature) : undefined}
                 isFirst={index === 0}
                 isLast={index === columnFeatures.length - 1}
               />
@@ -1033,8 +955,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   }`}
                 >
                   ({features.length}
-                  {unassignedCount > 0 ? `, ${unassignedCount} unassigned` : ""}
-                  )
+                  {unassignedCount > 0 ? `, ${unassignedCount} unassigned` : ""})
                 </span>
               )}
             </button>
@@ -1102,16 +1023,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 </svg>
                 <div className="flex-1">
                   <p className="text-blue-300 text-sm">
-                    <strong>Looking for A La Carte options?</strong> They are
-                    managed separately in the{" "}
+                    <strong>Looking for A La Carte options?</strong> They are managed separately in
+                    the{" "}
                     <button
                       onClick={() => handleTabChange("alacarte")}
                       className="underline hover:text-blue-200 font-semibold"
                     >
                       A La Carte Options
                     </button>{" "}
-                    tab. You currently have{" "}
-                    <strong>{alaCarteCounts.total}</strong> A La Carte option
+                    tab. You currently have <strong>{alaCarteCounts.total}</strong> A La Carte
+                    option
                     {alaCarteCounts.total !== 1 ? "s" : ""}.
                   </p>
                 </div>
@@ -1166,8 +1087,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </div>
 
             <p className="text-sm text-gray-400 mb-4">
-              This view is for column ordering by tier. Create or edit products
-              in the{" "}
+              This view is for column ordering by tier. Create or edit products in the{" "}
               <button
                 onClick={() => handleTabChange("product-hub")}
                 className="underline text-blue-300 hover:text-blue-200 font-semibold"
@@ -1181,12 +1101,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <p className="text-sm text-purple-200 font-semibold">
-                    Popular Add-ons are managed in A La Carte Options tab
-                    (Featured lane).
+                    Popular Add-ons are managed in A La Carte Options tab (Featured lane).
                   </p>
                   <p className="text-xs text-purple-200/80">
-                    Featured add-ons (Column 4) shown to customers come from A
-                    La Carte options.
+                    Featured add-ons (Column 4) shown to customers come from A La Carte options.
                   </p>
                 </div>
               </div>
@@ -1206,24 +1124,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <p className="text-sm text-gray-300 font-semibold">
-                    Recommended package
-                  </p>
+                  <p className="text-sm text-gray-300 font-semibold">Recommended package</p>
                   <p className="text-xs text-gray-500">
-                    Choose which package shows the recommended badge to
-                    customers.
+                    Choose which package shows the recommended badge to customers.
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   {isSavingRecommended && (
-                    <span className="text-blue-400 flex items-center gap-1">
-                      Saving...
-                    </span>
+                    <span className="text-blue-400 flex items-center gap-1">Saving...</span>
                   )}
                   {recommendedMessage && !isSavingRecommended && (
-                    <span className="text-green-400 flex items-center gap-1">
-                      Saved
-                    </span>
+                    <span className="text-green-400 flex items-center gap-1">Saved</span>
                   )}
                 </div>
               </div>
@@ -1238,9 +1149,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                     name="recommended-package"
                     checked={recommendedSelection === elitePackageId}
                     disabled={!elitePackageId || isSavingRecommended}
-                    onChange={() =>
-                      elitePackageId && handleRecommendedChange(elitePackageId)
-                    }
+                    onChange={() => elitePackageId && handleRecommendedChange(elitePackageId)}
                     className="form-radio h-4 w-4 text-blue-500"
                   />
                   Elite
@@ -1251,10 +1160,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                     name="recommended-package"
                     checked={recommendedSelection === platinumPackageId}
                     disabled={!platinumPackageId || isSavingRecommended}
-                    onChange={() =>
-                      platinumPackageId &&
-                      handleRecommendedChange(platinumPackageId)
-                    }
+                    onChange={() => platinumPackageId && handleRecommendedChange(platinumPackageId)}
                     className="form-radio h-4 w-4 text-blue-500"
                   />
                   Platinum
@@ -1265,9 +1171,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                     name="recommended-package"
                     checked={recommendedSelection === goldPackageId}
                     disabled={!goldPackageId || isSavingRecommended}
-                    onChange={() =>
-                      goldPackageId && handleRecommendedChange(goldPackageId)
-                    }
+                    onChange={() => goldPackageId && handleRecommendedChange(goldPackageId)}
                     className="form-radio h-4 w-4 text-blue-500"
                   />
                   Gold
@@ -1284,9 +1188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   None
                 </label>
               </div>
-              {recommendedError && (
-                <p className="text-red-400 text-sm mt-2">{recommendedError}</p>
-              )}
+              {recommendedError && <p className="text-red-400 text-sm mt-2">{recommendedError}</p>}
             </div>
 
             <div className="border-t border-gray-700 pt-6">
@@ -1313,15 +1215,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                     </span>
                   </label>
                   <p className="text-sm text-gray-500">
-                    Drag using the ≡ handle to reorder or move between columns •
-                    AND/OR controls the connector to the NEXT item below (hidden
-                    on the last item)
+                    Drag using the ≡ handle to reorder or move between columns • AND/OR controls the
+                    connector to the NEXT item below (hidden on the last item)
                   </p>
                 </div>
               </div>
-              {isLoading && (
-                <p className="text-gray-400">Loading features...</p>
-              )}
+              {isLoading && <p className="text-gray-400">Loading features...</p>}
               {error && (
                 <p className="text-red-400 bg-red-500/10 p-3 rounded-md border border-red-500/30 mb-4">
                   {error}
@@ -1338,8 +1237,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   <div className="space-y-6">
                     {features.length === 0 ? (
                       <p className="text-gray-500">
-                        No features found. Click "Add New Feature" to create
-                        one.
+                        No features found. Click "Add New Feature" to create one.
                       </p>
                     ) : (
                       <>
@@ -1359,49 +1257,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                                 </p>
                               </div>
                               <div className="mt-2">
-                                {renderColumnFeatures(
-                                  featuresByColumn[num],
-                                  num,
-                                  (feature) =>
-                                    handleEditInProductHub(feature.id)
+                                {renderColumnFeatures(featuresByColumn[num], num, (feature) =>
+                                  handleEditInProductHub(feature.id)
                                 )}
                               </div>
                             </div>
                           ))}
                         </div>
 
-                        {showUnassigned &&
-                          featuresByColumn.unassigned.length > 0 && (
-                            <div
-                              className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 relative max-h-[70vh] overflow-y-auto"
-                              data-testid="column-unassigned"
-                            >
-                              <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-2">
-                                <h5 className="text-lg font-semibold text-yellow-400 mb-1 font-teko tracking-wider">
-                                  Unassigned Features
-                                </h5>
-                                <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-                                  Not currently in a package column
-                                </p>
-                              </div>
-                              <div className="mt-2">
-                                {renderColumnFeatures(
-                                  featuresByColumn.unassigned,
-                                  "unassigned",
-                                  (feature) =>
-                                    handleEditInProductHub(feature.id)
-                                )}
-                              </div>
+                        {showUnassigned && featuresByColumn.unassigned.length > 0 && (
+                          <div
+                            className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 relative max-h-[70vh] overflow-y-auto"
+                            data-testid="column-unassigned"
+                          >
+                            <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-2">
+                              <h5 className="text-lg font-semibold text-yellow-400 mb-1 font-teko tracking-wider">
+                                Unassigned Features
+                              </h5>
+                              <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
+                                Not currently in a package column
+                              </p>
                             </div>
-                          )}
+                            <div className="mt-2">
+                              {renderColumnFeatures(
+                                featuresByColumn.unassigned,
+                                "unassigned",
+                                (feature) => handleEditInProductHub(feature.id)
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
 
                   <DragOverlay>
-                    {activeFeature ? (
-                      <DragOverlayItem feature={activeFeature} />
-                    ) : null}
+                    {activeFeature ? <DragOverlayItem feature={activeFeature} /> : null}
                   </DragOverlay>
                 </DndContext>
               )}

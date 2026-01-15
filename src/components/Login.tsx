@@ -25,12 +25,13 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
     try {
       await signInWithEmailAndPassword(auth, email, password);
       // onAuthStateChanged in App.tsx will handle the view change
-    } catch (err: any) {
-        if (err.code === 'auth/invalid-credential') {
-            setError('Invalid email or password. Please try again.');
-        } else {
-            setError('An unexpected error occurred. Please try again later.');
-        }
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
+      if (error.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
       console.error(err);
     } finally {
       setIsSubmitting(false);

@@ -82,7 +82,7 @@ describe("ProductHub inline editing", () => {
     mockAddDoc.mockResolvedValue({ id: "new-feature" });
   });
 
-  it("orders package lane radios Gold, Elite, Platinum, Not in Packages", async () => {
+  it("orders package lane radios Elite, Platinum, Gold, Not in Packages", async () => {
     const { feature } = await renderHub({ column: 2 });
     const row = await expandRow(feature.name);
     expect(row).toBeTruthy();
@@ -91,9 +91,9 @@ describe("ProductHub inline editing", () => {
       (radio as HTMLInputElement).labels?.[0]?.textContent?.trim()
     );
     expect(labels).toEqual([
-      "Gold Package (Column 1)",
       "Elite Package (Column 2)",
       "Platinum Package (Column 3)",
+      "Gold Package (Column 1)",
       "Not in Packages",
     ]);
 

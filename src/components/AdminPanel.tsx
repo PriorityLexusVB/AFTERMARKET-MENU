@@ -42,10 +42,11 @@ type AdminTab = "features" | "alacarte" | "product-hub";
 
 // Column configuration - strict 1:1 mapping and display order
 // Gold = Column 1, Elite = Column 2, Platinum = Column 3
+// Display order: Elite, Platinum, Gold (as requested)
 const COLUMNS = [
-  { num: 1, label: "Gold Package (Column 1)" },
   { num: 2, label: "Elite Package (Column 2)" },
   { num: 3, label: "Platinum Package (Column 3)" },
+  { num: 1, label: "Gold Package (Column 1)" },
 ] as const;
 
 const FEATURE_COLUMN_NUMBERS = [1, 2, 3] as const;

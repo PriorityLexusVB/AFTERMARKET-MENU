@@ -31,10 +31,11 @@ interface ProductHubProps {
   onScrollHandled?: () => void;
 }
 
+// Display order: Elite, Platinum, Gold (as requested)
 const packageLaneOptions: Array<{ value: 1 | 2 | 3; label: string }> = [
-  { value: 1, label: "Gold Package (Column 1)" },
   { value: 2, label: "Elite Package (Column 2)" },
   { value: 3, label: "Platinum Package (Column 3)" },
+  { value: 1, label: "Gold Package (Column 1)" },
 ];
 const columnLabels: Record<1 | 2 | 3, string> = {
   1: "Gold Package (Column 1)",

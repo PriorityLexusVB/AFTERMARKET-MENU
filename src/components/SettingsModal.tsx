@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
 import type { AlaCarteOption, PackageTier, PriceOverrides } from "../types";
-import { CustomerInfoSchema } from "../schemas";
 
 interface CustomerInfo {
   name: string;

@@ -12,6 +12,7 @@ import { AgreementView } from "./components/AgreementView";
 import { Login } from "./components/Login";
 import { AdminPanel } from "./components/AdminPanel";
 import { SetupGuide } from "./components/SetupGuide";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
@@ -835,7 +836,9 @@ const App: React.FC = () => {
               <SetupGuide error={firebaseInitializationError} />
             </div>
           ) : (
-            <AdminPanel onDataUpdate={loadData} />
+            <ErrorBoundary>
+              <AdminPanel onDataUpdate={loadData} />
+            </ErrorBoundary>
           )}
         </div>
       ) : (

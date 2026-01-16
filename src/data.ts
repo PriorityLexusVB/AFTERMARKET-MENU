@@ -15,6 +15,7 @@ import {
   validateDataArray,
   ProductFeatureSchema,
   AlaCarteOptionSchema,
+  PackageTierSchema,
 } from "./schemas";
 import { deriveTierFeatures } from "./utils/featureOrdering";
 
@@ -103,14 +104,15 @@ export async function fetchAllData(): Promise<FetchDataResult> {
       "ala_carte_options"
     );
 
-    const packages: PackageTier[] = packagesSnapshot.docs.map((doc) => {
+    // Map and prepare packages for validation
+    const rawPackages = packagesSnapshot.docs.map((doc) => {
       const data = doc.data() as Omit<FirebasePackage, "id">;
       const isRecommended = data.isRecommended ?? data.is_recommended ?? false;
       // Derive features from column assignments based on tier name
       // This makes admin column configuration the single source of truth
       const derivedFeatures = deriveTierFeatures(data.name, features);
 
-      const pkg: PackageTier = {
+      return {
         id: doc.id,
         name: data.name,
         price: data.price,
@@ -120,8 +122,14 @@ export async function fetchAllData(): Promise<FetchDataResult> {
         tier_color: data.tier_color,
         features: derivedFeatures,
       };
-      return pkg;
     });
+
+    // Validate packages using Zod schema
+    const packages: PackageTier[] = validateDataArray(
+      PackageTierSchema,
+      rawPackages,
+      "packages"
+    );
 
     // If no data is fetched (e.g., empty collections), fallback to mock data to ensure the app is usable.
     if (

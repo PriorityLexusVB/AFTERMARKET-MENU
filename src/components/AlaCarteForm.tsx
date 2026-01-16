@@ -76,11 +76,25 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
     setError(null);
 
     try {
+      // Validate numeric inputs before parsing
+      const price = formData.price.trim();
+      const cost = formData.cost.trim();
+
+      // Check if price is a valid number
+      if (!price || isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+        throw new Error("Price must be a valid non-negative number.");
+      }
+
+      // Check if cost is a valid number
+      if (!cost || isNaN(parseFloat(cost)) || parseFloat(cost) < 0) {
+        throw new Error("Cost must be a valid non-negative number.");
+      }
+
       // Build the option data object with proper typing
       const optionData: Omit<AlaCarteOption, 'id'> = {
         name: formData.name,
-        price: parseFloat(formData.price),
-        cost: parseFloat(formData.cost),
+        price: parseFloat(price),
+        cost: parseFloat(cost),
         description: formData.description,
         points: formData.points.split('\n').filter(line => line.trim() !== ''),
         connector: formData.connector,
@@ -95,13 +109,9 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
       // Add column if valid
       if (formData.column) {
         const parsedColumn = parseInt(formData.column);
-        if (!isNaN(parsedColumn)) {
+        if (!isNaN(parsedColumn) && parsedColumn >= 1 && parsedColumn <= 4) {
           optionData.column = parsedColumn;
         }
-      }
-
-      if (isNaN(optionData.price) || isNaN(optionData.cost)) {
-        throw new Error("Price and Cost must be valid numbers.");
       }
 
       if (isEditMode && editingOption) {

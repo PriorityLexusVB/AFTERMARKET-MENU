@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { addAlaCarteOption, updateAlaCarteOption } from '../data';
+import { MIN_COLUMN, MAX_COLUMN } from '../constants';
 import type { AlaCarteOption, FeatureConnector } from '../types';
 
 interface AlaCarteFormProps {
@@ -109,7 +110,7 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
       // Add column if valid
       if (formData.column) {
         const parsedColumn = parseInt(formData.column);
-        if (!isNaN(parsedColumn) && parsedColumn >= 1 && parsedColumn <= 4) {
+        if (!isNaN(parsedColumn) && parsedColumn >= MIN_COLUMN && parsedColumn <= MAX_COLUMN) {
           optionData.column = parsedColumn;
         }
       }

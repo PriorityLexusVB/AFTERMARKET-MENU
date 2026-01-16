@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ERROR_AUTO_HIDE_TIMEOUT } from "../constants";
 import type { AlaCarteOption } from "../types";
 
 interface CustomPackageBuilderProps {
@@ -67,8 +68,8 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setDropError(`Failed to add item: ${errorMessage}. Please try again.`);
       
-      // Auto-hide error after 5 seconds
-      setTimeout(() => setDropError(null), 5000);
+      // Auto-hide error after configured timeout
+      setTimeout(() => setDropError(null), ERROR_AUTO_HIDE_TIMEOUT);
     }
   };
 

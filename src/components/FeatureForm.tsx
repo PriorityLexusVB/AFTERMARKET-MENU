@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addFeature, updateFeature, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature } from '../data';
 import { ImageUploader } from './ImageUploader';
+import { MIN_COLUMN, MAX_COLUMN } from '../constants';
 import type { ProductFeature, FeatureConnector } from '../types';
 
 interface FeatureFormProps {
@@ -128,7 +129,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         // Add column if valid
         if (formData.column) {
             const parsedColumn = parseInt(formData.column);
-            if (!isNaN(parsedColumn) && parsedColumn >= 1 && parsedColumn <= 4) {
+            if (!isNaN(parsedColumn) && parsedColumn >= MIN_COLUMN && parsedColumn <= MAX_COLUMN) {
                 featureData.column = parsedColumn;
             }
         }

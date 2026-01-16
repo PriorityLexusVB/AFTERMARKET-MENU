@@ -1220,6 +1220,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               // If not grouping or only one variant, render normally
               if (!groupByName || !hasMultipleVariants) {
                 const feature = group.variants[0];
+                if (!feature) return null;
                 const option = alaCarteMap.get(feature.id);
                 const isPublished =
                   option?.isPublished ?? feature.publishToAlaCarte ?? false;
@@ -1624,9 +1625,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                               </span>
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {columnLabelsArray.map((label, idx) => (
+                              {columnLabelsArray.map((label) => (
                                 <span
-                                  key={idx}
+                                  key={label}
                                   className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700"
                                 >
                                   {label}
@@ -1660,7 +1661,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     const laneLabel = feature.column
                       ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
                       : "Not in packages";
-                    const isAdvancedOpen = advancedOpenIds.has(feature.id);
                     const categoryLabel = getCategoryLabel(option);
                     const positionLabel =
                       option?.position !== undefined
@@ -1795,19 +1795,37 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                     ) && (
                                       <div className="mt-2 flex items-center gap-2">
                                         <span className="text-[11px] uppercase text-gray-400">
-                                          Connector
+                                          Connector:
                                         </span>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleConnectorToggle(feature)}
-                                          className={`text-xs px-2 py-1 rounded border ${
-                                            currentConnector === "AND"
-                                              ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
-                                              : "bg-purple-500/20 text-purple-300 border-purple-500/40"
-                                          }`}
-                                        >
-                                          {currentConnector}
-                                        </button>
+                                        <div className="flex gap-2">
+                                          {(["AND", "OR"] as const).map(
+                                            (optionConnector) => (
+                                              <button
+                                                key={optionConnector}
+                                                type="button"
+                                                onClick={() =>
+                                                  handleConnectorChange(
+                                                    feature,
+                                                    optionConnector
+                                                  )
+                                                }
+                                                aria-label={`Set connector to ${optionConnector}`}
+                                                aria-pressed={
+                                                  currentConnector === optionConnector
+                                                }
+                                                className={`px-2 py-1 rounded text-xs border ${
+                                                  currentConnector === optionConnector
+                                                    ? optionConnector === "OR"
+                                                      ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/60"
+                                                      : "bg-green-500/20 text-green-300 border-green-400/60"
+                                                    : "bg-gray-800 text-gray-200 border-gray-700"
+                                                }`}
+                                              >
+                                                {optionConnector}
+                                              </button>
+                                            )
+                                          )}
+                                        </div>
                                       </div>
                                     )}
                                 </div>
@@ -1870,8 +1888,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                                           type="text"
                                           value={warrantyValue}
                                           onChange={(e) =>
-                                            handleWarrantyChange(
-                                              feature.id,
+                                            updateFeatureState(feature.id, {
+                                              alaCarteWarranty: e.target.value,
+                                            })
+                                          }
+                                          onBlur={(e) =>
+                                            handleWarrantyBlur(
+                                              feature,
                                               e.target.value
                                             )
                                           }

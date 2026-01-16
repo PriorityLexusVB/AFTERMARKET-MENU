@@ -84,11 +84,33 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
     setError(null);
 
     try {
+        // Validate numeric inputs before parsing
+        const price = formData.price.trim();
+        const cost = formData.cost.trim();
+        const alaCartePrice = formData.alaCartePrice?.trim();
+
+        // Check if price is a valid number
+        if (!price || isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+            throw new Error("Price must be a valid non-negative number.");
+        }
+
+        // Check if cost is a valid number
+        if (!cost || isNaN(parseFloat(cost)) || parseFloat(cost) < 0) {
+            throw new Error("Cost must be a valid non-negative number.");
+        }
+
+        // Check A La Carte price if publishing
+        if (formData.publishToAlaCarte) {
+            if (!alaCartePrice || isNaN(parseFloat(alaCartePrice)) || parseFloat(alaCartePrice) < 0) {
+                throw new Error("A La Carte price is required and must be a valid non-negative number when publishing to A La Carte.");
+            }
+        }
+
         // Build the feature data object with proper typing
         const featureData: Omit<ProductFeature, 'id'> = {
             name: formData.name,
-            price: parseFloat(formData.price),
-            cost: parseFloat(formData.cost),
+            price: parseFloat(price),
+            cost: parseFloat(cost),
             description: formData.description,
             warranty: formData.warranty || '',
             points: formData.points.split('\n').filter(line => line.trim() !== ''),
@@ -98,7 +120,7 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
             ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
             ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
             publishToAlaCarte: formData.publishToAlaCarte,
-            ...(formData.publishToAlaCarte && formData.alaCartePrice && { alaCartePrice: parseFloat(formData.alaCartePrice) }),
+            ...(formData.publishToAlaCarte && alaCartePrice && { alaCartePrice: parseFloat(alaCartePrice) }),
             ...(formData.alaCarteWarranty && { alaCarteWarranty: formData.alaCarteWarranty }),
             ...(formData.publishToAlaCarte && { alaCarteIsNew: formData.alaCarteIsNew }),
         };
@@ -106,17 +128,9 @@ export const FeatureForm: React.FC<FeatureFormProps> = ({ onSaveSuccess, editing
         // Add column if valid
         if (formData.column) {
             const parsedColumn = parseInt(formData.column);
-            if (!isNaN(parsedColumn)) {
+            if (!isNaN(parsedColumn) && parsedColumn >= 1 && parsedColumn <= 4) {
                 featureData.column = parsedColumn;
             }
-        }
-
-        if (isNaN(featureData.price) || isNaN(featureData.cost)) {
-            throw new Error("Price and Cost must be valid numbers.");
-        }
-
-        if (formData.publishToAlaCarte && (!formData.alaCartePrice || isNaN(parseFloat(formData.alaCartePrice)))) {
-            throw new Error("A La Carte price is required and must be a valid number when publishing to A La Carte.");
         }
 
         let savedFeature: ProductFeature;

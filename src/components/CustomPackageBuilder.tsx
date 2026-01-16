@@ -24,6 +24,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(
     null
   );
+  const [dropError, setDropError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -42,15 +43,32 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
     if (!enableDrop) return;
     e.preventDefault();
     setIsDragOver(false);
+    setDropError(null);
+    
     try {
-      const item = JSON.parse(
-        e.dataTransfer.getData("application/json")
-      ) as AlaCarteOption;
+      const dataString = e.dataTransfer.getData("application/json");
+      
+      if (!dataString) {
+        throw new Error("No data found in drop event");
+      }
+      
+      const item = JSON.parse(dataString) as AlaCarteOption;
+      
+      // Validate that the item has required properties
+      if (!item.id || !item.name) {
+        throw new Error("Invalid item data");
+      }
+      
       onDropItem(item);
       setHighlightedItemId(item.id);
       setTimeout(() => setHighlightedItemId(null), 1000);
     } catch (error) {
       console.error("Failed to parse dropped data:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setDropError(`Failed to add item: ${errorMessage}. Please try again.`);
+      
+      // Auto-hide error after 5 seconds
+      setTimeout(() => setDropError(null), 5000);
     }
   };
 
@@ -78,6 +96,49 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
 
   return (
     <>
+      {/* Error message for failed drops */}
+      {dropError && (
+        <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-start gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-5 h-5 flex-shrink-0 mt-0.5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+            />
+          </svg>
+          <div className="flex-1">
+            <p>{dropError}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDropError(null)}
+            className="flex-shrink-0 text-red-400 hover:text-red-300"
+            aria-label="Dismiss error"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
       {/* Drag/drop handlers are required for the dropzone; keyboard DnD isn't supported here. */}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div

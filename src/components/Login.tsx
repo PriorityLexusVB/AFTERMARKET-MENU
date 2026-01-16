@@ -27,12 +27,34 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
       // onAuthStateChanged in App.tsx will handle the view change
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
-      if (error.code === 'auth/invalid-credential') {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError('An unexpected error occurred. Please try again later.');
+      
+      // Handle specific Firebase auth error codes
+      switch (error.code) {
+        case 'auth/invalid-credential':
+        case 'auth/wrong-password':
+        case 'auth/user-not-found':
+          setError('Invalid email or password. Please try again.');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address.');
+          break;
+        case 'auth/user-disabled':
+          setError('This account has been disabled. Please contact support.');
+          break;
+        case 'auth/too-many-requests':
+          setError('Too many failed login attempts. Please try again later or reset your password.');
+          break;
+        case 'auth/network-request-failed':
+          setError('Network error. Please check your internet connection and try again.');
+          break;
+        case 'auth/operation-not-allowed':
+          setError('Email/password sign-in is not enabled. Please contact support.');
+          break;
+        default:
+          setError(`Login failed: ${error.message || 'An unexpected error occurred. Please try again later.'}`);
       }
-      console.error(err);
+      
+      console.error('Login error:', err);
     } finally {
       setIsSubmitting(false);
     }

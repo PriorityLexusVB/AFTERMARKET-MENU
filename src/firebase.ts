@@ -57,6 +57,9 @@ const firebaseConfig = {
     : {}),
 };
 
+const forceDemoMode =
+  String(import.meta.env["VITE_FORCE_DEMO_MODE"]).toLowerCase() === "true";
+
 // If we're explicitly using the emulator in dev, allow a minimal config so
 // local development doesn't require real Firebase credentials.
 if (useFirestoreEmulator) {
@@ -78,7 +81,10 @@ const requiredKeys: Array<keyof typeof firebaseConfigFromKeys> = [
 ];
 
 // We must check that the essential configuration values are present before initializing.
-if (firebaseConfigFromJson && "__parseError" in firebaseConfigFromJson) {
+if (forceDemoMode) {
+  firebaseInitializationError =
+    "Firebase initialization was skipped because VITE_FORCE_DEMO_MODE is enabled.";
+} else if (firebaseConfigFromJson && "__parseError" in firebaseConfigFromJson) {
   firebaseInitializationError =
     "Firebase initialization was skipped because VITE_FIREBASE_CONFIG is not valid JSON.";
 } else if (

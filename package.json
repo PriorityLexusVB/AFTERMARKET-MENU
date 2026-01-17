@@ -13,6 +13,7 @@
     "prebuild": "node scripts/validate-env-vars.js",
     "postbuild": "node scripts/validate-build.js",
     "preview": "vite preview",
+    "e2e:web": "node scripts/run-e2e-webserver.mjs",
     "start": "node index.js",
     "serve": "node index.js",
     "gcp-build": "npm run build",

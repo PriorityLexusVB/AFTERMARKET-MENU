@@ -455,14 +455,24 @@ const App: React.FC = () => {
   }, [displayAllAlaCarteOptions]);
 
   const mainPageAddons = useMemo(() => {
-    // The Packages page "Add Ons" column should be a tight, explicit whitelist
-    // (matching the printed menu), not "everything in Column 4".
+    // The Packages page "Add Ons" column prefers a tight, explicit whitelist
+    // (matching the printed menu). If the whitelist doesn't match the current DB
+    // (e.g., different dealer dataset), fall back to Column 4 "Featured" items.
     const byId = new Map(
       curatedAlaCarteOptions.map((option) => [option.id, option])
     );
-    return MAIN_PAGE_ADDON_IDS.map((id) => byId.get(id)).filter(
+    const explicit = MAIN_PAGE_ADDON_IDS.map((id) => byId.get(id)).filter(
       (option): option is AlaCarteOption => Boolean(option)
     );
+    if (explicit.length > 0) return explicit;
+
+    return curatedAlaCarteOptions
+      .filter((option) => option.column === 4)
+      .sort((a, b) => {
+        const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+        const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+        return posA - posB;
+      });
   }, [curatedAlaCarteOptions]);
 
   const availableAlaCarteItems = useMemo(() => {

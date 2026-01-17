@@ -32,7 +32,10 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
             <p>No featured add-ons configured yet.</p>
-            <p>Set the Packages-page add-ons list via MAIN_PAGE_ADDON_IDS.</p>
+            <p>
+              Set the Packages-page add-ons list via MAIN_PAGE_ADDON_IDS (or
+              assign items to Column 4 in the A La Carte admin).
+            </p>
           </div>
         ) : (
           items.map((item) => (

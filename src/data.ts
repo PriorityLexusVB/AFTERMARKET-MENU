@@ -58,9 +58,30 @@ interface FirebasePackage {
   cost: number;
   isRecommended?: boolean;
   is_recommended?: boolean;
-  tier_color: string;
+  tier_color?: string;
+  tierColor?: string;
   featureIds?: string[]; // Legacy field (removed by migration)
   legacyFeatureIds?: string[]; // Backup of legacy featureIds (added by migration)
+}
+
+function coerceNumber(value: unknown, fallback: number, context: string): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return fallback;
+    const parsed = Number(trimmed);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  console.warn(`Unexpected numeric value for ${context}:`, value);
+  return fallback;
+}
+
+function fallbackTierColor(name: string): string {
+  const n = name.trim().toLowerCase();
+  if (/\belite\b/.test(n)) return "gray-400";
+  if (/\bplatinum\b/.test(n)) return "blue-400";
+  if (/\bgold\b/.test(n)) return "yellow-400";
+  return "gray-400";
 }
 
 export async function fetchAllData(): Promise<FetchDataResult> {
@@ -106,20 +127,29 @@ export async function fetchAllData(): Promise<FetchDataResult> {
 
     // Map and prepare packages for validation
     const rawPackages = packagesSnapshot.docs.map((doc) => {
-      const data = doc.data() as Omit<FirebasePackage, "id">;
+      const data = doc.data() as unknown as Omit<FirebasePackage, "id">;
       const isRecommended = data.isRecommended ?? data.is_recommended ?? false;
+
+      const price = coerceNumber((data as FirebasePackage).price, 0, `packages.${doc.id}.price`);
+      const cost = coerceNumber((data as FirebasePackage).cost, 0, `packages.${doc.id}.cost`);
+      const name = (data as FirebasePackage).name;
+      const tier_color =
+        (data as FirebasePackage).tier_color ??
+        (data as FirebasePackage).tierColor ??
+        fallbackTierColor(name);
+
       // Derive features from column assignments based on tier name
       // This makes admin column configuration the single source of truth
-      const derivedFeatures = deriveTierFeatures(data.name, features);
+      const derivedFeatures = deriveTierFeatures(name, features);
 
       return {
         id: doc.id,
-        name: data.name,
-        price: data.price,
-        cost: data.cost,
+        name,
+        price,
+        cost,
         isRecommended,
         is_recommended: data.is_recommended,
-        tier_color: data.tier_color,
+        tier_color,
         features: derivedFeatures,
       };
     });

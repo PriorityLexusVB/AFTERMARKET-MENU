@@ -246,7 +246,6 @@ describe("AdminPanel", () => {
     expect(screen.getByText("Elite Package (Column 2)")).toBeInTheDocument();
     expect(screen.getByText("Platinum Package (Column 3)")).toBeInTheDocument();
     expect(screen.getByText("Gold Package (Column 1)")).toBeInTheDocument();
-    expect(screen.getByText(/Popular Add-Ons are managed/i)).toBeInTheDocument();
   });
 
   describe("with features loaded", () => {
@@ -291,7 +290,7 @@ describe("AdminPanel", () => {
       expect(orButtons.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("hides unassigned lane by default and reveals it when toggled", async () => {
+    it("does not show an unassigned lane in the UI", async () => {
       await renderAdminPanel();
 
       await waitFor(() => {
@@ -299,11 +298,8 @@ describe("AdminPanel", () => {
       });
 
       expect(screen.queryByTestId("column-unassigned")).not.toBeInTheDocument();
-
-      await userEvent.click(screen.getByLabelText(/Show unassigned/i));
-
-      expect(await screen.findByTestId("column-unassigned")).toBeInTheDocument();
-      expect(screen.getByText("Unassigned Feature")).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Show unassigned/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Unassigned Features/i)).not.toBeInTheDocument();
     });
 
     it("should display drag handles for features", async () => {
@@ -507,7 +503,7 @@ describe("AdminPanel", () => {
       expect(screen.getAllByRole("button", { name: /^A La Carte Options/ })[0]).toBeInTheDocument();
     });
 
-    it("should display A La Carte count in tab label", async () => {
+    it("should not display counts in the A La Carte tab label", async () => {
       // Mock getDocs to return different values based on collection
       vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
         const collectionName = collectionRef?._collectionName;
@@ -535,14 +531,8 @@ describe("AdminPanel", () => {
 
       await renderAdminPanel();
 
-      // Wait for the count to load and be rendered
-      await waitFor(
-        () => {
-          const alaCarteButton = screen.getAllByRole("button", { name: /^A La Carte Options/ })[0]!;
-          expect(alaCarteButton.textContent).toContain("5");
-        },
-        { timeout: 3000 }
-      );
+      const alaCarteButton = screen.getAllByRole("button", { name: /^A La Carte Options/ })[0]!;
+      expect(alaCarteButton).toHaveTextContent(/^A La Carte Options$/);
     });
 
     it("should switch to A La Carte tab when clicked and show correct heading", async () => {
@@ -645,8 +635,8 @@ describe("AdminPanel", () => {
       });
     });
 
-    it("should show informational banner on Package Features tab when A La Carte count > 0", async () => {
-      // Mock getDocs to return A La Carte count of 3
+    it("does not render the A La Carte informational banner", async () => {
+      // Mock getDocs to return A La Carte count > 0 (banner should still not appear)
       vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
         const collectionName = collectionRef?._collectionName;
 
@@ -673,127 +663,12 @@ describe("AdminPanel", () => {
 
       await renderAdminPanel();
 
-      // Wait for banner to appear
-      await waitFor(
-        () => {
-          expect(screen.getByText(/Looking for A La Carte options\?/)).toBeInTheDocument();
-        },
-        { timeout: 3000 }
-      );
-
-      // Banner should mention the count
-      expect(screen.getByText(/You currently have/)).toBeInTheDocument();
-      const bannerText = screen.getByText(/You currently have/).closest("div")?.textContent;
-      expect(bannerText).toContain("3");
-    });
-
-    it("should hide banner when dismiss button is clicked", async () => {
-      const user = userEvent.setup();
-
-      // Mock getDocs to return A La Carte count of 2
-      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
-        const collectionName = collectionRef?._collectionName;
-
-        if (collectionName === "ala_carte_options") {
-          return {
-            size: 2,
-            docs: Array(2)
-              .fill(null)
-              .map((_, i) => ({
-                id: `alacarte-${i}`,
-                data: () => ({
-                  name: `Option ${i}`,
-                  price: 100,
-                  cost: 50,
-                  description: "Test option",
-                  points: ["Point 1"],
-                }),
-              })),
-          } as any;
-        }
-
-        return { docs: [], size: 0 } as any;
-      });
-
-      await renderAdminPanel();
-
-      // Wait for banner to appear
-      await waitFor(
-        () => {
-          expect(screen.getByText(/Looking for A La Carte options\?/)).toBeInTheDocument();
-        },
-        { timeout: 3000 }
-      );
-
-      // Click dismiss button
-      const dismissButton = screen.getByLabelText("Dismiss banner");
-      await user.click(dismissButton);
-
-      // Banner should be hidden
-      await waitFor(() => {
-        expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
-      });
-
-      // Check localStorage
-      expect(localStorage.getItem("adminPanel_alaCarteBannerDismissed")).toBe("true");
-    });
-
-    it("should not show banner if previously dismissed", async () => {
-      // Set dismissed flag in localStorage
-      localStorage.setItem("adminPanel_alaCarteBannerDismissed", "true");
-
-      // Mock getDocs to return A La Carte count of 2
-      vi.mocked(getDocs).mockImplementation(async (collectionRef: any) => {
-        const collectionName = collectionRef?._collectionName;
-
-        if (collectionName === "ala_carte_options") {
-          return {
-            size: 2,
-            docs: Array(2)
-              .fill(null)
-              .map((_, i) => ({
-                id: `alacarte-${i}`,
-                data: () => ({
-                  name: `Option ${i}`,
-                  price: 100,
-                  cost: 50,
-                  description: "Test option",
-                  points: ["Point 1"],
-                }),
-              })),
-          } as any;
-        }
-
-        return { docs: [], size: 0 } as any;
-      });
-
-      await renderAdminPanel();
-
-      // Wait for potential banner (it shouldn't appear)
       await waitFor(() => {
         expect(screen.getByText("Manage Package Features")).toBeInTheDocument();
       });
 
-      // Banner should not be shown
       expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
-    });
-
-    it("should not show banner if A La Carte count is 0", async () => {
-      // Mock getDocs to return A La Carte count of 0
-      vi.mocked(getDocs).mockImplementation(async (_collectionRef: any) => {
-        // Always return empty for this test
-        return { docs: [], size: 0 } as any;
-      });
-
-      await renderAdminPanel();
-
-      // Wait for render
-      await waitFor(() => {
-        expect(screen.getByText("Manage Package Features")).toBeInTheDocument();
-      });
-
-      // Banner should not be shown
-      expect(screen.queryByText(/Looking for A La Carte options\?/)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Dismiss banner/i)).not.toBeInTheDocument();
     });
   });
 

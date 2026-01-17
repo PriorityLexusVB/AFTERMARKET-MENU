@@ -252,7 +252,6 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children })
 
 // Helper functions for localStorage
 const STORAGE_KEY_TAB = "adminPanel_lastTab";
-const STORAGE_KEY_BANNER_DISMISSED = "adminPanel_alaCarteBannerDismissed";
 
 const getStoredTab = (): AdminTab | null => {
   try {
@@ -268,22 +267,6 @@ const getStoredTab = (): AdminTab | null => {
 const setStoredTab = (tab: AdminTab): void => {
   try {
     localStorage.setItem(STORAGE_KEY_TAB, tab);
-  } catch {
-    // Silently fail if localStorage is not available
-  }
-};
-
-const isBannerDismissed = (): boolean => {
-  try {
-    return localStorage.getItem(STORAGE_KEY_BANNER_DISMISSED) === "true";
-  } catch {
-    return false;
-  }
-};
-
-const dismissBanner = (): void => {
-  try {
-    localStorage.setItem(STORAGE_KEY_BANNER_DISMISSED, "true");
   } catch {
     // Silently fail if localStorage is not available
   }
@@ -321,8 +304,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     featured: number;
   }>({ total: 0, published: 0, featured: 0 });
   const [isLoadingCount, setIsLoadingCount] = useState(true);
-  const [showBanner, setShowBanner] = useState(!isBannerDismissed());
-  const [showUnassigned, setShowUnassigned] = useState(false);
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [recommendedSelection, setRecommendedSelection] = useState<string>("none");
   const [isSavingRecommended, setIsSavingRecommended] = useState(false);
@@ -479,11 +460,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
     [handleTabChange]
   );
 
-  const handleDismissBanner = () => {
-    setShowBanner(false);
-    dismissBanner();
-  };
-
   const handleAlaCarteDataUpdate = useCallback(() => {
     fetchAlaCarteCount();
     onDataUpdate();
@@ -528,11 +504,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const featuresByColumn = useMemo(() => {
     return groupFeaturesByColumn(features);
   }, [features]);
-
-  // Count unassigned features for the tab badge
-  const unassignedCount = useMemo(() => {
-    return featuresByColumn.unassigned.length;
-  }, [featuresByColumn]);
 
   const elitePackageId = useMemo(
     () => packages.find((pkg) => pkg.name.toLowerCase().includes("elite"))?.id,
@@ -882,12 +853,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   ) => {
     // Get a helpful empty state message for each column
     const getEmptyMessage = (): string => {
-      if (columnId === 2)
-        return "No Elite features yet - drag items here from unassigned or other columns";
-      if (columnId === 3)
-        return "No Platinum features yet - drag items here from unassigned or other columns";
-      if (columnId === 1)
-        return "No Gold features yet - drag items here from unassigned or other columns";
+      if (columnId === 2) return "No Elite features yet - drag items here from other columns";
+      if (columnId === 3) return "No Platinum features yet - drag items here from other columns";
+      if (columnId === 1) return "No Gold features yet - drag items here from other columns";
       return "Drop items here to assign them";
     };
 
@@ -955,8 +923,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                     activeTab === "features" ? "text-blue-300" : "text-gray-500"
                   }`}
                 >
-                  ({features.length}
-                  {unassignedCount > 0 ? `, ${unassignedCount} unassigned` : ""})
+                  ({features.length})
                 </span>
               )}
             </button>
@@ -969,15 +936,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               }`}
             >
               A La Carte Options
-              {!isLoadingCount && (
-                <span
-                  className={`ml-2 text-sm ${
-                    activeTab === "alacarte" ? "text-blue-300" : "text-gray-500"
-                  }`}
-                >
-                  ({alaCarteCounts.published}/{alaCarteCounts.total})
-                </span>
-              )}
             </button>
             <button
               onClick={() => handleTabChange("product-hub")}
@@ -1007,53 +965,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
           />
         ) : (
           <>
-            {/* Informational Banner for A La Carte Options */}
-            {showBanner && alaCarteCounts.total > 0 && (
-              <div className="mb-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex items-start gap-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <p className="text-blue-300 text-sm">
-                    <strong>Looking for A La Carte options?</strong> They are managed separately in
-                    the{" "}
-                    <button
-                      onClick={() => handleTabChange("alacarte")}
-                      className="underline hover:text-blue-200 font-semibold"
-                    >
-                      A La Carte Options
-                    </button>{" "}
-                    tab. You currently have <strong>{alaCarteCounts.total}</strong> A La Carte
-                    option
-                    {alaCarteCounts.total !== 1 ? "s" : ""}.
-                  </p>
-                </div>
-                <button
-                  onClick={handleDismissBanner}
-                  className="text-gray-400 hover:text-gray-300 flex-shrink-0"
-                  aria-label="Dismiss banner"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-teko tracking-wider text-white">
                 Manage Package Features
@@ -1097,30 +1008,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               </button>
               .
             </p>
-
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6 flex flex-col gap-3">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <p className="text-sm text-purple-200 font-semibold">
-                    Popular Add-ons are managed in A La Carte Options tab (Featured lane).
-                  </p>
-                  <p className="text-xs text-purple-200/80">
-                    Featured add-ons (Column 4) shown to customers come from A La Carte options.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => handleTabChange("alacarte")}
-                  className="btn-lux-primary w-fit"
-                >
-                  Go to A La Carte Options
-                </button>
-                <p className="text-xs text-purple-200/80">
-                  Edit featured items in A La Carte Options.
-                </p>
-              </div>
-            </div>
 
             <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1198,23 +1085,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                   Features by Column
                 </h4>
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-3 text-sm cursor-pointer bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 hover:bg-gray-900 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={showUnassigned}
-                      onChange={(e) => setShowUnassigned(e.target.checked)}
-                      className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-800"
-                      aria-label="Show unassigned features"
-                    />
-                    <span className="font-medium text-gray-300">
-                      Show unassigned
-                      {unassignedCount > 0 && (
-                        <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-yellow-900 bg-yellow-400 rounded-full">
-                          {unassignedCount}
-                        </span>
-                      )}
-                    </span>
-                  </label>
                   <p className="text-sm text-gray-500">
                     Drag using the ≡ handle to reorder or move between columns • AND/OR controls the
                     connector to the NEXT item below (hidden on the last item)
@@ -1265,29 +1135,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                             </div>
                           ))}
                         </div>
-
-                        {showUnassigned && featuresByColumn.unassigned.length > 0 && (
-                          <div
-                            className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 relative max-h-[70vh] overflow-y-auto"
-                            data-testid="column-unassigned"
-                          >
-                            <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-2">
-                              <h5 className="text-lg font-semibold text-yellow-400 mb-1 font-teko tracking-wider">
-                                Unassigned Features
-                              </h5>
-                              <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-                                Not currently in a package column
-                              </p>
-                            </div>
-                            <div className="mt-2">
-                              {renderColumnFeatures(
-                                featuresByColumn.unassigned,
-                                "unassigned",
-                                (feature) => handleEditInProductHub(feature.id)
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </>
                     )}
                   </div>

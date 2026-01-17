@@ -31,20 +31,30 @@ try {
   await run("npm", ["run", "build"], { waitForExit: true });
 
   // Start preview and keep the process alive (Playwright will manage lifecycle).
-  await run(
+  const preview = await run(
     "npm",
-    [
-      "run",
-      "preview",
-      "--",
-      "--host",
-      "0.0.0.0",
-      "--port",
-      "4173",
-      "--strictPort",
-    ],
-    { waitForExit: false },
+    ["run", "preview", "--", "--host", "0.0.0.0", "--port", "4173", "--strictPort"],
+    { waitForExit: false }
   );
+
+  const shutdown = () => {
+    try {
+      preview.kill();
+    } catch {
+      // ignore
+    }
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+
+  await new Promise((_, reject) => {
+    preview.on("exit", (code) => {
+      if (code === 0) return;
+      reject(new Error(`vite preview exited with code ${code}`));
+    });
+    preview.on("error", (error) => reject(error));
+  });
 } catch (error) {
   console.error(error);
   process.exitCode = 1;

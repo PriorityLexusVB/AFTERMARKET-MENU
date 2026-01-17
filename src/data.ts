@@ -34,9 +34,7 @@ const RETRY_DELAY_MS = 1000;
  * @param data - The data object to process
  * @returns A new object with undefined values replaced by deleteField()
  */
-function prepareUpdateData(
-  data: Record<string, unknown>
-): Record<string, unknown> {
+function prepareUpdateData(data: Record<string, unknown>): Record<string, unknown> {
   const updateData: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     updateData[key] = value === undefined ? deleteField() : value;
@@ -96,12 +94,11 @@ export async function fetchAllData(): Promise<FetchDataResult> {
   }
 
   try {
-    const [featuresSnapshot, alaCarteSnapshot, packagesSnapshot] =
-      await Promise.all([
-        getDocs(collection(db, "features")),
-        getDocs(collection(db, "ala_carte_options")),
-        getDocs(collection(db, "packages")),
-      ]);
+    const [featuresSnapshot, alaCarteSnapshot, packagesSnapshot] = await Promise.all([
+      getDocs(collection(db, "features")),
+      getDocs(collection(db, "ala_carte_options")),
+      getDocs(collection(db, "packages")),
+    ]);
 
     // Fetch and validate features with Zod
     const rawFeatures = featuresSnapshot.docs.map((doc) => ({
@@ -155,18 +152,10 @@ export async function fetchAllData(): Promise<FetchDataResult> {
     });
 
     // Validate packages using Zod schema
-    const packages: PackageTier[] = validateDataArray(
-      PackageTierSchema,
-      rawPackages,
-      "packages"
-    );
+    const packages: PackageTier[] = validateDataArray(PackageTierSchema, rawPackages, "packages");
 
     // If no data is fetched (e.g., empty collections), fallback to mock data to ensure the app is usable.
-    if (
-      packages.length === 0 &&
-      features.length === 0 &&
-      alaCarteOptions.length === 0
-    ) {
+    if (packages.length === 0 && features.length === 0 && alaCarteOptions.length === 0) {
       console.warn("No data found in Firestore, falling back to mock data.");
       return {
         packages: MOCK_PACKAGES,
@@ -177,10 +166,7 @@ export async function fetchAllData(): Promise<FetchDataResult> {
 
     return { packages, features, alaCarteOptions };
   } catch (error) {
-    console.error(
-      "Error fetching data from Firestore, falling back to mock data.",
-      error
-    );
+    console.error("Error fetching data from Firestore, falling back to mock data.", error);
     // In case of error (e.g., permissions), fall back to mocks so the app is still usable.
     return {
       packages: MOCK_PACKAGES,
@@ -190,13 +176,9 @@ export async function fetchAllData(): Promise<FetchDataResult> {
   }
 }
 
-export async function setRecommendedPackage(
-  packageIdOrNull: string | null
-): Promise<void> {
+export async function setRecommendedPackage(packageIdOrNull: string | null): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot update recommended package."
-    );
+    throw new Error("Firebase is not initialized. Cannot update recommended package.");
   }
 
   const packagesSnapshot = await getDocs(collection(db, "packages"));
@@ -207,8 +189,7 @@ export async function setRecommendedPackage(
   const batch = writeBatch(db);
   packagesSnapshot.docs.forEach((pkgDoc) => {
     const targetRef = doc(db!, "packages", pkgDoc.id);
-    const isRecommended =
-      packageIdOrNull !== null && pkgDoc.id === packageIdOrNull;
+    const isRecommended = packageIdOrNull !== null && pkgDoc.id === packageIdOrNull;
     batch.update(targetRef, {
       isRecommended,
       // Preserve legacy field for backward compatibility
@@ -224,9 +205,7 @@ export async function setRecommendedPackage(
  * @param featureData - The feature data to add, without an 'id'.
  * @returns A promise that resolves when the document is successfully added.
  */
-export async function addFeature(
-  featureData: Omit<ProductFeature, "id">
-): Promise<void> {
+export async function addFeature(featureData: Omit<ProductFeature, "id">): Promise<void> {
   if (!db) {
     throw new Error("Firebase is not initialized. Cannot add feature.");
   }
@@ -259,9 +238,7 @@ export async function updateFeature(
 
   try {
     const featureRef = doc(db, "features", featureId);
-    const updateData = prepareUpdateData(
-      featureData as Record<string, unknown>
-    );
+    const updateData = prepareUpdateData(featureData as Record<string, unknown>);
     await updateDoc(featureRef, updateData);
   } catch (error) {
     console.error("Error updating feature in Firestore:", error);
@@ -299,9 +276,7 @@ export async function batchUpdateFeaturesPositions(
   features: FeaturePositionUpdate[]
 ): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot batch update features."
-    );
+    throw new Error("Firebase is not initialized. Cannot batch update features.");
   }
 
   if (features.length === 0) {
@@ -342,9 +317,7 @@ export async function batchUpdateFeaturesPositions(
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         console.error(
-          `Batch update attempt ${attempt + 1} failed for chunk ${
-            chunkIndex + 1
-          }:`,
+          `Batch update attempt ${attempt + 1} failed for chunk ${chunkIndex + 1}:`,
           error
         );
 
@@ -367,13 +340,9 @@ export async function batchUpdateFeaturesPositions(
  * @param optionData - The A La Carte option data to add, without an 'id'.
  * @returns A promise that resolves when the document is successfully added.
  */
-export async function addAlaCarteOption(
-  optionData: Omit<AlaCarteOption, "id">
-): Promise<void> {
+export async function addAlaCarteOption(optionData: Omit<AlaCarteOption, "id">): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot add A La Carte option."
-    );
+    throw new Error("Firebase is not initialized. Cannot add A La Carte option.");
   }
 
   try {
@@ -398,9 +367,7 @@ export async function updateAlaCarteOption(
   optionData: Partial<Omit<AlaCarteOption, "id">>
 ): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot update A La Carte option."
-    );
+    throw new Error("Firebase is not initialized. Cannot update A La Carte option.");
   }
 
   try {
@@ -436,9 +403,7 @@ export async function batchUpdateAlaCartePositions(
   options: AlaCartePositionUpdate[]
 ): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot batch update A La Carte options."
-    );
+    throw new Error("Firebase is not initialized. Cannot batch update A La Carte options.");
   }
 
   if (options.length === 0) {
@@ -479,9 +444,7 @@ export async function batchUpdateAlaCartePositions(
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         console.error(
-          `Batch update attempt ${attempt + 1} failed for chunk ${
-            chunkIndex + 1
-          }:`,
+          `Batch update attempt ${attempt + 1} failed for chunk ${chunkIndex + 1}:`,
           error
         );
 
@@ -514,10 +477,7 @@ export { sortFeatures as sortFeaturesByPosition } from "./utils/featureOrdering"
  * @returns Object with columns 1-4 and unassigned features, each sorted by position
  * @deprecated Use groupFeaturesByColumn from './utils/featureOrdering' instead
  */
-export {
-  groupFeaturesByColumn,
-  type GroupedFeatures,
-} from "./utils/featureOrdering";
+export { groupFeaturesByColumn, type GroupedFeatures } from "./utils/featureOrdering";
 
 /**
  * Publishes or updates a feature to the A La Carte options collection.
@@ -525,9 +485,7 @@ export {
  * @param feature - The feature to publish to A La Carte
  * @returns A promise that resolves when the A La Carte option is created/updated
  */
-type AlaCarteUpsertOptions = Partial<
-  Omit<AlaCarteOption, "column" | "position">
-> & {
+type AlaCarteUpsertOptions = Partial<Omit<AlaCarteOption, "column" | "position">> & {
   column?: number | undefined;
   position?: number | undefined;
 };
@@ -537,26 +495,21 @@ export async function upsertAlaCarteFromFeature(
   overrides: AlaCarteUpsertOptions = {}
 ): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot publish to A La Carte."
-    );
+    throw new Error("Firebase is not initialized. Cannot publish to A La Carte.");
   }
 
   const isPublishing = overrides.isPublished ?? true;
   const price = overrides.price ?? feature.alaCartePrice;
 
   if (isPublishing && (!feature.publishToAlaCarte || price === undefined)) {
-    throw new Error(
-      "Feature must have publishToAlaCarte=true and alaCartePrice set to publish."
-    );
+    throw new Error("Feature must have publishToAlaCarte=true and alaCartePrice set to publish.");
   }
 
   try {
     // Use stable doc ID: the feature's ID
     const alaCarteRef = doc(db, "ala_carte_options", feature.id);
 
-    const warranty =
-      overrides.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
+    const warranty = overrides.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
 
     // Build the A La Carte option data
     const alaCarteData: AlaCarteUpsertOptions = {
@@ -605,13 +558,9 @@ export async function upsertAlaCarteFromFeature(
  * @param featureId - The ID of the feature to unpublish
  * @returns A promise that resolves when the A La Carte option is updated
  */
-export async function unpublishAlaCarteFromFeature(
-  featureId: string
-): Promise<void> {
+export async function unpublishAlaCarteFromFeature(featureId: string): Promise<void> {
   if (!db) {
-    throw new Error(
-      "Firebase is not initialized. Cannot unpublish from A La Carte."
-    );
+    throw new Error("Firebase is not initialized. Cannot unpublish from A La Carte.");
   }
 
   try {
@@ -629,15 +578,8 @@ export async function unpublishAlaCarteFromFeature(
   } catch (error) {
     console.error("Error unpublishing feature from A La Carte:", error);
     // If the doc doesn't exist, we can ignore the error (already unpublished)
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "not-found"
-    ) {
-      console.warn(
-        `A La Carte option ${featureId} not found, treating as already unpublished.`
-      );
+    if (error && typeof error === "object" && "code" in error && error.code === "not-found") {
+      console.warn(`A La Carte option ${featureId} not found, treating as already unpublished.`);
       return;
     }
     throw new Error(

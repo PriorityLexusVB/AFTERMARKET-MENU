@@ -62,14 +62,9 @@ const SortableAlaCarteItem: React.FC<SortableAlaCarteItemProps> = ({
   isFirst,
   isLast,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: option.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: option.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -116,9 +111,7 @@ const SortableAlaCarteItem: React.FC<SortableAlaCarteItemProps> = ({
               />
             </svg>
           </button>
-          <span className="font-semibold text-gray-200 text-sm">
-            {option.name}
-          </span>
+          <span className="font-semibold text-gray-200 text-sm">{option.name}</span>
           {option.isNew && (
             <span className="bg-green-500/20 text-green-400 text-xs font-bold px-1.5 py-0.5 rounded">
               NEW
@@ -178,9 +171,7 @@ const SortableAlaCarteItem: React.FC<SortableAlaCarteItemProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-gray-400 font-mono text-xs">
-          {formatPrice(option.price)}
-        </span>
+        <span className="text-gray-400 font-mono text-xs">{formatPrice(option.price)}</span>
         {/* Inline AND/OR Toggle Button */}
         <button
           onClick={onToggleConnector}
@@ -226,10 +217,7 @@ interface DroppableColumnProps {
   children: React.ReactNode;
 }
 
-const DroppableColumn: React.FC<DroppableColumnProps> = ({
-  columnId,
-  children,
-}) => {
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: `lane-${columnId}`,
   });
@@ -255,8 +243,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showHiddenReasons, setShowHiddenReasons] = useState(false);
-  const [showLegacyUnpublished, setShowLegacyUnpublished] = useState(false);
 
   // Backup state for rollback on error
   const [optionsBackup, setOptionsBackup] = useState<AlaCarteOption[]>([]);
@@ -281,13 +267,10 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const optionsQuery = query(
-        collection(db, "ala_carte_options"),
-        orderBy("name")
-      );
+      const optionsQuery = query(collection(db, "ala_carte_options"), orderBy("name"));
       const querySnapshot = await getDocs(optionsQuery);
       const optionsData = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as AlaCarteOption)
+        (doc) => ({ id: doc.id, ...doc.data() }) as AlaCarteOption
       );
       setOptions(optionsData);
     } catch (err) {
@@ -304,77 +287,28 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
     fetchOptions();
   }, [fetchOptions]);
 
-  const hasDisplayFields = useCallback(
-    (option: AlaCarteOption) => Boolean(option.name),
-    []
-  );
+  const hasDisplayFields = useCallback((option: AlaCarteOption) => Boolean(option.name), []);
 
   const hasValidPrice = useCallback(
     (option: AlaCarteOption) =>
-      typeof option.price === "number" &&
-      !Number.isNaN(option.price) &&
-      option.price > 0,
+      typeof option.price === "number" && !Number.isNaN(option.price) && option.price > 0,
     []
   );
 
   const isVisibleOption = useCallback(
     (option: AlaCarteOption) => {
       if (!hasDisplayFields(option) || !hasValidPrice(option)) return false;
-      if (option.isPublished === true) return true;
-      return showLegacyUnpublished;
+      return option.isPublished === true;
     },
-    [hasDisplayFields, hasValidPrice, showLegacyUnpublished]
+    [hasDisplayFields, hasValidPrice]
   );
 
-  const visibleOptions = useMemo(
-    () => options.filter(isVisibleOption),
-    [options, isVisibleOption]
-  );
-
-  const hiddenOptions = useMemo(
-    () => options.filter((option) => !isVisibleOption(option)),
-    [options, isVisibleOption]
-  );
-
-  const getHiddenReasons = useCallback((option: AlaCarteOption) => {
-    const reasons: string[] = [];
-    if (option.isPublished !== true) {
-      reasons.push("unpublished");
-    }
-    if (!option.name?.trim()) {
-      reasons.push("missing name");
-    }
-    const invalidPrice =
-      typeof option.price !== "number" ||
-      Number.isNaN(option.price) ||
-      option.price <= 0;
-    if (invalidPrice) {
-      reasons.push("missing/invalid price");
-    }
-    if (
-      option.column !== undefined &&
-      !VALID_ALACARTE_COLUMNS.includes(option.column)
-    ) {
-      reasons.push("invalid column assignment");
-    }
-    if (reasons.length === 0) {
-      reasons.push("not curated / legacy data");
-    }
-    return reasons;
-  }, []);
-
-  const totalDocs = options.length;
-  const visibleDocs = visibleOptions.length;
-  const hiddenCount = Math.max(totalDocs - visibleDocs, 0);
+  const visibleOptions = useMemo(() => options.filter(isVisibleOption), [options, isVisibleOption]);
 
   const { featuredOptions, publishedOptions } = useMemo(() => {
     const base = visibleOptions;
-    const featured = base.filter(
-      (option) => option.column === FEATURED_COLUMN.num
-    );
-    const published = base.filter(
-      (option) => option.column !== FEATURED_COLUMN.num
-    );
+    const featured = base.filter((option) => option.column === FEATURED_COLUMN.num);
+    const published = base.filter((option) => option.column !== FEATURED_COLUMN.num);
     return {
       featuredOptions: sortOrderableItems(featured),
       publishedOptions: sortOrderableItems(published),
@@ -409,9 +343,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
     const overIdStr = over.id as string;
 
     const activeInFeatured = featuredOptions.some((o) => o.id === activeIdStr);
-    const activeInPublished = publishedOptions.some(
-      (o) => o.id === activeIdStr
-    );
+    const activeInPublished = publishedOptions.some((o) => o.id === activeIdStr);
     if (!activeInFeatured && !activeInPublished) {
       return;
     }
@@ -421,23 +353,17 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
       overIdStr === "lane-featured"
         ? "featured"
         : overIdStr === "lane-published"
-        ? "published"
-        : (() => {
-            const overInFeatured = featuredOptions.some(
-              (o) => o.id === overIdStr
-            );
-            const overInPublished = publishedOptions.some(
-              (o) => o.id === overIdStr
-            );
-            if (!overInFeatured && !overInPublished) return null;
-            return overInFeatured ? "featured" : "published";
-          })();
+          ? "published"
+          : (() => {
+              const overInFeatured = featuredOptions.some((o) => o.id === overIdStr);
+              const overInPublished = publishedOptions.some((o) => o.id === overIdStr);
+              if (!overInFeatured && !overInPublished) return null;
+              return overInFeatured ? "featured" : "published";
+            })();
     if (!overLane) return;
 
-    const sourceList =
-      activeLane === "featured" ? featuredOptions : publishedOptions;
-    const targetList =
-      overLane === "featured" ? featuredOptions : publishedOptions;
+    const sourceList = activeLane === "featured" ? featuredOptions : publishedOptions;
+    const targetList = overLane === "featured" ? featuredOptions : publishedOptions;
 
     const oldIndex = sourceList.findIndex((o) => o.id === activeIdStr);
     const newIndex = targetList.findIndex((o) => o.id === overIdStr);
@@ -474,8 +400,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
       ];
 
       nextFeatured = overLane === "featured" ? targetWithInsert : prunedSource;
-      nextPublished =
-        overLane === "published" ? targetWithInsert : prunedSource;
+      nextPublished = overLane === "published" ? targetWithInsert : prunedSource;
     }
 
     await applyLaneUpdates(
@@ -485,10 +410,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
   };
 
   // Handle keyboard reorder (up/down buttons)
-  const handleKeyboardReorder = async (
-    optionId: string,
-    direction: "up" | "down"
-  ) => {
+  const handleKeyboardReorder = async (optionId: string, direction: "up" | "down") => {
     const inFeatured = featuredOptions.some((o) => o.id === optionId);
     const laneItems = inFeatured ? featuredOptions : publishedOptions;
     const currentIndex = laneItems.findIndex((o) => o.id === optionId);
@@ -526,8 +448,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
     if (!option) return;
 
     const currentConnector = option.connector || "AND";
-    const newConnector: FeatureConnector =
-      currentConnector === "AND" ? "OR" : "AND";
+    const newConnector: FeatureConnector = currentConnector === "AND" ? "OR" : "AND";
 
     // Store backup for rollback
     setOptionsBackup([...options]);
@@ -595,9 +516,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
     } catch (err) {
       console.error("Error saving position changes:", err);
       setOptions(optionsBackup);
-      setError(
-        "Failed to save position changes. Changes have been rolled back."
-      );
+      setError("Failed to save position changes. Changes have been rolled back.");
     } finally {
       setIsSaving(false);
     }
@@ -611,9 +530,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
     return (
       <DroppableColumn columnId={columnId}>
         {columnOptions.length === 0 ? (
-          <p className="text-gray-500 text-sm italic p-2">
-            Drop items here to add to this lane
-          </p>
+          <p className="text-gray-500 text-sm italic p-2">Drop items here to add to this lane</p>
         ) : (
           <SortableContext
             items={columnOptions.map((o) => o.id)}
@@ -647,14 +564,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
             <h3 className="text-2xl font-teko tracking-wider text-white">
               Manage A La Carte Options
             </h3>
-            <p className="text-sm text-gray-400 mt-1">
-              Visible {visibleDocs} / Total {totalDocs}
-              {hiddenCount > 0 && (
-                <span className="ml-2 text-yellow-300">
-                  (Hidden {hiddenCount})
-                </span>
-              )}
-            </p>
           </div>
           {isSaving && (
             <span className="text-blue-400 text-sm flex items-center gap-2">
@@ -683,65 +592,19 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
           )}
         </div>
         <div className="bg-blue-500/10 border border-blue-500/30 text-blue-200 text-sm rounded-md px-3 py-2">
-          A La Carte items are created/edited in Product Hub. This screen is for
-          ordering/placement only.
-        </div>
-        <div className="flex flex-col md:flex-row gap-3 md:items-center md:flex-wrap">
-          <label className="flex items-center gap-2 text-sm text-gray-200 bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 hover:border-gray-500 transition-colors w-fit">
-            <input
-              type="checkbox"
-              checked={showLegacyUnpublished}
-              onChange={(e) => setShowLegacyUnpublished(e.target.checked)}
-              className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-800"
-              aria-label="Show legacy and unpublished items in lanes"
-            />
-            <span className="font-semibold">
-              Show legacy/unpublished in lanes
-            </span>
-          </label>
-          <button
-            type="button"
-            onClick={() => setShowHiddenReasons((prev) => !prev)}
-            className="flex items-center gap-2 text-sm text-gray-200 bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 hover:border-gray-500 transition-colors"
-            aria-expanded={showHiddenReasons}
-            aria-controls="hidden-reasons-panel"
-          >
-            <span className="font-semibold">
-              Hidden items (why not visible)
-            </span>
-            <span className="text-xs text-gray-400">
-              ({hiddenOptions.length})
-            </span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className={`w-4 h-4 transition-transform ${
-                showHiddenReasons ? "rotate-180" : ""
-              }`}
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 10.585l3.71-3.355a.75.75 0 111 1.115l-4.24 3.84a.75.75 0 01-1.04 0l-4.24-3.84a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+          A La Carte items are created/edited in Product Hub. This screen is for ordering/placement
+          only.
         </div>
       </div>
 
       <div className="border-t border-gray-700 pt-6">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h4 className="text-xl font-teko tracking-wider text-gray-300">
-            A La Carte Options
-          </h4>
+          <h4 className="text-xl font-teko tracking-wider text-gray-300">A La Carte Options</h4>
           <p className="text-sm text-gray-500">
             Drag to reorder or move between lanes • Click AND/OR to toggle
           </p>
         </div>
-        {isLoading && (
-          <p className="text-gray-400">Loading A La Carte options...</p>
-        )}
+        {isLoading && <p className="text-gray-400">Loading A La Carte options...</p>}
         {error && (
           <p className="text-red-400 bg-red-500/10 p-3 rounded-md border border-red-500/30 mb-4">
             {error}
@@ -758,8 +621,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
             <div className="space-y-6">
               {options.length === 0 ? (
                 <p className="text-gray-500">
-                  No published A La Carte options yet. Publish items from the
-                  Features hub.
+                  No published A La Carte options yet. Publish items from the Product Hub.
                 </p>
               ) : (
                 <>
@@ -777,10 +639,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
                         </p>
                       </div>
                       <div className="mt-2">
-                        {renderColumnOptions(
-                          featuredOptions as AlaCarteOption[],
-                          "featured"
-                        )}
+                        {renderColumnOptions(featuredOptions as AlaCarteOption[], "featured")}
                       </div>
                     </div>
                     <div
@@ -796,10 +655,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
                         </p>
                       </div>
                       <div className="mt-2">
-                        {renderColumnOptions(
-                          publishedOptions as AlaCarteOption[],
-                          "published"
-                        )}
+                        {renderColumnOptions(publishedOptions as AlaCarteOption[], "published")}
                       </div>
                     </div>
                   </div>
@@ -813,64 +669,6 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
           </DndContext>
         )}
       </div>
-      {showHiddenReasons && (
-        <div
-          className="border-t border-gray-700 pt-6"
-          id="hidden-reasons-panel"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xl font-teko tracking-wider text-gray-300">
-              Hidden items (why not visible) ({hiddenOptions.length})
-            </h4>
-            {hiddenCount > 0 && (
-              <span className="text-xs text-yellow-300 bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-1">
-                {hiddenCount} hidden from main lanes
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-gray-500 mb-3">
-            Items appear here when they do not meet visibility requirements
-            (publish + name + valid price).
-          </p>
-          {hiddenOptions.length === 0 ? (
-            <p className="text-sm text-gray-500">No hidden or legacy items.</p>
-          ) : (
-            <ul className="space-y-2">
-              {hiddenOptions.map((option) => {
-                const displayName =
-                  option.name?.trim() ||
-                  `(Missing name) - doc id: ${option.id}`;
-                const reasons = getHiddenReasons(option);
-                return (
-                  <li
-                    key={option.id}
-                    className="bg-gray-900/30 border border-gray-800 rounded-md px-3 py-2 flex flex-col gap-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-200">
-                        {displayName}
-                      </span>
-                      <span className="text-xs text-gray-500 break-words">
-                        id: {option.id}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {reasons.map((reason) => (
-                        <span
-                          key={reason}
-                          className="text-xs text-yellow-200 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-2 py-0.5"
-                        >
-                          {reason}
-                        </span>
-                      ))}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
     </div>
   );
 };

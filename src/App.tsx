@@ -16,12 +16,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
-import type {
-  PackageTier,
-  AlaCarteOption,
-  ProductFeature,
-  PriceOverrides,
-} from "./types";
+import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from "./types";
 import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
 import { sortPackagesForDisplay } from "./utils/packageOrder";
 import {
@@ -51,9 +46,7 @@ const App: React.FC = () => {
   // Data state
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [allFeatures, setAllFeatures] = useState<ProductFeature[]>([]);
-  const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<
-    AlaCarteOption[]
-  >([]);
+  const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<AlaCarteOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // UI State
@@ -61,12 +54,8 @@ const App: React.FC = () => {
   const [pendingPrint, setPendingPrint] = useState<null | {
     returnToMenu: boolean;
   }>(null);
-  const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(
-    null
-  );
-  const [customPackageItems, setCustomPackageItems] = useState<
-    AlaCarteOption[]
-  >([]);
+  const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(null);
+  const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
   const [viewingDetailItem, setViewingDetailItem] = useState<
     ProductFeature | AlaCarteOption | null
   >(null);
@@ -79,13 +68,11 @@ const App: React.FC = () => {
     // Prefer a height bound over a tight max-width bound.
     "(min-width: 1024px) and (max-height: 1100px) and (orientation: landscape)";
   const computeIsIpadLandscape = useCallback(() => {
-    if (typeof window === "undefined" || typeof navigator === "undefined")
-      return false;
+    if (typeof window === "undefined" || typeof navigator === "undefined") return false;
 
     // Local override to help validate iPad-only layout in desktop emulation.
     // Example: http://localhost:5174/?forceIpad=1
-    const forceIpad =
-      new URLSearchParams(window.location.search).get("forceIpad") === "1";
+    const forceIpad = new URLSearchParams(window.location.search).get("forceIpad") === "1";
     if (forceIpad) {
       return true;
     }
@@ -106,9 +93,7 @@ const App: React.FC = () => {
     const looksLikeIpad = /\biPad\b/i.test(ua);
     return looksLikeIpad;
   }, [ipadLandscapeQuery]);
-  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() =>
-    computeIsIpadLandscape()
-  );
+  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => computeIsIpadLandscape());
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
@@ -153,8 +138,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const className = "ipad-landscape-lock";
-    const shouldLock =
-      isIpadLandscape && currentView === "menu" && !isAdminView;
+    const shouldLock = isIpadLandscape && currentView === "menu" && !isAdminView;
     if (shouldLock) {
       document.body.classList.add(className);
       document.documentElement.classList.add(className);
@@ -169,18 +153,13 @@ const App: React.FC = () => {
   }, [isIpadLandscape, currentView, isAdminView]);
 
   useEffect(() => {
-    if (
-      !isIpadLandscape ||
-      typeof document === "undefined" ||
-      typeof window === "undefined"
-    )
+    if (!isIpadLandscape || typeof document === "undefined" || typeof window === "undefined")
       return;
     const shouldLock = currentView === "menu" && !isAdminView;
     if (!shouldLock) return;
     const root = document.documentElement;
     let header: Element | null = document.querySelector("header");
-    let selectionBar: Element | null =
-      document.querySelector(".am-selection-bar");
+    let selectionBar: Element | null = document.querySelector(".am-selection-bar");
 
     let resizeObserver: ResizeObserver | null = null;
     let handleResize: (() => void) | null = null;
@@ -211,10 +190,7 @@ const App: React.FC = () => {
       const barHeight = selectionBar
         ? (selectionBar as HTMLElement).getBoundingClientRect().height
         : 112;
-      root.style.setProperty(
-        "--ipad-bottom-bar-h",
-        `${Math.round(barHeight)}px`
-      );
+      root.style.setProperty("--ipad-bottom-bar-h", `${Math.round(barHeight)}px`);
     };
 
     updateHeaderHeight();
@@ -278,14 +254,11 @@ const App: React.FC = () => {
   }, [guestMode, isAdminView, isDemoMode]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof document === "undefined")
-      return;
+    if (typeof window === "undefined" || typeof document === "undefined") return;
     const root = document.documentElement;
 
     const setViewportVars = () => {
-      const height = Math.round(
-        window.visualViewport?.height ?? window.innerHeight
-      );
+      const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
       root.style.setProperty("--app-vh", `${height}px`);
       root.style.setProperty("--app-height", `${height}px`);
     };
@@ -345,9 +318,7 @@ const App: React.FC = () => {
   );
 
   // Price calculations and display data (must be before handleShowAgreement)
-  const applyOverrides = <
-    T extends { id: string; price: number; cost: number }
-  >(
+  const applyOverrides = <T extends { id: string; price: number; cost: number }>(
     items: T[],
     overrides: PriceOverrides
   ): T[] => {
@@ -401,9 +372,7 @@ const App: React.FC = () => {
     let price = 0;
     let cost = 0;
     if (selectedPackage) {
-      const currentPackage = displayPackages.find(
-        (p) => p.id === selectedPackage.id
-      );
+      const currentPackage = displayPackages.find((p) => p.id === selectedPackage.id);
       if (currentPackage) {
         price += currentPackage.price;
         cost += currentPackage.cost;
@@ -419,19 +388,13 @@ const App: React.FC = () => {
   const baseTotalPrice = useMemo(() => {
     let price = 0;
     if (selectedPackage) {
-      price +=
-        basePackagePricesById[selectedPackage.id] ?? selectedPackage.price;
+      price += basePackagePricesById[selectedPackage.id] ?? selectedPackage.price;
     }
     customPackageItems.forEach((item) => {
       price += baseAddonPricesById[item.id] ?? item.price;
     });
     return price;
-  }, [
-    selectedPackage,
-    customPackageItems,
-    basePackagePricesById,
-    baseAddonPricesById,
-  ]);
+  }, [selectedPackage, customPackageItems, basePackagePricesById, baseAddonPricesById]);
 
   const baseCustomPackageSubtotal = useMemo(() => {
     let price = 0;
@@ -442,25 +405,20 @@ const App: React.FC = () => {
   }, [curatedSelectedItems, baseAddonPricesById]);
 
   const curatedAlaCarteOptions = useMemo(() => {
-    return [...displayAllAlaCarteOptions]
-      .filter(isCuratedOption)
-      .sort((a, b) => {
-        const columnDiff =
-          columnOrderValue(a.column) - columnOrderValue(b.column);
-        if (columnDiff !== 0) return columnDiff;
-        const posA = a.position ?? Number.MAX_SAFE_INTEGER;
-        const posB = b.position ?? Number.MAX_SAFE_INTEGER;
-        return posA - posB;
-      });
+    return [...displayAllAlaCarteOptions].filter(isCuratedOption).sort((a, b) => {
+      const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
+      if (columnDiff !== 0) return columnDiff;
+      const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+      const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+      return posA - posB;
+    });
   }, [displayAllAlaCarteOptions]);
 
   const mainPageAddons = useMemo(() => {
     // The Packages page "Add Ons" column prefers a tight, explicit whitelist
     // (matching the printed menu). If the whitelist doesn't match the current DB
     // (e.g., different dealer dataset), fall back to Column 4 "Featured" items.
-    const byId = new Map(
-      curatedAlaCarteOptions.map((option) => [option.id, option])
-    );
+    const byId = new Map(curatedAlaCarteOptions.map((option) => [option.id, option]));
     const explicit = MAIN_PAGE_ADDON_IDS.map((id) => byId.get(id)).filter(
       (option): option is AlaCarteOption => Boolean(option)
     );
@@ -483,11 +441,7 @@ const App: React.FC = () => {
 
   const handleShowAgreement = useCallback(() => {
     // Track quote finalization
-    const vehicleString = [
-      customerInfo.year,
-      customerInfo.make,
-      customerInfo.model,
-    ]
+    const vehicleString = [customerInfo.year, customerInfo.make, customerInfo.model]
       .filter(Boolean)
       .join(" ");
     trackQuoteFinalize({
@@ -547,9 +501,7 @@ const App: React.FC = () => {
   const handleViewDetail = useCallback(
     (item: ProductFeature | AlaCarteOption) => {
       // Determine if it's a package feature or a la carte option
-      const isAlaCarteOption = allAlaCarteOptions.some(
-        (opt) => opt.id === item.id
-      );
+      const isAlaCarteOption = allAlaCarteOptions.some((opt) => opt.id === item.id);
       trackFeatureView(item.name, isAlaCarteOption ? "alacarte" : "package");
       setViewingDetailItem(item);
     },
@@ -606,10 +558,7 @@ const App: React.FC = () => {
     };
   }, [pendingPrint, currentView]);
 
-  const NavButton: React.FC<{ page: Page; label: string }> = ({
-    page,
-    label,
-  }) => (
+  const NavButton: React.FC<{ page: Page; label: string }> = ({ page, label }) => (
     <button
       onClick={() => setCurrentPage(page)}
       className={`am-menu-tab-btn ${
@@ -652,12 +601,9 @@ const App: React.FC = () => {
     </div>
   );
 
-  const enableIpadMenuLayout =
-    isIpadLandscape && currentView === "menu" && !isAdminView;
-  const enableIpadPackagesLayout =
-    enableIpadMenuLayout && currentPage === "packages";
-  const enableIpadAlaCarteLayout =
-    enableIpadMenuLayout && currentPage === "alacarte";
+  const enableIpadMenuLayout = isIpadLandscape && currentView === "menu" && !isAdminView;
+  const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
+  const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
   const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
 
   const renderMenuContent = () => {
@@ -694,9 +640,7 @@ const App: React.FC = () => {
                   className="h-full min-h-0"
                 />
               }
-              gridClassName={
-                isIpadLandscape ? "items-stretch h-full" : "items-stretch"
-              }
+              gridClassName={isIpadLandscape ? "items-stretch h-full" : "items-stretch"}
               isIpadLandscape={isIpadLandscape}
             />
           </div>
@@ -711,11 +655,7 @@ const App: React.FC = () => {
             }
           >
             <div
-              className={
-                enableIpadAlaCarteLayout
-                  ? "flex-1 min-h-0 overflow-hidden"
-                  : "xl:w-3/5"
-              }
+              className={enableIpadAlaCarteLayout ? "flex-1 min-h-0 overflow-hidden" : "xl:w-3/5"}
             >
               <h3
                 className={
@@ -777,8 +717,8 @@ const App: React.FC = () => {
           <div className="am-page-header-stack text-center">
             <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
             <p className={heroSubtitleClass}>
-              Select one of our expertly curated packages, or build a custom
-              package from our a la carte options.
+              Select one of our expertly curated packages, or build a custom package from our a la
+              carte options.
             </p>
           </div>
         </div>
@@ -799,30 +739,20 @@ const App: React.FC = () => {
 
   const isMenuView = currentView === "menu";
   const mainLayoutClass =
-    enableIpadMenuLayout && isMenuView
-      ? "am-main-ipad-menu"
-      : "am-main-default";
+    enableIpadMenuLayout && isMenuView ? "am-main-ipad-menu" : "am-main-default";
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
   if (!user && !isDemoMode) {
-    return (
-      <Login
-        isAuthLoading={isAuthLoading}
-        firebaseError={firebaseInitializationError}
-      />
-    );
+    return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
   }
 
-  const shouldLockIpadMenuScroll =
-    isIpadLandscape && currentView === "menu" && !isAdminView;
+  const shouldLockIpadMenuScroll = isIpadLandscape && currentView === "menu" && !isAdminView;
 
   return (
     <div
       className={`lux-app am-app-min-h antialiased flex flex-col ${
-        shouldLockIpadMenuScroll
-          ? "h-[var(--app-height,100vh)] overflow-hidden"
-          : ""
+        shouldLockIpadMenuScroll ? "h-[var(--app-height,100vh)] overflow-hidden" : ""
       }`}
     >
       <Header
@@ -863,9 +793,7 @@ const App: React.FC = () => {
                 onBack={handleShowMenu}
                 selectedPackage={
                   selectedPackage
-                    ? displayPackages.find(
-                        (p) => p.id === selectedPackage.id
-                      ) || null
+                    ? displayPackages.find((p) => p.id === selectedPackage.id) || null
                     : null
                 }
                 customPackageItems={displayCustomPackageItems}
@@ -891,9 +819,7 @@ const App: React.FC = () => {
               <SelectionDrawer
                 selectedPackage={
                   selectedPackage
-                    ? displayPackages.find(
-                        (p) => p.id === selectedPackage.id
-                      ) || null
+                    ? displayPackages.find((p) => p.id === selectedPackage.id) || null
                     : null
                 }
                 customItems={displayCustomPackageItems}
@@ -904,9 +830,7 @@ const App: React.FC = () => {
                 onRemoveItem={handleRemoveAlaCarte}
                 onPrint={handlePrint}
                 onDeselectPackage={
-                  selectedPackage
-                    ? () => handleSelectPackage(selectedPackage)
-                    : undefined
+                  selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined
                 }
                 onShowAgreement={handleShowAgreement}
                 variant="bar"
@@ -916,9 +840,7 @@ const App: React.FC = () => {
         </>
       )}
 
-      {viewingDetailItem && (
-        <FeatureModal feature={viewingDetailItem} onClose={handleCloseModal} />
-      )}
+      {viewingDetailItem && <FeatureModal feature={viewingDetailItem} onClose={handleCloseModal} />}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
@@ -926,9 +848,7 @@ const App: React.FC = () => {
         currentInfo={customerInfo}
         currentPriceOverrides={priceOverrides}
         selectedPackage={
-          selectedPackage
-            ? displayPackages.find((p) => p.id === selectedPackage.id) || null
-            : null
+          selectedPackage ? displayPackages.find((p) => p.id === selectedPackage.id) || null : null
         }
         selectedAddOns={displayCustomPackageItems}
       />

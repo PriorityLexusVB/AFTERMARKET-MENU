@@ -33,8 +33,8 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
           <div className="text-sm text-gray-400 space-y-1">
             <p>No featured add-ons configured yet.</p>
             <p>
-              Set the Packages-page add-ons list via MAIN_PAGE_ADDON_IDS (or
-              assign items to Column 4 in the A La Carte admin).
+              Set the Packages-page add-ons list via MAIN_PAGE_ADDON_IDS (or assign items to Column
+              4 in the A La Carte admin).
             </p>
           </div>
         ) : (
@@ -43,9 +43,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
               key={item.id}
               item={item}
               basePrice={basePricesById?.[item.id]}
-              isSelected={selectedItems.some(
-                (selected) => selected.id === item.id
-              )}
+              isSelected={selectedItems.some((selected) => selected.id === item.id)}
               onToggle={() => onToggleItem(item)}
               onView={() => onViewItem(item)}
             />

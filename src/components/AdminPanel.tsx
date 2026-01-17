@@ -298,12 +298,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [alaCarteCounts, setAlaCarteCounts] = useState<{
+  const [, setAlaCarteCounts] = useState<{
     total: number;
     published: number;
     featured: number;
   }>({ total: 0, published: 0, featured: 0 });
-  const [isLoadingCount, setIsLoadingCount] = useState(true);
+  const [, setIsLoadingCount] = useState(true);
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [recommendedSelection, setRecommendedSelection] = useState<string>("none");
   const [isSavingRecommended, setIsSavingRecommended] = useState(false);

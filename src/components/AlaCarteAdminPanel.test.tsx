@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from "vitest";
-import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "../test/test-utils";
 import { AlaCarteAdminPanel } from "./AlaCarteAdminPanel";
 
@@ -112,3 +111,5 @@ describe("AlaCarteAdminPanel", () => {
     expect(screen.queryByRole("button", { name: /Hidden items/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox", { name: /Show legacy/i })).not.toBeInTheDocument();
   });
+
+});

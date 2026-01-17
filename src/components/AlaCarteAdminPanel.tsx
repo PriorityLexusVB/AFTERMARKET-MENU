@@ -25,7 +25,6 @@ import { db } from "../firebase";
 import type { AlaCarteOption, FeatureConnector } from "../types";
 import { batchUpdateAlaCartePositions, updateAlaCarteOption } from "../data";
 import { sortOrderableItems } from "../utils/featureOrdering";
-import { VALID_ALACARTE_COLUMNS } from "../utils/alaCarte";
 
 interface AlaCarteAdminPanelProps {
   onDataUpdate: () => void;

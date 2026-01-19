@@ -99,9 +99,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   );
   const [showForm, setShowForm] = useState(false);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
-  const [positionInputs, setPositionInputs] = useState<Record<string, string>>(
-    {}
-  );
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());

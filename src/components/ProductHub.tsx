@@ -12,6 +12,27 @@ import {
   orderBy,
   query,
 } from "firebase/firestore/lite";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  useDroppable,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { db } from "../firebase";
 import type { AlaCarteOption, ProductFeature } from "../types";
 import {
@@ -19,8 +40,10 @@ import {
   upsertAlaCarteFromFeature,
   unpublishAlaCarteFromFeature,
   updateAlaCarteOption,
+  batchUpdateFeaturesPositions,
 } from "../data";
 import { FeatureForm } from "./FeatureForm";
+import { sortOrderableItems } from "../utils/featureOrdering";
 
 interface ProductHubProps {
   onDataUpdate: () => void;
@@ -31,26 +54,10 @@ interface ProductHubProps {
   onScrollHandled?: () => void;
 }
 
-// Display order: Elite, Platinum, Gold (as requested)
-const packageLaneOptions: Array<{ value: 1 | 2 | 3; label: string }> = [
-  { value: 2, label: "Elite Package (Column 2)" },
-  { value: 3, label: "Platinum Package (Column 3)" },
-  { value: 1, label: "Gold Package (Column 1)" },
-];
 const columnLabels: Record<1 | 2 | 3, string> = {
   1: "Gold Package (Column 1)",
   2: "Elite Package (Column 2)",
   3: "Platinum Package (Column 3)",
-};
-const TABLE_COLUMN_COUNT = 1;
-const packageOrder: (1 | 2 | 3)[] = packageLaneOptions.map((opt) => opt.value);
-
-const getPlacementDisplay = (column?: number) => {
-  if (column === 4) return "Featured (Popular Add-ons)";
-  if (column === 2) return "Elite";
-  if (column === 3) return "Platinum";
-  if (column === 1) return "Gold";
-  return "Unplaced";
 };
 
 export const ProductHub: React.FC<ProductHubProps> = ({
@@ -92,19 +99,32 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const [positionInputs, setPositionInputs] = useState<Record<string, string>>(
     {}
   );
-  const [advancedOpenIds, setAdvancedOpenIds] = useState<Set<string>>(
-    new Set()
-  );
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [groupByName, setGroupByName] = useState(true); // Group products by name by default
-  const [expandedGroupNames, setExpandedGroupNames] = useState<Set<string>>(new Set());
+  
+  // Drag-and-drop state
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
+  
   const bulkSelectRef = useRef<HTMLInputElement>(null);
   const headerSelectRef = useRef<HTMLInputElement>(null);
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
   const isMounted = useRef(true);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // Drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const clearRowError = (featureId: string) => {
     setRowErrors((prev) => {
@@ -128,18 +148,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
   const toggleRowExpanded = (featureId: string) => {
     setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(featureId)) {
-        next.delete(featureId);
-      } else {
-        next.add(featureId);
-      }
-      return next;
-    });
-  };
-
-  const toggleAdvanced = (featureId: string) => {
-    setAdvancedOpenIds((prev) => {
       const next = new Set(prev);
       if (next.has(featureId)) {
         next.delete(featureId);
@@ -299,57 +307,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     searchTerm,
   ]);
 
-  // Group products by name when groupByName is enabled
-  interface ProductGroup {
-    name: string;
-    variants: ProductFeature[];
-    columns: Set<number>; // Track which columns this product appears in
-  }
-
-  const groupedProducts = useMemo(() => {
-    if (!groupByName) {
-      return filteredFeatures.map((feature) => ({
-        name: feature.name,
-        variants: [feature],
-        columns: new Set(feature.column ? [feature.column] : []),
-      }));
-    }
-
-    const groups = new Map<string, ProductGroup>();
-    
-    for (const feature of filteredFeatures) {
-      const groupKey = feature.name.toLowerCase().trim();
-      
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, {
-          name: feature.name,
-          variants: [],
-          columns: new Set(),
-        });
-      }
-      
-      const group = groups.get(groupKey)!;
-      group.variants.push(feature);
-      if (feature.column) {
-        group.columns.add(feature.column);
-      }
-    }
-    
-    return Array.from(groups.values());
-  }, [filteredFeatures, groupByName]);
-
-  const toggleGroupExpanded = (groupName: string) => {
-    setExpandedGroupNames((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupName)) {
-        next.delete(groupName);
-      } else {
-        next.add(groupName);
-      }
-      return next;
-    });
-  };
-
   useEffect(() => {
     if (!scrollTargetId || isLoading) return;
     const attemptScroll = () => {
@@ -502,43 +459,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const handleWarrantyBlur = async (feature: ProductFeature, value: string) => {
-    updateFeatureState(feature.id, { alaCarteWarranty: value });
-    try {
-      await updateFeature(feature.id, { alaCarteWarranty: value });
-    } catch (err) {
-      console.error("Failed to update warranty override", err);
-    }
-  };
-
-  const handleIsNewToggle = async (
-    feature: ProductFeature,
-    checked: boolean
-  ) => {
-    updateFeatureState(feature.id, { alaCarteIsNew: checked });
-    const option = alaCarteMap.get(feature.id);
-    try {
-      clearRowError(feature.id);
-      await updateFeature(feature.id, { alaCarteIsNew: checked });
-      if (option) {
-        await upsertAlaCarteFromFeature(
-          {
-            ...feature,
-            alaCarteIsNew: checked,
-            publishToAlaCarte:
-              feature.publishToAlaCarte ?? option.isPublished ?? false,
-          },
-          { isPublished: option.isPublished, isNew: checked }
-        );
-        upsertOptionState(feature, { isNew: checked });
-      }
-      markSaved(feature.id);
-    } catch (err) {
-      console.error("Failed to update NEW flag", err);
-      setRowErrorMessage(feature.id, "Failed to update NEW flag.");
-    }
-  };
-
   const handlePlacementUpdate = async (
     feature: ProductFeature,
     column: number | null,
@@ -688,14 +608,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const handleRemoveFromPackages = (feature: ProductFeature) => {
-    return handlePackagePlacement(feature, undefined);
-  };
-
-  const handleUnpublishOnly = (feature: ProductFeature) => {
-    return handlePublishToggle(feature, false);
-  };
-
   const handleDuplicateToLane = async (
     feature: ProductFeature,
     targetColumn: 1 | 2 | 3
@@ -736,37 +648,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const handlePositionBlur = (feature: ProductFeature) => {
-    const option = alaCarteMap.get(feature.id);
-    const raw = positionInputs[feature.id];
-    const parsed = raw === "" || raw === undefined ? undefined : Number(raw);
-    setPositionInputs((prev) => {
-      const { [feature.id]: _removed, ...rest } = prev;
-      return rest;
-    });
-    if (option || feature.publishToAlaCarte) {
-      handlePlacementUpdate(feature, option?.column ?? null, parsed);
-    }
-  };
-
-  const handleConnectorChange = async (
-    feature: ProductFeature,
-    connector: "AND" | "OR"
-  ) => {
-    const previousConnector = feature.connector || "AND";
-    if (previousConnector === connector) return;
-    updateFeatureState(feature.id, { connector });
-    clearRowError(feature.id);
-    try {
-      await updateFeature(feature.id, { connector });
-      markSaved(feature.id);
-    } catch (err) {
-      console.error("Failed to update connector", err);
-      setRowErrorMessage(feature.id, "Failed to update connector.");
-      updateFeatureState(feature.id, { connector: previousConnector });
-      clearSaved(feature.id);
-    }
-  };
 
   const handleEditDetails = (feature: ProductFeature) => {
     const rowEl = rowRefs.current[feature.id];
@@ -792,18 +673,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     fetchData();
     onAlaCarteChange?.();
     onDataUpdate();
-  };
-
-  const handleSelectFeature = (featureId: string, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) {
-        next.add(featureId);
-      } else {
-        next.delete(featureId);
-      }
-      return next;
-    });
   };
 
   const selectedFeatures = useMemo(
@@ -892,6 +761,184 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       return handlePlacementUpdate(feature, column, undefined);
     });
 
+  // Separate features into two columns for drag-and-drop
+  const { packagesFeatures, alaCarteFeatures } = useMemo(() => {
+    const packages = filteredFeatures.filter(
+      (f) => f.column === 1 || f.column === 2 || f.column === 3
+    );
+    const alaCarte = filteredFeatures.filter((f) => {
+      const option = alaCarteMap.get(f.id);
+      return option?.isPublished || f.publishToAlaCarte;
+    });
+    return {
+      packagesFeatures: sortOrderableItems(packages),
+      alaCarteFeatures: sortOrderableItems(alaCarte),
+    };
+  }, [filteredFeatures, alaCarteMap]);
+
+  // Get active feature being dragged
+  const activeFeature = useMemo(() => {
+    if (!activeId) return null;
+    return features.find((f) => f.id === activeId) || null;
+  }, [activeId, features]);
+
+  // Drag-and-drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    setFeaturesBackup([...features]);
+  };
+
+  const handleDragOver = (_event: DragOverEvent) => {
+    // Visual feedback handled by DroppableColumn component
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over) return;
+
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
+
+    const activeInPackages = packagesFeatures.some((f) => f.id === activeIdStr);
+    const activeInAlaCarte = alaCarteFeatures.some((f) => f.id === activeIdStr);
+    if (!activeInPackages && !activeInAlaCarte) return;
+
+    const activeLane = activeInPackages ? "packages" : "alacarte";
+
+    const overLane =
+      overIdStr === "lane-packages"
+        ? "packages"
+        : overIdStr === "lane-alacarte"
+          ? "alacarte"
+          : (() => {
+              const overInPackages = packagesFeatures.some((f) => f.id === overIdStr);
+              const overInAlaCarte = alaCarteFeatures.some((f) => f.id === overIdStr);
+              if (!overInPackages && !overInAlaCarte) return null;
+              return overInPackages ? "packages" : "alacarte";
+            })();
+
+    if (!overLane) return;
+
+    const sourceList = activeLane === "packages" ? packagesFeatures : alaCarteFeatures;
+    const targetList = overLane === "packages" ? packagesFeatures : alaCarteFeatures;
+
+    const oldIndex = sourceList.findIndex((f) => f.id === activeIdStr);
+    const newIndex = targetList.findIndex((f) => f.id === overIdStr);
+    if (oldIndex === -1) return;
+
+    let nextPackages = packagesFeatures;
+    let nextAlaCarte = alaCarteFeatures;
+
+    if (activeLane === overLane) {
+      // Reordering within same column
+      const reordered = arrayMove(
+        sourceList,
+        oldIndex,
+        newIndex === -1 ? sourceList.length - 1 : newIndex
+      );
+      if (activeLane === "packages") {
+        nextPackages = reordered;
+      } else {
+        nextAlaCarte = reordered;
+      }
+    } else {
+      // Moving between columns
+      const moving = sourceList[oldIndex];
+      if (!moving) return;
+
+      // When moving to packages, assign default column 2
+      // When moving to alacarte, publish the product
+      const updatedMoving =
+        overLane === "packages"
+          ? { ...moving, column: 2, publishToAlaCarte: false }
+          : { ...moving, column: undefined, publishToAlaCarte: true };
+
+      const prunedSource = sourceList.filter((f) => f.id !== activeIdStr);
+      const insertIndex = newIndex === -1 ? targetList.length : newIndex;
+      const targetWithInsert = [
+        ...targetList.slice(0, insertIndex),
+        updatedMoving,
+        ...targetList.slice(insertIndex),
+      ];
+
+      nextPackages = overLane === "packages" ? targetWithInsert : prunedSource;
+      nextAlaCarte = overLane === "alacarte" ? targetWithInsert : prunedSource;
+    }
+
+    await applyDragUpdates(
+      nextPackages.map((f, index) => ({ ...f, position: index })),
+      nextAlaCarte.map((f, index) => ({ ...f, position: index }))
+    );
+  };
+
+  const applyDragUpdates = async (
+    nextPackages: ProductFeature[],
+    nextAlaCarte: ProductFeature[]
+  ) => {
+    setIsSaving(true);
+    try {
+      // Update packages features with position and column
+      const packagesUpdates = nextPackages.map((f, index) => ({
+        id: f.id,
+        position: index,
+        column: f.column ?? 2,
+        connector: f.connector,
+      }));
+
+      // Update alacarte features - publish them
+      const alaCarteUpdates = nextAlaCarte.map((f, index) => ({
+        id: f.id,
+        position: index,
+        column: undefined as number | undefined,
+        connector: f.connector,
+      }));
+
+      // Update features state optimistically
+      const updatedFeatures = features.map((f) => {
+        const packageUpdate = packagesUpdates.find((u) => u.id === f.id);
+        const alaCarteUpdate = alaCarteUpdates.find((u) => u.id === f.id);
+        if (packageUpdate) {
+          return { ...f, position: packageUpdate.position, column: packageUpdate.column };
+        }
+        if (alaCarteUpdate) {
+          return {
+            ...f,
+            position: alaCarteUpdate.position,
+            column: undefined,
+            publishToAlaCarte: true,
+          };
+        }
+        return f;
+      });
+      setFeatures(updatedFeatures);
+
+      // Persist to Firestore
+      await batchUpdateFeaturesPositions([...packagesUpdates, ...alaCarteUpdates]);
+
+      // For items moved to alacarte, publish them
+      for (const f of nextAlaCarte) {
+        const option = alaCarteMap.get(f.id);
+        if (!option?.isPublished && f.publishToAlaCarte) {
+          await upsertAlaCarteFromFeature(f, {
+            isPublished: true,
+            price: f.alaCartePrice ?? f.price,
+          });
+          upsertOptionState(f, { isPublished: true });
+        }
+      }
+
+      onDataUpdate();
+      onAlaCarteChange?.();
+    } catch (err) {
+      console.error("Error saving drag updates:", err);
+      setFeatures(featuresBackup);
+      setError("Failed to save changes. Changes have been rolled back.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const getCategoryLabel = (option?: AlaCarteOption) => {
     if (!option) return "Not placed";
     if (option.column === 4) return "Featured";
@@ -900,102 +947,272 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     return "Not placed";
   };
 
-  const renderPlacementControls = (
-    feature: ProductFeature,
-    option: AlaCarteOption | undefined,
-    includeFeatured = true
-  ) => {
-    const isPublished =
-      option?.isPublished ?? feature.publishToAlaCarte ?? false;
-    const column = isPublished ? option?.column : undefined;
-    const featured = isPublished && column === 4;
-    const category = !featured && column ? String(column) : "";
-    const positionValue = isPublished
-      ? positionInputs[feature.id] ?? option?.position ?? ""
-      : "";
-    const disabled = !isPublished;
 
-    const categoryInputId = `alacarte-category-${feature.id}`;
-    const positionInputId = `alacarte-position-${feature.id}`;
+  // Sortable Product Card Component
+  interface SortableProductCardProps {
+    feature: ProductFeature;
+    option?: AlaCarteOption;
+    onEdit: (feature: ProductFeature) => void;
+    onDuplicate: (feature: ProductFeature, column: 1 | 2 | 3) => void;
+  }
+
+  const SortableProductCard: React.FC<SortableProductCardProps> = ({
+    feature,
+    option,
+    onEdit,
+    onDuplicate,
+  }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: feature.id,
+    });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const isFeatured = option?.column === 4;
+    const laneLabel = feature.column
+      ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
+      : "Not in packages";
+    const categoryLabel = getCategoryLabel(option);
+    const positionLabel =
+      feature.position !== undefined ? `Position ${feature.position}` : "Position —";
+
+    const [showDuplicateMenu, setShowDuplicateMenu] = useState(false);
+    const isExpanded = expandedIds.has(feature.id);
 
     return (
-      <div className="space-y-2">
-        {includeFeatured && (
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id={`featured-${feature.id}`}
-              checked={featured}
-              disabled={disabled}
-              onChange={(e) =>
-                handlePlacementUpdate(
-                  feature,
-                  e.target.checked ? 4 : null,
-                  undefined
-                )
-              }
-            />
-            <label
-              htmlFor={`featured-${feature.id}`}
-              className="text-sm text-gray-200"
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`bg-gray-800 p-4 rounded-md border ${
+          isDragging ? "border-blue-500" : "border-gray-700"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex items-start gap-3 flex-1">
+            {/* Position badge */}
+            {feature.position !== undefined && (
+              <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-gray-900 bg-blue-400 rounded-full flex-shrink-0">
+                {feature.position + 1}
+              </span>
+            )}
+            {/* Drag handle */}
+            <button
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded"
+              title="Drag to reorder or move between columns"
+              aria-label={`Drag ${feature.name} to reorder or move between columns`}
             >
-              Featured (Popular Add-Ons)
-            </label>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            <div className="space-y-1 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="font-semibold text-base text-white">{feature.name}</div>
+                {rowErrors[feature.id] && (
+                  <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>
+                )}
+                {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
+              </div>
+              <div className="text-xs text-gray-400 line-clamp-2">{feature.description}</div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
+                  {laneLabel}
+                </span>
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                    isPublished
+                      ? "bg-green-500/10 text-green-300 border-green-500/40"
+                      : "bg-gray-700 text-gray-300 border-gray-600"
+                  }`}
+                >
+                  {isPublished ? "Published" : "Unpublished"}
+                </span>
+                {isFeatured && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/40">
+                    Featured
+                  </span>
+                )}
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
+                  {categoryLabel}
+                </span>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
+                  {positionLabel}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => toggleRowExpanded(feature.id)}
+              className="px-3 py-1.5 rounded bg-gray-700 text-gray-100 border border-gray-600 hover:border-blue-400 transition-colors text-xs whitespace-nowrap"
+            >
+              {isExpanded ? "Collapse" : "Expand"}
+            </button>
+            <button
+              onClick={() => onEdit(feature)}
+              className="px-3 py-1.5 rounded bg-blue-600/80 text-white hover:bg-blue-500 text-xs transition-colors whitespace-nowrap"
+            >
+              Edit details
+            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowDuplicateMenu(!showDuplicateMenu)}
+                className="px-3 py-1.5 rounded bg-gray-700 text-gray-100 border border-gray-600 hover:border-green-400 transition-colors text-xs whitespace-nowrap w-full"
+              >
+                Duplicate
+              </button>
+              {showDuplicateMenu && (
+                <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg z-10 p-2 space-y-1">
+                  <button
+                    onClick={() => {
+                      onDuplicate(feature, 1);
+                      setShowDuplicateMenu(false);
+                    }}
+                    disabled={feature.column === 1}
+                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    → Gold
+                  </button>
+                  <button
+                    onClick={() => {
+                      onDuplicate(feature, 2);
+                      setShowDuplicateMenu(false);
+                    }}
+                    disabled={feature.column === 2}
+                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    → Elite
+                  </button>
+                  <button
+                    onClick={() => {
+                      onDuplicate(feature, 3);
+                      setShowDuplicateMenu(false);
+                    }}
+                    disabled={feature.column === 3}
+                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    → Platinum
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        {isExpanded && (
+          <div className="mt-3 pt-3 border-t border-gray-700 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Package Lane</label>
+                <select
+                  value={feature.column ?? ""}
+                  onChange={(e) =>
+                    handlePackagePlacement(
+                      feature,
+                      e.target.value ? (Number(e.target.value) as 1 | 2 | 3) : undefined
+                    )
+                  }
+                  className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
+                >
+                  <option value="">Not in Packages</option>
+                  <option value="1">Gold Package (Column 1)</option>
+                  <option value="2">Elite Package (Column 2)</option>
+                  <option value="3">Platinum Package (Column 3)</option>
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={isPublished}
+                    onChange={(e) => handlePublishToggle(feature, e.target.checked)}
+                  />
+                  <span>Publish to A La Carte</span>
+                </label>
+                {isPublished && (
+                  <div className="mt-2">
+                    <label className="text-xs text-gray-400 block mb-1">A La Carte Price</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={
+                        priceInputs[feature.id] ?? (feature.alaCartePrice ?? "").toString()
+                      }
+                      onChange={(e) =>
+                        setPriceInputs((prev) => ({
+                          ...prev,
+                          [feature.id]: e.target.value,
+                        }))
+                      }
+                      onBlur={() => handlePriceBlur(feature)}
+                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
-        <div className="flex flex-col gap-1">
-          <label htmlFor={categoryInputId} className="text-xs text-gray-400">
-            Category (columns 1-3)
-          </label>
-          <select
-            id={categoryInputId}
-            value={category}
-            disabled={disabled || featured}
-            onChange={(e) => {
-              const value = e.target.value;
-              const newColumn = value ? Number(value) : null;
-              const newPosition =
-                newColumn === null ? undefined : option?.position;
-              handlePlacementUpdate(feature, newColumn, newPosition);
-            }}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="">Not placed</option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor={positionInputId} className="text-xs text-gray-400">
-            Position
-          </label>
-          <input
-            id={positionInputId}
-            type="number"
-            min="0"
-            disabled={disabled}
-            value={positionValue}
-            onChange={(e) =>
-              setPositionInputs((prev) => ({
-                ...prev,
-                [feature.id]: e.target.value,
-              }))
-            }
-            onBlur={() => handlePositionBlur(feature)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+      </div>
+    );
+  };
+
+  // Drag overlay component
+  const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({ feature }) => (
+    <div className="bg-gray-800 p-4 rounded-md border border-blue-500 shadow-lg">
+      <div className="flex items-center gap-2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="w-4 h-4 text-gray-500"
+        >
+          <path
+            fillRule="evenodd"
+            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z"
+            clipRule="evenodd"
           />
-        </div>
-        {!isPublished && (
-          <p className="text-xs text-amber-400">
-            Publish first to enable Category / Position. Unpublished items won’t
-            show to customers.
-          </p>
-        )}
-        <p className="text-xs text-gray-500">
-          Current:{" "}
-          {getPlacementDisplay(isPublished ? option?.column : undefined)}
-        </p>
+        </svg>
+        <span className="font-semibold text-gray-200 text-sm">{feature.name}</span>
+      </div>
+    </div>
+  );
+
+  // Droppable column component
+  interface DroppableColumnProps {
+    columnId: "packages" | "alacarte";
+    children: React.ReactNode;
+  }
+
+  const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
+    const { isOver, setNodeRef } = useDroppable({
+      id: `lane-${columnId}`,
+    });
+
+    return (
+      <div
+        ref={setNodeRef}
+        className={`min-h-[200px] transition-colors rounded-lg ${
+          isOver ? "bg-blue-500/10 ring-2 ring-blue-500/50" : ""
+        }`}
+      >
+        {children}
       </div>
     );
   };
@@ -1027,16 +1244,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-3 text-sm text-gray-300">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={groupByName}
-            onChange={(e) => setGroupByName(e.target.checked)}
-            className="form-checkbox h-4 w-4 text-blue-500 rounded"
-          />
-          <span className="text-gray-300">Group by product name</span>
-        </label>
-        <span className="text-gray-600">|</span>
         <label className="flex items-center gap-2">
           <span className="text-gray-400">Package lane</span>
           <select
@@ -1192,746 +1399,123 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-800">
-          <thead>
-            <tr className="text-left text-sm text-gray-400">
-              <th className="px-3 py-2 font-semibold">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all filtered"
-                    ref={headerSelectRef}
-                    checked={allFilteredSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                  <span className="uppercase tracking-wide text-xs text-gray-500">
-                    Products
-                  </span>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-800">
-            {groupedProducts.map((group) => {
-              const isGroupExpanded = expandedGroupNames.has(group.name.toLowerCase().trim());
-              const hasMultipleVariants = group.variants.length > 1;
-              
-              // If not grouping or only one variant, render normally
-              if (!groupByName || !hasMultipleVariants) {
-                const feature = group.variants[0];
-                if (!feature) return null;
-                const option = alaCarteMap.get(feature.id);
-                const isPublished =
-                  option?.isPublished ?? feature.publishToAlaCarte ?? false;
-                const priceValue =
-                  priceInputs[feature.id] ??
-                  (feature.alaCartePrice ?? "").toString();
-                const warrantyValue = feature.alaCarteWarranty ?? "";
-                const isNew = feature.alaCarteIsNew ?? option?.isNew ?? false;
-                const isFeatured = option?.column === 4;
-                const currentConnector = feature.connector || "AND";
-                const laneLabel = feature.column
-                  ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
-                  : "Not in packages";
-                const isAdvancedOpen = advancedOpenIds.has(feature.id);
-                const categoryLabel = getCategoryLabel(option);
-                const positionLabel =
-                  option?.position !== undefined
-                    ? `Position ${option.position}`
-                    : "Position —";
-                const isExpanded = expandedIds.has(feature.id);
-                return (
-                  <tr
-                    key={feature.id}
-                    className="text-sm text-gray-200 align-top"
-                    ref={(el) => {
-                      rowRefs.current[feature.id] = el;
-                    }}
-                  >
-                    <td className="px-3 py-4" colSpan={TABLE_COLUMN_COUNT}>
-                    <div className="flex flex-col gap-3">
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            aria-label={`Select ${feature.name}`}
-                            checked={selectedIds.has(feature.id)}
-                            onChange={(e) =>
-                              handleSelectFeature(feature.id, e.target.checked)
-                            }
-                            className="mt-1"
-                          />
-                          <div className="space-y-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <div className="font-semibold text-base text-white">
-                                {feature.name}
-                              </div>
-                              {rowErrors[feature.id] && (
-                                <p className="text-xs text-red-400">
-                                  {rowErrors[feature.id]}
-                                </p>
-                              )}
-                              {savedIds.has(feature.id) && (
-                                <p className="text-xs text-green-400">Saved</p>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-500 clamp-3">
-                              {feature.description}
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                                Lane: {laneLabel}
-                              </span>
-                              <span
-                                className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                                  isPublished
-                                    ? "bg-green-500/10 text-green-300 border-green-500/40"
-                                    : "bg-gray-700 text-gray-300 border-gray-600"
-                                }`}
-                              >
-                                {isPublished ? "Published" : "Unpublished"}
-                              </span>
-                              <span
-                                className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                                  isFeatured
-                                    ? "bg-blue-500/10 text-blue-300 border-blue-500/40"
-                                    : "bg-gray-700 text-gray-300 border-gray-600"
-                                }`}
-                              >
-                                {isFeatured ? "Featured" : "Not featured"}
-                              </span>
-                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                                Category: {categoryLabel}
-                              </span>
-                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                                {positionLabel}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleRowExpanded(feature.id)}
-                            className="px-3 py-2 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 hover:border-blue-400 transition-colors text-sm"
-                          >
-                            {isExpanded ? "Collapse" : "Expand"}
-                          </button>
-                          <button
-                            onClick={() => handleEditDetails(feature)}
-                            className="px-3 py-2 rounded-lg bg-blue-600/80 text-white hover:bg-blue-500 text-sm transition-colors"
-                          >
-                            Edit details
-                          </button>
-                        </div>
-                      </div>
+      {isSaving && (
+        <div className="flex items-center gap-2 text-blue-400 text-sm">
+          <svg
+            className="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          Saving changes...
+        </div>
+      )}
 
-                      {isExpanded && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-900/40 border border-gray-800 rounded-lg p-4">
-                          <div className="space-y-2">
-                            <p className="text-[11px] uppercase text-gray-400">
-                              Package placement (choose one lane)
-                            </p>
-                            {packageLaneOptions.map(
-                              ({ value: colNum, label }) => (
-                                <label
-                                  key={colNum}
-                                  className="flex items-center gap-2 text-sm text-gray-200"
-                                >
-                                  <input
-                                    type="radio"
-                                    name={`pkg-${feature.id}`}
-                                    checked={feature.column === colNum}
-                                    onChange={() =>
-                                      handlePackagePlacement(feature, colNum)
-                                    }
-                                  />
-                                  <span>{label}</span>
-                                </label>
-                              )
-                            )}
-                            <label className="flex items-center gap-2 text-sm text-gray-200">
-                              <input
-                                type="radio"
-                                name={`pkg-${feature.id}`}
-                                checked={feature.column == null}
-                                onChange={() =>
-                                  handlePackagePlacement(feature, undefined)
-                                }
-                              />
-                              <span>Not in Packages</span>
-                            </label>
-                            {feature.column !== undefined &&
-                              packageOrder.includes(
-                                feature.column as 1 | 2 | 3
-                              ) && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <span className="text-[11px] uppercase text-gray-400">
-                                    Connector:
-                                  </span>
-                                  <div className="flex gap-2">
-                                    {(["AND", "OR"] as const).map(
-                                      (optionConnector) => (
-                                        <button
-                                          key={optionConnector}
-                                          type="button"
-                                          onClick={() =>
-                                            handleConnectorChange(
-                                              feature,
-                                              optionConnector
-                                            )
-                                          }
-                                          aria-label={`Set connector to ${optionConnector}`}
-                                          aria-pressed={
-                                            currentConnector === optionConnector
-                                          }
-                                          className={`px-2 py-1 rounded text-xs border ${
-                                            currentConnector === optionConnector
-                                              ? optionConnector === "OR"
-                                                ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/60"
-                                                : "bg-green-500/20 text-green-300 border-green-400/60"
-                                              : "bg-gray-800 text-gray-200 border-gray-700"
-                                          }`}
-                                        >
-                                          {optionConnector}
-                                        </button>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                          </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column: Packages */}
+          <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 space-y-4">
+            <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-3 border-b border-gray-700">
+              <h4 className="text-xl font-teko tracking-wider text-gray-200">
+                Packages Section
+              </h4>
+              <p className="text-xs text-gray-400 mt-1">
+                Products in Gold, Elite, or Platinum packages (Columns 1, 2, 3)
+              </p>
+            </div>
+            <DroppableColumn columnId="packages">
+              {packagesFeatures.length === 0 ? (
+                <p className="text-gray-500 text-sm italic p-4">
+                  No products in packages. Drag items here to add to packages.
+                </p>
+              ) : (
+                <SortableContext
+                  items={packagesFeatures.map((f) => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                    {packagesFeatures.map((feature) => {
+                      const option = alaCarteMap.get(feature.id);
+                      return (
+                        <SortableProductCard
+                          key={feature.id}
+                          feature={feature}
+                          option={option}
+                          onEdit={handleEditDetails}
+                          onDuplicate={handleDuplicateToLane}
+                        />
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              )}
+            </DroppableColumn>
+          </div>
 
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={isPublished}
-                                onChange={(e) =>
-                                  handlePublishToggle(feature, e.target.checked)
-                                }
-                              />
-                              <span>Publish to A La Carte</span>
-                            </label>
-                            <div className="flex flex-col gap-1">
-                              <label
-                                htmlFor={`alacarte-price-${feature.id}`}
-                                className="text-xs text-gray-400"
-                              >
-                                A La Carte Price (customer price)
-                              </label>
-                              <input
-                                id={`alacarte-price-${feature.id}`}
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={priceValue}
-                                onChange={(e) =>
-                                  setPriceInputs((prev) => ({
-                                    ...prev,
-                                    [feature.id]: e.target.value,
-                                  }))
-                                }
-                                onBlur={() => handlePriceBlur(feature)}
-                                className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                              />
-                            </div>
-                            <div className="flex items-center justify-between gap-3 text-xs">
-                              <label className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  id={`featured-inline-${feature.id}`}
-                                  checked={isFeatured}
-                                  disabled={!isPublished}
-                                  onChange={(e) =>
-                                    handlePlacementUpdate(
-                                      feature,
-                                      e.target.checked ? 4 : null,
-                                      undefined
-                                    )
-                                  }
-                                />
-                                <span>Featured (Popular Add-Ons)</span>
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => toggleAdvanced(feature.id)}
-                                className="text-blue-300 hover:text-blue-100 underline"
-                              >
-                                {isAdvancedOpen
-                                  ? "Hide A La Carte advanced"
-                                  : "Show A La Carte advanced"}
-                              </button>
-                            </div>
-                            {isAdvancedOpen && (
-                              <div className="space-y-3 border border-gray-800 rounded-md p-3 bg-gray-900/30">
-                                {renderPlacementControls(
-                                  feature,
-                                  option,
-                                  false
-                                )}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                  <div className="flex flex-col gap-1">
-                                    <label
-                                      htmlFor={`alacarte-warranty-${feature.id}`}
-                                      className="text-xs text-gray-400"
-                                    >
-                                      Warranty override
-                                    </label>
-                                    <input
-                                      id={`alacarte-warranty-${feature.id}`}
-                                      type="text"
-                                      value={warrantyValue}
-                                      onChange={(e) =>
-                                        updateFeatureState(feature.id, {
-                                          alaCarteWarranty: e.target.value,
-                                        })
-                                      }
-                                      onBlur={(e) =>
-                                        handleWarrantyBlur(
-                                          feature,
-                                          e.target.value
-                                        )
-                                      }
-                                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-2 text-xs">
-                                    <input
-                                      type="checkbox"
-                                      checked={isNew}
-                                      onChange={(e) =>
-                                        handleIsNewToggle(
-                                          feature,
-                                          e.target.checked
-                                        )
-                                      }
-                                      disabled={!isPublished}
-                                    />
-                                    <span>Mark as NEW</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+          {/* Right Column: A La Carte */}
+          <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 space-y-4">
+            <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-3 border-b border-gray-700">
+              <h4 className="text-xl font-teko tracking-wider text-gray-200">
+                A La Carte Section
+              </h4>
+              <p className="text-xs text-gray-400 mt-1">
+                Published products available for a la carte selection
+              </p>
+            </div>
+            <DroppableColumn columnId="alacarte">
+              {alaCarteFeatures.length === 0 ? (
+                <p className="text-gray-500 text-sm italic p-4">
+                  No published a la carte products. Drag items here to publish.
+                </p>
+              ) : (
+                <SortableContext
+                  items={alaCarteFeatures.map((f) => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                    {alaCarteFeatures.map((feature) => {
+                      const option = alaCarteMap.get(feature.id);
+                      return (
+                        <SortableProductCard
+                          key={feature.id}
+                          feature={feature}
+                          option={option}
+                          onEdit={handleEditDetails}
+                          onDuplicate={handleDuplicateToLane}
+                        />
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              )}
+            </DroppableColumn>
+          </div>
+        </div>
 
-                          <div className="space-y-2">
-                            <div className="flex flex-col gap-2">
-                              <button
-                                onClick={() =>
-                                  handleRemoveFromPackages(feature)
-                                }
-                                className="text-sm text-red-300 hover:text-red-200 underline text-left disabled:opacity-50"
-                                disabled={feature.column === undefined}
-                              >
-                                Remove from Packages
-                              </button>
-                              <button
-                                onClick={() => handleUnpublishOnly(feature)}
-                                className="text-sm text-yellow-300 hover:text-yellow-200 underline text-left disabled:opacity-50"
-                                disabled={!isPublished}
-                              >
-                                Unpublish A La Carte
-                              </button>
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs text-gray-400 font-semibold">
-                                Duplicate to Gold/Elite/Platinum
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  type="button"
-                                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
-                                  disabled={feature.column === 1}
-                                  onClick={() =>
-                                    handleDuplicateToLane(feature, 1)
-                                  }
-                                >
-                                  Gold
-                                </button>
-                                <button
-                                  type="button"
-                                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
-                                  disabled={feature.column === 2}
-                                  onClick={() =>
-                                    handleDuplicateToLane(feature, 2)
-                                  }
-                                >
-                                  Elite
-                                </button>
-                                <button
-                                  type="button"
-                                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-xs text-gray-100 disabled:opacity-40"
-                                  disabled={feature.column === 3}
-                                  onClick={() =>
-                                    handleDuplicateToLane(feature, 3)
-                                  }
-                                >
-                                  Platinum
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-              }
-              
-              // Render grouped view for products with multiple variants
-              const columnLabelsArray = Array.from(group.columns).sort().map(col => {
-                if (col === 1) return "Gold";
-                if (col === 2) return "Elite";
-                if (col === 3) return "Platinum";
-                if (col === 4) return "Featured";
-                return `Col ${col}`;
-              });
-              
-              return (
-                <React.Fragment key={group.name}>
-                  {/* Group header row */}
-                  <tr className="text-sm text-gray-200 align-top bg-gray-900/30">
-                    <td className="px-3 py-4" colSpan={TABLE_COLUMN_COUNT}>
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1">
-                          <button
-                            onClick={() => toggleGroupExpanded(group.name.toLowerCase().trim())}
-                            className="text-gray-400 hover:text-gray-200 transition-colors"
-                            aria-label={isGroupExpanded ? "Collapse group" : "Expand group"}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                              className={`w-5 h-5 transition-transform ${isGroupExpanded ? "rotate-90" : ""}`}
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-base text-white">
-                                {group.name}
-                              </span>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                                {group.variants.length} variant{group.variants.length !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {columnLabelsArray.map((label) => (
-                                <span
-                                  key={label}
-                                  className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700"
-                                >
-                                  {label}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => toggleGroupExpanded(group.name.toLowerCase().trim())}
-                          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 hover:border-blue-400 transition-colors text-sm"
-                        >
-                          {isGroupExpanded ? "Collapse" : "Expand"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  {/* Render individual variants when expanded */}
-                  {isGroupExpanded && group.variants.map((feature) => {
-                    const option = alaCarteMap.get(feature.id);
-                    const isPublished =
-                      option?.isPublished ?? feature.publishToAlaCarte ?? false;
-                    const priceValue =
-                      priceInputs[feature.id] ??
-                      (feature.alaCartePrice ?? "").toString();
-                    const warrantyValue = feature.alaCarteWarranty ?? "";
-                    const isNew = feature.alaCarteIsNew ?? option?.isNew ?? false;
-                    const isFeatured = option?.column === 4;
-                    const currentConnector = feature.connector || "AND";
-                    const laneLabel = feature.column
-                      ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
-                      : "Not in packages";
-                    const categoryLabel = getCategoryLabel(option);
-                    const positionLabel =
-                      option?.position !== undefined
-                        ? `Position ${option.position}`
-                        : "Position —";
-                    const isExpanded = expandedIds.has(feature.id);
-                    
-                    return (
-                      <tr
-                        key={feature.id}
-                        className="text-sm text-gray-200 align-top bg-gray-900/10 border-l-2 border-l-blue-500/30"
-                        ref={(el) => {
-                          rowRefs.current[feature.id] = el;
-                        }}
-                      >
-                        <td className="px-3 py-4 pl-12" colSpan={TABLE_COLUMN_COUNT}>
-                          <div className="flex flex-col gap-3">
-                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                              <div className="flex items-start gap-3">
-                                <input
-                                  type="checkbox"
-                                  aria-label={`Select ${feature.name} (${laneLabel})`}
-                                  checked={selectedIds.has(feature.id)}
-                                  onChange={(e) =>
-                                    handleSelectFeature(feature.id, e.target.checked)
-                                  }
-                                  className="mt-1"
-                                />
-                                <div className="space-y-1">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <div className="text-sm text-gray-300">
-                                      Variant: <span className="font-medium">{feature.id}</span>
-                                    </div>
-                                    {rowErrors[feature.id] && (
-                                      <p className="text-xs text-red-400">
-                                        {rowErrors[feature.id]}
-                                      </p>
-                                    )}
-                                    {savedIds.has(feature.id) && (
-                                      <p className="text-xs text-green-400">Saved</p>
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-gray-500 clamp-3">
-                                    {feature.description}
-                                  </div>
-                                  <div className="flex flex-wrap gap-2 mt-2">
-                                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                                      Lane: {laneLabel}
-                                    </span>
-                                    <span
-                                      className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                                        isPublished
-                                          ? "bg-green-500/10 text-green-300 border-green-500/40"
-                                          : "bg-gray-700 text-gray-300 border-gray-600"
-                                      }`}
-                                    >
-                                      {isPublished ? "Published" : "Unpublished"}
-                                    </span>
-                                    <span
-                                      className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                                        isFeatured
-                                          ? "bg-blue-500/10 text-blue-300 border-blue-500/40"
-                                          : "bg-gray-700 text-gray-300 border-gray-600"
-                                      }`}
-                                    >
-                                      {isFeatured ? "Featured" : "Not featured"}
-                                    </span>
-                                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                                      Category: {categoryLabel}
-                                    </span>
-                                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-200 border border-gray-700">
-                                      {positionLabel}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => toggleRowExpanded(feature.id)}
-                                  className="px-3 py-2 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 hover:border-blue-400 transition-colors text-sm"
-                                >
-                                  {isExpanded ? "Collapse" : "Expand"}
-                                </button>
-                                <button
-                                  onClick={() => handleEditDetails(feature)}
-                                  className="px-3 py-2 rounded-lg bg-blue-600/80 text-white hover:bg-blue-500 text-sm transition-colors"
-                                >
-                                  Edit details
-                                </button>
-                              </div>
-                            </div>
-
-                            {isExpanded && (
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-900/40 border border-gray-800 rounded-lg p-4">
-                                <div className="space-y-2">
-                                  <p className="text-[11px] uppercase text-gray-400">
-                                    Package placement (choose one lane)
-                                  </p>
-                                  {packageLaneOptions.map(
-                                    ({ value: colNum, label }) => (
-                                      <label
-                                        key={colNum}
-                                        className="flex items-center gap-2 text-sm text-gray-200"
-                                      >
-                                        <input
-                                          type="radio"
-                                          name={`pkg-${feature.id}`}
-                                          checked={feature.column === colNum}
-                                          onChange={() =>
-                                            handlePackagePlacement(feature, colNum)
-                                          }
-                                        />
-                                        <span>{label}</span>
-                                      </label>
-                                    )
-                                  )}
-                                  <label className="flex items-center gap-2 text-sm text-gray-200">
-                                    <input
-                                      type="radio"
-                                      name={`pkg-${feature.id}`}
-                                      checked={feature.column == null}
-                                      onChange={() =>
-                                        handlePackagePlacement(feature, undefined)
-                                      }
-                                    />
-                                    <span>Not in Packages</span>
-                                  </label>
-                                  {feature.column !== undefined &&
-                                    packageOrder.includes(
-                                      feature.column as 1 | 2 | 3
-                                    ) && (
-                                      <div className="mt-2 flex items-center gap-2">
-                                        <span className="text-[11px] uppercase text-gray-400">
-                                          Connector:
-                                        </span>
-                                        <div className="flex gap-2">
-                                          {(["AND", "OR"] as const).map(
-                                            (optionConnector) => (
-                                              <button
-                                                key={optionConnector}
-                                                type="button"
-                                                onClick={() =>
-                                                  handleConnectorChange(
-                                                    feature,
-                                                    optionConnector
-                                                  )
-                                                }
-                                                aria-label={`Set connector to ${optionConnector}`}
-                                                aria-pressed={
-                                                  currentConnector === optionConnector
-                                                }
-                                                className={`px-2 py-1 rounded text-xs border ${
-                                                  currentConnector === optionConnector
-                                                    ? optionConnector === "OR"
-                                                      ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/60"
-                                                      : "bg-green-500/20 text-green-300 border-green-400/60"
-                                                    : "bg-gray-800 text-gray-200 border-gray-700"
-                                                }`}
-                                              >
-                                                {optionConnector}
-                                              </button>
-                                            )
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                  <div>
-                                    <label className="flex items-center gap-2 text-sm text-gray-200 mb-2">
-                                      <input
-                                        type="checkbox"
-                                        checked={isPublished}
-                                        onChange={(e) =>
-                                          handlePublishToggle(feature, e.target.checked)
-                                        }
-                                      />
-                                      <span>Publish to A La Carte</span>
-                                    </label>
-                                    {isPublished && (
-                                      <div className="ml-6 space-y-2">
-                                        {renderPlacementControls(feature, option, true)}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                  {isPublished && (
-                                    <div className="space-y-3">
-                                      <div className="space-y-1">
-                                        <label
-                                          htmlFor={`alacarte-price-${feature.id}`}
-                                          className="text-xs text-gray-400 block"
-                                        >
-                                          A La Carte Price
-                                        </label>
-                                        <input
-                                          id={`alacarte-price-${feature.id}`}
-                                          type="number"
-                                          value={priceValue}
-                                          onChange={(e) =>
-                                            setPriceInputs((prev) => ({
-                                              ...prev,
-                                              [feature.id]: e.target.value,
-                                            }))
-                                          }
-                                          onBlur={() => handlePriceBlur(feature)}
-                                          min="0"
-                                          step="1"
-                                          className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
-                                        />
-                                      </div>
-                                      <div className="space-y-1">
-                                        <label
-                                          htmlFor={`warranty-${feature.id}`}
-                                          className="text-xs text-gray-400 block"
-                                        >
-                                          Warranty
-                                        </label>
-                                        <input
-                                          id={`warranty-${feature.id}`}
-                                          type="text"
-                                          value={warrantyValue}
-                                          onChange={(e) =>
-                                            updateFeatureState(feature.id, {
-                                              alaCarteWarranty: e.target.value,
-                                            })
-                                          }
-                                          onBlur={(e) =>
-                                            handleWarrantyBlur(
-                                              feature,
-                                              e.target.value
-                                            )
-                                          }
-                                          placeholder="e.g., 5 Year Warranty"
-                                          className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
-                                        />
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <input
-                                          type="checkbox"
-                                          checked={isNew}
-                                          onChange={(e) =>
-                                            handleIsNewToggle(
-                                              feature,
-                                              e.target.checked
-                                            )
-                                          }
-                                          disabled={!isPublished}
-                                        />
-                                        <span>Mark as NEW</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+        <DragOverlay>
+          {activeFeature ? <DragOverlayItem feature={activeFeature} /> : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 };

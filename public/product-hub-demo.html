@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Hub Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0f172a;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .column {
+            background: rgba(31, 41, 55, 0.3);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .column h3 {
+            color: #e5e7eb;
+            font-size: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .column p {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+        .card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .card-header {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+        .drag-handle {
+            color: #6b7280;
+            cursor: grab;
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .card-desc {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid;
+        }
+        .badge-lane {
+            background: #374151;
+            color: #e5e7eb;
+            border-color: #4b5563;
+        }
+        .badge-published {
+            background: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        .badge-unpublished {
+            background: #374151;
+            color: #9ca3af;
+            border-color: #4b5563;
+        }
+        .position-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #60a5fa;
+            color: #1e293b;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 999px;
+            flex-shrink: 0;
+        }
+        .buttons {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #4b5563;
+            background: #374151;
+            color: #e5e7eb;
+            cursor: pointer;
+        }
+        .btn:hover {
+            border-color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="font-size: 32px; margin: 0;">Product Hub - Drag & Drop Interface</h1>
+            <p style="color: #9ca3af; margin-top: 8px;">Manage package placement and A La Carte visibility with drag and drop</p>
+        </div>
+        
+        <div class="columns">
+            <!-- Packages Column -->
+            <div class="column">
+                <h3>Packages Section</h3>
+                <p>Products assigned to Gold, Elite, or Platinum packages</p>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="position-badge">1</span>
+                        <div class="drag-handle">☰</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">RustGuard Pro</div>
+                            <div class="card-desc">Underbody protection to prevent corrosion and structural damage.</div>
+                            <div class="badges">
+                                <span class="badge badge-lane">Elite Package (Column 2)</span>
+                                <span class="badge badge-unpublished">Unpublished</span>
+                                <span class="badge badge-lane">Position 0</span>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn">Expand</button>
+                                <button class="btn" style="background: #2563eb;">Edit details</button>
+                                <button class="btn">Duplicate ▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="position-badge">2</span>
+                        <div class="drag-handle">☰</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">ToughGuard Premium</div>
+                            <div class="card-desc">A premium paint sealant that protects against environmental damage.</div>
+                            <div class="badges">
+                                <span class="badge badge-lane">Elite Package (Column 2)</span>
+                                <span class="badge badge-published">Published</span>
+                                <span class="badge badge-lane">Position 1</span>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn">Expand</button>
+                                <button class="btn" style="background: #2563eb;">Edit details</button>
+                                <button class="btn">Duplicate ▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="position-badge">3</span>
+                        <div class="drag-handle">☰</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">Interior Leather & Fabric Protection</div>
+                            <div class="card-desc">A complete interior treatment to protect against stains and damage.</div>
+                            <div class="badges">
+                                <span class="badge badge-lane">Gold Package (Column 1)</span>
+                                <span class="badge badge-unpublished">Unpublished</span>
+                                <span class="badge badge-lane">Position 0</span>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn">Expand</button>
+                                <button class="btn" style="background: #2563eb;">Edit details</button>
+                                <button class="btn">Duplicate ▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- A La Carte Column -->
+            <div class="column">
+                <h3>A La Carte Section</h3>
+                <p>Published products available for a la carte selection</p>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="position-badge">1</span>
+                        <div class="drag-handle">☰</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">Diamond Shield</div>
+                            <div class="card-desc">Premium ceramic coating for ultimate paint protection.</div>
+                            <div class="badges">
+                                <span class="badge badge-lane">Not in packages</span>
+                                <span class="badge badge-published">Published</span>
+                                <span class="badge badge-lane">Category: Gold</span>
+                                <span class="badge badge-lane">Position 0</span>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn">Expand</button>
+                                <button class="btn" style="background: #2563eb;">Edit details</button>
+                                <button class="btn">Duplicate ▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="position-badge">2</span>
+                        <div class="drag-handle">☰</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">ToughGuard Premium</div>
+                            <div class="card-desc">A premium paint sealant that protects against environmental damage.</div>
+                            <div class="badges">
+                                <span class="badge badge-lane">Elite Package (Column 2)</span>
+                                <span class="badge badge-published">Published</span>
+                                <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #93c5fd; border-color: rgba(59, 130, 246, 0.4);">Featured</span>
+                                <span class="badge badge-lane">Position 1</span>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn">Expand</button>
+                                <button class="btn" style="background: #2563eb;">Edit details</button>
+                                <button class="btn">Duplicate ▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="border: 2px dashed #60a5fa; background: rgba(96, 165, 250, 0.05);">
+                    <div style="text-align: center; padding: 20px; color: #9ca3af; font-style: italic;">
+                        ↓ Drop here to publish products to A La Carte ↓
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 14px;">
+            <p>✨ Drag products between columns to move them • Drag within columns to reorder • Click Duplicate to create variants</p>
+        </div>
+    </div>
+</body>
+</html>

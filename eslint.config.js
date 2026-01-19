@@ -68,6 +68,7 @@ export default [
         },
       ],
       "react/no-unescaped-entities": "off",
+      "react/prop-types": "off", // TypeScript provides type checking
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/no-static-element-interactions": "warn",
       "jsx-a11y/no-noninteractive-element-interactions": "warn",

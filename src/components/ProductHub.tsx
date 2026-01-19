@@ -978,8 +978,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
       : "Not in packages";
     const categoryLabel = getCategoryLabel(option);
+    // Display position as 1-based (position + 1) for user clarity, consistent with position badge
     const positionLabel =
-      feature.position !== undefined ? `Position ${feature.position}` : "Position —";
+      feature.position !== undefined ? `Position ${feature.position + 1}` : "Position —";
 
     const [showDuplicateMenu, setShowDuplicateMenu] = useState(false);
     const isExpanded = expandedIds.has(feature.id);

@@ -54,6 +54,9 @@ interface ProductHubProps {
   onScrollHandled?: () => void;
 }
 
+// Default package column when moving items to packages section
+const DEFAULT_PACKAGE_COLUMN: 1 | 2 | 3 = 2; // Elite Package
+
 const columnLabels: Record<1 | 2 | 3, string> = {
   1: "Gold Package (Column 1)",
   2: "Elite Package (Column 2)",
@@ -847,11 +850,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const moving = sourceList[oldIndex];
       if (!moving) return;
 
-      // When moving to packages, assign default column 2
-      // When moving to alacarte, publish the product
+      // When moving to packages, assign default package column
+      // When moving to alacarte, publish the product and remove column
       const updatedMoving =
         overLane === "packages"
-          ? { ...moving, column: 2, publishToAlaCarte: false }
+          ? { ...moving, column: DEFAULT_PACKAGE_COLUMN, publishToAlaCarte: false }
           : { ...moving, column: undefined, publishToAlaCarte: true };
 
       const prunedSource = sourceList.filter((f) => f.id !== activeIdStr);
@@ -882,7 +885,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const packagesUpdates = nextPackages.map((f, index) => ({
         id: f.id,
         position: index,
-        column: f.column ?? 2,
+        column: f.column ?? DEFAULT_PACKAGE_COLUMN, // Use existing column or default
         connector: f.connector,
       }));
 
@@ -994,7 +997,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       >
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-start gap-3 flex-1">
-            {/* Position badge */}
+            {/* Position badge - Display 1-based index (position + 1) for user clarity */}
             {feature.position !== undefined && (
               <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-gray-900 bg-blue-400 rounded-full flex-shrink-0">
                 {feature.position + 1}
@@ -1029,7 +1032,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 )}
                 {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
               </div>
-              <div className="text-xs text-gray-400 line-clamp-2">{feature.description}</div>
+              <div className="text-xs text-gray-400 clamp-2">{feature.description}</div>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
                   {laneLabel}

@@ -150,10 +150,15 @@ const App: React.FC = () => {
       document.body.classList.remove(className);
       document.documentElement.classList.remove(className);
     };
-  }, [isIpadLandscape, currentView, isAdminView]);
+  }, [isIpadLandscape, currentView, isAdminView, isLoading]);
 
   useEffect(() => {
-    if (!isIpadLandscape || typeof document === "undefined" || typeof window === "undefined")
+    if (
+      !isIpadLandscape ||
+      isLoading ||
+      typeof document === "undefined" ||
+      typeof window === "undefined"
+    )
       return;
     const shouldLock = currentView === "menu" && !isAdminView;
     if (!shouldLock) return;
@@ -740,6 +745,7 @@ const App: React.FC = () => {
   const isMenuView = currentView === "menu";
   const mainLayoutClass =
     enableIpadMenuLayout && isMenuView ? "am-main-ipad-menu" : "am-main-default";
+  const mainFlexClass = enableIpadMenuLayout ? "flex-none" : "flex-grow";
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
@@ -784,7 +790,7 @@ const App: React.FC = () => {
       ) : (
         <>
           <main
-            className={`container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col min-h-0 ${mainLayoutClass}`}
+            className={`container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex flex-col min-h-0 ${mainFlexClass} ${mainLayoutClass}`}
           >
             {isLoading ? (
               <LoadingSpinner />

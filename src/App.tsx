@@ -234,7 +234,7 @@ const App: React.FC = () => {
       root.style.removeProperty("--ipad-header-h");
       root.style.removeProperty("--ipad-bottom-bar-h");
     };
-  }, [isIpadLandscape, currentView, isAdminView]);
+  }, [isIpadLandscape, currentView, isAdminView, isLoading]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);

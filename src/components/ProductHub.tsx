@@ -1053,7 +1053,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       if (!showDuplicateMenu) return;
       
       const handleClickOutside = (event: MouseEvent) => {
-        if (duplicateMenuRef.current && !duplicateMenuRef.current.contains(event.target as Node)) {
+        if (duplicateMenuRef.current && event.target && !duplicateMenuRef.current.contains(event.target as Node)) {
           setShowDuplicateMenu(false);
         }
       };

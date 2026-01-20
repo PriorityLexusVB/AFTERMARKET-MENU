@@ -688,6 +688,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     setSelectedIds(new Set(filteredFeatures.map((f) => f.id)));
   };
 
+  const toggleSelection = (featureId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(featureId)) {
+        next.delete(featureId);
+      } else {
+        next.add(featureId);
+      }
+      return next;
+    });
+  };
+
   const runBulkAction = async (
     action: (feature: ProductFeature) => Promise<void> | void,
     featuresToProcess: ProductFeature[] = selectedFeatures
@@ -763,10 +775,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
   // Separate features into two columns for drag-and-drop
   const { packagesFeatures, alaCarteFeatures } = useMemo(() => {
+    // Products in packages take priority - they won't appear in A La Carte even if published
     const packages = filteredFeatures.filter(
       (f) => f.column === 1 || f.column === 2 || f.column === 3
     );
+    const packageIds = new Set(packages.map((f) => f.id));
+    
+    // Only show in A La Carte if NOT in a package
     const alaCarte = filteredFeatures.filter((f) => {
+      if (packageIds.has(f.id)) return false; // Exclude products already in packages
       const option = alaCarteMap.get(f.id);
       return option?.isPublished || f.publishToAlaCarte;
     });
@@ -899,7 +916,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         const packageUpdate = packagesUpdates.find((u) => u.id === f.id);
         const alaCarteUpdate = alaCarteUpdates.find((u) => u.id === f.id);
         if (packageUpdate) {
-          return { ...f, position: packageUpdate.position, column: packageUpdate.column };
+          return { ...f, position: packageUpdate.position, column: packageUpdate.column, publishToAlaCarte: false };
         }
         if (alaCarteUpdate) {
           return {
@@ -925,6 +942,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             price: f.alaCartePrice ?? f.price,
           });
           upsertOptionState(f, { isPublished: true });
+        }
+      }
+
+      // For items moved to packages, unpublish them from A La Carte
+      for (const f of nextPackages) {
+        const option = alaCarteMap.get(f.id);
+        if (option?.isPublished) {
+          await unpublishAlaCarteFromFeature(f.id);
+          upsertOptionState(f, { isPublished: false });
         }
       }
 
@@ -954,6 +980,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     option?: AlaCarteOption;
     onEdit: (feature: ProductFeature) => void;
     onDuplicate: (feature: ProductFeature, column: 1 | 2 | 3) => void;
+    isSelected: boolean;
+    onToggleSelection: (featureId: string) => void;
   }
 
   const SortableProductCard: React.FC<SortableProductCardProps> = ({
@@ -961,6 +989,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     option,
     onEdit,
     onDuplicate,
+    isSelected,
+    onToggleSelection,
   }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
       id: feature.id,
@@ -984,6 +1014,23 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
     const [showDuplicateMenu, setShowDuplicateMenu] = useState(false);
     const isExpanded = expandedIds.has(feature.id);
+    const duplicateMenuRef = useRef<HTMLDivElement>(null);
+
+    // Click-outside handler to close duplicate menu
+    useEffect(() => {
+      if (!showDuplicateMenu) return;
+      
+      const handleClickOutside = (event: MouseEvent) => {
+        if (duplicateMenuRef.current && !duplicateMenuRef.current.contains(event.target as Node)) {
+          setShowDuplicateMenu(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [showDuplicateMenu]);
 
     return (
       <div
@@ -995,6 +1042,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       >
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-start gap-3 flex-1">
+            {/* Selection checkbox for bulk operations */}
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggleSelection(feature.id)}
+              className="mt-1 flex-shrink-0"
+              aria-label={`Select ${feature.name}`}
+              onClick={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
+            />
             {/* Position badge - Display 1-based index (position + 1) for user clarity */}
             {feature.position !== undefined && (
               <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-gray-900 bg-blue-400 rounded-full flex-shrink-0">
@@ -1071,7 +1127,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             >
               Edit details
             </button>
-            <div className="relative">
+            <div className="relative" ref={duplicateMenuRef}>
               <button
                 onClick={() => setShowDuplicateMenu(!showDuplicateMenu)}
                 className="px-3 py-1.5 rounded bg-gray-700 text-gray-100 border border-gray-600 hover:border-green-400 transition-colors text-xs whitespace-nowrap w-full"
@@ -1464,6 +1520,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                           option={option}
                           onEdit={handleEditDetails}
                           onDuplicate={handleDuplicateToLane}
+                          isSelected={selectedIds.has(feature.id)}
+                          onToggleSelection={toggleSelection}
                         />
                       );
                     })}
@@ -1503,6 +1561,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                           option={option}
                           onEdit={handleEditDetails}
                           onDuplicate={handleDuplicateToLane}
+                          isSelected={selectedIds.has(feature.id)}
+                          onToggleSelection={toggleSelection}
                         />
                       );
                     })}

@@ -64,8 +64,6 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
-    "firebase-tools": "^15.3.1",
     "@eslint/js": "^9.19.0",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -76,12 +74,14 @@
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/parser": "^5.62.0",
     "@vitest/ui": "^4.0.17",
+    "cross-env": "^7.0.3",
     "dotenv": "^17.2.3",
     "eslint": "^8.57.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "firebase-admin": "^13.6.0",
+    "firebase-tools": "^15.3.1",
     "globals": "^15.14.0",
     "jsdom": "^27.4.0",
     "prettier": "^3.8.0",

@@ -142,17 +142,20 @@ describe("ProductHub drag-and-drop interface", () => {
     expect(card).toBeInTheDocument();
   });
 
-  it("displays product in both sections when it's in a package AND published", async () => {
+  it("displays product in packages section only when it's in a package AND published (mutual exclusivity)", async () => {
     const { feature } = await renderHub(
       { column: 2, publishToAlaCarte: true, alaCartePrice: 100 },
       { isPublished: true, column: undefined, price: 100 }
     );
     
+    // Product should only appear in Packages section due to mutual exclusivity
     const packagesCard = findProductCard(feature.name, "packages");
-    const alaCarteCard = findProductCard(feature.name, "alacarte");
-    
     expect(packagesCard).toBeInTheDocument();
-    expect(alaCarteCard).toBeInTheDocument();
+    
+    // Product should NOT appear in A La Carte section when it's in a package
+    const alaCarteSection = screen.getByText(/A La Carte Section/i).parentElement;
+    const alaCarteCards = within(alaCarteSection!).queryAllByText(feature.name);
+    expect(alaCarteCards.length).toBe(0);
   });
 
   it("shows Expand button for product cards", async () => {

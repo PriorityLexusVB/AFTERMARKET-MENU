@@ -911,7 +911,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         connector: f.connector,
       }));
 
-      // Update features state optimistically
+      // Update features state optimistically with position normalization
+      // Normalize positions for all features so that even items not in the
+      // current visible columns have consistent, contiguous positions.
       const updatedFeatures = features.map((f) => {
         const packageUpdate = packagesUpdates.find((u) => u.id === f.id);
         const alaCarteUpdate = alaCarteUpdates.find((u) => u.id === f.id);
@@ -928,7 +930,37 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         }
         return f;
       });
-      setFeatures(updatedFeatures);
+
+      // Normalize positions: group features and ensure contiguous positions
+      const normalizedFeatures: ProductFeature[] = (() => {
+        const groups = new Map<string, ProductFeature[]>();
+
+        for (const feature of updatedFeatures) {
+          const groupKey =
+            feature.publishToAlaCarte || feature.column === undefined
+              ? "alacarte"
+              : `package-${feature.column ?? DEFAULT_PACKAGE_COLUMN}`;
+
+          const group = groups.get(groupKey);
+          if (group) {
+            group.push(feature);
+          } else {
+            groups.set(groupKey, [feature]);
+          }
+        }
+
+        const result: ProductFeature[] = [];
+        for (const group of groups.values()) {
+          group.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+          group.forEach((item, index) => {
+            result.push({ ...item, position: index });
+          });
+        }
+
+        return result;
+      })();
+
+      setFeatures(normalizedFeatures);
 
       // Persist to Firestore
       await batchUpdateFeaturesPositions([...packagesUpdates, ...alaCarteUpdates]);

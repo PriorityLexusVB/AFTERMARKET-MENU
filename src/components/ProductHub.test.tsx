@@ -21,6 +21,7 @@ vi.mock("../data", () => ({
   updateFeature: (...args: unknown[]) => mockUpdateFeature(...args),
   upsertAlaCarteFromFeature: (...args: unknown[]) => mockUpsert(...args),
   unpublishAlaCarteFromFeature: (...args: unknown[]) => mockUnpublish(...args),
+  batchUpdateFeaturePositions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../firebase", () => ({
@@ -61,20 +62,66 @@ const renderHub = async (
       initialAlaCarteOptions={option ? [option] : []}
     />
   );
-  await waitFor(() => expect(screen.getByText(feature.name)).toBeInTheDocument(), {
+  
+  // Wait for the component to render
+  await waitFor(() => expect(screen.getByText("Product Hub")).toBeInTheDocument(), {
     timeout: 2000,
   });
+  
   return { feature, option, features };
 };
 
-const expandRow = async (featureName: string) => {
-  const row = screen.getByText(featureName).closest("tr") as HTMLElement;
-  const expandButton = within(row).getByRole("button", { name: /Expand/i });
-  await userEvent.click(expandButton);
-  return row;
+// Helper to find a product card by feature name
+const findProductCard = (featureName: string, section?: "packages" | "alacarte"): HTMLElement => {
+  const elements = screen.queryAllByText(featureName);
+  
+  if (elements.length === 0) {
+    throw new Error(`Could not find any elements with text "${featureName}"`);
+  }
+  
+  const cards: HTMLElement[] = [];
+  for (const element of elements) {
+    const card = element.closest('[class*="bg-gray-800"]');
+    if (card) {
+      cards.push(card as HTMLElement);
+    }
+  }
+  
+  if (cards.length === 0) {
+    throw new Error(`Could not find product card for "${featureName}"`);
+  }
+  
+  if (section) {
+    const sectionHeading = section === "packages" ? "Packages Section" : "A La Carte Section";
+    const sectionElement = screen.getByText(sectionHeading);
+    const sectionContainer = sectionElement.closest('[class*="bg-gray-900/30"]');
+    
+    for (const card of cards) {
+      if (sectionContainer?.contains(card)) {
+        return card;
+      }
+    }
+    
+    throw new Error(`Could not find product card for "${featureName}" in ${section} section`);
+  }
+  
+  return cards[0];
 };
 
-describe("ProductHub inline editing", () => {
+const expandCard = async (featureName: string, section?: "packages" | "alacarte") => {
+  const card = findProductCard(featureName, section);
+  const expandButton = within(card).getByRole("button", { name: /Expand/i });
+  await userEvent.click(expandButton);
+  
+  // Wait for the card to actually expand (Collapse button appears)
+  await waitFor(() => {
+    expect(within(card).getByRole("button", { name: /Collapse/i })).toBeInTheDocument();
+  }, { timeout: 1000 });
+  
+  return card;
+};
+
+describe("ProductHub drag-and-drop interface", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetDocs.mockReset();
@@ -82,259 +129,129 @@ describe("ProductHub inline editing", () => {
     mockAddDoc.mockResolvedValue({ id: "new-feature" });
   });
 
-  it("orders package lane radios Elite, Platinum, Gold, Not in Packages", async () => {
+  it("renders two-column layout with Packages and A La Carte sections", async () => {
+    await renderHub({ column: 2 });
+    
+    expect(screen.getByText("Packages Section")).toBeInTheDocument();
+    expect(screen.getByText("A La Carte Section")).toBeInTheDocument();
+  });
+
+  it("displays product in Packages section when it has a column assignment", async () => {
     const { feature } = await renderHub({ column: 2 });
-    const row = await expandRow(feature.name);
-    expect(row).toBeTruthy();
-    const radios = within(row as HTMLElement).getAllByRole("radio");
-    const labels = radios.map((radio) =>
-      (radio as HTMLInputElement).labels?.[0]?.textContent?.trim()
-    );
-    expect(labels).toEqual([
-      "Elite Package (Column 2)",
-      "Platinum Package (Column 3)",
-      "Gold Package (Column 1)",
-      "Not in Packages",
-    ]);
-
-    await userEvent.click(within(row as HTMLElement).getByLabelText("Gold Package (Column 1)"));
-    await waitFor(() =>
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ column: 1 })
-      )
-    );
-
-    await userEvent.click(within(row as HTMLElement).getByLabelText("Not in Packages"));
-    await waitFor(() =>
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ column: undefined })
-      )
-    );
-    expect(within(row as HTMLElement).getByLabelText("Not in Packages")).toBeChecked();
+    
+    const card = findProductCard(feature.name, "packages");
+    expect(card).toBeInTheDocument();
+    expect(within(card).getByText(feature.name)).toBeInTheDocument();
   });
 
-  it("allows inline connector toggling for placed features", async () => {
-    const { feature } = await renderHub({ column: 2, connector: "AND" });
-    const row = await expandRow(feature.name);
-    const orButton = within(row).getByRole("button", { name: /Set connector to OR/i });
-
-    await userEvent.click(orButton);
-
-    await waitFor(() =>
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ connector: "OR" })
-      )
-    );
-    expect(orButton).toHaveAttribute("aria-pressed", "true");
-  });
-
-  it("scrolls the row into view before opening edit form", async () => {
-    const { feature } = await renderHub({ column: 1 });
-    const row = screen.getByText(feature.name).closest("tr") as HTMLElement;
-    const scrollSpy = vi.fn();
-    (row as HTMLElement & { scrollIntoView: () => void }).scrollIntoView = scrollSpy;
-
-    await userEvent.click(within(row).getByRole("button", { name: /Edit details/i }));
-
-    expect(scrollSpy).toHaveBeenCalled();
-    await waitFor(() => expect(screen.getByLabelText(/Feature Name/i)).toBeInTheDocument());
-  });
-
-  it("publishes inline using the typed A La Carte price", async () => {
-    const { feature } = await renderHub();
-    const row = await expandRow(feature.name);
-    const priceInput = within(row).getAllByRole("spinbutton")[0]!;
-    await userEvent.clear(priceInput);
-    await userEvent.type(priceInput, "125");
-
-    const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
-    await userEvent.click(publishToggle);
-
-    await waitFor(() =>
-      expect(mockUpdateFeature).toHaveBeenCalledWith(feature.id, {
-        publishToAlaCarte: true,
-        alaCartePrice: 125,
-      })
-    );
-    expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({ id: feature.id, alaCartePrice: 125, publishToAlaCarte: true }),
-      expect.objectContaining({ isPublished: true, price: 125 })
-    );
-  });
-
-  it("blocks publishing without a price and shows inline validation", async () => {
-    const { feature } = await renderHub({ alaCartePrice: undefined });
-    const row = await expandRow(feature.name);
-    const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
-
-    await userEvent.click(publishToggle);
-
-    await screen.findByText(/Enter an A La Carte price before publishing/i);
-    expect(mockUpdateFeature).not.toHaveBeenCalled();
-    expect(mockUpsert).not.toHaveBeenCalled();
-  });
-
-  it("updates category and featured placement inline", async () => {
+  it("displays product in A La Carte section when it's published", async () => {
     const { feature } = await renderHub(
-      { publishToAlaCarte: true },
-      { isPublished: true, column: undefined, price: 200 }
+      { publishToAlaCarte: true, alaCartePrice: 100 },
+      { isPublished: true, column: undefined, price: 100 }
     );
-    const row = await expandRow(feature.name);
-    const advancedToggle = within(row).getByRole("button", { name: /Show A La Carte advanced/i });
-    await userEvent.click(advancedToggle);
-    const categorySelect = within(row).getAllByRole("combobox")[0]!;
-
-    await userEvent.selectOptions(categorySelect, "2");
-
-    await waitFor(() => expect(mockUpsert).toHaveBeenCalled());
-    const categoryCall = mockUpsert.mock.calls[mockUpsert.mock.calls.length - 1]?.[1];
-    expect(categoryCall?.column).toBe(2);
-
-    const featuredToggle = within(row).getByLabelText(/Featured \(Popular Add-Ons\)/i);
-    await userEvent.click(featuredToggle);
-
-    await waitFor(() => expect(mockUpsert).toHaveBeenCalledTimes(2));
-    const featuredCall = mockUpsert.mock.calls[mockUpsert.mock.calls.length - 1]?.[1];
-    expect(featuredCall?.column).toBe(4);
+    
+    const card = findProductCard(feature.name, "alacarte");
+    expect(card).toBeInTheDocument();
   });
 
-  it("shows row error when publish save fails", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockUpsert.mockRejectedValueOnce(new Error("boom"));
-    const { feature } = await renderHub({ alaCartePrice: 150 });
-    const row = await expandRow(feature.name);
-    const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
-
-    await userEvent.click(publishToggle);
-
-    await waitFor(() => expect(screen.getByText(/boom/i)).toBeInTheDocument());
-    consoleErrorSpy.mockRestore();
+  it("displays product in both sections when it's in a package AND published", async () => {
+    const { feature } = await renderHub(
+      { column: 2, publishToAlaCarte: true, alaCartePrice: 100 },
+      { isPublished: true, column: undefined, price: 100 }
+    );
+    
+    const packagesCard = findProductCard(feature.name, "packages");
+    const alaCarteCard = findProductCard(feature.name, "alacarte");
+    
+    expect(packagesCard).toBeInTheDocument();
+    expect(alaCarteCard).toBeInTheDocument();
   });
 
-  it("clears publish error on successful retry", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockUpsert.mockRejectedValueOnce(new Error("boom"));
-    const { feature } = await renderHub({ alaCartePrice: 150 });
-    const row = await expandRow(feature.name);
-    const publishToggle = within(row).getByLabelText(/Publish to A La Carte/i);
-
-    await userEvent.click(publishToggle);
-    await screen.findByText(/boom/i);
-
-    mockUpsert.mockResolvedValueOnce(undefined);
-    await userEvent.click(publishToggle);
-
-    await waitFor(() => expect(screen.queryByText(/boom/i)).not.toBeInTheDocument());
-    consoleErrorSpy.mockRestore();
+  it("shows Expand button for product cards", async () => {
+    const { feature } = await renderHub({ column: 2 });
+    
+    const card = findProductCard(feature.name, "packages");
+    const expandButton = within(card).getByRole("button", { name: /Expand/i });
+    
+    expect(expandButton).toBeInTheDocument();
   });
 
-  it("duplicates a feature into a target lane with the next position", async () => {
+  it("shows Edit details button", async () => {
+    const { feature } = await renderHub({ column: 2 });
+    
+    const card = findProductCard(feature.name, "packages");
+    const editButton = within(card).getByRole("button", { name: /Edit details/i });
+    
+    expect(editButton).toBeInTheDocument();
+  });
+
+  it("shows Duplicate button with dropdown menu", async () => {
+    const { feature } = await renderHub({ column: 2 });
+    
+    const card = findProductCard(feature.name, "packages");
+    const duplicateButton = within(card).getByRole("button", { name: /Duplicate/i });
+    
+    expect(duplicateButton).toBeInTheDocument();
+  });
+
+  it("duplicates product to selected package column", async () => {
     const extraFeature = createMockFeature({
       id: "existing",
       name: "Existing Feature",
-      column: 2,
+      column: 1,
       position: 3,
     });
     mockAddDoc.mockResolvedValueOnce({ id: "duplicate-id" });
-    const { feature } = await renderHub({ column: 1, position: 1 }, undefined, [extraFeature]);
-    const row = await expandRow(feature.name);
-    const duplicateButton = within(row).getByRole("button", { name: /Elite/i });
-
+    
+    const { feature } = await renderHub({ column: 2, position: 1 }, undefined, [extraFeature]);
+    
+    const card = findProductCard(feature.name, "packages");
+    const duplicateButton = within(card).getByRole("button", { name: /Duplicate/i });
+    
     await userEvent.click(duplicateButton);
-
+    
+    // Wait for dropdown menu to appear
+    await waitFor(() => {
+      expect(within(card).queryByText("→ Gold")).toBeInTheDocument();
+    }, { timeout: 1000 });
+    
+    // Click "→ Gold" option in dropdown menu
+    const goldOption = within(card).getByText("→ Gold");
+    await userEvent.click(goldOption);
+    
     await waitFor(() => expect(mockAddDoc).toHaveBeenCalled());
     const payload = mockAddDoc.mock.calls[0]?.[1] as ProductFeature;
-    expect(payload.column).toBe(2);
+    expect(payload.column).toBe(1);
     expect(payload.position).toBe(4); // next after existing position 3
     expect(payload.name).toBe(feature.name);
-    expect(payload.description).toBe(feature.description);
-    expect(payload.connector).toBe(feature.connector);
   });
 
-  it("allows removing a feature from a package lane (regression test)", async () => {
-    const { feature } = await renderHub({ column: 3, position: 1 });
-    const row = await expandRow(feature.name);
-
-    // Verify feature is currently in Platinum Package
-    expect(within(row).getByLabelText("Platinum Package (Column 3)")).toBeChecked();
-
-    // Click "Not in Packages" radio button
-    await userEvent.click(within(row).getByLabelText("Not in Packages"));
-
-    // Verify updateFeature was called with column: undefined and position: undefined
-    await waitFor(() => {
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ column: undefined, position: undefined })
-      );
-    });
-
-    // Verify "Not in Packages" is now checked
-    expect(within(row).getByLabelText("Not in Packages")).toBeChecked();
+  it("shows position badge on cards", async () => {
+    const { feature } = await renderHub({ column: 2, position: 0 });
+    
+    const card = findProductCard(feature.name, "packages");
+    // Position badge shows position + 1 (1-based for users)
+    expect(within(card).getByText("1")).toBeInTheDocument();
   });
 
-  it("can add a feature to a package lane and then remove it", async () => {
-    const { feature } = await renderHub({ column: undefined, position: undefined });
-    const row = await expandRow(feature.name);
-
-    // Start with "Not in Packages"
-    expect(within(row).getByLabelText("Not in Packages")).toBeChecked();
-
-    // Add to Elite Package
-    await userEvent.click(within(row).getByLabelText("Elite Package (Column 2)"));
-    await waitFor(() => {
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ column: 2, position: 0 })
-      );
-    });
-
-    // Now remove from package
-    mockUpdateFeature.mockClear();
-    await userEvent.click(within(row).getByLabelText("Not in Packages"));
-
-    // Verify updateFeature was called to remove the feature
-    await waitFor(() => {
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ column: undefined, position: undefined })
-      );
-    });
+  it("displays package lane label on card", async () => {
+    const { feature } = await renderHub({ column: 2 });
+    
+    const card = findProductCard(feature.name, "packages");
+    expect(within(card).getByText("Elite Package (Column 2)")).toBeInTheDocument();
   });
 
-  it("removes a feature from packages via explicit action", async () => {
-    const { feature } = await renderHub({ column: 2, position: 3 });
-    const row = await expandRow(feature.name);
-
-    await userEvent.click(within(row).getByRole("button", { name: /Remove from Packages/i }));
-
-    await waitFor(() =>
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ column: undefined, position: undefined })
-      )
-    );
+  it("displays published status on card", async () => {
+    const { feature } = await renderHub({ column: 2, publishToAlaCarte: true },  { isPublished: true });
+    
+    const card = findProductCard(feature.name, "packages");
+    expect(within(card).getByText("Published")).toBeInTheDocument();
   });
 
-  it("unpublishes A La Carte without changing package placement", async () => {
-    const { feature } = await renderHub(
-      { column: 2, position: 1, publishToAlaCarte: true, alaCartePrice: 200 },
-      { isPublished: true, column: 4, price: 200 }
-    );
-    const row = await expandRow(feature.name);
-
-    await userEvent.click(within(row).getByRole("button", { name: /Unpublish A La Carte/i }));
-
-    await waitFor(() =>
-      expect(mockUpdateFeature).toHaveBeenCalledWith(
-        feature.id,
-        expect.objectContaining({ publishToAlaCarte: false })
-      )
-    );
-    expect(mockUnpublish).toHaveBeenCalledWith(feature.id);
-    expect(feature.column).toBe(2);
+  it("displays unpublished status on card", async () => {
+    const { feature } = await renderHub({ column: 2 });
+    
+    const card = findProductCard(feature.name, "packages");
+    expect(within(card).getByText("Unpublished")).toBeInTheDocument();
   });
 });

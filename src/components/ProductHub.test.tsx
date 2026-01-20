@@ -105,20 +105,8 @@ const findProductCard = (featureName: string, section?: "packages" | "alacarte")
     throw new Error(`Could not find product card for "${featureName}" in ${section} section`);
   }
   
-  return cards[0];
-};
-
-const expandCard = async (featureName: string, section?: "packages" | "alacarte") => {
-  const card = findProductCard(featureName, section);
-  const expandButton = within(card).getByRole("button", { name: /Expand/i });
-  await userEvent.click(expandButton);
-  
-  // Wait for the card to actually expand (Collapse button appears)
-  await waitFor(() => {
-    expect(within(card).getByRole("button", { name: /Collapse/i })).toBeInTheDocument();
-  }, { timeout: 1000 });
-  
-  return card;
+  // TypeScript: cards.length is guaranteed > 0 due to check above
+  return cards[0]!;
 };
 
 describe("ProductHub drag-and-drop interface", () => {

@@ -1331,7 +1331,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
   // Droppable column component
   interface DroppableColumnProps {
-    columnId: "packages" | "alacarte";
+    columnId: "unassigned" | "packages" | "alacarte";
     children: React.ReactNode;
   }
 

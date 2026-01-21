@@ -274,9 +274,38 @@ describe("ProductHub drag-and-drop interface", () => {
   });
 
   it("does not show unassigned products section when all products are assigned", async () => {
-    await renderHub({ column: 2 });
+    // Create a product in packages and a published A La Carte product
+    const packageFeature = createMockFeature({
+      id: "package-1",
+      name: "Package Product",
+      column: 2,
+      publishToAlaCarte: false,
+    });
     
-    // Unassigned section should not be present
+    const alaCarteFeature = createMockFeature({
+      id: "alacarte-1",
+      name: "A La Carte Product",
+      column: undefined,
+      publishToAlaCarte: true,
+    });
+    
+    const alaCarteOption = createMockAlaCarteOption({
+      id: "alacarte-1",
+      isPublished: true,
+    });
+    
+    render(
+      <ProductHub
+        onDataUpdate={vi.fn()}
+        onAlaCarteChange={vi.fn()}
+        initialFeatures={[packageFeature, alaCarteFeature]}
+        initialAlaCarteOptions={[alaCarteOption]}
+      />
+    );
+    
+    await waitFor(() => expect(screen.getByText("Product Hub")).toBeInTheDocument());
+    
+    // Unassigned section should not be present when all products are assigned
     expect(screen.queryByText("Unassigned Products")).not.toBeInTheDocument();
   });
 });

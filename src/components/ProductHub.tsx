@@ -773,7 +773,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       return handlePlacementUpdate(feature, column, undefined);
     });
 
-  // Separate features into three columns for drag-and-drop
+  // Separate features into three sections for drag-and-drop
   const { unassignedFeatures, packagesFeatures, alaCarteFeatures } = useMemo(() => {
     // Products in packages take priority - they won't appear in A La Carte even if published
     const packages = filteredFeatures.filter(
@@ -924,6 +924,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         position: index,
         column: undefined as number | undefined,
         connector: f.connector,
+        publishToAlaCarte: false,
       }));
 
       // Update packages features with position and column
@@ -1586,7 +1587,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   Unassigned Products
                 </h4>
                 <p className="text-xs text-blue-300/70 mt-1">
-                  Newly added products that haven't been assigned to a column yet. Drag them to Packages or A La Carte sections below.
+                  Products that haven't been assigned to Packages or published to A La Carte yet. Drag them to the sections below to assign them.
                 </p>
               </div>
               <span className="text-sm text-blue-400 font-semibold">

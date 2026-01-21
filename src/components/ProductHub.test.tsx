@@ -245,4 +245,38 @@ describe("ProductHub drag-and-drop interface", () => {
     const card = findProductCard(feature.name, "packages");
     expect(within(card).getByText("Unpublished")).toBeInTheDocument();
   });
+
+  it("renders 'Add Product' button in header", async () => {
+    await renderHub();
+    
+    const addButton = screen.getByRole("button", { name: /Add new product/i });
+    expect(addButton).toBeInTheDocument();
+    expect(addButton).toHaveTextContent("+ Add Product");
+  });
+
+  it("shows unassigned products section when there are unassigned products", async () => {
+    const unassignedFeature = createMockFeature({
+      id: "unassigned-1",
+      name: "Unassigned Product",
+      column: undefined,
+      publishToAlaCarte: false,
+    });
+    
+    await renderHub({ column: undefined, publishToAlaCarte: false }, undefined, [unassignedFeature]);
+    
+    // The main feature and unassignedFeature should both be unassigned
+    // Check for unassigned section header
+    const unassignedHeader = await screen.findByText("Unassigned Products");
+    expect(unassignedHeader).toBeInTheDocument();
+    
+    // Check that the unassigned product is displayed
+    expect(screen.getByText("Unassigned Product")).toBeInTheDocument();
+  });
+
+  it("does not show unassigned products section when all products are assigned", async () => {
+    await renderHub({ column: 2 });
+    
+    // Unassigned section should not be present
+    expect(screen.queryByText("Unassigned Products")).not.toBeInTheDocument();
+  });
 });

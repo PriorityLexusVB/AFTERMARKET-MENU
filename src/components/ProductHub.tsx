@@ -773,8 +773,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       return handlePlacementUpdate(feature, column, undefined);
     });
 
-  // Separate features into two columns for drag-and-drop
-  const { packagesFeatures, alaCarteFeatures } = useMemo(() => {
+  // Separate features into three columns for drag-and-drop
+  const { unassignedFeatures, packagesFeatures, alaCarteFeatures } = useMemo(() => {
     // Products in packages take priority - they won't appear in A La Carte even if published
     const packages = filteredFeatures.filter(
       (f) => f.column === 1 || f.column === 2 || f.column === 3
@@ -787,7 +787,17 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const option = alaCarteMap.get(f.id);
       return option?.isPublished || f.publishToAlaCarte;
     });
+    const alaCarteIds = new Set(alaCarte.map((f) => f.id));
+    
+    // Unassigned products: not in packages and not published to A La Carte
+    const unassigned = filteredFeatures.filter((f) => {
+      if (packageIds.has(f.id)) return false; // Exclude products in packages
+      if (alaCarteIds.has(f.id)) return false; // Exclude products in A La Carte
+      return true;
+    });
+    
     return {
+      unassignedFeatures: sortOrderableItems(unassigned),
       packagesFeatures: sortOrderableItems(packages),
       alaCarteFeatures: sortOrderableItems(alaCarte),
     };
@@ -817,33 +827,38 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
 
+    const activeInUnassigned = unassignedFeatures.some((f) => f.id === activeIdStr);
     const activeInPackages = packagesFeatures.some((f) => f.id === activeIdStr);
     const activeInAlaCarte = alaCarteFeatures.some((f) => f.id === activeIdStr);
-    if (!activeInPackages && !activeInAlaCarte) return;
+    if (!activeInUnassigned && !activeInPackages && !activeInAlaCarte) return;
 
-    const activeLane = activeInPackages ? "packages" : "alacarte";
+    const activeLane = activeInUnassigned ? "unassigned" : activeInPackages ? "packages" : "alacarte";
 
     const overLane =
-      overIdStr === "lane-packages"
-        ? "packages"
-        : overIdStr === "lane-alacarte"
-          ? "alacarte"
-          : (() => {
-              const overInPackages = packagesFeatures.some((f) => f.id === overIdStr);
-              const overInAlaCarte = alaCarteFeatures.some((f) => f.id === overIdStr);
-              if (!overInPackages && !overInAlaCarte) return null;
-              return overInPackages ? "packages" : "alacarte";
-            })();
+      overIdStr === "lane-unassigned"
+        ? "unassigned"
+        : overIdStr === "lane-packages"
+          ? "packages"
+          : overIdStr === "lane-alacarte"
+            ? "alacarte"
+            : (() => {
+                const overInUnassigned = unassignedFeatures.some((f) => f.id === overIdStr);
+                const overInPackages = packagesFeatures.some((f) => f.id === overIdStr);
+                const overInAlaCarte = alaCarteFeatures.some((f) => f.id === overIdStr);
+                if (!overInUnassigned && !overInPackages && !overInAlaCarte) return null;
+                return overInUnassigned ? "unassigned" : overInPackages ? "packages" : "alacarte";
+              })();
 
     if (!overLane) return;
 
-    const sourceList = activeLane === "packages" ? packagesFeatures : alaCarteFeatures;
-    const targetList = overLane === "packages" ? packagesFeatures : alaCarteFeatures;
+    const sourceList = activeLane === "unassigned" ? unassignedFeatures : activeLane === "packages" ? packagesFeatures : alaCarteFeatures;
+    const targetList = overLane === "unassigned" ? unassignedFeatures : overLane === "packages" ? packagesFeatures : alaCarteFeatures;
 
     const oldIndex = sourceList.findIndex((f) => f.id === activeIdStr);
     const newIndex = targetList.findIndex((f) => f.id === overIdStr);
     if (oldIndex === -1) return;
 
+    let nextUnassigned = unassignedFeatures;
     let nextPackages = packagesFeatures;
     let nextAlaCarte = alaCarteFeatures;
 
@@ -854,7 +869,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         oldIndex,
         newIndex === -1 ? sourceList.length - 1 : newIndex
       );
-      if (activeLane === "packages") {
+      if (activeLane === "unassigned") {
+        nextUnassigned = reordered;
+      } else if (activeLane === "packages") {
         nextPackages = reordered;
       } else {
         nextAlaCarte = reordered;
@@ -864,12 +881,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const moving = sourceList[oldIndex];
       if (!moving) return;
 
+      // When moving to unassigned, remove column and unpublish
       // When moving to packages, assign default package column
       // When moving to alacarte, publish the product and remove column
       const updatedMoving =
-        overLane === "packages"
-          ? { ...moving, column: DEFAULT_PACKAGE_COLUMN, publishToAlaCarte: false }
-          : { ...moving, column: undefined, publishToAlaCarte: true };
+        overLane === "unassigned"
+          ? { ...moving, column: undefined, publishToAlaCarte: false }
+          : overLane === "packages"
+            ? { ...moving, column: DEFAULT_PACKAGE_COLUMN, publishToAlaCarte: false }
+            : { ...moving, column: undefined, publishToAlaCarte: true };
 
       const prunedSource = sourceList.filter((f) => f.id !== activeIdStr);
       const insertIndex = newIndex === -1 ? targetList.length : newIndex;
@@ -879,22 +899,33 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         ...targetList.slice(insertIndex),
       ];
 
-      nextPackages = overLane === "packages" ? targetWithInsert : prunedSource;
-      nextAlaCarte = overLane === "alacarte" ? targetWithInsert : prunedSource;
+      nextUnassigned = overLane === "unassigned" ? targetWithInsert : activeLane === "unassigned" ? prunedSource : unassignedFeatures;
+      nextPackages = overLane === "packages" ? targetWithInsert : activeLane === "packages" ? prunedSource : packagesFeatures;
+      nextAlaCarte = overLane === "alacarte" ? targetWithInsert : activeLane === "alacarte" ? prunedSource : alaCarteFeatures;
     }
 
     await applyDragUpdates(
+      nextUnassigned.map((f, index) => ({ ...f, position: index })),
       nextPackages.map((f, index) => ({ ...f, position: index })),
       nextAlaCarte.map((f, index) => ({ ...f, position: index }))
     );
   };
 
   const applyDragUpdates = async (
+    nextUnassigned: ProductFeature[],
     nextPackages: ProductFeature[],
     nextAlaCarte: ProductFeature[]
   ) => {
     setIsSaving(true);
     try {
+      // Update unassigned features - remove column and unpublish
+      const unassignedUpdates = nextUnassigned.map((f, index) => ({
+        id: f.id,
+        position: index,
+        column: undefined as number | undefined,
+        connector: f.connector,
+      }));
+
       // Update packages features with position and column
       const packagesUpdates = nextPackages.map((f, index) => ({
         id: f.id,
@@ -915,8 +946,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       // Normalize positions for all features so that even items not in the
       // current visible columns have consistent, contiguous positions.
       const updatedFeatures = features.map((f) => {
+        const unassignedUpdate = unassignedUpdates.find((u) => u.id === f.id);
         const packageUpdate = packagesUpdates.find((u) => u.id === f.id);
         const alaCarteUpdate = alaCarteUpdates.find((u) => u.id === f.id);
+        if (unassignedUpdate) {
+          return { ...f, position: unassignedUpdate.position, column: undefined, publishToAlaCarte: false };
+        }
         if (packageUpdate) {
           return { ...f, position: packageUpdate.position, column: packageUpdate.column, publishToAlaCarte: false };
         }
@@ -963,7 +998,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       setFeatures(normalizedFeatures);
 
       // Persist to Firestore
-      await batchUpdateFeaturesPositions([...packagesUpdates, ...alaCarteUpdates]);
+      await batchUpdateFeaturesPositions([...unassignedUpdates, ...packagesUpdates, ...alaCarteUpdates]);
 
       // For items moved to alacarte, publish them
       for (const f of nextAlaCarte) {
@@ -974,6 +1009,17 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             price: f.alaCartePrice ?? f.price,
           });
           upsertOptionState(f, { isPublished: true });
+        }
+      }
+
+      // For items moved to unassigned, unpublish them
+      for (const f of nextUnassigned) {
+        const option = alaCarteMap.get(f.id);
+        if (option?.isPublished) {
+          await upsertAlaCarteFromFeature(f, {
+            isPublished: false,
+          });
+          upsertOptionState(f, { isPublished: false });
         }
       }
 
@@ -1322,6 +1368,16 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setEditingFeature(null);
+              setShowForm(true);
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+            aria-label="Add new product"
+          >
+            + Add Product
+          </button>
           <input
             type="search"
             value={searchTerm}
@@ -1521,6 +1577,48 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
+        {/* Unassigned Products Section - shows when there are unassigned products */}
+        {unassignedFeatures.length > 0 && (
+          <div className="bg-blue-500/5 p-4 rounded-lg border border-blue-500/30 space-y-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xl font-teko tracking-wider text-blue-400">
+                  Unassigned Products
+                </h4>
+                <p className="text-xs text-blue-300/70 mt-1">
+                  Newly added products that haven't been assigned to a column yet. Drag them to Packages or A La Carte sections below.
+                </p>
+              </div>
+              <span className="text-sm text-blue-400 font-semibold">
+                {unassignedFeatures.length} {unassignedFeatures.length === 1 ? 'product' : 'products'}
+              </span>
+            </div>
+            <DroppableColumn columnId="unassigned">
+              <SortableContext
+                items={unassignedFeatures.map((f) => f.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-3">
+                  {unassignedFeatures.map((feature) => {
+                    const option = alaCarteMap.get(feature.id);
+                    return (
+                      <SortableProductCard
+                        key={feature.id}
+                        feature={feature}
+                        option={option}
+                        onEdit={handleEditDetails}
+                        onDuplicate={handleDuplicateToLane}
+                        isSelected={selectedIds.has(feature.id)}
+                        onToggleSelection={toggleSelection}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DroppableColumn>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Packages */}
           <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 space-y-4">

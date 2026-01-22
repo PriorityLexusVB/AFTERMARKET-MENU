@@ -84,10 +84,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       >
         <div
           className={`am-package-title-block ${
-            isCompact ? "space-y-0" : "space-y-1"
+            isCompact ? "space-y-0.5" : "space-y-1"
           }`}
         >
-          <p className={`${isCompact ? "text-[10px]" : "text-xs"} uppercase tracking-[0.2em] text-lux-textMuted text-left`}>
+          <p className={`${isCompact ? "text-xs" : "text-xs"} uppercase tracking-[0.2em] text-lux-textMuted text-left`}>
             Plan
           </p>
           <h3
@@ -140,7 +140,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                   <ul
                     className={`text-lux-textMuted ${
                       isCompact
-                        ? "text-[10px] mt-0.5 space-y-0"
+                        ? "text-xs mt-0.5 space-y-0"
                         : "text-sm sm:text-base mt-2 space-y-1"
                     }`}
                   >

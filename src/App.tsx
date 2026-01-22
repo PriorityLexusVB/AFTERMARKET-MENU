@@ -154,7 +154,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (
-      !isIpadLandscape ||
       isLoading ||
       typeof document === "undefined" ||
       typeof window === "undefined"
@@ -234,7 +233,7 @@ const App: React.FC = () => {
       root.style.removeProperty("--ipad-header-h");
       root.style.removeProperty("--ipad-bottom-bar-h");
     };
-  }, [isIpadLandscape, currentView, isAdminView, isLoading]);
+  }, [currentView, isAdminView, isLoading]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -610,17 +609,21 @@ const App: React.FC = () => {
   const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
   const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
   const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
+  
+  // Enable no-scroll layout for both desktop and iPad in menu view
+  const enableNoScrollLayout = currentView === "menu" && !isAdminView;
+  const enableDesktopNoScrollLayout = enableNoScrollLayout && !isIpadLandscape;
 
   const renderMenuContent = () => {
-    const wrapperClass = enableIpadMenuLayout
+    const wrapperClass = enableNoScrollLayout
       ? "flex flex-col h-full min-h-0 gap-1.5"
       : "space-y-4";
     const heroTitleClass = enableIpadMenuLayout
       ? "lux-title text-lg leading-tight"
-      : "lux-title text-3xl md:text-4xl";
+      : "lux-title text-2xl md:text-3xl";
     const heroSubtitleClass = enableIpadMenuLayout
       ? "lux-subtitle mt-0 text-xs max-w-2xl mx-auto clamp-2"
-      : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
+      : "lux-subtitle mt-0.5 text-base max-w-3xl mx-auto clamp-2";
     const tabsRowClass = `am-page-tabs-row am-menu-tabs-row flex flex-col sm:flex-row justify-center items-center shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
     }`;
@@ -734,7 +737,7 @@ const App: React.FC = () => {
           <NavButton page="alacarte" label="A La Carte Options" />
         </div>
 
-        {enableIpadMenuLayout ? (
+        {enableNoScrollLayout ? (
           <div className="flex-1 min-h-0 overflow-hidden">{pageContent}</div>
         ) : (
           pageContent
@@ -745,8 +748,8 @@ const App: React.FC = () => {
 
   const isMenuView = currentView === "menu";
   const mainLayoutClass =
-    enableIpadMenuLayout && isMenuView ? "am-main-ipad-menu" : "am-main-default";
-  const mainFlexClass = enableIpadMenuLayout ? "flex-none" : "flex-grow";
+    enableNoScrollLayout && isMenuView ? "am-main-no-scroll" : "am-main-default";
+  const mainFlexClass = enableNoScrollLayout ? "flex-none" : "flex-grow";
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
@@ -754,12 +757,12 @@ const App: React.FC = () => {
     return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
   }
 
-  const shouldLockIpadMenuScroll = isIpadLandscape && currentView === "menu" && !isAdminView;
+  const shouldLockMenuScroll = currentView === "menu" && !isAdminView;
 
   return (
     <div
       className={`lux-app am-app-min-h antialiased flex flex-col ${
-        shouldLockIpadMenuScroll ? "h-[var(--app-height,100vh)] overflow-hidden" : ""
+        shouldLockMenuScroll ? "h-[var(--app-height,100vh)] overflow-hidden" : ""
       }`}
     >
       <Header

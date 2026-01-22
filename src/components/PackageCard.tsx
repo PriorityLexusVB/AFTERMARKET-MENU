@@ -87,7 +87,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             isCompact ? "space-y-0.5" : "space-y-1"
           }`}
         >
-          <p className={`${isCompact ? "text-xs" : "text-xs"} uppercase tracking-[0.2em] text-lux-textMuted text-left`}>
+          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">
             Plan
           </p>
           <h3

@@ -610,8 +610,41 @@ const App: React.FC = () => {
   const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
   const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
   
-  // Enable no-scroll layout for both desktop and iPad in menu view
-  const enableNoScrollLayout = currentView === "menu" && !isAdminView;
+  // Track whether we're in a "desktop kiosk" viewport using a dedicated media query.
+  // This should stay in sync with the kiosk CSS/media-query definition.
+  const [isDesktopKiosk, setIsDesktopKiosk] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(min-width: 1280px) and (min-height: 800px) and (orientation: landscape)");
+
+    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      setIsDesktopKiosk(event.matches);
+    };
+
+    // Set initial value.
+    handleChange(mediaQuery);
+
+    if ("addEventListener" in mediaQuery) {
+      mediaQuery.addEventListener("change", handleChange as (e: MediaQueryListEvent) => void);
+      return () => {
+        mediaQuery.removeEventListener("change", handleChange as (e: MediaQueryListEvent) => void);
+      };
+    } else {
+      // Fallback for older browsers.
+      mediaQuery.addListener(handleChange as (m: MediaQueryList) => void);
+      return () => {
+        mediaQuery.removeListener(handleChange as (m: MediaQueryList) => void);
+      };
+    }
+  }, []);
+
+  // Enable no-scroll layout only for iPad landscape and explicit desktop kiosk viewports in menu view.
+  const enableNoScrollLayout =
+    (isIpadLandscape || isDesktopKiosk) && currentView === "menu" && !isAdminView;
 
   const renderMenuContent = () => {
     const wrapperClass = enableNoScrollLayout
@@ -761,7 +794,7 @@ const App: React.FC = () => {
     return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
   }
 
-  const shouldLockMenuScroll = currentView === "menu" && !isAdminView;
+  const shouldLockMenuScroll = (isIpadLandscape || isDesktopKiosk) && currentView === "menu" && !isAdminView;
 
   return (
     <div

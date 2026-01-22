@@ -54,7 +54,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   const includedPackageFeatures = packageInfo.features ?? [];
 
   const CompactDivider: React.FC<{ text: string }> = ({ text }) => (
-    <div className="flex items-center justify-center my-2">
+    <div className="flex items-center justify-center my-1">
       <div className="h-px bg-white/10 flex-grow"></div>
       <span
         className={`font-bold px-2 text-[11px] uppercase tracking-wider ${
@@ -84,15 +84,15 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       >
         <div
           className={`am-package-title-block ${
-            isCompact ? "space-y-0.5" : "space-y-1"
+            isCompact ? "space-y-0" : "space-y-1"
           }`}
         >
-          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">
+          <p className={`${isCompact ? "text-[10px]" : "text-xs"} uppercase tracking-[0.2em] text-lux-textMuted text-left`}>
             Plan
           </p>
           <h3
             className={`font-teko ${
-              isCompact ? "text-xl leading-none" : "text-3xl sm:text-4xl"
+              isCompact ? "text-lg leading-none" : "text-3xl sm:text-4xl"
             } font-bold uppercase tracking-wider text-lux-textStrong`}
           >
             {packageInfo.name}
@@ -108,7 +108,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         <div
           className={`am-package-first-feature ${
             isCompact ? "am-package-body-compact" : "am-package-body"
-          } ${isCompact ? "space-y-2" : "space-y-3"} flex-1 overflow-hidden`}
+          } ${isCompact ? "space-y-1" : "space-y-3"} flex-1 overflow-hidden`}
         >
           {includedPackageFeatures.map((feature, index) => {
             const connector = feature.connector || "AND";
@@ -128,7 +128,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                   <button
                     onClick={() => onViewFeature(feature)}
                     className={`min-h-[44px] font-semibold ${
-                      isCompact ? "text-base" : "text-lg sm:text-xl"
+                      isCompact ? "text-sm" : "text-lg sm:text-xl"
                     } text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
@@ -140,7 +140,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                   <ul
                     className={`text-lux-textMuted ${
                       isCompact
-                        ? "text-xs mt-1 space-y-0.5"
+                        ? "text-[10px] mt-0.5 space-y-0"
                         : "text-sm sm:text-base mt-2 space-y-1"
                     }`}
                   >
@@ -164,7 +164,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       </div>
 
       <div
-        className={`${isCompact ? "space-y-2" : "space-y-3"} mt-auto ${
+        className={`${isCompact ? "space-y-1.5" : "space-y-3"} mt-auto ${
           isCompact ? "am-package-footer-compact" : "am-package-footer"
         }`}
       >
@@ -180,7 +180,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             )}
             <p
               className={`${
-                isCompact ? "text-2xl" : "text-4xl sm:text-5xl"
+                isCompact ? "text-xl" : "text-4xl sm:text-5xl"
               } font-teko text-lux-textStrong`}
             >
               {formatPrice(packageInfo.price)}
@@ -194,7 +194,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         </div>
         <button
           onClick={onSelect}
-          className={`w-full text-base lg:text-lg font-semibold uppercase tracking-wider transition-all duration-300 transform active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70 focus:ring-offset-2 focus:ring-offset-lux-bg1 rounded-xl min-h-[48px]
+          className={`w-full ${isCompact ? "text-sm" : "text-base lg:text-lg"} font-semibold uppercase tracking-wider transition-all duration-300 transform active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70 focus:ring-offset-2 focus:ring-offset-lux-bg1 rounded-xl ${isCompact ? "min-h-[44px] py-2" : "min-h-[48px]"}
             ${
               isSelected
                 ? "bg-lux-blue text-lux-textStrong shadow-luxury-lg"

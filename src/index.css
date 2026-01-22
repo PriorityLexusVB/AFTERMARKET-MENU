@@ -279,11 +279,11 @@ h6,
 
   /* iPad landscape: tighten header height without impacting desktop */
   .ipad-landscape-lock .am-page-header {
-    @apply pt-2 pb-2;
+    @apply pt-1 pb-1;
   }
 
   .ipad-landscape-lock .am-page-header-stack {
-    @apply space-y-1;
+    @apply space-y-0.5;
   }
 
   .ipad-landscape-lock .am-page-tabs-row {
@@ -295,32 +295,32 @@ h6,
   }
 
   .ipad-landscape-lock .am-menu-tab-btn {
-    @apply px-4 py-2 min-h-[44px];
+    @apply px-4 py-1.5 min-h-[44px];
   }
 
   /* iPad landscape: compact package cards so the grid can fit without scrolling */
   .ipad-landscape-lock .am-package-card {
-    @apply px-4;
+    @apply px-3;
   }
 
   .ipad-landscape-lock .am-package-title-block {
-    @apply mb-2;
+    @apply mb-1;
   }
 
   .ipad-landscape-lock .am-package-header-compact {
-    @apply p-3 pb-2;
+    @apply p-2 pb-1;
   }
 
   .ipad-landscape-lock .am-package-body-compact {
-    @apply p-3 pt-0;
+    @apply p-2 pt-0;
   }
 
   .ipad-landscape-lock .am-package-footer-compact {
-    @apply p-3 pt-2;
+    @apply p-2 pt-1;
   }
 
   .ipad-landscape-lock .lux-price-plaque {
-    @apply px-3 py-2;
+    @apply px-2 py-1.5;
   }
 
   .am-grid-top {

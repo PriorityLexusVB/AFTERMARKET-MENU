@@ -612,18 +612,22 @@ const App: React.FC = () => {
   
   // Enable no-scroll layout for both desktop and iPad in menu view
   const enableNoScrollLayout = currentView === "menu" && !isAdminView;
-  const enableDesktopNoScrollLayout = enableNoScrollLayout && !isIpadLandscape;
 
   const renderMenuContent = () => {
     const wrapperClass = enableNoScrollLayout
       ? "flex flex-col h-full min-h-0 gap-1.5"
       : "space-y-4";
+    // Use iPad-specific compact styling only for iPad, desktop gets slightly larger but still fits
     const heroTitleClass = enableIpadMenuLayout
       ? "lux-title text-lg leading-tight"
-      : "lux-title text-2xl md:text-3xl";
+      : enableNoScrollLayout
+      ? "lux-title text-2xl md:text-3xl"
+      : "lux-title text-3xl md:text-4xl";
     const heroSubtitleClass = enableIpadMenuLayout
       ? "lux-subtitle mt-0 text-xs max-w-2xl mx-auto clamp-2"
-      : "lux-subtitle mt-0.5 text-base max-w-3xl mx-auto clamp-2";
+      : enableNoScrollLayout
+      ? "lux-subtitle mt-0.5 text-base max-w-3xl mx-auto clamp-2"
+      : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
     const tabsRowClass = `am-page-tabs-row am-menu-tabs-row flex flex-col sm:flex-row justify-center items-center shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
     }`;

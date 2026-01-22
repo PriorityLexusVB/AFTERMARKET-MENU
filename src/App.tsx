@@ -637,10 +637,13 @@ const App: React.FC = () => {
         mediaQuery.removeEventListener("change", handleChange);
       };
     } else {
-      // Fallback for older browsers.
-      mediaQuery.addListener(handleChange);
+      // Fallback for older browsers that only support addListener/removeListener.
+      // TypeScript needs explicit type assertion here since control flow narrowing
+      // makes the else branch incompatible with MediaQueryList.
+      const mql = mediaQuery as MediaQueryList;
+      mql.addListener(handleChange);
       return () => {
-        mediaQuery.removeListener(handleChange);
+        mql.removeListener(handleChange);
       };
     }
   }, []);

@@ -613,13 +613,13 @@ const App: React.FC = () => {
 
   const renderMenuContent = () => {
     const wrapperClass = enableIpadMenuLayout
-      ? "flex flex-col h-full min-h-0 gap-2.5"
+      ? "flex flex-col h-full min-h-0 gap-1.5"
       : "space-y-4";
     const heroTitleClass = enableIpadMenuLayout
-      ? "lux-title text-xl leading-tight"
+      ? "lux-title text-lg leading-tight"
       : "lux-title text-3xl md:text-4xl";
     const heroSubtitleClass = enableIpadMenuLayout
-      ? "lux-subtitle mt-0 text-sm max-w-2xl mx-auto clamp-3"
+      ? "lux-subtitle mt-0 text-xs max-w-2xl mx-auto clamp-2"
       : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
     const tabsRowClass = `am-page-tabs-row am-menu-tabs-row flex flex-col sm:flex-row justify-center items-center shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
@@ -643,6 +643,7 @@ const App: React.FC = () => {
                   onViewItem={handleViewDetail}
                   basePricesById={baseAddonPricesById}
                   className="h-full min-h-0"
+                  isCompact={isIpadLandscape}
                 />
               }
               gridClassName={isIpadLandscape ? "items-stretch h-full" : "items-stretch"}

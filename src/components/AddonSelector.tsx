@@ -9,6 +9,7 @@ interface AddonSelectorProps {
   onViewItem: (item: ProductFeature | AlaCarteOption) => void;
   basePricesById?: Record<string, number>;
   className?: string;
+  isCompact?: boolean;
 }
 
 export const AddonSelector: React.FC<AddonSelectorProps> = ({
@@ -18,17 +19,18 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
   onViewItem,
   basePricesById,
   className,
+  isCompact = false,
 }) => {
   return (
     <div
-      className={`bg-gray-800/50 border border-gray-700 rounded-lg p-4 h-full min-h-0 flex flex-col ${
+      className={`bg-gray-800/50 border border-gray-700 rounded-lg ${isCompact ? "p-2" : "p-4"} h-full min-h-0 flex flex-col ${
         className ?? ""
       }`}
     >
-      <h3 className="text-2xl font-teko font-bold tracking-wider text-gray-200 mb-4 text-center">
+      <h3 className={`${isCompact ? "text-lg" : "text-2xl"} font-teko font-bold tracking-wider text-gray-200 ${isCompact ? "mb-2" : "mb-4"} text-center`}>
         Add-Ons
       </h3>
-      <div className="space-y-3 flex-grow pr-2 min-h-0 overflow-hidden">
+      <div className={`${isCompact ? "space-y-2" : "space-y-3"} flex-grow pr-2 min-h-0 overflow-hidden`}>
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
             <p>No featured add-ons configured yet.</p>

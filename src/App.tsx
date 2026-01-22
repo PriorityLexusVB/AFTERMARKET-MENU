@@ -67,6 +67,9 @@ const App: React.FC = () => {
     // changes the effective width (e.g. Display Zoom / More Space / windowed).
     // Prefer a height bound over a tight max-width bound.
     "(min-width: 1024px) and (max-height: 1100px) and (orientation: landscape)";
+  const desktopKioskQuery =
+    // Desktop kiosk mode for larger landscape displays that should use no-scroll layout.
+    "(min-width: 1280px) and (min-height: 800px) and (orientation: landscape)";
   const computeIsIpadLandscape = useCallback(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined") return false;
 
@@ -619,7 +622,7 @@ const App: React.FC = () => {
       return;
     }
 
-    const mediaQuery = window.matchMedia("(min-width: 1280px) and (min-height: 800px) and (orientation: landscape)");
+    const mediaQuery = window.matchMedia(desktopKioskQuery);
 
     const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
       setIsDesktopKiosk(event.matches);
@@ -629,15 +632,15 @@ const App: React.FC = () => {
     handleChange(mediaQuery);
 
     if ("addEventListener" in mediaQuery) {
-      mediaQuery.addEventListener("change", handleChange as (e: MediaQueryListEvent) => void);
+      mediaQuery.addEventListener("change", handleChange);
       return () => {
-        mediaQuery.removeEventListener("change", handleChange as (e: MediaQueryListEvent) => void);
+        mediaQuery.removeEventListener("change", handleChange);
       };
     } else {
       // Fallback for older browsers.
-      mediaQuery.addListener(handleChange as (m: MediaQueryList) => void);
+      mediaQuery.addListener(handleChange);
       return () => {
-        mediaQuery.removeListener(handleChange as (m: MediaQueryList) => void);
+        mediaQuery.removeListener(handleChange);
       };
     }
   }, []);

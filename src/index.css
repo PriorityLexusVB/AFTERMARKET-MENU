@@ -642,6 +642,14 @@ h6,
     overflow: hidden;
   }
 
+  .am-main-no-scroll {
+    height: calc(
+      var(--app-height, 100vh) - var(--ipad-header-h, 96px) -
+        var(--ipad-bottom-bar-h, 84px)
+    );
+    overflow: hidden;
+  }
+
   .am-main-default {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 170px);
   }

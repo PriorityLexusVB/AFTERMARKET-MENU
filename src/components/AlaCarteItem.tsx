@@ -22,6 +22,8 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
   onToggle,
   isCompact = false,
 }) => {
+  const canToggle = disableDrag && typeof onToggle === "function";
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -33,20 +35,82 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
   if (isCompact) {
+    if (canToggle) {
+      return (
+        <div
+          draggable={!disableDrag}
+          onDragStart={disableDrag ? undefined : onDragStart}
+          onClick={onToggle}
+          className={`lux-card p-3 flex items-center justify-between gap-4 transition-all duration-200 ${
+            isSelected ? "ring-1 ring-lux-blue/70 bg-lux-blue/5" : ""
+          } cursor-pointer hover:-translate-y-0.5`}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewItem();
+            }}
+            className="flex-1 min-w-0 text-left min-h-[44px]"
+            aria-label={`Learn more about ${item.name}`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-2xl leading-tight font-bold font-teko tracking-wider text-lux-textStrong hover:text-lux-blue transition-colors clamp-1">
+                {item.name}
+              </span>
+              {item.isNew && <span className="lux-chip-gold">New</span>}
+            </div>
+            {item.warranty && (
+              <div className="text-sm font-bold text-lux-gold mt-0.5">{item.warranty}</div>
+            )}
+          </button>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-lux-textMuted">Price</div>
+              {isDiscounted && (
+                <div className="text-base font-teko leading-none text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                  {formatPrice(basePrice)}
+                </div>
+              )}
+              <div className="text-4xl font-teko leading-none text-lux-textStrong">
+                {formatPrice(item.price)}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
+              className={`min-h-[48px] min-w-[120px] px-5 py-3 text-lg font-semibold rounded-md transition-colors ${
+                isSelected
+                  ? "btn-lux-ghost border border-red-500/40 text-red-200 hover:border-red-500/60 hover:text-red-100"
+                  : "btn-lux-primary"
+              }`}
+            >
+              {isSelected ? "REMOVE" : "ADD"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         draggable={!disableDrag}
         onDragStart={disableDrag ? undefined : onDragStart}
         className={`lux-card p-3 flex items-center justify-between gap-4 transition-all duration-200 ${
           isSelected ? "ring-1 ring-lux-blue/70 bg-lux-blue/5" : ""
-        } ${
-          disableDrag
-            ? ""
-            : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5"
-        }`}
+        } ${disableDrag ? "" : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5"}`}
       >
         <button
-          onClick={onViewItem}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewItem();
+          }}
           className="flex-1 min-w-0 text-left min-h-[44px]"
           aria-label={`Learn more about ${item.name}`}
         >
@@ -57,17 +121,13 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
             {item.isNew && <span className="lux-chip-gold">New</span>}
           </div>
           {item.warranty && (
-            <div className="text-sm font-bold text-lux-gold mt-0.5">
-              {item.warranty}
-            </div>
+            <div className="text-sm font-bold text-lux-gold mt-0.5">{item.warranty}</div>
           )}
         </button>
 
         <div className="flex items-center gap-3 shrink-0">
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-lux-textMuted">
-              Price
-            </div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-lux-textMuted">Price</div>
             {isDiscounted && (
               <div className="text-base font-teko leading-none text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
                 {formatPrice(basePrice)}
@@ -78,17 +138,20 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
             </div>
           </div>
 
-          {onToggle && disableDrag && (
+          {canToggle && (
             <button
-              onClick={onToggle}
-              disabled={isSelected}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
               className={`min-h-[48px] min-w-[120px] px-5 py-3 text-lg font-semibold rounded-md transition-colors ${
                 isSelected
-                  ? "bg-gray-700 text-gray-300 cursor-not-allowed"
+                  ? "btn-lux-ghost border border-red-500/40 text-red-200 hover:border-red-500/60 hover:text-red-100"
                   : "btn-lux-primary"
               }`}
             >
-              {isSelected ? "ADDED" : "ADD"}
+              {isSelected ? "REMOVE" : "ADD"}
             </button>
           )}
         </div>
@@ -100,23 +163,28 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
     <div
       draggable={!disableDrag}
       onDragStart={disableDrag ? undefined : onDragStart}
+      onClick={canToggle ? onToggle : undefined}
       className={`lux-card ${
         isCompact ? "p-4" : "p-6"
       } flex flex-col relative transition-all duration-200 ${
-        disableDrag
-          ? ""
-          : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5"
+        isSelected ? "ring-1 ring-lux-blue/70 bg-lux-blue/5" : ""
+      } ${
+        canToggle
+          ? "cursor-pointer hover:-translate-y-0.5"
+          : disableDrag
+            ? ""
+            : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5"
       }`}
     >
-      {item.isNew && (
-        <div className="absolute top-0 right-0 -mt-3 -mr-3 lux-chip-gold">
-          New
-        </div>
-      )}
+      {item.isNew && <div className="absolute top-0 right-0 -mt-3 -mr-3 lux-chip-gold">New</div>}
 
       <div className="flex-grow">
         <button
-          onClick={onViewItem}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewItem();
+          }}
           className={`${
             isCompact ? "text-xl leading-tight min-h-[44px]" : "text-xl"
           } font-bold font-teko tracking-wider text-left text-lux-textStrong hover:text-lux-blue transition-colors w-full`}
@@ -125,16 +193,10 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
           <span className={isCompact ? "clamp-2" : ""}>{item.name}</span>
         </button>
 
-        {item.warranty && (
-          <p className="text-sm font-bold text-lux-gold mb-2">
-            {item.warranty}
-          </p>
-        )}
+        {item.warranty && <p className="text-sm font-bold text-lux-gold mb-2">{item.warranty}</p>}
 
         <div className="lux-price-plaque mt-2">
-          <span className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-            Price
-          </span>
+          <span className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Price</span>
           <div className="flex flex-col items-start">
             {isDiscounted && (
               <span className="text-xs text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
@@ -155,9 +217,7 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
 
         {!isCompact && (
           <>
-            <p className="text-sm text-lux-textMuted mt-3 mb-4">
-              {item.description}
-            </p>
+            <p className="text-sm text-lux-textMuted mt-3 mb-4">{item.description}</p>
             {item.points.length > 0 && (
               <ul className="text-sm text-lux-text space-y-1 list-disc list-inside">
                 {item.points.map((point) => (
@@ -175,19 +235,22 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
             Drag to add
           </div>
         )}
-        {onToggle && disableDrag && (
+        {canToggle && (
           <button
-            onClick={onToggle}
-            disabled={isSelected}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
             className={`w-full min-h-[48px] px-4 py-3 ${
               isCompact ? "text-base" : "text-sm"
             } font-semibold rounded-md transition-colors ${
               isSelected
-                ? "bg-gray-700 text-gray-300 cursor-not-allowed"
+                ? "btn-lux-ghost border border-red-500/40 text-red-200 hover:border-red-500/60 hover:text-red-100"
                 : "btn-lux-primary"
             }`}
           >
-            {isSelected ? "ADDED" : "ADD"}
+            {isSelected ? "REMOVE" : "ADD"}
           </button>
         )}
       </div>

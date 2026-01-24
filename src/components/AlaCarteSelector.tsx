@@ -71,9 +71,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
         <h4 className="text-xl font-bold font-teko text-lux-textStrong tracking-wider">
           No add-ons configured
         </h4>
-        <p className="lux-subtitle mt-1">
-          Please check back for curated options.
-        </p>
+        <p className="lux-subtitle mt-1">Please check back for curated options.</p>
       </div>
     );
   }
@@ -82,10 +80,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
     const orderedItems = [...featuredItems, ...otherItems];
     // iPad "paper mode": a single-column "menu row" layout reads faster than a grid.
     const itemsPerPage = 6;
-    const totalPages = Math.max(
-      1,
-      Math.ceil(orderedItems.length / itemsPerPage)
-    );
+    const totalPages = Math.max(1, Math.ceil(orderedItems.length / itemsPerPage));
     const safePage = Math.min(Math.max(compactPage, 1), totalPages);
     const start = (safePage - 1) * itemsPerPage;
     const pageItems = orderedItems.slice(start, start + itemsPerPage);
@@ -97,12 +92,8 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
       <div className="flex flex-col h-full min-h-0">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="min-w-0">
-            <h4 className="text-base font-semibold text-lux-text">
-              Available Add-Ons
-            </h4>
-            <p className="text-xs text-lux-textMuted mt-0.5">
-              Tap an option name for details.
-            </p>
+            <h4 className="text-base font-semibold text-lux-text">Available Add-Ons</h4>
+            <p className="text-xs text-lux-textMuted mt-0.5">Tap an option name for details.</p>
             <div className="mt-1 inline-flex items-center gap-2">
               <span className="text-xs text-lux-textMuted">Page</span>
               <span className="text-xs font-semibold bg-gray-800/70 text-gray-200 px-2 py-1 rounded-md">
@@ -153,11 +144,14 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
 
   return (
     <div className="space-y-6">
+      {disableDrag && (
+        <p className="text-sm text-lux-textMuted">
+          Click anywhere on an option to add/remove. Click the option name for details.
+        </p>
+      )}
       {featuredItems.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-lg font-semibold text-lux-text">
-            Featured Add-Ons
-          </h4>
+          <h4 className="text-lg font-semibold text-lux-text">Featured Add-Ons</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
             {featuredItems.map((item) => (
               <AlaCarteItem

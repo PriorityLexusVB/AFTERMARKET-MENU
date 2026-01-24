@@ -22,9 +22,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
   baseSubtotal,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(
-    null
-  );
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [dropError, setDropError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
@@ -45,21 +43,21 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
     e.preventDefault();
     setIsDragOver(false);
     setDropError(null);
-    
+
     try {
       const dataString = e.dataTransfer.getData("application/json");
-      
+
       if (!dataString) {
         throw new Error("No data found in drop event");
       }
-      
+
       const item = JSON.parse(dataString) as AlaCarteOption;
-      
+
       // Validate that the item has required properties
       if (!item.id || !item.name) {
         throw new Error("Invalid item data");
       }
-      
+
       onDropItem(item);
       setHighlightedItemId(item.id);
       setTimeout(() => setHighlightedItemId(null), 1000);
@@ -67,15 +65,14 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
       console.error("Failed to parse dropped data:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setDropError(`Failed to add item: ${errorMessage}. Please try again.`);
-      
+
       // Auto-hide error after configured timeout
       setTimeout(() => setDropError(null), ERROR_AUTO_HIDE_TIMEOUT);
     }
   };
 
   const subtotal = items.reduce((acc, item) => acc + item.price, 0);
-  const showDiscountSubtotal =
-    typeof baseSubtotal === "number" && baseSubtotal > subtotal;
+  const showDiscountSubtotal = typeof baseSubtotal === "number" && baseSubtotal > subtotal;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -86,14 +83,10 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
   };
 
   const itemsPerPage = isCompact ? 5 : Number.POSITIVE_INFINITY;
-  const totalPages = isCompact
-    ? Math.max(1, Math.ceil(items.length / itemsPerPage))
-    : 1;
+  const totalPages = isCompact ? Math.max(1, Math.ceil(items.length / itemsPerPage)) : 1;
   const safePage = isCompact ? Math.min(Math.max(page, 1), totalPages) : 1;
   const pageStart = (safePage - 1) * itemsPerPage;
-  const visibleItems = isCompact
-    ? items.slice(pageStart, pageStart + itemsPerPage)
-    : items;
+  const visibleItems = isCompact ? items.slice(pageStart, pageStart + itemsPerPage) : items;
 
   return (
     <>
@@ -131,11 +124,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
               stroke="currentColor"
               className="w-5 h-5"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -185,9 +174,11 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
               No items selected
             </h4>
             <p className={`mt-1 ${isCompact ? "text-sm" : "text-sm max-w-xs"}`}>
-              {isCompact
-                ? "Tap ADD on the left to build your package."
-                : "Drag items from the 'Available Options' list and drop them here to build your personalized protection plan."}
+              {!enableDrop
+                ? "Tap ADD (or tap an option) on the left to build your package."
+                : isCompact
+                  ? "Tap ADD on the left to build your package."
+                  : "Drag items from the 'Available Options' list and drop them here to build your personalized protection plan."}
             </p>
           </div>
         ) : (
@@ -195,8 +186,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
             {isCompact && totalPages > 1 && (
               <div className="flex items-center justify-between gap-2 mb-3">
                 <p className="text-xs text-lux-textMuted">
-                  Items {pageStart + 1}-
-                  {Math.min(pageStart + itemsPerPage, items.length)} of{" "}
+                  Items {pageStart + 1}-{Math.min(pageStart + itemsPerPage, items.length)} of{" "}
                   {items.length}
                 </p>
                 <div className="flex items-center gap-2">
@@ -223,9 +213,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
             )}
 
             <div
-              className={`flex-grow ${
-                isCompact ? "space-y-2" : "space-y-3 pr-2 overflow-y-auto"
-              }`}
+              className={`flex-grow ${isCompact ? "space-y-2" : "space-y-3 pr-2 overflow-y-auto"}`}
             >
               {visibleItems.map((item) => (
                 <div
@@ -240,8 +228,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
                     <p className="font-semibold text-lux-text">{item.name}</p>
                     {(() => {
                       const basePrice = basePricesById?.[item.id];
-                      const showDiscount =
-                        typeof basePrice === "number" && basePrice > item.price;
+                      const showDiscount = typeof basePrice === "number" && basePrice > item.price;
 
                       if (showDiscount) {
                         return (
@@ -249,17 +236,13 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
                             <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
                               {formatPrice(basePrice)}
                             </div>
-                            <div className="text-lux-textStrong">
-                              {formatPrice(item.price)}
-                            </div>
+                            <div className="text-lux-textStrong">{formatPrice(item.price)}</div>
                           </div>
                         );
                       }
 
                       return (
-                        <p className="text-sm text-lux-textMuted">
-                          {formatPrice(item.price)}
-                        </p>
+                        <p className="text-sm text-lux-textMuted">{formatPrice(item.price)}</p>
                       );
                     })()}
                   </div>
@@ -288,11 +271,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
                 </div>
               ))}
             </div>
-            <div
-              className={`${
-                isCompact ? "mt-3 pt-3" : "mt-4 pt-4"
-              } border-t border-gray-700`}
-            >
+            <div className={`${isCompact ? "mt-3 pt-3" : "mt-4 pt-4"} border-t border-gray-700`}>
               <div className="flex justify-between items-center text-lg">
                 <p className="font-semibold text-gray-300">Subtotal:</p>
                 <div className="text-right">
@@ -301,9 +280,7 @@ export const CustomPackageBuilder: React.FC<CustomPackageBuilderProps> = ({
                       {formatPrice(baseSubtotal)}
                     </p>
                   )}
-                  <p className="font-bold font-teko text-3xl text-white">
-                    {formatPrice(subtotal)}
-                  </p>
+                  <p className="font-bold font-teko text-3xl text-white">{formatPrice(subtotal)}</p>
                 </div>
               </div>
             </div>

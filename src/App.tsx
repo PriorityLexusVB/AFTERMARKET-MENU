@@ -601,14 +601,17 @@ const App: React.FC = () => {
     </div>
   );
 
-  const enableIpadMenuLayout = isIpadLandscape && currentView === "menu" && !isAdminView;
-  const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
-  const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
-  const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
-
   // Track whether we're in a "desktop kiosk" viewport using a dedicated media query.
   // This should stay in sync with the kiosk CSS/media-query definition.
   const [isDesktopKiosk, setIsDesktopKiosk] = useState(false);
+
+  const enableIpadMenuLayout = isIpadLandscape && currentView === "menu" && !isAdminView;
+  const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
+  const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
+  const enableKioskAlaCarteLayout =
+    isDesktopKiosk && currentView === "menu" && !isAdminView && currentPage === "alacarte";
+  const enableCompactAlaCarteLayout = enableIpadAlaCarteLayout || enableKioskAlaCarteLayout;
+  const disableAlaCarteDrag = enableCompactAlaCarteLayout || guestMode;
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) {
@@ -694,45 +697,47 @@ const App: React.FC = () => {
         {currentPage === "alacarte" && (
           <div
             className={
-              enableIpadAlaCarteLayout
+              enableCompactAlaCarteLayout
                 ? "flex flex-1 min-h-0 gap-6 overflow-hidden"
                 : "flex flex-col xl:flex-row gap-12"
             }
           >
             <div
-              className={enableIpadAlaCarteLayout ? "flex-1 min-h-0 overflow-hidden" : "xl:w-3/5"}
+              className={
+                enableCompactAlaCarteLayout ? "flex-1 min-h-0 overflow-hidden" : "xl:w-3/5"
+              }
             >
               <h3
                 className={
-                  enableIpadAlaCarteLayout
+                  enableCompactAlaCarteLayout
                     ? "font-teko font-semibold tracking-wider text-lux-textStrong text-2xl mb-2"
                     : "lux-title mb-4"
                 }
               >
                 Available Options
               </h3>
-              <div className={enableIpadAlaCarteLayout ? "h-full min-h-0" : ""}>
+              <div className={enableCompactAlaCarteLayout ? "h-full min-h-0" : ""}>
                 <AlaCarteSelector
                   items={availableAlaCarteItems}
                   onViewItem={handleViewDetail}
                   disableDrag={disableAlaCarteDrag}
                   onToggleItem={handleToggleAlaCarteItem}
                   selectedIds={customPackageItems.map((item) => item.id)}
-                  isCompact={enableIpadAlaCarteLayout}
+                  isCompact={enableCompactAlaCarteLayout}
                   basePricesById={baseAddonPricesById}
                 />
               </div>
             </div>
             <div
               className={
-                enableIpadAlaCarteLayout
+                enableCompactAlaCarteLayout
                   ? "w-[40%] min-w-[320px] flex flex-col min-h-0"
                   : "xl:w-2/5 flex flex-col min-h-0"
               }
             >
               <h3
                 className={
-                  enableIpadAlaCarteLayout
+                  enableCompactAlaCarteLayout
                     ? "font-teko font-semibold tracking-wider text-lux-textStrong text-2xl mb-2"
                     : "lux-title mb-4"
                 }
@@ -745,7 +750,7 @@ const App: React.FC = () => {
                   onDropItem={handleDropAlaCarte}
                   onRemoveItem={handleRemoveAlaCarte}
                   enableDrop={!disableAlaCarteDrag}
-                  isCompact={enableIpadAlaCarteLayout}
+                  isCompact={enableCompactAlaCarteLayout}
                   basePricesById={baseAddonPricesById}
                   baseSubtotal={baseCustomPackageSubtotal}
                 />
@@ -800,7 +805,9 @@ const App: React.FC = () => {
   return (
     <div
       className={`lux-app am-app-min-h antialiased flex flex-col ${
-        shouldLockMenuScroll ? "ipad-landscape-lock h-[var(--app-height,100vh)] overflow-hidden" : ""
+        shouldLockMenuScroll
+          ? "ipad-landscape-lock h-[var(--app-height,100vh)] overflow-hidden"
+          : ""
       }`}
     >
       <Header

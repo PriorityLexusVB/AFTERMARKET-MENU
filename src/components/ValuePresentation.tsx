@@ -10,9 +10,9 @@ interface ValuePresentationProps {
  * Ensures 100% UI consistency and vertical alignment for iPad displays.
  */
 const BulletRow = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-start gap-3 text-white/70 font-light leading-snug">
-    <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.6)]" />
-    <div className="text-sm lg:text-base">{children}</div>
+  <div className="flex items-start gap-3 text-white/75 font-light leading-relaxed">
+    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full mt-2 flex-shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.6)]" />
+    <div className="text-base md:text-[17px] lg:text-lg">{children}</div>
   </div>
 );
 
@@ -20,6 +20,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
   const [currentSlide, setCurrentSlide] = useState(1);
   const totalSlides = 10;
   const [activeSlide, setActiveSlide] = useState(1);
+  const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   // Mapping for locally saved PNG files in your /public folder
   const images: Record<number, string> = {
@@ -51,6 +52,48 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Avoid interfering with any potential form elements.
+      const target = event.target as HTMLElement | null;
+      const isEditableTarget =
+        !!target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          (target as HTMLElement).isContentEditable);
+
+      if (isEditableTarget) return;
+
+      if (event.key === "ArrowRight" || event.key === "PageDown") {
+        event.preventDefault();
+        scrollToSlide(currentSlide + 1);
+      }
+
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        scrollToSlide(currentSlide - 1);
+      }
+
+      if (event.key === "Home") {
+        event.preventDefault();
+        scrollToSlide(1);
+      }
+
+      if (event.key === "End") {
+        event.preventDefault();
+        scrollToSlide(totalSlides);
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onComplete();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentSlide, onComplete]);
+
   const scrollToSlide = (index: number) => {
     if (index < 1 || index > totalSlides) return;
     document.getElementById(`rs${index}`)?.scrollIntoView({ behavior: "smooth" });
@@ -64,6 +107,11 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
     progressBarRef.current.style.width = `${progress}%`;
   }, [progress]);
 
+  useEffect(() => {
+    // Enable immediate keyboard navigation on desktop + iPad w/ keyboard.
+    scrollRootRef.current?.focus();
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[9999] bg-[#0d0d0d] overflow-hidden text-white font-sans selection:bg-blue-500/30">
       {/* Premium Executive Progress Bar */}
@@ -75,7 +123,21 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
       </div>
 
       {/* Navigation Controls */}
-      <div className="fixed bottom-6 right-8 flex gap-3 z-[10000]">
+      <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] flex items-center gap-3 z-[10000]">
+        <div className="hidden sm:flex items-center gap-3 mr-1">
+          <div className="text-[10px] uppercase tracking-[0.35em] text-white/35">
+            Slide {currentSlide}/{totalSlides}
+          </div>
+          <button
+            type="button"
+            onClick={onComplete}
+            aria-label="Skip presentation and review package options"
+            title="Skip presentation"
+            className="px-4 py-3 rounded-full bg-blue-600/20 hover:bg-blue-600/35 transition-all backdrop-blur-2xl border border-blue-400/20 shadow-2xl text-xs uppercase tracking-[0.25em]"
+          >
+            Review Package Options
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => scrollToSlide(1)}
@@ -105,10 +167,14 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
         </button>
       </div>
 
-      <div className="h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none scroll-smooth overscroll-contain">
+      <div
+        ref={scrollRootRef}
+        tabIndex={-1}
+        className="h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none scroll-smooth overscroll-contain focus:outline-none"
+      >
         {/* Slide 1: Welcome */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative overflow-hidden"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative overflow-hidden"
           id="rs1"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(0,145,255,0.05)_0%,transparent_50%)]" />
@@ -135,21 +201,21 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
         {/* Slide 2: Factory Warranty */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs2"
         >
           <div
-            className={`my-auto z-10 transition-all duration-1000 ${activeSlide === 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
               Factory Coverage
             </span>
-            <h2 className="text-2xl lg:text-4xl font-bold uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
               Lexus Manufacturer Warranties
             </h2>
-            <div className="grid grid-cols-2 gap-10 items-center">
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
               <div className="space-y-4">
-                <p className="text-base lg:text-xl text-white/80 font-light leading-relaxed">
+                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
                   Your new Lexus comes with world-class mechanical protection designed to cover
                   manufacturing defects:
                 </p>
@@ -186,24 +252,24 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
         {/* Slide 3: Priorities For Life */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs3"
         >
           <div
-            className={`my-auto z-10 transition-all duration-1000 ${activeSlide === 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
               The Priority Advantage
             </span>
-            <h2 className="text-2xl lg:text-4xl font-bold uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
               Priorities For Life
             </h2>
-            <div className="grid grid-cols-2 gap-10 items-center">
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
               <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[40vh]">
                 <img src={images[3]} alt="Service" className="w-full h-full object-cover" />
               </div>
               <div className="space-y-4">
-                <p className="text-base lg:text-xl text-white/80 font-light leading-relaxed">
+                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
                   We’ve ensured your vehicle’s mechanical health and maintenance are handled for the
                   long haul:
                 </p>
@@ -245,23 +311,23 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
         {/* Slide 4: Warranty Gap */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs4"
         >
           <div
-            className={`my-auto z-10 transition-all duration-1000 ${
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${
               activeSlide === 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             }`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
               The Gap
             </span>
-            <h2 className="text-2xl lg:text-4xl font-bold uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
               Appearance Damage Isn’t Mechanical
             </h2>
-            <div className="grid grid-cols-2 gap-10 items-center">
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
               <div className="space-y-4">
-                <p className="text-base lg:text-xl text-white/80 font-light leading-relaxed">
+                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
                   Lexus warranties protect manufacturing defects — but most real-world ownership
                   pain comes from environmental exposure, road hazards, and interior wear.
                 </p>
@@ -309,19 +375,19 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
         {/* Slide 5: Regional Science */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs5"
         >
           <div
-            className={`my-auto z-10 transition-all duration-1000 ${activeSlide === 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
               Coastal Science
             </span>
-            <h2 className="text-2xl lg:text-4xl font-bold uppercase tracking-wider mb-4 pb-4 border-b border-white/10">
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-4 pb-4 border-b border-white/10">
               The "Coastal Corrosion" Reality
             </h2>
-            <div className="grid grid-cols-2 gap-10 items-start">
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-start">
               <div className="relative rounded-xl overflow-hidden border border-white/10 h-[280px] lg:h-[350px] shadow-2xl">
                 <img
                   src={images[5]}
@@ -383,11 +449,11 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
         {/* Slide 6: ToughGuard */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs6"
         >
           <div
-            className={`my-auto z-10 transition-all duration-1000 ${activeSlide === 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
               Exterior Protection
@@ -395,12 +461,12 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
             <div className="inline-block bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
               5-YEAR SURFACE GUARANTEE
             </div>
-            <h2 className="text-2xl lg:text-4xl font-bold uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
               ToughGuard: The Clear Coat Shield
             </h2>
-            <div className="grid grid-cols-2 gap-10 items-center">
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
               <div className="space-y-4">
-                <p className="text-base lg:text-xl text-white/80 font-light leading-relaxed">
+                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
                   Modern clear coats are porous. ToughGuard Premium creates a permanent chemical
                   bond that seals those pores for good.
                 </p>
@@ -434,7 +500,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
         {[7, 8, 9].map((num) => (
           <div
             key={num}
-            className="slide-container h-screen w-screen snap-start flex flex-col p-10 lg:p-16 relative"
+            className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
             id={`rs${num}`}
           >
             <div
@@ -442,108 +508,110 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                 activeSlide === num ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}
             >
-              <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
-                {num === 7
-                  ? "Impact Protection"
-                  : num === 8
-                    ? "Life Proofing"
-                    : "Structural Protection"}
-              </span>
-              <div className="inline-block bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
-                {num === 7
-                  ? "10-YEAR SUNTEK WARRANTY"
-                  : num === 8
-                    ? "INTERIOR & GLASS GUARANTEE"
-                    : "LIFETIME RUST COVERAGE"}
-              </div>
-              <h2 className="text-2xl lg:text-4xl font-bold uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
-                {num === 7
-                  ? "Highway Hazards: Suntek Film"
-                  : num === 8
-                    ? "Shielding the Cabin"
-                    : "RustGuard Pro: Foundation"}
-              </h2>
-              <div className="grid grid-cols-2 gap-10 items-center">
-                <div className={`${num % 2 === 0 ? "order-1" : "order-2"} space-y-4`}>
-                  <p className="text-base lg:text-xl text-white/80 font-light leading-relaxed">
-                    {num === 7
-                      ? "I-264 construction and coastal sand effectively 'sand-blast' your front-end at highway speeds."
-                      : num === 8
-                        ? "Luxury interiors require luxury protection. We focus on the moments that hurt your trade-in value."
-                        : "In our coastal region, the most dangerous damage is the kind you can't see. Stop corrosion before it starts."}
-                  </p>
-                  <ul className="space-y-1 list-none">
-                    {num === 7 && (
-                      <>
-                        <li>
-                          <BulletRow>
-                            <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel
-                            impacts.
-                          </BulletRow>
-                        </li>
-                        <li>
-                          <BulletRow>
-                            <strong>Self-Healing:</strong> Minor scratches disappear with heat.
-                          </BulletRow>
-                        </li>
-                        <li>
-                          <BulletRow>
-                            <strong>Total Coverage:</strong> Focused protection on high-impact
-                            zones.
-                          </BulletRow>
-                        </li>
-                      </>
-                    )}
-                    {num === 8 && (
-                      <>
-                        <li>
-                          <BulletRow>
-                            <strong>Stain Resistance:</strong> Coverage for coffee, juices, and
-                            daily spills.
-                          </BulletRow>
-                        </li>
-                        <li>
-                          <BulletRow>
-                            <strong>Accidental Coverage:</strong> Protection for rips, tears, and
-                            burns.
-                          </BulletRow>
-                        </li>
-                        <li>
-                          <BulletRow>
-                            <strong>Diamond Shield:</strong> Helps reduce glass pitting and
-                            sand-clouding.
-                          </BulletRow>
-                        </li>
-                      </>
-                    )}
-                    {num === 9 && (
-                      <>
-                        <li>
-                          <BulletRow>
-                            <strong>Neutralizes Salt:</strong> Barrier helps stop brine from
-                            reaching raw steel.
-                          </BulletRow>
-                        </li>
-                        <li>
-                          <BulletRow>
-                            <strong>Prevents Fatigue:</strong> Avoids rust-frozen hardware and
-                            hidden decay.
-                          </BulletRow>
-                        </li>
-                        <li>
-                          <BulletRow>
-                            <strong>Resale Edge:</strong> A rust-free chassis protects long-term
-                            equity.
-                          </BulletRow>
-                        </li>
-                      </>
-                    )}
-                  </ul>
+              <div className="max-w-6xl mx-auto w-full">
+                <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+                  {num === 7
+                    ? "Impact Protection"
+                    : num === 8
+                      ? "Life Proofing"
+                      : "Structural Protection"}
+                </span>
+                <div className="inline-block bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+                  {num === 7
+                    ? "10-YEAR SUNTEK WARRANTY"
+                    : num === 8
+                      ? "INTERIOR & GLASS GUARANTEE"
+                      : "LIFETIME RUST COVERAGE"}
                 </div>
-                <div
-                  className={`${num % 2 === 0 ? "order-2" : "order-1"} relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]`}
-                >
-                  <img src={images[num]} alt="Visual" className="w-full h-full object-cover" />
+                <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+                  {num === 7
+                    ? "Highway Hazards: Suntek Film"
+                    : num === 8
+                      ? "Shielding the Cabin"
+                      : "RustGuard Pro: Foundation"}
+                </h2>
+                <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+                  <div className={`${num % 2 === 0 ? "order-1" : "order-2"} space-y-4`}>
+                    <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                      {num === 7
+                        ? "I-264 construction and coastal sand effectively 'sand-blast' your front-end at highway speeds."
+                        : num === 8
+                          ? "Luxury interiors require luxury protection. We focus on the moments that hurt your trade-in value."
+                          : "In our coastal region, the most dangerous damage is the kind you can't see. Stop corrosion before it starts."}
+                    </p>
+                    <ul className="space-y-1 list-none">
+                      {num === 7 && (
+                        <>
+                          <li>
+                            <BulletRow>
+                              <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel
+                              impacts.
+                            </BulletRow>
+                          </li>
+                          <li>
+                            <BulletRow>
+                              <strong>Self-Healing:</strong> Minor scratches disappear with heat.
+                            </BulletRow>
+                          </li>
+                          <li>
+                            <BulletRow>
+                              <strong>Total Coverage:</strong> Focused protection on high-impact
+                              zones.
+                            </BulletRow>
+                          </li>
+                        </>
+                      )}
+                      {num === 8 && (
+                        <>
+                          <li>
+                            <BulletRow>
+                              <strong>Stain Resistance:</strong> Coverage for coffee, juices, and
+                              daily spills.
+                            </BulletRow>
+                          </li>
+                          <li>
+                            <BulletRow>
+                              <strong>Accidental Coverage:</strong> Protection for rips, tears, and
+                              burns.
+                            </BulletRow>
+                          </li>
+                          <li>
+                            <BulletRow>
+                              <strong>Diamond Shield:</strong> Helps reduce glass pitting and
+                              sand-clouding.
+                            </BulletRow>
+                          </li>
+                        </>
+                      )}
+                      {num === 9 && (
+                        <>
+                          <li>
+                            <BulletRow>
+                              <strong>Neutralizes Salt:</strong> Barrier helps stop brine from
+                              reaching raw steel.
+                            </BulletRow>
+                          </li>
+                          <li>
+                            <BulletRow>
+                              <strong>Prevents Fatigue:</strong> Avoids rust-frozen hardware and
+                              hidden decay.
+                            </BulletRow>
+                          </li>
+                          <li>
+                            <BulletRow>
+                              <strong>Resale Edge:</strong> A rust-free chassis protects long-term
+                              equity.
+                            </BulletRow>
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                  <div
+                    className={`${num % 2 === 0 ? "order-2" : "order-1"} relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]`}
+                  >
+                    <img src={images[num]} alt="Visual" className="w-full h-full object-cover" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -552,7 +620,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
         {/* Slide 10: Conclusion */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col bg-black p-10 lg:p-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col bg-black px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs10"
         >
           <div
@@ -561,7 +629,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
             <h2 className="text-4xl lg:text-6xl font-bold text-blue-500 uppercase tracking-widest mb-6">
               Empowering Ownership
             </h2>
-            <p className="text-base lg:text-xl text-white/50 mb-10 font-light leading-relaxed max-w-3xl mx-auto">
+            <p className="text-base md:text-lg lg:text-xl text-white/55 mb-10 font-light leading-relaxed max-w-3xl mx-auto">
               Based on your driving habits, we have organized our protection into three tailored
               tiers.
             </p>
@@ -594,7 +662,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   <div className="font-bold text-xl lg:text-2xl mb-2 tracking-widest">
                     {tier.label}
                   </div>
-                  <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-bold leading-tight">
+                  <p className="text-xs text-white/35 uppercase tracking-[0.16em] font-bold leading-snug">
                     {tier.desc}
                   </p>
                 </div>
@@ -603,7 +671,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
 
             <button
               onClick={onComplete}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-[0.5em] px-12 py-6 rounded-full shadow-[0_20px_60px_rgba(0,145,255,0.4)] transition-all duration-500 hover:scale-105 group"
+              className="bg-blue-600 hover:bg-blue-500 text-white font-black text-base uppercase tracking-[0.25em] px-12 py-6 rounded-full shadow-[0_20px_60px_rgba(0,145,255,0.4)] transition-all duration-500 hover:scale-105 group"
             >
               Review Package Options
             </button>

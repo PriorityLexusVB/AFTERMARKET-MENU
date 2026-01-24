@@ -28,6 +28,8 @@ interface HeaderProps {
   onToggleAdminView: () => void;
   isAdminView: boolean;
   onPrint: () => void;
+  onShowPresentation?: () => void;
+  showPresentationButton?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,6 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleAdminView,
   isAdminView,
   onPrint,
+  onShowPresentation,
+  showPresentationButton = false,
 }) => {
   return (
     <header className="am-app-header bg-lux-bg1/80 backdrop-blur-sm py-4 border-b border-lux-border/60 sticky top-0 z-header">
@@ -63,6 +67,17 @@ export const Header: React.FC<HeaderProps> = ({
             </svg>
             Print
           </button>
+          {showPresentationButton && onShowPresentation && (
+            <button
+              type="button"
+              onClick={onShowPresentation}
+              className="btn-lux-ghost text-sm px-3"
+              aria-label="Show presentation"
+              title="Show presentation"
+            >
+              Presentation
+            </button>
+          )}
           {(!guestMode || isDemoMode) && (
             <>
               <button onClick={onToggleAdminView} className="btn-lux-secondary text-sm px-3">

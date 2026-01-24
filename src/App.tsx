@@ -844,6 +844,8 @@ const App: React.FC = () => {
         onToggleAdminView={handleToggleAdminView}
         isAdminView={isAdminView}
         onPrint={handlePrint}
+        onShowPresentation={() => setCurrentView("presentation")}
+        showPresentationButton={currentView === "menu" && !isAdminView}
       />
 
       {isAdminView && (isDemoMode || (!isDemoMode && !guestMode)) ? (

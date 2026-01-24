@@ -14,18 +14,14 @@ test.describe("Package Selection", () => {
       page.locator('[data-testid="package-card"] h3:has-text("Elite")').first()
     ).toBeVisible();
     await expect(
-      page
-        .locator('[data-testid="package-card"] h3:has-text("Platinum")')
-        .first()
+      page.locator('[data-testid="package-card"] h3:has-text("Platinum")').first()
     ).toBeVisible();
     await expect(
       page.locator('[data-testid="package-card"] h3:has-text("Gold")').first()
     ).toBeVisible();
   });
 
-  test("should display package features with correct connectors", async ({
-    page,
-  }) => {
+  test("should display package features with correct connectors", async ({ page }) => {
     // Check that features are displayed - use data-testid for reliable selection
     const packageCards = page.locator('[data-testid="package-card"]').filter({
       hasText: /select plan/i,
@@ -47,22 +43,15 @@ test.describe("Package Selection", () => {
     await expect(page.locator('button:has-text("Selected")')).toBeVisible();
   });
 
-  test("should display feature details when clicking on a feature", async ({
-    page,
-  }) => {
+  test("should display feature details when clicking on a feature", async ({ page }) => {
     // Click on a feature name (they have data-testid="package-feature")
-    const featureButton = page
-      .locator('[data-testid="package-feature"]')
-      .first();
+    const featureButton = page.locator('[data-testid="package-feature"]').first();
+    await expect(featureButton).toBeVisible({ timeout: 10000 });
     await featureButton.click();
 
     // A modal should appear with feature details
     // The modal typically shows a description and may have warranty info
-    await expect(
-      page
-        .locator('[role="dialog"], [class*="modal"], [class*="Modal"]')
-        .first()
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[role="dialog"]').first()).toBeVisible({ timeout: 10000 });
   });
 
   test("visual: package cards layout", async ({ page }) => {
@@ -125,9 +114,7 @@ test.describe("Feature Rendering Order", () => {
     expect(featureTexts.length).toBeGreaterThan(0);
   });
 
-  test("connector markers should match feature configuration", async ({
-    page,
-  }) => {
+  test("connector markers should match feature configuration", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
@@ -139,9 +126,7 @@ test.describe("Feature Rendering Order", () => {
     expect(andCount).toBeGreaterThanOrEqual(0);
   });
 
-  test("features display in admin-defined order within packages", async ({
-    page,
-  }) => {
+  test("features display in admin-defined order within packages", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
@@ -174,9 +159,7 @@ test.describe("Feature Rendering Order", () => {
     }
   });
 
-  test("OR connector should be visible between features configured with OR", async ({
-    page,
-  }) => {
+  test("OR connector should be visible between features configured with OR", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 

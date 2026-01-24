@@ -452,7 +452,7 @@ h6,
   }
 
   .lux-card-selected {
-    @apply ring-2 ring-lux-gold/80 shadow-glow-gold;
+    @apply ring-inset ring-2 ring-lux-gold/80 shadow-glow-gold;
   }
 
   .lux-card-recommended {

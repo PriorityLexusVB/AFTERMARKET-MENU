@@ -279,23 +279,44 @@ h6,
 
   /* iPad landscape: tighten header height without impacting desktop */
   .ipad-landscape-lock .am-page-header {
-    @apply pt-1 pb-1;
+    @apply pt-0 pb-0;
   }
 
   .ipad-landscape-lock .am-page-header-stack {
-    @apply space-y-0.5;
+    @apply space-y-0;
   }
 
   .ipad-landscape-lock .am-page-tabs-row {
-    @apply mb-1;
+    @apply mb-0;
   }
 
   .ipad-landscape-lock .am-grid-top {
-    @apply mt-1;
+    @apply mt-0;
   }
 
   .ipad-landscape-lock .am-menu-tab-btn {
-    @apply px-4 py-1.5 min-h-[44px];
+    @apply px-4 py-1 min-h-[44px];
+  }
+
+  /* iPad/kiosk no-scroll: condense the top app header */
+  .ipad-landscape-lock .am-app-header {
+    @apply py-1;
+  }
+
+  .ipad-landscape-lock .am-app-header-inner {
+    @apply flex-row gap-2;
+  }
+
+  .ipad-landscape-lock .am-app-header-title {
+    @apply text-2xl;
+  }
+
+  .ipad-landscape-lock .am-app-header-subtitle {
+    @apply hidden;
+  }
+
+  .ipad-landscape-lock .am-app-header-tagline {
+    @apply hidden;
   }
 
   /* iPad landscape: compact package cards so the grid can fit without scrolling */

@@ -40,18 +40,24 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
         <div
           draggable={!disableDrag}
           onDragStart={disableDrag ? undefined : onDragStart}
-          onClick={onToggle}
           className={`lux-card p-3 flex items-center justify-between gap-4 transition-all duration-200 ${
             isSelected ? "ring-1 ring-lux-blue/70 bg-lux-blue/5" : ""
-          } cursor-pointer hover:-translate-y-0.5`}
+          } relative cursor-pointer hover:-translate-y-0.5`}
         >
+          <button
+            type="button"
+            onClick={onToggle}
+            className="absolute inset-0"
+            aria-label={`Toggle ${item.name}`}
+          />
+
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onViewItem();
             }}
-            className="flex-1 min-w-0 text-left min-h-[44px]"
+            className="relative z-10 flex-1 min-w-0 text-left min-h-[44px]"
             aria-label={`Learn more about ${item.name}`}
           >
             <div className="flex items-center gap-2 min-w-0">
@@ -65,7 +71,7 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
             )}
           </button>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="relative z-10 flex items-center gap-3 shrink-0">
             <div className="text-right">
               <div className="text-[10px] uppercase tracking-[0.2em] text-lux-textMuted">Price</div>
               {isDiscounted && (
@@ -163,7 +169,6 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
     <div
       draggable={!disableDrag}
       onDragStart={disableDrag ? undefined : onDragStart}
-      onClick={canToggle ? onToggle : undefined}
       className={`lux-card ${
         isCompact ? "p-4" : "p-6"
       } flex flex-col relative transition-all duration-200 ${
@@ -176,9 +181,17 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
             : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5"
       }`}
     >
+      {canToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute inset-0"
+          aria-label={`Toggle ${item.name}`}
+        />
+      )}
       {item.isNew && <div className="absolute top-0 right-0 -mt-3 -mr-3 lux-chip-gold">New</div>}
 
-      <div className="flex-grow">
+      <div className="flex-grow relative z-10">
         <button
           type="button"
           onClick={(e) => {
@@ -229,7 +242,7 @@ export const AlaCarteItem: React.FC<AlaCarteItemProps> = ({
         )}
       </div>
 
-      <div className={`${isCompact ? "mt-4" : "mt-6"} flex flex-col gap-3`}>
+      <div className={`${isCompact ? "mt-4" : "mt-6"} flex flex-col gap-3 relative z-10`}>
         {!disableDrag && !isCompact && (
           <div className="text-xs text-lux-textMuted font-semibold uppercase tracking-wider">
             Drag to add

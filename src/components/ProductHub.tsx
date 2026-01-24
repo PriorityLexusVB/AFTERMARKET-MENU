@@ -1,17 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  addDoc,
-  collection,
-  getDocs,
-  orderBy,
-  query,
-} from "firebase/firestore/lite";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { addDoc, collection, getDocs, orderBy, query } from "firebase/firestore/lite";
 import {
   DndContext,
   DragEndEvent,
@@ -71,22 +59,16 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   scrollTargetId,
   onScrollHandled,
 }) => {
-  const [features, setFeatures] = useState<ProductFeature[]>(
-    initialFeatures ?? []
-  );
+  const [features, setFeatures] = useState<ProductFeature[]>(initialFeatures ?? []);
   const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>(
     initialAlaCarteOptions ?? []
   );
   const [searchTerm, setSearchTerm] = useState("");
-  const [packageLaneFilter, setPackageLaneFilter] = useState<
-    "all" | "1" | "2" | "3" | "none"
-  >("all");
-  const [publishFilter, setPublishFilter] = useState<
-    "all" | "published" | "unpublished"
-  >("all");
-  const [featuredFilter, setFeaturedFilter] = useState<
-    "all" | "featured" | "not-featured"
-  >("all");
+  const [packageLaneFilter, setPackageLaneFilter] = useState<"all" | "1" | "2" | "3" | "none">(
+    "all"
+  );
+  const [publishFilter, setPublishFilter] = useState<"all" | "published" | "unpublished">("all");
+  const [featuredFilter, setFeaturedFilter] = useState<"all" | "featured" | "not-featured">("all");
   const [categoryFilter, setCategoryFilter] = useState<
     "all" | "1" | "2" | "3" | "unplaced" | "featured"
   >("all");
@@ -94,20 +76,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const [isBulkWorking, setIsBulkWorking] = useState(false);
   const [isLoading, setIsLoading] = useState(initialFeatures ? false : true);
   const [error, setError] = useState<string | null>(null);
-  const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(
-    null
-  );
+  const [editingFeature, setEditingFeature] = useState<ProductFeature | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  
+
   // Drag-and-drop state
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [featuresBackup, setFeaturesBackup] = useState<ProductFeature[]>([]);
-  
+
   const bulkSelectRef = useRef<HTMLInputElement>(null);
   const headerSelectRef = useRef<HTMLInputElement>(null);
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
@@ -200,14 +180,10 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       ]);
 
       setFeatures(
-        featuresSnap.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as ProductFeature)
-        )
+        featuresSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as ProductFeature)
       );
       setAlaCarteOptions(
-        alaCarteSnap.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as AlaCarteOption)
-        )
+        alaCarteSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AlaCarteOption)
       );
     } catch (err) {
       console.error("Error loading Product Hub data:", err);
@@ -266,11 +242,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       if (!matchesSearch) return false;
 
       const lane = feature.column ? String(feature.column) : "none";
-      if (packageLaneFilter !== "all" && packageLaneFilter !== lane)
-        return false;
+      if (packageLaneFilter !== "all" && packageLaneFilter !== lane) return false;
 
-      const isPublished =
-        option?.isPublished ?? feature.publishToAlaCarte ?? false;
+      const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
       if (publishFilter === "published" && !isPublished) return false;
       if (publishFilter === "unpublished" && isPublished) return false;
 
@@ -281,17 +255,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const categoryValue = isFeatured
         ? "featured"
         : option?.column
-        ? String(option.column)
-        : "unplaced";
+          ? String(option.column)
+          : "unplaced";
       if (categoryFilter !== "all") {
-        if (categoryFilter === "unplaced" && categoryValue !== "unplaced")
-          return false;
-        if (categoryFilter === "featured" && categoryValue !== "featured")
-          return false;
-        if (
-          !["unplaced", "featured"].includes(categoryFilter) &&
-          categoryFilter !== categoryValue
-        )
+        if (categoryFilter === "unplaced" && categoryValue !== "unplaced") return false;
+        if (categoryFilter === "featured" && categoryValue !== "featured") return false;
+        if (!["unplaced", "featured"].includes(categoryFilter) && categoryFilter !== categoryValue)
           return false;
       }
 
@@ -326,9 +295,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   }, [filteredFeatures, isLoading, onScrollHandled, scrollTargetId]);
 
   const allFilteredSelected = useMemo(
-    () =>
-      filteredFeatures.length > 0 &&
-      filteredFeatures.every((f) => selectedIds.has(f.id)),
+    () => filteredFeatures.length > 0 && filteredFeatures.every((f) => selectedIds.has(f.id)),
     [filteredFeatures, selectedIds]
   );
   const someSelected = selectedIds.size > 0;
@@ -343,25 +310,15 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   }, [allFilteredSelected, someSelected]);
 
-  const updateFeatureState = (
-    featureId: string,
-    updates: Partial<ProductFeature>
-  ) => {
-    setFeatures((prev) =>
-      prev.map((f) => (f.id === featureId ? { ...f, ...updates } : f))
-    );
+  const updateFeatureState = (featureId: string, updates: Partial<ProductFeature>) => {
+    setFeatures((prev) => prev.map((f) => (f.id === featureId ? { ...f, ...updates } : f)));
   };
 
-  const upsertOptionState = (
-    feature: ProductFeature,
-    updates: Partial<AlaCarteOption>
-  ) => {
+  const upsertOptionState = (feature: ProductFeature, updates: Partial<AlaCarteOption>) => {
     setAlaCarteOptions((prev) => {
       const existing = prev.find((o) => o.id === feature.id);
       if (existing) {
-        return prev.map((o) =>
-          o.id === feature.id ? { ...o, ...updates } : o
-        );
+        return prev.map((o) => (o.id === feature.id ? { ...o, ...updates } : o));
       }
       const base: AlaCarteOption = {
         id: feature.id,
@@ -376,17 +333,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   };
 
   const getNextPosition = (column: 1 | 2 | 3) => {
-    const positions = features
-      .filter((f) => f.column === column)
-      .map((f) => f.position ?? 0);
+    const positions = features.filter((f) => f.column === column).map((f) => f.position ?? 0);
     if (positions.length === 0) return 0;
     return Math.max(...positions) + 1;
   };
 
-  const handlePackagePlacement = async (
-    feature: ProductFeature,
-    column: 1 | 2 | 3 | undefined
-  ) => {
+  const handlePackagePlacement = async (feature: ProductFeature, column: 1 | 2 | 3 | undefined) => {
     if ((feature.column ?? null) === (column ?? null)) return;
     const prevColumn = feature.column;
     const prevPosition = feature.position;
@@ -423,9 +375,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const handlePriceBlur = async (feature: ProductFeature) => {
     const rawValue =
       priceInputs[feature.id] ??
-      (feature.alaCartePrice !== undefined
-        ? feature.alaCartePrice.toString()
-        : "");
+      (feature.alaCartePrice !== undefined ? feature.alaCartePrice.toString() : "");
     if (rawValue === "") return;
     const parsed = Number(rawValue);
     setPriceInputs((prev) => {
@@ -465,15 +415,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     position?: number
   ) => {
     const option = alaCarteMap.get(feature.id);
-    const isPublished =
-      option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const price = option?.price ?? feature.alaCartePrice;
     const isNew = option?.isNew ?? feature.alaCarteIsNew ?? false;
-    const warranty =
-      option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
+    const warranty = option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty;
     const desiredColumn = column === null ? undefined : column;
     const desiredPosition =
-      desiredColumn === undefined ? undefined : position ?? option?.position;
+      desiredColumn === undefined ? undefined : (position ?? option?.position);
 
     try {
       clearRowError(feature.id);
@@ -519,28 +467,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const handlePublishToggle = async (
-    feature: ProductFeature,
-    publish: boolean
-  ) => {
+  const handlePublishToggle = async (feature: ProductFeature, publish: boolean) => {
     clearRowError(feature.id);
     const option = alaCarteMap.get(feature.id);
     const inputValue = priceInputs[feature.id];
     const parsedInputPrice =
-      inputValue !== undefined && inputValue !== ""
-        ? Number(inputValue)
-        : undefined;
+      inputValue !== undefined && inputValue !== "" ? Number(inputValue) : undefined;
     const price = option?.price ?? feature.alaCartePrice ?? parsedInputPrice;
     if (publish && (price === undefined || Number.isNaN(price) || price <= 0)) {
-      setRowErrorMessage(
-        feature.id,
-        "Enter an A La Carte price before publishing."
-      );
+      setRowErrorMessage(feature.id, "Enter an A La Carte price before publishing.");
       return;
     }
 
-    const previousPublished =
-      option?.isPublished ?? feature.publishToAlaCarte ?? false;
+    const previousPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const previousPrice = option?.price ?? feature.alaCartePrice;
 
     try {
@@ -568,8 +507,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           position: option?.position,
           price: resolvedPrice,
           isNew: option?.isNew ?? feature.alaCarteIsNew,
-          warranty:
-            option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
+          warranty: option?.warranty ?? feature.alaCarteWarranty ?? feature.warranty,
         });
         updateFeatureState(feature.id, {
           publishToAlaCarte: true,
@@ -608,10 +546,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const handleDuplicateToLane = async (
-    feature: ProductFeature,
-    targetColumn: 1 | 2 | 3
-  ) => {
+  const handleDuplicateToLane = async (feature: ProductFeature, targetColumn: 1 | 2 | 3) => {
     if (!db) {
       setRowErrorMessage(feature.id, "Firebase is not connected.");
       return;
@@ -647,7 +582,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       clearSaved(feature.id);
     }
   };
-
 
   const handleEditDetails = (feature: ProductFeature) => {
     const rowEl = rowRefs.current[feature.id];
@@ -743,23 +677,17 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       return;
     }
     if (missingPrice.length > 0) {
-      setError(
-        "Some selected items are missing A La Carte prices and were skipped."
-      );
+      setError("Some selected items are missing A La Carte prices and were skipped.");
     } else {
       setError(null);
     }
-    return runBulkAction(
-      (feature) => handlePublishToggle(feature, publish),
-      priced
-    );
+    return runBulkAction((feature) => handlePublishToggle(feature, publish), priced);
   };
 
   const bulkSetFeatured = (featured: boolean) =>
     runBulkAction((feature) => {
       const option = alaCarteMap.get(feature.id);
-      const isPublished =
-        option?.isPublished ?? feature.publishToAlaCarte ?? false;
+      const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
       if (!isPublished) return;
       return handlePlacementUpdate(feature, featured ? 4 : null, undefined);
     });
@@ -767,8 +695,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const bulkSetCategory = (column: 1 | 2 | 3 | null) =>
     runBulkAction((feature) => {
       const option = alaCarteMap.get(feature.id);
-      const isPublished =
-        option?.isPublished ?? feature.publishToAlaCarte ?? false;
+      const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
       if (!isPublished) return;
       return handlePlacementUpdate(feature, column, undefined);
     });
@@ -780,7 +707,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       (f) => f.column === 1 || f.column === 2 || f.column === 3
     );
     const packageIds = new Set(packages.map((f) => f.id));
-    
+
     // Only show in A La Carte if NOT in a package
     const alaCarte = filteredFeatures.filter((f) => {
       if (packageIds.has(f.id)) return false; // Exclude products already in packages
@@ -788,14 +715,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       return option?.isPublished || f.publishToAlaCarte;
     });
     const alaCarteIds = new Set(alaCarte.map((f) => f.id));
-    
+
     // Unassigned products: not in packages and not published to A La Carte
     const unassigned = filteredFeatures.filter((f) => {
       if (packageIds.has(f.id)) return false; // Exclude products in packages
       if (alaCarteIds.has(f.id)) return false; // Exclude products in A La Carte
       return true;
     });
-    
+
     return {
       unassignedFeatures: sortOrderableItems(unassigned),
       packagesFeatures: sortOrderableItems(packages),
@@ -832,7 +759,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     const activeInAlaCarte = alaCarteFeatures.some((f) => f.id === activeIdStr);
     if (!activeInUnassigned && !activeInPackages && !activeInAlaCarte) return;
 
-    const activeLane = activeInUnassigned ? "unassigned" : activeInPackages ? "packages" : "alacarte";
+    const activeLane = activeInUnassigned
+      ? "unassigned"
+      : activeInPackages
+        ? "packages"
+        : "alacarte";
 
     const overLane =
       overIdStr === "lane-unassigned"
@@ -851,8 +782,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
 
     if (!overLane) return;
 
-    const sourceList = activeLane === "unassigned" ? unassignedFeatures : activeLane === "packages" ? packagesFeatures : alaCarteFeatures;
-    const targetList = overLane === "unassigned" ? unassignedFeatures : overLane === "packages" ? packagesFeatures : alaCarteFeatures;
+    const sourceList =
+      activeLane === "unassigned"
+        ? unassignedFeatures
+        : activeLane === "packages"
+          ? packagesFeatures
+          : alaCarteFeatures;
+    const targetList =
+      overLane === "unassigned"
+        ? unassignedFeatures
+        : overLane === "packages"
+          ? packagesFeatures
+          : alaCarteFeatures;
 
     const oldIndex = sourceList.findIndex((f) => f.id === activeIdStr);
     const newIndex = targetList.findIndex((f) => f.id === overIdStr);
@@ -899,9 +840,24 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         ...targetList.slice(insertIndex),
       ];
 
-      nextUnassigned = overLane === "unassigned" ? targetWithInsert : activeLane === "unassigned" ? prunedSource : unassignedFeatures;
-      nextPackages = overLane === "packages" ? targetWithInsert : activeLane === "packages" ? prunedSource : packagesFeatures;
-      nextAlaCarte = overLane === "alacarte" ? targetWithInsert : activeLane === "alacarte" ? prunedSource : alaCarteFeatures;
+      nextUnassigned =
+        overLane === "unassigned"
+          ? targetWithInsert
+          : activeLane === "unassigned"
+            ? prunedSource
+            : unassignedFeatures;
+      nextPackages =
+        overLane === "packages"
+          ? targetWithInsert
+          : activeLane === "packages"
+            ? prunedSource
+            : packagesFeatures;
+      nextAlaCarte =
+        overLane === "alacarte"
+          ? targetWithInsert
+          : activeLane === "alacarte"
+            ? prunedSource
+            : alaCarteFeatures;
     }
 
     await applyDragUpdates(
@@ -951,10 +907,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         const packageUpdate = packagesUpdates.find((u) => u.id === f.id);
         const alaCarteUpdate = alaCarteUpdates.find((u) => u.id === f.id);
         if (unassignedUpdate) {
-          return { ...f, position: unassignedUpdate.position, column: undefined, publishToAlaCarte: false };
+          return {
+            ...f,
+            position: unassignedUpdate.position,
+            column: undefined,
+            publishToAlaCarte: false,
+          };
         }
         if (packageUpdate) {
-          return { ...f, position: packageUpdate.position, column: packageUpdate.column, publishToAlaCarte: false };
+          return {
+            ...f,
+            position: packageUpdate.position,
+            column: packageUpdate.column,
+            publishToAlaCarte: false,
+          };
         }
         if (alaCarteUpdate) {
           return {
@@ -999,7 +965,11 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       setFeatures(normalizedFeatures);
 
       // Persist to Firestore
-      await batchUpdateFeaturesPositions([...unassignedUpdates, ...packagesUpdates, ...alaCarteUpdates]);
+      await batchUpdateFeaturesPositions([
+        ...unassignedUpdates,
+        ...packagesUpdates,
+        ...alaCarteUpdates,
+      ]);
 
       // For items moved to alacarte, publish them
       for (const f of nextAlaCarte) {
@@ -1047,11 +1017,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const getCategoryLabel = (option?: AlaCarteOption) => {
     if (!option) return "Not placed";
     if (option.column === 4) return "Featured";
-    if (option.column)
-      return columnLabels[option.column as 1 | 2 | 3] ?? "Placed";
+    if (option.column) return columnLabels[option.column as 1 | 2 | 3] ?? "Placed";
     return "Not placed";
   };
-
 
   // Sortable Product Card Component
   interface SortableProductCardProps {
@@ -1084,7 +1052,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
     const isFeatured = option?.column === 4;
     const laneLabel = feature.column
-      ? columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages"
+      ? (columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages")
       : "Not in packages";
     const categoryLabel = getCategoryLabel(option);
     // Display position as 1-based (position + 1) for user clarity, consistent with position badge
@@ -1098,16 +1066,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     // Click-outside handler to close duplicate menu
     useEffect(() => {
       if (!showDuplicateMenu) return;
-      
+
       const handleClickOutside = (event: MouseEvent) => {
-        if (duplicateMenuRef.current && event.target && !duplicateMenuRef.current.contains(event.target as Node)) {
+        if (
+          duplicateMenuRef.current &&
+          event.target &&
+          !duplicateMenuRef.current.contains(event.target as Node)
+        ) {
           setShowDuplicateMenu(false);
         }
       };
 
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }, [showDuplicateMenu]);
 
@@ -1254,8 +1226,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <div className="mt-3 pt-3 border-t border-gray-700 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Package Lane</label>
+                <label
+                  htmlFor={`package-lane-${feature.id}`}
+                  className="text-xs text-gray-400 block mb-1"
+                >
+                  Package Lane
+                </label>
                 <select
+                  id={`package-lane-${feature.id}`}
                   value={feature.column ?? ""}
                   onChange={(e) =>
                     handlePackagePlacement(
@@ -1282,14 +1260,18 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 </label>
                 {isPublished && (
                   <div className="mt-2">
-                    <label className="text-xs text-gray-400 block mb-1">A La Carte Price</label>
+                    <label
+                      htmlFor={`alacarte-price-${feature.id}`}
+                      className="text-xs text-gray-400 block mb-1"
+                    >
+                      A La Carte Price
+                    </label>
                     <input
+                      id={`alacarte-price-${feature.id}`}
                       type="number"
                       min="0"
                       step="0.01"
-                      value={
-                        priceInputs[feature.id] ?? (feature.alaCartePrice ?? "").toString()
-                      }
+                      value={priceInputs[feature.id] ?? (feature.alaCartePrice ?? "").toString()}
                       onChange={(e) =>
                         setPriceInputs((prev) => ({
                           ...prev,
@@ -1361,9 +1343,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h3 className="text-2xl font-teko tracking-wider text-white">
-            Product Hub
-          </h3>
+          <h3 className="text-2xl font-teko tracking-wider text-white">Product Hub</h3>
           <p className="text-sm text-gray-400">
             Manage package placement and A La Carte visibility from one place.
           </p>
@@ -1394,9 +1374,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">Package lane</span>
           <select
             value={packageLaneFilter}
-            onChange={(e) =>
-              setPackageLaneFilter(e.target.value as typeof packageLaneFilter)
-            }
+            onChange={(e) => setPackageLaneFilter(e.target.value as typeof packageLaneFilter)}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
@@ -1410,9 +1388,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">Published</span>
           <select
             value={publishFilter}
-            onChange={(e) =>
-              setPublishFilter(e.target.value as typeof publishFilter)
-            }
+            onChange={(e) => setPublishFilter(e.target.value as typeof publishFilter)}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
@@ -1424,9 +1400,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">Featured</span>
           <select
             value={featuredFilter}
-            onChange={(e) =>
-              setFeaturedFilter(e.target.value as typeof featuredFilter)
-            }
+            onChange={(e) => setFeaturedFilter(e.target.value as typeof featuredFilter)}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
@@ -1438,9 +1412,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           <span className="text-gray-400">A La Carte Category</span>
           <select
             value={categoryFilter}
-            onChange={(e) =>
-              setCategoryFilter(e.target.value as typeof categoryFilter)
-            }
+            onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
             className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           >
             <option value="all">All</option>
@@ -1469,7 +1441,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           className="px-2 py-1 rounded bg-green-600 text-white disabled:opacity-50"
           onClick={() => bulkPublishToggle(true)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
           aria-label="Publish selected items"
         >
           Publish
@@ -1478,7 +1449,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
           onClick={() => bulkPublishToggle(false)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
           aria-label="Unpublish selected items"
         >
           Unpublish
@@ -1487,7 +1457,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           className="px-2 py-1 rounded bg-blue-700 text-white disabled:opacity-50"
           onClick={() => bulkSetFeatured(true)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
           aria-label="Mark selected items as featured"
         >
           Set Featured
@@ -1496,7 +1465,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
           onClick={() => bulkSetFeatured(false)}
           disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-disabled={isBulkWorking || selectedFeatures.length === 0}
           aria-label="Remove featured from selected items"
         >
           Remove Featured
@@ -1530,9 +1498,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       </div>
 
       {error && (
-        <p className="text-red-400 bg-red-500/10 border border-red-500/30 p-3 rounded">
-          {error}
-        </p>
+        <p className="text-red-400 bg-red-500/10 border border-red-500/30 p-3 rounded">{error}</p>
       )}
 
       {showForm && (
@@ -1587,11 +1553,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   Unassigned Products
                 </h4>
                 <p className="text-xs text-blue-300/70 mt-1">
-                  Products that haven't been assigned to Packages or published to A La Carte yet. Drag them to the sections below to assign them.
+                  Products that haven't been assigned to Packages or published to A La Carte yet.
+                  Drag them to the sections below to assign them.
                 </p>
               </div>
               <span className="text-sm text-blue-400 font-semibold">
-                {unassignedFeatures.length} {unassignedFeatures.length === 1 ? 'product' : 'products'}
+                {unassignedFeatures.length}{" "}
+                {unassignedFeatures.length === 1 ? "product" : "products"}
               </span>
             </div>
             <DroppableColumn columnId="unassigned">
@@ -1624,9 +1592,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           {/* Left Column: Packages */}
           <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 space-y-4">
             <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-3 border-b border-gray-700">
-              <h4 className="text-xl font-teko tracking-wider text-gray-200">
-                Packages Section
-              </h4>
+              <h4 className="text-xl font-teko tracking-wider text-gray-200">Packages Section</h4>
               <p className="text-xs text-gray-400 mt-1">
                 Products in Gold, Elite, or Platinum packages (Columns 1, 2, 3)
               </p>
@@ -1665,9 +1631,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           {/* Right Column: A La Carte */}
           <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-700 space-y-4">
             <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-3 border-b border-gray-700">
-              <h4 className="text-xl font-teko tracking-wider text-gray-200">
-                A La Carte Section
-              </h4>
+              <h4 className="text-xl font-teko tracking-wider text-gray-200">A La Carte Section</h4>
               <p className="text-xs text-gray-400 mt-1">
                 Published products available for a la carte selection
               </p>

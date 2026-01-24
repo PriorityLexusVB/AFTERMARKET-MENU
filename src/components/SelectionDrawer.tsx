@@ -13,6 +13,7 @@ interface SelectionDrawerProps {
   onDeselectPackage?: () => void;
   onShowAgreement?: () => void;
   variant?: "panel" | "bar";
+  isCompact?: boolean;
 }
 
 const formatPrice = (price: number) =>
@@ -34,9 +35,9 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   onDeselectPackage,
   onShowAgreement,
   variant = "panel",
+  isCompact = false,
 }) => {
-  const showDiscountTotal =
-    typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
+  const showDiscountTotal = typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
 
   const basePackagePrice = selectedPackage
     ? basePackagePricesById?.[selectedPackage.id]
@@ -50,54 +51,88 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   if (variant === "bar") {
     return (
       <div
-        className="am-selection-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden"
+        className={`am-selection-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden ${
+          isCompact ? "am-selection-bar--compact" : ""
+        }`}
         data-testid="selection-drawer-bar"
       >
         <div className="container mx-auto px-4 sm:px-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between pb-[env(safe-area-inset-bottom,0px)] py-3">
-            <div className="space-y-1">
-              <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-                Your Selection
-              </p>
-              <div className="flex flex-wrap items-center gap-2 text-sm text-lux-text">
-                <span className="font-semibold text-white">
+          <div
+            className={`flex pb-[env(safe-area-inset-bottom,0px)] ${
+              isCompact
+                ? "items-center justify-between gap-3 py-2"
+                : "flex-col gap-3 md:flex-row md:items-center md:justify-between py-3"
+            }`}
+          >
+            <div className={isCompact ? "min-w-0" : "space-y-1"}>
+              {!isCompact && (
+                <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
+                  Your Selection
+                </p>
+              )}
+              <div
+                className={`flex items-center gap-2 text-sm text-lux-text ${
+                  isCompact ? "flex-nowrap" : "flex-wrap"
+                }`}
+              >
+                <span
+                  className={`font-semibold text-white ${
+                    isCompact ? "truncate max-w-[42vw] sm:max-w-[48vw]" : ""
+                  }`}
+                >
                   {selectedPackage
                     ? `${selectedPackage.name} Package`
-                    : "No package selected"}
+                    : isCompact
+                      ? "No package"
+                      : "No package selected"}
                 </span>
-                <span className="px-2 py-1 rounded-full bg-gray-800 text-gray-200 text-xs">
-                  {customItems.length} add-on
-                  {customItems.length === 1 ? "" : "s"}
-                </span>
+                {!isCompact && (
+                  <span className="px-2 py-1 rounded-full bg-gray-800 text-gray-200 text-xs">
+                    {customItems.length} add-on
+                    {customItems.length === 1 ? "" : "s"}
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap justify-end">
+            <div
+              className={`flex justify-end ${
+                isCompact
+                  ? "items-center gap-2 flex-nowrap"
+                  : "flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap"
+              }`}
+            >
               {showDiscountTotal && (
-                <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
+                <p
+                  className={`text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60 ${
+                    isCompact ? "hidden sm:block" : ""
+                  }`}
+                >
                   {formatPrice(baseTotalPrice)}
                 </p>
               )}
-              <div className="text-left sm:text-right">
-                <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-                  Total
-                </p>
-                <p className="text-3xl sm:text-4xl font-teko text-white">
+              <div className={isCompact ? "text-right" : "text-left sm:text-right"}>
+                <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Total</p>
+                <p
+                  className={`font-teko text-white ${
+                    isCompact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"
+                  }`}
+                >
                   {formatPrice(totalPrice)}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 ${isCompact ? "flex-nowrap" : ""}`}>
                 <button
                   onClick={onPrint}
-                  className="btn-lux-ghost px-4 min-h-[44px]"
+                  className={`btn-lux-ghost min-h-[44px] ${isCompact ? "px-3" : "px-4"}`}
                   aria-label="Print summary"
                 >
-                  Print Selection
+                  {isCompact ? "Print" : "Print Selection"}
                 </button>
                 {onShowAgreement && (
                   <button
                     onClick={onShowAgreement}
-                    className="btn-lux-primary px-4 min-h-[44px]"
+                    className={`btn-lux-primary min-h-[44px] ${isCompact ? "px-3" : "px-4"}`}
                     aria-label="Finalize and view agreement"
                   >
                     Finalize
@@ -115,9 +150,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
     <aside className="lux-card lg:sticky lg:top-6 p-5 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-            Your Selection
-          </p>
+          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Your Selection</p>
           <h3 className="lux-title text-2xl mt-1">Summary</h3>
         </div>
         <button
@@ -141,14 +174,10 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
         <div className="lux-divider" />
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-              Package
-            </p>
+            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Package</p>
             {selectedPackage ? (
               <>
-                <p className="text-lg font-semibold text-lux-textStrong">
-                  {selectedPackage.name}
-                </p>
+                <p className="text-lg font-semibold text-lux-textStrong">{selectedPackage.name}</p>
                 <div className="lux-price-plaque mt-2">
                   <span className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
                     Price
@@ -166,9 +195,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 </div>
               </>
             ) : (
-              <p className="text-sm text-lux-textMuted mt-1">
-                No package selected
-              </p>
+              <p className="text-sm text-lux-textMuted mt-1">No package selected</p>
             )}
           </div>
           {selectedPackage && onDeselectPackage && (
@@ -186,12 +213,8 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-            Add-ons
-          </p>
-          <span className="text-xs text-lux-textMuted">
-            {customItems.length} selected
-          </span>
+          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Add-ons</p>
+          <span className="text-xs text-lux-textMuted">{customItems.length} selected</span>
         </div>
         {customItems.length === 0 ? (
           <p className="text-sm text-lux-textMuted">No add-ons selected</p>
@@ -201,8 +224,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
               (() => {
                 const baseItemPrice = baseAddonPricesById?.[item.id];
                 const showDiscountItem =
-                  typeof baseItemPrice === "number" &&
-                  baseItemPrice > item.price;
+                  typeof baseItemPrice === "number" && baseItemPrice > item.price;
 
                 return (
                   <div
@@ -210,17 +232,13 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                     className="flex items-center justify-between bg-lux-bg2/70 border border-lux-border/60 rounded-lg px-3 py-2"
                   >
                     <div>
-                      <p className="text-sm font-semibold text-lux-text">
-                        {item.name}
-                      </p>
+                      <p className="text-sm font-semibold text-lux-text">{item.name}</p>
                       {showDiscountItem ? (
                         <div className="text-xs mt-0.5">
                           <div className="text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
                             {formatPrice(baseItemPrice)}
                           </div>
-                          <div className="text-lux-textStrong">
-                            {formatPrice(item.price)}
-                          </div>
+                          <div className="text-lux-textStrong">{formatPrice(item.price)}</div>
                         </div>
                       ) : (
                         <p className="text-xs text-lux-textMuted mt-0.5">
@@ -259,17 +277,13 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
       <div className="space-y-3">
         <div className="lux-price-plaque">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-              Total
-            </p>
+            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Total</p>
             {showDiscountTotal && (
               <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
                 {formatPrice(baseTotalPrice)}
               </p>
             )}
-            <p className="text-3xl font-teko text-lux-textStrong">
-              {formatPrice(totalPrice)}
-            </p>
+            <p className="text-3xl font-teko text-lux-textStrong">{formatPrice(totalPrice)}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-lux-textMuted">Taxes not included</p>

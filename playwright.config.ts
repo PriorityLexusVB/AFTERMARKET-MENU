@@ -24,6 +24,17 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    ...(process.env["PW_WEBKIT"] === "1"
+      ? [
+          {
+            name: "webkit-ipad",
+            use: {
+              ...devices["iPad Pro 11"],
+              browserName: "webkit" as const,
+            },
+          },
+        ]
+      : []),
   ],
 
   webServer: {
@@ -31,7 +42,7 @@ export default defineConfig({
     url: "http://localhost:4173",
     // Accurate-by-default: always start from a fresh build.
     // If you want faster local iteration, set `PW_REUSE_SERVER=1`.
-    reuseExistingServer: !!process.env["CI"] ? false : process.env["PW_REUSE_SERVER"] === "1",
+    reuseExistingServer: process.env["CI"] ? false : process.env["PW_REUSE_SERVER"] === "1",
     timeout: 120000,
   },
 });

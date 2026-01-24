@@ -109,6 +109,7 @@ const App: React.FC = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const guestMode = !user;
+  const isLoginView = !user && !isDemoMode;
 
   useEffect(() => {
     // Initialize Firebase Analytics
@@ -139,7 +140,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const className = "ipad-landscape-lock";
-    const shouldLock = isIpadLandscape && currentView === "menu" && !isAdminView;
+    const shouldLock = isIpadLandscape && currentView === "menu" && !isAdminView && !isLoginView;
     if (shouldLock) {
       document.body.classList.add(className);
       document.documentElement.classList.add(className);
@@ -151,11 +152,11 @@ const App: React.FC = () => {
       document.body.classList.remove(className);
       document.documentElement.classList.remove(className);
     };
-  }, [isIpadLandscape, currentView, isAdminView, isLoading]);
+  }, [isIpadLandscape, currentView, isAdminView, isLoginView]);
 
   useEffect(() => {
     if (isLoading || typeof document === "undefined" || typeof window === "undefined") return;
-    const shouldLock = currentView === "menu" && !isAdminView;
+    const shouldLock = currentView === "menu" && !isAdminView && !isLoginView;
     if (!shouldLock) return;
     const root = document.documentElement;
     let header: Element | null = document.querySelector("header");
@@ -229,7 +230,7 @@ const App: React.FC = () => {
       root.style.removeProperty("--ipad-header-h");
       root.style.removeProperty("--ipad-bottom-bar-h");
     };
-  }, [currentView, isAdminView, isLoading]);
+  }, [currentView, isAdminView, isLoading, isLoginView]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -661,7 +662,7 @@ const App: React.FC = () => {
     const heroSubtitleClass = enableIpadMenuLayout
       ? "lux-subtitle mt-0 text-xs max-w-2xl mx-auto clamp-2"
       : enableNoScrollLayout
-        ? "lux-subtitle mt-0.5 text-base max-w-3xl mx-auto clamp-2"
+        ? "hidden"
         : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
     const tabsRowClass = `am-page-tabs-row am-menu-tabs-row flex flex-col sm:flex-row justify-center items-center shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
@@ -891,6 +892,7 @@ const App: React.FC = () => {
                 }
                 onShowAgreement={handleShowAgreement}
                 variant="bar"
+                isCompact={enableNoScrollLayout}
               />
             </>
           )}

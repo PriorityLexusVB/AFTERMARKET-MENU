@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { User, onAuthStateChanged, signOut } from "firebase/auth";
 import { Header } from "./components/Header";
 import { PackageSelector } from "./components/PackageSelector";
@@ -13,6 +13,7 @@ import { Login } from "./components/Login";
 import { AdminPanel } from "./components/AdminPanel";
 import { SetupGuide } from "./components/SetupGuide";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import ValuePresentation from "./components/ValuePresentation";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
@@ -33,7 +34,7 @@ import {
 } from "./analytics";
 
 type Page = "packages" | "alacarte";
-type View = "menu" | "agreement";
+type View = "menu" | "agreement" | "presentation";
 
 interface CustomerInfo {
   name: string;
@@ -51,6 +52,7 @@ const App: React.FC = () => {
 
   // UI State
   const [currentView, setCurrentView] = useState<View>("menu");
+  const hasShownPresentationRef = useRef(false);
   const [pendingPrint, setPendingPrint] = useState<null | {
     returnToMenu: boolean;
   }>(null);
@@ -123,6 +125,15 @@ const App: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsAuthLoading(false);
+
+      // Navigation Flow:
+      // Login -> Presentation -> Menu
+      if (currentUser && !hasShownPresentationRef.current) {
+        setCurrentView("presentation");
+      }
+      if (!currentUser) {
+        hasShownPresentationRef.current = false;
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -289,6 +300,8 @@ const App: React.FC = () => {
       await signOut(auth);
       trackUserLogout();
       setIsAdminView(false); // Reset to menu view on logout
+      setCurrentView("menu");
+      hasShownPresentationRef.current = false;
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -798,6 +811,17 @@ const App: React.FC = () => {
   // This also handles the initial authentication loading state.
   if (!user && !isDemoMode) {
     return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
+  }
+
+  if (currentView === "presentation") {
+    return (
+      <ValuePresentation
+        onComplete={() => {
+          hasShownPresentationRef.current = true;
+          setCurrentView("menu");
+        }}
+      />
+    );
   }
 
   const shouldLockMenuScroll =

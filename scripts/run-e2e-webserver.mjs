@@ -37,7 +37,10 @@ try {
     { waitForExit: false }
   );
 
+  let shuttingDown = false;
+
   const shutdown = () => {
+    shuttingDown = true;
     try {
       preview.kill();
     } catch {
@@ -45,13 +48,25 @@ try {
     }
   };
 
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
 
-  await new Promise((_, reject) => {
-    preview.on("exit", (code) => {
-      if (code === 0) return;
-      reject(new Error(`vite preview exited with code ${code}`));
+  await new Promise((resolve, reject) => {
+    preview.on("exit", (code, signal) => {
+      if (shuttingDown) {
+        resolve(undefined);
+        return;
+      }
+
+      // The preview server should remain alive for the duration of the test run.
+      // If it exits for any reason (even code 0), fail fast so Playwright doesn't
+      // keep running against a dead server.
+      if (signal) {
+        reject(new Error(`vite preview exited unexpectedly (signal: ${signal})`));
+        return;
+      }
+
+      reject(new Error(`vite preview exited unexpectedly with code ${code}`));
     });
     preview.on("error", (error) => reject(error));
   });

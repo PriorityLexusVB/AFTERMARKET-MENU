@@ -1,13 +1,19 @@
-import {
-  getAnalytics,
-  logEvent,
-  setUserProperties,
-  Analytics,
-} from "firebase/analytics";
+import { getAnalytics, logEvent, setUserProperties, Analytics } from "firebase/analytics";
 import { app } from "./firebase";
 import type { PackageTier, AlaCarteOption } from "./types";
 
 let analytics: Analytics | null = null;
+
+function safeLogEvent(eventName: string, params?: Record<string, unknown>): void {
+  if (!analytics) return;
+
+  try {
+    logEvent(analytics, eventName, params);
+  } catch (error) {
+    // Analytics must never break core UI flows.
+    console.warn(`Failed to log analytics event: ${eventName}`, error);
+  }
+}
 
 /**
  * Initialize Firebase Analytics
@@ -35,9 +41,7 @@ export function initializeAnalytics(): void {
  * Track page views
  */
 export function trackPageView(pageName: string): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "page_view", {
+  safeLogEvent("page_view", {
     page_title: pageName,
     page_location: window.location.href,
   });
@@ -47,14 +51,11 @@ export function trackPageView(pageName: string): void {
  * Track package selection
  */
 export function trackPackageSelect(packageInfo: PackageTier): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "select_package", {
+  safeLogEvent("select_package", {
     package_id: packageInfo.id,
     package_name: packageInfo.name,
     package_price: packageInfo.price,
-    is_recommended:
-      packageInfo.isRecommended ?? packageInfo.is_recommended ?? false,
+    is_recommended: packageInfo.isRecommended ?? packageInfo.is_recommended ?? false,
   });
 }
 
@@ -62,9 +63,7 @@ export function trackPackageSelect(packageInfo: PackageTier): void {
  * Track a la carte option added
  */
 export function trackAlaCarteAdd(option: AlaCarteOption): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "add_alacarte_option", {
+  safeLogEvent("add_alacarte_option", {
     option_id: option.id,
     option_name: option.name,
     option_price: option.price,
@@ -75,9 +74,7 @@ export function trackAlaCarteAdd(option: AlaCarteOption): void {
  * Track a la carte option removed
  */
 export function trackAlaCarteRemove(option: AlaCarteOption): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "remove_alacarte_option", {
+  safeLogEvent("remove_alacarte_option", {
     option_id: option.id,
     option_name: option.name,
     option_price: option.price,
@@ -87,13 +84,8 @@ export function trackAlaCarteRemove(option: AlaCarteOption): void {
 /**
  * Track feature modal view
  */
-export function trackFeatureView(
-  featureName: string,
-  featureType: "package" | "alacarte"
-): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "view_feature_details", {
+export function trackFeatureView(featureName: string, featureType: "package" | "alacarte"): void {
+  safeLogEvent("view_feature_details", {
     feature_name: featureName,
     feature_type: featureType,
   });
@@ -109,9 +101,7 @@ export function trackQuoteFinalize(data: {
   customerName?: string;
   vehicleInfo?: string;
 }): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "finalize_quote", {
+  safeLogEvent("finalize_quote", {
     package_id: data.selectedPackage?.id || null,
     package_name: data.selectedPackage?.name || null,
     package_price: data.selectedPackage?.price || 0,
@@ -127,9 +117,7 @@ export function trackQuoteFinalize(data: {
  * Track quote print
  */
 export function trackQuotePrint(totalPrice: number): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "print_quote", {
+  safeLogEvent("print_quote", {
     total_price: totalPrice,
   });
 }
@@ -138,27 +126,21 @@ export function trackQuotePrint(totalPrice: number): void {
  * Track settings menu open
  */
 export function trackSettingsOpen(): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "settings_open");
+  safeLogEvent("settings_open");
 }
 
 /**
  * Track admin panel access
  */
 export function trackAdminPanelAccess(): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "admin_panel_access");
+  safeLogEvent("admin_panel_access");
 }
 
 /**
  * Track admin feature added
  */
 export function trackAdminFeatureAdd(featureName: string): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "admin_feature_add", {
+  safeLogEvent("admin_feature_add", {
     feature_name: featureName,
   });
 }
@@ -167,9 +149,7 @@ export function trackAdminFeatureAdd(featureName: string): void {
  * Track user authentication
  */
 export function trackUserLogin(method: string): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "login", {
+  safeLogEvent("login", {
     method: method,
   });
 }
@@ -178,17 +158,13 @@ export function trackUserLogin(method: string): void {
  * Track user logout
  */
 export function trackUserLogout(): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "logout");
+  safeLogEvent("logout");
 }
 
 /**
  * Set user properties for analytics
  */
-export function setAnalyticsUserProperties(
-  properties: Record<string, string>
-): void {
+export function setAnalyticsUserProperties(properties: Record<string, string>): void {
   if (!analytics) return;
 
   setUserProperties(analytics, properties);
@@ -198,9 +174,7 @@ export function setAnalyticsUserProperties(
  * Track errors
  */
 export function trackError(errorMessage: string, errorContext?: string): void {
-  if (!analytics) return;
-
-  logEvent(analytics, "error", {
+  safeLogEvent("error", {
     error_message: errorMessage,
     error_context: errorContext || "unknown",
   });
@@ -209,11 +183,6 @@ export function trackError(errorMessage: string, errorContext?: string): void {
 /**
  * Track custom events
  */
-export function trackCustomEvent(
-  eventName: string,
-  eventParams?: Record<string, unknown>
-): void {
-  if (!analytics) return;
-
-  logEvent(analytics, eventName, eventParams);
+export function trackCustomEvent(eventName: string, eventParams?: Record<string, unknown>): void {
+  safeLogEvent(eventName, eventParams);
 }

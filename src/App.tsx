@@ -800,7 +800,7 @@ const App: React.FC = () => {
   return (
     <div
       className={`lux-app am-app-min-h antialiased flex flex-col ${
-        shouldLockMenuScroll ? "h-[var(--app-height,100vh)] overflow-hidden" : ""
+        shouldLockMenuScroll ? "ipad-landscape-lock h-[var(--app-height,100vh)] overflow-hidden" : ""
       }`}
     >
       <Header
@@ -857,7 +857,7 @@ const App: React.FC = () => {
             ) : (
               <div
                 className={`lux-no-select ${
-                  isIpadLandscape ? "flex-1 flex flex-col min-h-0" : "space-y-4"
+                  enableNoScrollLayout ? "flex-1 flex flex-col min-h-0" : "space-y-4"
                 }`}
               >
                 {renderMenuContent()}

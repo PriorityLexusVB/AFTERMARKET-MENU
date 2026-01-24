@@ -27,7 +27,11 @@
 */
 
 body {
-  font-family: "Roboto", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Roboto",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   font-weight: 300;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
@@ -220,11 +224,7 @@ h6,
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(10, 10, 10, 0) 0%,
-      rgba(10, 10, 10, 0.8) 100%
-    );
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0) 0%, rgba(10, 10, 10, 0.8) 100%);
     pointer-events: none;
   }
 
@@ -539,11 +539,7 @@ h6,
     transform: translateX(-50%);
     width: 40px;
     height: 40px;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.2) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
     border-radius: 50%;
     animation: pulse-scroll 2s infinite;
   }
@@ -636,22 +632,29 @@ h6,
 
   .am-main-ipad-menu {
     height: calc(
-      var(--app-height, 100vh) - var(--ipad-header-h, 96px) -
-        var(--ipad-bottom-bar-h, 84px)
+      var(--app-height, 100vh) - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 170px)
     );
+    padding-bottom: calc(var(--ipad-bottom-bar-h, 170px) + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
   }
 
   .am-main-no-scroll {
     height: calc(
-      var(--app-height, 100vh) - var(--ipad-header-h, 96px) -
-        var(--ipad-bottom-bar-h, 84px)
+      var(--app-height, 100vh) - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 170px)
     );
+    padding-bottom: calc(var(--ipad-bottom-bar-h, 170px) + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
   }
 
   .am-main-default {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 170px);
+  }
+
+  .am-select-plan-btn {
+    scroll-margin-top: calc(var(--ipad-header-h, 96px) + 16px);
+    scroll-margin-bottom: calc(
+      var(--ipad-bottom-bar-h, 170px) + env(safe-area-inset-bottom, 0px) + 24px
+    );
   }
 }
 

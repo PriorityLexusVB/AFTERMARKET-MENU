@@ -29,7 +29,9 @@ export default defineConfig({
   webServer: {
     command: "npm run e2e:web",
     url: "http://localhost:4173",
-    reuseExistingServer: !process.env["CI"],
+    // Accurate-by-default: always start from a fresh build.
+    // If you want faster local iteration, set `PW_REUSE_SERVER=1`.
+    reuseExistingServer: !!process.env["CI"] ? false : process.env["PW_REUSE_SERVER"] === "1",
     timeout: 120000,
   },
 });

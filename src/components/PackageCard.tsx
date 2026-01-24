@@ -44,11 +44,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({
     }).format(price);
   };
 
-  const isRecommended =
-    packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
+  const isRecommended = packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
 
-  const isDiscounted =
-    typeof basePrice === "number" && basePrice > packageInfo.price;
+  const isDiscounted = typeof basePrice === "number" && basePrice > packageInfo.price;
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
@@ -82,14 +80,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           isCompact ? "am-package-header-compact" : "am-package-header"
         } flex items-start justify-between`}
       >
-        <div
-          className={`am-package-title-block ${
-            isCompact ? "space-y-0.5" : "space-y-1"
-          }`}
-        >
-          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">
-            Plan
-          </p>
+        <div className={`am-package-title-block ${isCompact ? "space-y-0.5" : "space-y-1"}`}>
+          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
           <h3
             className={`font-teko ${
               isCompact ? "text-lg leading-none" : "text-3xl sm:text-4xl"
@@ -98,9 +90,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             {packageInfo.name}
           </h3>
         </div>
-        {isRecommended && (
-          <span className="lux-chip-gold shadow-glow-gold">Recommended</span>
-        )}
+        {isRecommended && <span className="lux-chip-gold shadow-glow-gold">Recommended</span>}
       </div>
 
       {/* Features section stretches with page scroll */}
@@ -133,21 +123,14 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
-                    <span className={isCompact ? "clamp-1" : "clamp-2"}>
-                      {feature.name}
-                    </span>
+                    <span className={isCompact ? "clamp-1" : "clamp-2"}>{feature.name}</span>
                   </button>
                   <ul
                     className={`text-lux-textMuted ${
-                      isCompact
-                        ? "text-xs mt-0.5 space-y-0"
-                        : "text-sm sm:text-base mt-2 space-y-1"
+                      isCompact ? "text-xs mt-0.5 space-y-0" : "text-sm sm:text-base mt-2 space-y-1"
                     }`}
                   >
-                    {(isCompact
-                      ? feature.points.slice(0, 3)
-                      : feature.points
-                    ).map((p, idx) => (
+                    {(isCompact ? feature.points.slice(0, 3) : feature.points).map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
                         className={isCompact ? "clamp-1" : "clamp-3"}
@@ -170,9 +153,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       >
         <div className="lux-price-plaque">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">
-              Investment
-            </p>
+            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Investment</p>
             {isDiscounted && (
               <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
                 {formatPrice(basePrice)}
@@ -187,14 +168,12 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-lux-textMuted">
-              Includes listed coverage
-            </p>
+            <p className="text-xs text-lux-textMuted">Includes listed coverage</p>
           </div>
         </div>
         <button
           onClick={onSelect}
-          className={`w-full ${isCompact ? "text-sm" : "text-base lg:text-lg"} font-semibold uppercase tracking-wider transition-all duration-300 transform active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70 focus:ring-offset-2 focus:ring-offset-lux-bg1 rounded-xl ${isCompact ? "min-h-[44px] py-2" : "min-h-[48px]"}
+          className={`am-select-plan-btn w-full ${isCompact ? "text-sm" : "text-base lg:text-lg"} font-semibold uppercase tracking-wider transition-all duration-300 transform active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70 focus:ring-offset-2 focus:ring-offset-lux-bg1 rounded-xl ${isCompact ? "min-h-[44px] py-2" : "min-h-[48px]"}
             ${
               isSelected
                 ? "bg-lux-blue text-lux-textStrong shadow-luxury-lg"

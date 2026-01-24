@@ -66,7 +66,7 @@ const App: React.FC = () => {
     // iPad “paper mode” should stay enabled on 12.9" iPads even if iPadOS
     // changes the effective width (e.g. Display Zoom / More Space / windowed).
     // Prefer a height bound over a tight max-width bound.
-    "(min-width: 1024px) and (max-height: 1100px) and (orientation: landscape)";
+    "(min-width: 1024px) and (min-height: 740px) and (max-height: 1100px) and (orientation: landscape)";
   const desktopKioskQuery =
     // Desktop kiosk mode for larger landscape displays that should use no-scroll layout.
     "(min-width: 1280px) and (min-height: 800px) and (orientation: landscape)";
@@ -85,16 +85,14 @@ const App: React.FC = () => {
     const matchesLayout = window.matchMedia(ipadLandscapeQuery).matches;
     if (!matchesLayout) return false;
 
-    // Heuristic to avoid applying iPad-specific layout on typical desktop browsers.
-    // Note: Chrome's device emulation may not report touch/coarse-pointer correctly,
-    // so we keep a narrow iPad UA fallback to preserve the paged “paper mode” preview.
-    const hasTouch = navigator.maxTouchPoints > 0;
-    const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    if (hasTouch || hasCoarsePointer) return true;
+    // iPadOS commonly reports itself as "MacIntel" with touch points.
+    // This is a strong signal that avoids false-positives on desktop Chromium (incl. Playwright).
+    const platform = navigator.platform || "";
+    const isIpadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    if (isIpadOS) return true;
 
     const ua = navigator.userAgent || "";
-    const looksLikeIpad = /\biPad\b/i.test(ua);
-    return looksLikeIpad;
+    return /\biPad\b/i.test(ua);
   }, [ipadLandscapeQuery]);
   const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => computeIsIpadLandscape());
 
@@ -156,12 +154,7 @@ const App: React.FC = () => {
   }, [isIpadLandscape, currentView, isAdminView, isLoading]);
 
   useEffect(() => {
-    if (
-      isLoading ||
-      typeof document === "undefined" ||
-      typeof window === "undefined"
-    )
-      return;
+    if (isLoading || typeof document === "undefined" || typeof window === "undefined") return;
     const shouldLock = currentView === "menu" && !isAdminView;
     if (!shouldLock) return;
     const root = document.documentElement;
@@ -196,7 +189,7 @@ const App: React.FC = () => {
       }
       const barHeight = selectionBar
         ? (selectionBar as HTMLElement).getBoundingClientRect().height
-        : 112;
+        : 170;
       root.style.setProperty("--ipad-bottom-bar-h", `${Math.round(barHeight)}px`);
     };
 
@@ -612,7 +605,7 @@ const App: React.FC = () => {
   const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
   const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
   const disableAlaCarteDrag = enableIpadAlaCarteLayout || guestMode;
-  
+
   // Track whether we're in a "desktop kiosk" viewport using a dedicated media query.
   // This should stay in sync with the kiosk CSS/media-query definition.
   const [isDesktopKiosk, setIsDesktopKiosk] = useState(false);
@@ -660,13 +653,13 @@ const App: React.FC = () => {
     const heroTitleClass = enableIpadMenuLayout
       ? "lux-title text-lg leading-tight"
       : enableNoScrollLayout
-      ? "lux-title text-2xl md:text-3xl"
-      : "lux-title text-3xl md:text-4xl";
+        ? "lux-title text-2xl md:text-3xl"
+        : "lux-title text-3xl md:text-4xl";
     const heroSubtitleClass = enableIpadMenuLayout
       ? "lux-subtitle mt-0 text-xs max-w-2xl mx-auto clamp-2"
       : enableNoScrollLayout
-      ? "lux-subtitle mt-0.5 text-base max-w-3xl mx-auto clamp-2"
-      : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
+        ? "lux-subtitle mt-0.5 text-base max-w-3xl mx-auto clamp-2"
+        : "lux-subtitle mt-0.5 max-w-3xl mx-auto clamp-3";
     const tabsRowClass = `am-page-tabs-row am-menu-tabs-row flex flex-col sm:flex-row justify-center items-center shrink-0 ${
       enableIpadPackagesLayout ? "" : ""
     }`;
@@ -689,11 +682,11 @@ const App: React.FC = () => {
                   onViewItem={handleViewDetail}
                   basePricesById={baseAddonPricesById}
                   className="h-full min-h-0"
-                  isCompact={isIpadLandscape}
+                  isCompact={enableNoScrollLayout}
                 />
               }
-              gridClassName={isIpadLandscape ? "items-stretch h-full" : "items-stretch"}
-              isIpadLandscape={isIpadLandscape}
+              gridClassName={enableNoScrollLayout ? "items-stretch h-full" : "items-stretch"}
+              isIpadLandscape={enableNoScrollLayout}
             />
           </div>
         )}
@@ -792,7 +785,8 @@ const App: React.FC = () => {
   const isMenuView = currentView === "menu";
   const mainLayoutClass =
     enableNoScrollLayout && isMenuView ? "am-main-no-scroll" : "am-main-default";
-  const mainFlexClass = enableNoScrollLayout ? "flex-none" : "flex-grow";
+  // In no-scroll mode, make the main region reliably fill available space.
+  const mainFlexClass = enableNoScrollLayout ? "flex-1" : "flex-grow";
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
@@ -800,7 +794,8 @@ const App: React.FC = () => {
     return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
   }
 
-  const shouldLockMenuScroll = (isIpadLandscape || isDesktopKiosk) && currentView === "menu" && !isAdminView;
+  const shouldLockMenuScroll =
+    (isIpadLandscape || isDesktopKiosk) && currentView === "menu" && !isAdminView;
 
   return (
     <div
@@ -837,7 +832,9 @@ const App: React.FC = () => {
       ) : (
         <>
           <main
-            className={`container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex flex-col min-h-0 ${mainFlexClass} ${mainLayoutClass}`}
+            className={`container mx-auto px-4 md:px-6 ${
+              enableNoScrollLayout ? "py-2 md:py-3" : "py-4 md:py-6"
+            } max-w-screen-2xl flex flex-col min-h-0 ${mainFlexClass} ${mainLayoutClass}`}
           >
             {isLoading ? (
               <LoadingSpinner />

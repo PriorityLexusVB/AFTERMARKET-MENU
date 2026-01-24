@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Home, Crown, Gem, ShieldAlert, Atom } from "lucide-react";
 
 interface ValuePresentationProps {
@@ -9,11 +9,11 @@ interface ValuePresentationProps {
  * Technical Restoration: Standardized Bullet Component
  * Ensures 100% UI consistency and vertical alignment for iPad displays.
  */
-const BulletItem = ({ children }: { children: React.ReactNode }) => (
-  <li className="flex items-start gap-3 text-white/70 font-light leading-snug mb-1.5">
+const BulletRow = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-start gap-3 text-white/70 font-light leading-snug">
     <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.6)]" />
     <div className="text-sm lg:text-base">{children}</div>
-  </li>
+  </div>
 );
 
 const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => {
@@ -57,33 +57,48 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
   };
 
   const progress = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+  const progressBarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!progressBarRef.current) return;
+    progressBarRef.current.style.width = `${progress}%`;
+  }, [progress]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-[#0d0d0d] overflow-hidden text-white font-sans selection:bg-blue-500/30">
       {/* Premium Executive Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-[4px] bg-white/5 z-[10000]">
         <div
+          ref={progressBarRef}
           className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-700 shadow-[0_0_15px_rgba(0,145,255,0.5)]"
-          style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Navigation Controls */}
       <div className="fixed bottom-6 right-8 flex gap-3 z-[10000]">
         <button
+          type="button"
           onClick={() => scrollToSlide(1)}
+          aria-label="Go to first slide"
+          title="Go to first slide"
           className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10 shadow-2xl"
         >
           <Home size={18} />
         </button>
         <button
+          type="button"
           onClick={() => scrollToSlide(currentSlide - 1)}
+          aria-label="Previous slide"
+          title="Previous slide"
           className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10 shadow-2xl"
         >
           <ChevronLeft size={18} />
         </button>
         <button
+          type="button"
           onClick={() => scrollToSlide(currentSlide + 1)}
+          aria-label="Next slide"
+          title="Next slide"
           className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10 shadow-2xl"
         >
           <ChevronRight size={18} />
@@ -138,19 +153,25 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   Your new Lexus comes with world-class mechanical protection designed to cover
                   manufacturing defects:
                 </p>
-                <ul className="space-y-1">
-                  <BulletItem>
-                    <strong>Basic Warranty:</strong> 48 months / 50,000 miles covering components
-                    other than normal wear.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Powertrain:</strong> 72 months / 70,000 miles for engine, transmission,
-                    and drive systems.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Hybrid/EV:</strong> Up to 10 years / 150,000 miles for the hybrid
-                    battery components.
-                  </BulletItem>
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Basic Warranty:</strong> 48 months / 50,000 miles covering components
+                      other than normal wear.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Powertrain:</strong> 72 months / 70,000 miles for engine,
+                      transmission, and drive systems.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Hybrid/EV:</strong> Up to 10 years / 150,000 miles for the hybrid
+                      battery components.
+                    </BulletRow>
+                  </li>
                 </ul>
                 <p className="text-[10px] text-white/30 italic mt-4">
                   *Subject to Lexus terms and conditions. Focuses on mechanical reliability.
@@ -186,22 +207,30 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   We’ve ensured your vehicle’s mechanical health and maintenance are handled for the
                   long haul:
                 </p>
-                <ul className="space-y-1">
-                  <BulletItem>
-                    <strong>Engine For Life:</strong> Lifetime coverage on engine components.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Oil & Filter Changes:</strong> Provided for as long as you own your
-                    vehicle.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>VA State Inspections:</strong> Annual safety inspections covered for
-                    life.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Towing For Life:</strong> Within a 50-mile radius of any Priority
-                    dealership.
-                  </BulletItem>
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Engine For Life:</strong> Lifetime coverage on engine components.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Oil & Filter Changes:</strong> Provided for as long as you own your
+                      vehicle.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>VA State Inspections:</strong> Annual safety inspections covered for
+                      life.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Towing For Life:</strong> Within a 50-mile radius of any Priority
+                      dealership.
+                    </BulletRow>
+                  </li>
                 </ul>
                 <div className="bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl mt-4 shadow-lg">
                   <p className="text-sm lg:text-base italic font-light text-blue-100 leading-snug">
@@ -236,19 +265,25 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   Lexus warranties protect manufacturing defects — but most real-world ownership
                   pain comes from environmental exposure, road hazards, and interior wear.
                 </p>
-                <ul className="space-y-1">
-                  <BulletItem>
-                    <strong>Environmental Etching:</strong> Bird droppings, tree sap, and industrial
-                    fallout can permanently damage clear coat.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Rock Chips:</strong> Highway debris causes impact points that lead to
-                    paint failure.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Interior Wear:</strong> Stains, tears, and burns directly reduce
-                    trade-in equity.
-                  </BulletItem>
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Environmental Etching:</strong> Bird droppings, tree sap, and
+                      industrial fallout can permanently damage clear coat.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Rock Chips:</strong> Highway debris causes impact points that lead to
+                      paint failure.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Interior Wear:</strong> Stains, tears, and burns directly reduce
+                      trade-in equity.
+                    </BulletRow>
+                  </li>
                 </ul>
                 <div className="bg-red-500/10 border-l-4 border-red-500 p-4 rounded-r-xl backdrop-blur-md shadow-lg">
                   <p className="text-red-400 font-black text-[10px] uppercase mb-1 tracking-widest">
@@ -299,27 +334,37 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                     <Atom size={14} /> Electrochemical Facts
                   </h3>
-                  <ul className="space-y-1">
-                    <BulletItem>
-                      <strong>Salt Air:</strong> Particles suspended for 50+ miles, seeking paint
-                      pores.
-                    </BulletItem>
-                    <BulletItem>
-                      <strong>Magnesium Chloride:</strong> Road brines are{" "}
-                      <strong>10x more corrosive</strong> than salt.
-                    </BulletItem>
-                    <BulletItem>
-                      <strong>Humid Catalyst:</strong> Coastal humidity accelerates oxidation speed
-                      on raw metal.
-                    </BulletItem>
-                    <BulletItem>
-                      <strong>Industrial Fallout:</strong> Industrial port soot creates aggressive
-                      clarity etching.
-                    </BulletItem>
-                    <BulletItem>
-                      <strong>Well Water:</strong> Regional mineral content causes permanent mineral
-                      "water spots."
-                    </BulletItem>
+                  <ul className="space-y-1 list-none">
+                    <li>
+                      <BulletRow>
+                        <strong>Salt Air:</strong> Particles suspended for 50+ miles, seeking paint
+                        pores.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Magnesium Chloride:</strong> Road brines are{" "}
+                        <strong>10x more corrosive</strong> than salt.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Humid Catalyst:</strong> Coastal humidity accelerates oxidation
+                        speed on raw metal.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Industrial Fallout:</strong> Industrial port soot creates aggressive
+                        clarity etching.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Well Water:</strong> Regional mineral content causes permanent
+                        mineral "water spots."
+                      </BulletRow>
+                    </li>
                   </ul>
                 </div>
                 <div className="bg-red-500/10 border-l-4 border-red-500 p-3 rounded-r-xl backdrop-blur-md shadow-lg">
@@ -359,17 +404,23 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   Modern clear coats are porous. ToughGuard Premium creates a permanent chemical
                   bond that seals those pores for good.
                 </p>
-                <ul className="space-y-1">
-                  <BulletItem>
-                    <strong>One-Time Application:</strong> No more annual waxing or polishing.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>Environmental Shield:</strong> Covers damage from bird droppings, tree
-                    sap, and fallout.
-                  </BulletItem>
-                  <BulletItem>
-                    <strong>The Finish:</strong> A deep, permanent "Liquid-Glass" shine.
-                  </BulletItem>
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>One-Time Application:</strong> No more annual waxing or polishing.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Environmental Shield:</strong> Covers damage from bird droppings, tree
+                      sap, and fallout.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>The Finish:</strong> A deep, permanent "Liquid-Glass" shine.
+                    </BulletRow>
+                  </li>
                 </ul>
               </div>
               <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
@@ -421,51 +472,70 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                         ? "Luxury interiors require luxury protection. We focus on the moments that hurt your trade-in value."
                         : "In our coastal region, the most dangerous damage is the kind you can't see. Stop corrosion before it starts."}
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 list-none">
                     {num === 7 && (
                       <>
-                        <BulletItem>
-                          <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel
-                          impacts.
-                        </BulletItem>
-                        <BulletItem>
-                          <strong>Self-Healing:</strong> Minor scratches disappear with heat.
-                        </BulletItem>
-                        <BulletItem>
-                          <strong>Total Coverage:</strong> Focused protection on high-impact zones.
-                        </BulletItem>
+                        <li>
+                          <BulletRow>
+                            <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel
+                            impacts.
+                          </BulletRow>
+                        </li>
+                        <li>
+                          <BulletRow>
+                            <strong>Self-Healing:</strong> Minor scratches disappear with heat.
+                          </BulletRow>
+                        </li>
+                        <li>
+                          <BulletRow>
+                            <strong>Total Coverage:</strong> Focused protection on high-impact
+                            zones.
+                          </BulletRow>
+                        </li>
                       </>
                     )}
                     {num === 8 && (
                       <>
-                        <BulletItem>
-                          <strong>Stain Resistance:</strong> Coverage for coffee, juices, and daily
-                          spills.
-                        </BulletItem>
-                        <BulletItem>
-                          <strong>Accidental Coverage:</strong> Protection for rips, tears, and
-                          burns.
-                        </BulletItem>
-                        <BulletItem>
-                          <strong>Diamond Shield:</strong> Helps reduce glass pitting and
-                          sand-clouding.
-                        </BulletItem>
+                        <li>
+                          <BulletRow>
+                            <strong>Stain Resistance:</strong> Coverage for coffee, juices, and
+                            daily spills.
+                          </BulletRow>
+                        </li>
+                        <li>
+                          <BulletRow>
+                            <strong>Accidental Coverage:</strong> Protection for rips, tears, and
+                            burns.
+                          </BulletRow>
+                        </li>
+                        <li>
+                          <BulletRow>
+                            <strong>Diamond Shield:</strong> Helps reduce glass pitting and
+                            sand-clouding.
+                          </BulletRow>
+                        </li>
                       </>
                     )}
                     {num === 9 && (
                       <>
-                        <BulletItem>
-                          <strong>Neutralizes Salt:</strong> Barrier helps stop brine from reaching
-                          raw steel.
-                        </BulletItem>
-                        <BulletItem>
-                          <strong>Prevents Fatigue:</strong> Avoids rust-frozen hardware and hidden
-                          decay.
-                        </BulletItem>
-                        <BulletItem>
-                          <strong>Resale Edge:</strong> A rust-free chassis protects long-term
-                          equity.
-                        </BulletItem>
+                        <li>
+                          <BulletRow>
+                            <strong>Neutralizes Salt:</strong> Barrier helps stop brine from
+                            reaching raw steel.
+                          </BulletRow>
+                        </li>
+                        <li>
+                          <BulletRow>
+                            <strong>Prevents Fatigue:</strong> Avoids rust-frozen hardware and
+                            hidden decay.
+                          </BulletRow>
+                        </li>
+                        <li>
+                          <BulletRow>
+                            <strong>Resale Edge:</strong> A rust-free chassis protects long-term
+                            equity.
+                          </BulletRow>
+                        </li>
                       </>
                     )}
                   </ul>

@@ -67,22 +67,22 @@ export const Header: React.FC<HeaderProps> = ({
             </svg>
             Print
           </button>
-          {showPresentationButton && onShowPresentation && (
-            <button
-              type="button"
-              onClick={onShowPresentation}
-              className="btn-lux-ghost text-sm px-3"
-              aria-label="Show presentation"
-              title="Show presentation"
-            >
-              Presentation
-            </button>
-          )}
           {(!guestMode || isDemoMode) && (
             <>
               <button onClick={onToggleAdminView} className="btn-lux-secondary text-sm px-3">
                 {isAdminView ? "View Menu" : isDemoMode ? "Admin Setup" : "Admin Panel"}
               </button>
+              {showPresentationButton && onShowPresentation && (
+                <button
+                  type="button"
+                  onClick={onShowPresentation}
+                  className="btn-lux-ghost text-sm px-3"
+                  aria-label="Show presentation"
+                  title="Show presentation"
+                >
+                  Presentation
+                </button>
+              )}
               {user && (
                 <button onClick={onLogout} className="btn-lux-ghost text-sm px-3">
                   Logout

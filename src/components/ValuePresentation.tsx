@@ -191,11 +191,8 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
             </p>
             <div className="w-16 h-0.5 bg-blue-600 mx-auto opacity-50" />
             <p className="mt-8 italic text-white/30 font-light text-lg">
-              A value overview for the 2025 Lexus Ownership Experience
+              A value overview for the Lexus Ownership Experience...
             </p>
-          </div>
-          <div className="absolute bottom-8 left-10 text-[10px] uppercase tracking-[0.5em] text-white/20 font-bold">
-            Priority Lexus x Commodore Coatings
           </div>
         </div>
 

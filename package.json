@@ -13,6 +13,7 @@
     "prebuild": "node scripts/validate-env-vars.js",
     "postbuild": "node scripts/validate-build.js",
     "preview": "vite preview",
+    "e2e:dev": "cross-env VITE_FORCE_DEMO_MODE=true vite --host 0.0.0.0 --port 4173 --strictPort",
     "e2e:web": "node scripts/run-e2e-webserver.mjs",
     "start": "node index.js",
     "serve": "node index.js",

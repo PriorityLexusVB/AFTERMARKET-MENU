@@ -1,5 +1,44 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Home, Crown, Gem, ShieldAlert, Atom } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Crown,
+  Gem,
+  ShieldAlert,
+  Atom,
+  Zap,
+  Maximize,
+  Truck,
+  FileWarning,
+  ShieldCheck,
+  Microscope,
+  Anchor,
+  ThermometerSnowflake,
+  Droplets,
+  Sun,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
+
+const PresentationBoardIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <rect x="4" y="3" width="16" height="11" rx="2" />
+    <path d="M8 21h8" />
+    <path d="M12 14v7" />
+    <path d="M8 8l2 2 3-4 3 5" />
+  </svg>
+);
 
 interface ValuePresentationProps {
   onComplete: () => void;
@@ -18,7 +57,7 @@ const BulletRow = ({ children }: { children: React.ReactNode }) => (
 
 const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => {
   const [currentSlide, setCurrentSlide] = useState(1);
-  const totalSlides = 10;
+  const totalSlides = 12;
   const [activeSlide, setActiveSlide] = useState(1);
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
@@ -27,11 +66,13 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
     2: "/MENU1.png",
     3: "/MENU2.png",
     4: "/MENU3.png",
-    5: "/MENU4.png",
-    6: "/MENU5.png",
-    7: "/MENU6.png",
-    8: "/MENU7.png",
-    9: "/MENU8.png",
+    5: "/MENU8.png",
+    6: "/MENU4.png",
+    7: "/MENU5.png",
+    8: "/MENU6.png",
+    9: "/MENU7.png",
+    10: "/MENU10.png",
+    11: "/MENU9.png",
   };
 
   useEffect(() => {
@@ -131,11 +172,11 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
           <button
             type="button"
             onClick={onComplete}
-            aria-label="Skip presentation and review package options"
-            title="Skip presentation"
-            className="px-4 py-3 rounded-full bg-blue-600/20 hover:bg-blue-600/35 transition-all backdrop-blur-2xl border border-blue-400/20 shadow-2xl text-xs uppercase tracking-[0.25em]"
+            aria-label="Review package options"
+            title="Review package options"
+            className="p-3 rounded-full bg-blue-600/20 hover:bg-blue-600/35 transition-all backdrop-blur-2xl border border-blue-400/20 shadow-2xl"
           >
-            Review Package Options
+            <PresentationBoardIcon className="w-[18px] h-[18px] text-white" />
           </button>
         </div>
         <button
@@ -370,13 +411,130 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
           </div>
         </div>
 
-        {/* Slide 5: Regional Science */}
+        {/* Slide 5: RustGuard Pro */}
         <div
           className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs5"
         >
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          >
+            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+              Structural Integrity Shield
+            </span>
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              CORROSION NEUTRALIZATION TECH
+            </div>
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+              RustGuard Pro: Foundation Defense
+            </h2>
+
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <Microscope size={18} className="text-blue-500" aria-hidden="true" />
+                    Molecular Barrier
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                    In our coastal region, the most dangerous damage is the kind you can&apos;t see.
+                    RustGuard Pro creates an active chemical barrier that neutralizes oxidation on
+                    contact.
+                  </p>
+                </div>
+
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Salt Air Neutralization:</strong> Active inhibitors stop salt
+                      particles from bonding to raw chassis steel.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Magnesium Chloride Defense:</strong> High-density shield against
+                      aggressive winter road brines.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Structural Security:</strong> Prevents the &quot;rust-freezing&quot;
+                      of critical suspension and braking components.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Hidden Cavity Protection:</strong> Crevice-penetrating formula reaches
+                      inner panels where moisture collects.
+                    </BulletRow>
+                  </li>
+                </ul>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <Anchor size={24} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Coastal Immunity
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Engineered for Virginia Beach humidity catalysts.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <ShieldAlert
+                      size={24}
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Equity Insurance
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        A clean undercarriage protects trade-in value.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
+                <img
+                  src={images[5]}
+                  alt="RustGuard Pro Chassis Protection"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(0,145,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,145,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                <div className="absolute bottom-4 right-4 text-blue-500/40">
+                  <ThermometerSnowflake size={48} strokeWidth={1} aria-hidden="true" />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                &quot;By protecting the structural foundation of your Lexus, RustGuard ensures your
+                vehicle remains safe, silent, and structurally sound for the life of your
+                ownership.&quot;
+              </p>
+              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                LIFETIME STRUCTURE WARRANTY
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide 6: Regional Science */}
+        <div
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          id="rs6"
+        >
+          <div
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
               Coastal Science
@@ -387,7 +545,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
             <div className="grid grid-cols-2 gap-8 lg:gap-10 items-start">
               <div className="relative rounded-xl overflow-hidden border border-white/10 h-[280px] lg:h-[350px] shadow-2xl">
                 <img
-                  src={images[5]}
+                  src={images[6]}
                   alt="VA Beach Science"
                   className="w-full h-full object-cover"
                 />
@@ -444,20 +602,17 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
           </div>
         </div>
 
-        {/* Slide 6: ToughGuard */}
+        {/* Slide 7: ToughGuard */}
         <div
           className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
-          id="rs6"
+          id="rs7"
         >
           <div
-            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 7 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
               Exterior Protection
             </span>
-            <div className="inline-block bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
-              5-YEAR SURFACE GUARANTEE
-            </div>
             <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
               ToughGuard: The Clear Coat Shield
             </h2>
@@ -481,147 +636,419 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
                   </li>
                   <li>
                     <BulletRow>
+                      <strong>Chemical Resistance:</strong> Guards against Bird Droppings, Tree Sap,
+                      and Insects.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Climate Barrier:</strong> Blocks UV Rays, Road Salt, and Acid Rain
+                      damage.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
                       <strong>The Finish:</strong> A deep, permanent "Liquid-Glass" shine.
                     </BulletRow>
                   </li>
                 </ul>
               </div>
               <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
-                <img src={images[6]} alt="ToughGuard" className="w-full h-full object-cover" />
+                <img src={images[7]} alt="ToughGuard" className="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-end">
+              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                5-YEAR SURFACE GUARANTEE
               </div>
             </div>
           </div>
         </div>
 
-        {/* Slides 7-9: Additional Protection Categories */}
-        {[7, 8, 9].map((num) => (
+        {/* Slide 8: Impact Protection */}
+        <div
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          id="rs8"
+        >
           <div
-            key={num}
-            className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
-            id={`rs${num}`}
+            className={`my-auto z-10 transition-all duration-1000 ${
+              activeSlide === 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
           >
-            <div
-              className={`my-auto z-10 transition-all duration-1000 ${
-                activeSlide === num ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-              }`}
-            >
-              <div className="max-w-6xl mx-auto w-full">
-                <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
-                  {num === 7
-                    ? "Impact Protection"
-                    : num === 8
-                      ? "Life Proofing"
-                      : "Structural Protection"}
-                </span>
-                <div className="inline-block bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
-                  {num === 7
-                    ? "10-YEAR SUNTEK WARRANTY"
-                    : num === 8
-                      ? "INTERIOR & GLASS GUARANTEE"
-                      : "LIFETIME RUST COVERAGE"}
+            <div className="max-w-6xl mx-auto w-full">
+              <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+                Impact Protection
+              </span>
+              <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+                Highway Hazards: Suntek Film
+              </h2>
+              <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+                <div className="order-2 space-y-4">
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                    I-264 construction and coastal sand effectively &apos;sand-blast&apos; your
+                    front-end at highway speeds.
+                  </p>
+                  <ul className="space-y-1 list-none">
+                    <li>
+                      <BulletRow>
+                        <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel impacts.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Self-Healing:</strong> Minor scratches disappear with heat.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Total Coverage:</strong> Focused protection on high-impact zones.
+                      </BulletRow>
+                    </li>
+                  </ul>
                 </div>
-                <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
-                  {num === 7
-                    ? "Highway Hazards: Suntek Film"
-                    : num === 8
-                      ? "Shielding the Cabin"
-                      : "RustGuard Pro: Foundation"}
-                </h2>
-                <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-                  <div className={`${num % 2 === 0 ? "order-1" : "order-2"} space-y-4`}>
-                    <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
-                      {num === 7
-                        ? "I-264 construction and coastal sand effectively 'sand-blast' your front-end at highway speeds."
-                        : num === 8
-                          ? "Luxury interiors require luxury protection. We focus on the moments that hurt your trade-in value."
-                          : "In our coastal region, the most dangerous damage is the kind you can't see. Stop corrosion before it starts."}
-                    </p>
-                    <ul className="space-y-1 list-none">
-                      {num === 7 && (
-                        <>
-                          <li>
-                            <BulletRow>
-                              <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel
-                              impacts.
-                            </BulletRow>
-                          </li>
-                          <li>
-                            <BulletRow>
-                              <strong>Self-Healing:</strong> Minor scratches disappear with heat.
-                            </BulletRow>
-                          </li>
-                          <li>
-                            <BulletRow>
-                              <strong>Total Coverage:</strong> Focused protection on high-impact
-                              zones.
-                            </BulletRow>
-                          </li>
-                        </>
-                      )}
-                      {num === 8 && (
-                        <>
-                          <li>
-                            <BulletRow>
-                              <strong>Stain Resistance:</strong> Coverage for coffee, juices, and
-                              daily spills.
-                            </BulletRow>
-                          </li>
-                          <li>
-                            <BulletRow>
-                              <strong>Accidental Coverage:</strong> Protection for rips, tears, and
-                              burns.
-                            </BulletRow>
-                          </li>
-                          <li>
-                            <BulletRow>
-                              <strong>Diamond Shield:</strong> Helps reduce glass pitting and
-                              sand-clouding.
-                            </BulletRow>
-                          </li>
-                        </>
-                      )}
-                      {num === 9 && (
-                        <>
-                          <li>
-                            <BulletRow>
-                              <strong>Neutralizes Salt:</strong> Barrier helps stop brine from
-                              reaching raw steel.
-                            </BulletRow>
-                          </li>
-                          <li>
-                            <BulletRow>
-                              <strong>Prevents Fatigue:</strong> Avoids rust-frozen hardware and
-                              hidden decay.
-                            </BulletRow>
-                          </li>
-                          <li>
-                            <BulletRow>
-                              <strong>Resale Edge:</strong> A rust-free chassis protects long-term
-                              equity.
-                            </BulletRow>
-                          </li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-                  <div
-                    className={`${num % 2 === 0 ? "order-2" : "order-1"} relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]`}
-                  >
-                    <img src={images[num]} alt="Visual" className="w-full h-full object-cover" />
-                  </div>
+                <div className="order-1 relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
+                  <img src={images[8]} alt="Visual" className="w-full h-full object-cover" />
+                </div>
+              </div>
+
+              <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-end">
+                <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest shrink-0">
+                  <ShieldCheck size={16} aria-hidden="true" />
+                  10-YEAR SUNTEK WARRANTY
                 </div>
               </div>
             </div>
           </div>
-        ))}
+        </div>
 
-        {/* Slide 10: Conclusion */}
+        {/* Slide 9: InteriorGuard (Cabin Preservation) */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col bg-black px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          id="rs9"
+        >
+          <div
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          >
+            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+              Signature Interior Defense
+            </span>
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              NANO-CERAMIC TEXTILE SHIELD
+            </div>
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+              InteriorGuard: Cabin Preservation
+            </h2>
+
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <Sparkles size={18} className="text-blue-500" aria-hidden="true" />
+                    Advanced Polymer Barrier
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                    Luxury interiors require a sophisticated defense. InteriorGuard life-proofs your
+                    cabin by sealing fibers and surfaces against the moments that impact trade-in
+                    value.
+                  </p>
+                </div>
+
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Stain Hydrophobicity:</strong> Immediate repulsion of water and
+                      oil-based spills (coffee, soda, and food dye).
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>UV Inhibition:</strong> Prevents leather cracking and vinyl
+                      discoloration from intense coastal solar heat.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Antimicrobial Shield:</strong> Inhibits the growth of bacteria, mold,
+                      and mildew within deep seat fibers.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Material Conditioning:</strong> Maintains the soft, supple factory
+                      feel of NuLuxe and Semi-Aniline leathers.
+                    </BulletRow>
+                  </li>
+                </ul>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <Droplets
+                      size={24}
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Spill Security
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Guaranteed protection against 100+ daily accidental stains.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <UserCheck
+                      size={24}
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Resale Edge
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        A pristine, scent-free interior is the highest valued trade-in factor.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[34vh] bg-[#111]">
+                <img
+                  src={images[9]}
+                  alt="InteriorGuard Cabin Protection"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(0,145,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,145,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                <div className="absolute bottom-4 right-4 text-blue-500/40 pointer-events-none">
+                  <Sun size={48} strokeWidth={1} aria-hidden="true" />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                &quot;By sealing your vehicle&apos;s most intimate surfaces, InteriorGuard ensures
+                your Lexus remains as inviting and vibrant as the day you first sat in the
+                driver&apos;s seat.&quot;
+              </p>
+              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                5-YEAR INTERIOR GUARANTEE
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide 10: Diamond Shield (Windshield Protection) */}
+        <div
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
           id="rs10"
         >
           <div
-            className={`m-auto text-center max-w-5xl z-10 transition-all duration-1000 ${activeSlide === 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          >
+            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+              Structural Glass Defense
+            </span>
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              NANO-MOLECULAR BONDING
+            </div>
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+              Diamond Shield: Windshield Protection
+            </h2>
+
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <Maximize size={18} className="text-blue-500" aria-hidden="true" />
+                    Liquid-Glass Resilience
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                    Diamond Shield uses an advanced polymer to seal microscopic pores, creating a
+                    smooth, high-tension surface that deflects impacts.
+                  </p>
+                </div>
+
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Impact Resistance:</strong> Reduces the likelihood of rock chips and
+                      spider-web cracks.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Pitting &amp; Sand-Clouding:</strong> Defends against coastal
+                      &quot;sand-blasting&quot; at highway speeds.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Hydrophobic Clarity:</strong> Sheds water, snow, and ice for improved
+                      foul-weather visibility.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Optically Clear:</strong> Enhances night-driving clarity by reducing
+                      glare and refraction.
+                    </BulletRow>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
+                <img
+                  src={images[10]}
+                  alt="Diamond Shield Glass Protection"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                &quot;Diamond Shield strengthens the structural integrity of your glass while
+                providing a self-cleaning surface that preserves your visibility and your
+                vehicle&apos;s clean history.&quot;
+              </p>
+              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                Fully Warrantied Protection
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide 11: Evernew (Appearance Protection) */}
+        <div
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          id="rs11"
+        >
+          <div
+            className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 11 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          >
+            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+              Premium Aesthetic Restoration
+            </span>
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              HIGH-LINE PRECISION SCANNING
+            </div>
+            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+              Evernew: Appearance Protection
+            </h2>
+
+            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <Maximize size={18} className="text-blue-500" aria-hidden="true" />
+                    Digital Reconditioning
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                    Evernew uses high-precision scanning to identify and neutralize surface
+                    imperfections before they compromise your vehicle&apos;s value.
+                  </p>
+                </div>
+
+                <ul className="space-y-1 list-none">
+                  <li>
+                    <BulletRow>
+                      <strong>Scratch, Chip &amp; Dent Repair:</strong> Master-level reconditioning
+                      for everyday road-borne impacts.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Eliminate Insurance Claims:</strong> Avoid the deductibles and premium
+                      hikes of minor dollar repairs.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>Shield Your CARFAX:</strong> Keep cosmetic reconditioning off
+                      permanent history reports.
+                    </BulletRow>
+                  </li>
+                  <li>
+                    <BulletRow>
+                      <strong>We Come to You:</strong> Elite mobile service—professional repairs at
+                      your home or office.
+                    </BulletRow>
+                  </li>
+                </ul>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <Truck size={24} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Total Mobility
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Professional on-site service at your convenience.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <FileWarning
+                      size={24}
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Equity Defense
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Preserve resale status with cleaner history reports.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[34vh]">
+                <img
+                  src={images[11]}
+                  alt="Evernew Digital Reconditioning"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                &quot;Evernew helps keep your Lexus in a perpetual state of
+                &apos;newness&apos;—preserving factory paint integrity and peak trade-in equity for
+                the long haul.&quot;
+              </p>
+              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                Covered for 5 Years
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide 12: Conclusion */}
+        <div
+          className="slide-container h-screen w-screen snap-start flex flex-col bg-black px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          id="rs12"
+        >
+          <div
+            className={`m-auto text-center max-w-5xl z-10 transition-all duration-1000 ${activeSlide === 12 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <h2 className="text-4xl lg:text-6xl font-bold text-blue-500 uppercase tracking-widest mb-6">
               Empowering Ownership

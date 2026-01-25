@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { SetupGuide } from "./SetupGuide";
@@ -20,6 +20,10 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
+
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const passwordRef = useRef<HTMLInputElement | null>(null);
 
   const installSupport = useMemo(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined") {
@@ -74,6 +78,14 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
     // iOS standalone Safari can be finicky about focusing inputs; ensure focus on user gesture.
     if (document.activeElement !== input) {
       input.focus();
+    }
+
+    // Nudge caret placement (some iOS edge cases focus without showing caret).
+    try {
+      const len = input.value.length;
+      input.setSelectionRange(len, len);
+    } catch {
+      // Not all input types support selection.
     }
   };
 
@@ -166,13 +178,26 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
               autoCorrect="off"
               spellCheck={false}
               autoComplete="email"
+              enterKeyHint="next"
               required
+              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onPointerDown={ensureFocus}
+              onTouchStart={ensureFocus}
               onTouchEnd={ensureFocus}
-              onFocus={scrollIntoViewOnFocus}
+              onFocus={(e) => {
+                setFocusedField("email");
+                scrollIntoViewOnFocus(e);
+              }}
+              onBlur={() => setFocusedField((prev) => (prev === "email" ? null : prev))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  passwordRef.current?.focus();
+                }
+              }}
               disabled={isSubmitting}
+              ref={emailRef}
               className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             />
           </div>
@@ -188,13 +213,20 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
               autoCorrect="off"
               spellCheck={false}
               autoComplete="current-password"
+              enterKeyHint="go"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onPointerDown={ensureFocus}
+              onTouchStart={ensureFocus}
               onTouchEnd={ensureFocus}
-              onFocus={scrollIntoViewOnFocus}
+              onFocus={(e) => {
+                setFocusedField("password");
+                scrollIntoViewOnFocus(e);
+              }}
+              onBlur={() => setFocusedField((prev) => (prev === "password" ? null : prev))}
               disabled={isSubmitting}
+              ref={passwordRef}
               className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             />
           </div>
@@ -211,6 +243,20 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
             >
               {isSubmitting ? "Signing In..." : "Sign In"}
             </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              className="btn-lux-ghost text-xs px-3"
+              onClick={() => {
+                // Manual fallback: user gesture button that focuses the email field.
+                window.setTimeout(() => emailRef.current?.focus(), 0);
+              }}
+            >
+              Tap to type
+            </button>
+            <p className="text-[11px] text-gray-500">Focused: {focusedField ?? "none"}</p>
           </div>
         </form>
 

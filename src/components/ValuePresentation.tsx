@@ -83,6 +83,10 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
     .filter(Boolean)
     .join(" ");
 
+  const reviewCtaLabel = preparedForName
+    ? `REVIEW PERSONALIZED OPTIONS FOR: ${preparedForName.toUpperCase()}`
+    : "Review Package Options";
+
   // Mapping for locally saved PNG files in your /public folder
   const images: Record<number, string> = {
     2: "/MENU1.png",
@@ -1229,7 +1233,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
               onClick={onComplete}
               className="bg-blue-600 hover:bg-blue-500 text-white font-black text-base uppercase tracking-[0.25em] px-12 py-6 rounded-full shadow-[0_20px_60px_rgba(0,145,255,0.4)] transition-all duration-500 hover:scale-105 group"
             >
-              Review Package Options
+              {reviewCtaLabel}
             </button>
           </div>
         </div>

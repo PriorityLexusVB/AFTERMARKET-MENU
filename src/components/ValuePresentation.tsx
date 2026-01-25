@@ -44,6 +44,12 @@ const PresentationBoardIcon: React.FC<{ className?: string }> = ({ className }) 
 
 interface ValuePresentationProps {
   onComplete: () => void;
+  customerInfo?: {
+    name: string;
+    year: string;
+    make: string;
+    model: string;
+  };
 }
 
 /**
@@ -57,11 +63,21 @@ const BulletRow = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => {
+const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete, customerInfo }) => {
   const [currentSlide, setCurrentSlide] = useState(1);
   const totalSlides = 12;
   const [activeSlide, setActiveSlide] = useState(1);
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
+
+  const preparedForName = (customerInfo?.name ?? "").trim();
+  const preparedForVehicle = [
+    customerInfo?.year ?? "",
+    customerInfo?.make ?? "",
+    customerInfo?.model ?? "",
+  ]
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .join(" ");
 
   // Mapping for locally saved PNG files in your /public folder
   const images: Record<number, string> = {
@@ -233,6 +249,19 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
               Virginia Beach Resilience
             </p>
             <div className="w-16 h-0.5 bg-blue-600 mx-auto opacity-50" />
+
+            <div className="mt-8">
+              <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Prepared for</p>
+              <p className="mt-2 text-lg lg:text-2xl text-white/80 font-light">
+                {preparedForName || "__________"}
+              </p>
+              {preparedForVehicle ? (
+                <p className="mt-2 text-sm lg:text-base text-white/45 font-light">
+                  on their {preparedForVehicle}
+                </p>
+              ) : null}
+            </div>
+
             <p className="mt-8 italic text-white/30 font-light text-lg">
               A value overview for the Lexus Ownership Experience...
             </p>

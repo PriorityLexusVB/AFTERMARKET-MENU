@@ -666,6 +666,17 @@ const App: React.FC = () => {
     const wrapperClass = enableNoScrollLayout
       ? "flex flex-col h-full min-h-0 gap-1.5"
       : "space-y-4";
+
+    const customerName = customerInfo.name.trim();
+    const vehicleLabel = [customerInfo.year, customerInfo.make, customerInfo.model]
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .join(" ");
+    const preparedForSummary = customerName
+      ? vehicleLabel
+        ? `Prepared for ${customerName} on their ${vehicleLabel}`
+        : `Prepared for ${customerName}`
+      : "Add customer + vehicle info";
     // Use iPad-specific compact styling only for iPad, desktop gets slightly larger but still fits
     const heroTitleClass = enableIpadMenuLayout
       ? "lux-title text-lg leading-tight"
@@ -777,6 +788,23 @@ const App: React.FC = () => {
 
     return (
       <div className={wrapperClass}>
+        <div className="shrink-0 rounded-2xl border border-lux-border/60 bg-lux-bg1/50 backdrop-blur-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.35em] text-lux-textMuted">
+              Prepared For
+            </div>
+            <div className="text-sm sm:text-base text-lux-textStrong font-semibold truncate">
+              {preparedForSummary}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenSettings}
+            className="btn-lux-secondary text-sm px-3 whitespace-nowrap"
+          >
+            Customer Info
+          </button>
+        </div>
         <div className="am-page-header shrink-0">
           <div className="am-page-header-stack text-center">
             <h2 className={heroTitleClass}>Vehicle Protection Menu</h2>
@@ -816,6 +844,7 @@ const App: React.FC = () => {
   if (currentView === "presentation") {
     return (
       <ValuePresentation
+        customerInfo={customerInfo}
         onComplete={() => {
           hasShownPresentationRef.current = true;
           setCurrentView("menu");

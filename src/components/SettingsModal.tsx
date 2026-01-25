@@ -1,5 +1,50 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import type { AlaCarteOption, PackageTier, PriceOverrides } from "../types";
+
+const parseMoneyInput = (raw: string): number | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  // Accept common sales inputs like "$2,999" or "2,999".
+  const normalized = trimmed.replace(/[$,\s]/g, "");
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return parsed;
+};
+
+const normalizeOverrides = (
+  overrides: PriceOverrides
+): Record<string, { price?: number; cost?: number }> => {
+  const result: Record<string, { price?: number; cost?: number }> = {};
+  Object.entries(overrides).forEach(([id, value]) => {
+    if (!value) return;
+    const next: { price?: number; cost?: number } = {};
+    if (typeof value.price === "number") next.price = value.price;
+    if (typeof value.cost === "number") next.cost = value.cost;
+    if (Object.keys(next).length > 0) {
+      result[id] = next;
+    }
+  });
+  return result;
+};
+
+const overridesEqual = (a: PriceOverrides, b: PriceOverrides): boolean => {
+  const na = normalizeOverrides(a);
+  const nb = normalizeOverrides(b);
+  const aKeys = Object.keys(na).sort();
+  const bKeys = Object.keys(nb).sort();
+  if (aKeys.length !== bKeys.length) return false;
+  for (const key of aKeys) {
+    if (!(key in nb)) return false;
+    const av = na[key];
+    const bv = nb[key];
+    if (!av || !bv) return false;
+    if (av.price !== bv.price) return false;
+    if (av.cost !== bv.cost) return false;
+  }
+  return true;
+};
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,7 +73,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [overrides, setOverrides] = useState<PriceOverrides>(currentPriceOverrides);
   const [desiredTotal, setDesiredTotal] = useState<string>("");
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   const selectionItems = useMemo(() => {
     const items: Array<{
@@ -82,6 +128,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const totalDelta = useMemo(() => currentTotal - standardTotal, [currentTotal, standardTotal]);
 
+  const isDirty = useMemo(
+    () => !overridesEqual(overrides, currentPriceOverrides),
+    [overrides, currentPriceOverrides]
+  );
+
   const formatMoney = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -93,8 +144,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setOverrides(currentPriceOverrides);
-      setSaveSuccess(false);
+      setSaveError(null);
       setDesiredTotal("");
+      setShowDiscardConfirm(false);
     }
   }, [currentPriceOverrides, isOpen]);
 
@@ -114,8 +166,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         return result;
       }
 
-      const parsed = Number(trimmed);
-      if (!Number.isFinite(parsed) || parsed < 0) {
+      const parsed = parseMoneyInput(trimmed);
+      if (parsed == null) {
         return prev;
       }
       return {
@@ -123,13 +175,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         [id]: { ...current, [key]: parsed },
       };
     });
-    setSaveSuccess(false);
+    setSaveError(null);
   };
 
   const applyDesiredTotal = () => {
     if (!selectedPackage) return;
-    const parsed = Number(desiredTotal.trim());
-    if (!Number.isFinite(parsed) || parsed < 0) return;
+    const parsed = parseMoneyInput(desiredTotal);
+    if (parsed == null) return;
     const addOnsTotal = selectionItems
       .filter((item) => item.id !== selectedPackage.id)
       .reduce((sum, item) => {
@@ -143,14 +195,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const clearAllOverrides = () => {
     setOverrides({});
-    setSaveSuccess(false);
+    setSaveError(null);
   };
+
+  const requestClose = useCallback(() => {
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    onClose();
+  }, [isDirty, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        requestClose();
       }
     };
     window.addEventListener("keydown", handleEsc);
@@ -160,21 +220,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       window.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, requestClose]);
 
   const handleSave = () => {
-    setSaveSuccess(true);
-
-    // Brief success message before closing
-    setTimeout(() => {
-      try {
-        onSave(overrides);
-      } catch (error) {
-        setSaveSuccess(false);
-        console.error("Error saving settings:", error);
-        // Error will be handled by parent component if needed
-      }
-    }, 500);
+    setSaveError(null);
+    try {
+      onSave(overrides);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      setSaveError("Could not save pricing adjustments. Please try again.");
+    }
   };
 
   if (!isOpen) return null;
@@ -184,7 +239,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       <button
         type="button"
         className="absolute inset-0 bg-black bg-opacity-70 animate-fade-in"
-        onClick={onClose}
+        onClick={requestClose}
         aria-label="Close settings"
       />
       <div
@@ -206,7 +261,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={requestClose}
             className="text-gray-400 hover:text-white transition-colors"
             aria-label="Close settings"
           >
@@ -228,21 +283,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="p-6 space-y-8 max-h-[calc(100vh-220px)] overflow-y-auto">
-          {saveSuccess && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center gap-3 animate-fade-in">
+          {saveError && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3 animate-fade-in">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className="w-5 h-5 text-green-400"
+                className="w-5 h-5 text-red-300"
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm-.75-10.75a.75.75 0 0 1 1.5 0v4.5a.75.75 0 0 1-1.5 0v-4.5Zm.75 8.25a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-green-400 font-semibold">Settings saved successfully!</span>
+              <span className="text-red-200 font-semibold">{saveError}</span>
+            </div>
+          )}
+
+          {showDiscardConfirm && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in">
+              <div className="text-amber-100">
+                <p className="font-semibold">Discard unsaved changes?</p>
+                <p className="text-sm text-amber-200/80">
+                  Your pricing edits won’t apply unless you Save.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowDiscardConfirm(false)}
+                  className="btn-lux-ghost px-3 min-h-[40px]"
+                >
+                  Keep editing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDiscardConfirm(false);
+                    onClose();
+                  }}
+                  className="bg-amber-500 text-black px-3 min-h-[40px] rounded-md font-bold"
+                >
+                  Discard
+                </button>
+              </div>
             </div>
           )}
 
@@ -265,7 +350,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                        Current total
+                        Negotiated total (preview)
                       </p>
                       <p className="text-2xl font-teko text-white">{formatMoney(currentTotal)}</p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -304,7 +389,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           value={desiredTotal}
                           onChange={(e) => {
                             setDesiredTotal(e.target.value);
-                            setSaveSuccess(false);
+                            setSaveError(null);
                           }}
                           className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500"
                           placeholder="e.g. 2999"
@@ -328,7 +413,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-xs text-gray-500">Overrides apply only after Save.</p>
+                    <p className="text-xs text-gray-500">
+                      Changes are a preview here and apply only after Save.
+                    </p>
                     <button
                       type="button"
                       onClick={clearAllOverrides}
@@ -426,6 +513,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="p-6 bg-gray-900/50 border-t border-gray-700 flex justify-end items-center rounded-b-xl sticky bottom-0 z-10">
+          <button type="button" onClick={requestClose} className="btn-lux-ghost px-5 py-2 mr-3">
+            Cancel
+          </button>
           <button
             onClick={handleSave}
             className="bg-blue-600 text-white px-6 py-2 rounded-md font-bold uppercase tracking-wider text-sm hover:bg-blue-700 transition-colors transform active:scale-95"

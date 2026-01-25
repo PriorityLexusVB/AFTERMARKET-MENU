@@ -97,7 +97,8 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     onClick={onOpenSettings}
                     className="btn-lux-ghost p-2 text-lux-textMuted hover:text-lux-textStrong hover:rotate-90 transition-all duration-300"
-                    aria-label="Open Settings"
+                    aria-label="Open pricing settings"
+                    title="Pricing adjustments"
                   >
                     <SettingsIcon />
                   </button>

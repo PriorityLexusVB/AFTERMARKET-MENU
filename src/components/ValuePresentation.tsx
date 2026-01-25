@@ -23,6 +23,8 @@ import {
   UserCheck,
 } from "lucide-react";
 
+import { CustomerInfoModal, type CustomerInfo } from "./CustomerInfoModal";
+
 const PresentationBoardIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -44,12 +46,8 @@ const PresentationBoardIcon: React.FC<{ className?: string }> = ({ className }) 
 
 interface ValuePresentationProps {
   onComplete: () => void;
-  customerInfo?: {
-    name: string;
-    year: string;
-    make: string;
-    model: string;
-  };
+  customerInfo?: CustomerInfo;
+  onSaveCustomerInfo?: (info: CustomerInfo) => void;
 }
 
 /**
@@ -63,11 +61,17 @@ const BulletRow = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete, customerInfo }) => {
+const ValuePresentation: React.FC<ValuePresentationProps> = ({
+  onComplete,
+  customerInfo,
+  onSaveCustomerInfo,
+}) => {
   const [currentSlide, setCurrentSlide] = useState(1);
   const totalSlides = 12;
   const [activeSlide, setActiveSlide] = useState(1);
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
+
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
 
   const preparedForName = (customerInfo?.name ?? "").trim();
   const preparedForVehicle = [
@@ -173,6 +177,14 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete, custo
 
   return (
     <div className="fixed inset-0 z-[9999] bg-[#0d0d0d] overflow-hidden text-white font-sans selection:bg-blue-500/30">
+      <CustomerInfoModal
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        currentInfo={customerInfo ?? { name: "", year: "", make: "", model: "" }}
+        onSave={(info) => {
+          onSaveCustomerInfo?.(info);
+        }}
+      />
       {/* Premium Executive Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-[4px] bg-white/5 z-[10000]">
         <div
@@ -237,6 +249,19 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete, custo
           id="rs1"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(0,145,255,0.05)_0%,transparent_50%)]" />
+
+          {onSaveCustomerInfo && (
+            <button
+              type="button"
+              onClick={() => setIsCustomerModalOpen(true)}
+              aria-label="Edit customer and vehicle info"
+              title="Customer / vehicle"
+              className="absolute top-6 right-6 z-20 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition"
+            >
+              <UserCheck size={16} />
+            </button>
+          )}
+
           <div
             className={`m-auto text-center z-10 transition-all duration-1000 transform ${activeSlide === 1 ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >

@@ -168,6 +168,9 @@ export const CustomerInfoModal: React.FC<CustomerInfoModalProps> = ({
                   id="name"
                   value={info.name}
                   onChange={handleInfoChange}
+                  placeholder="e.g. Jane Doe"
+                  autoCapitalize="words"
+                  autoComplete="off"
                   className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
                     validationErrors["name"] ? "border-red-500" : "border-gray-600"
                   }`}
@@ -185,6 +188,11 @@ export const CustomerInfoModal: React.FC<CustomerInfoModalProps> = ({
                     id="year"
                     value={info.year}
                     onChange={handleInfoChange}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    placeholder="e.g. 2025"
+                    autoComplete="off"
                     className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
                       validationErrors["year"] ? "border-red-500" : "border-gray-600"
                     }`}
@@ -201,6 +209,9 @@ export const CustomerInfoModal: React.FC<CustomerInfoModalProps> = ({
                     id="make"
                     value={info.make}
                     onChange={handleInfoChange}
+                    placeholder="e.g. Lexus"
+                    autoCapitalize="words"
+                    autoComplete="off"
                     className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
                       validationErrors["make"] ? "border-red-500" : "border-gray-600"
                     }`}
@@ -217,6 +228,9 @@ export const CustomerInfoModal: React.FC<CustomerInfoModalProps> = ({
                     id="model"
                     value={info.model}
                     onChange={handleInfoChange}
+                    placeholder="e.g. RX 350"
+                    autoCapitalize="words"
+                    autoComplete="off"
                     className={`w-full bg-gray-900 border rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 ${
                       validationErrors["model"] ? "border-red-500" : "border-gray-600"
                     }`}

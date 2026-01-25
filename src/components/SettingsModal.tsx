@@ -6,6 +6,10 @@ interface SettingsModalProps {
   onClose: () => void;
   onSave: (priceOverrides: PriceOverrides) => void;
   currentPriceOverrides: PriceOverrides;
+  basePackagePricesById?: Record<string, number>;
+  basePackageCostsById?: Record<string, number>;
+  baseAddonPricesById?: Record<string, number>;
+  baseAddonCostsById?: Record<string, number>;
   selectedPackage?: PackageTier | null;
   selectedAddOns?: AlaCarteOption[];
 }
@@ -15,6 +19,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   onSave,
   currentPriceOverrides,
+  basePackagePricesById = {},
+  basePackageCostsById = {},
+  baseAddonPricesById = {},
+  baseAddonCostsById = {},
   selectedPackage = null,
   selectedAddOns = [],
 }) => {
@@ -26,31 +34,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const items: Array<{
       id: string;
       name: string;
-      price: number;
-      cost: number;
+      standardPrice: number;
+      standardCost: number;
     }> = [];
     if (selectedPackage) {
+      const standardPrice = basePackagePricesById[selectedPackage.id] ?? selectedPackage.price;
+      const standardCost = basePackageCostsById[selectedPackage.id] ?? selectedPackage.cost;
       items.push({
         id: selectedPackage.id,
         name: `${selectedPackage.name} Package`,
-        price: selectedPackage.price,
-        cost: selectedPackage.cost,
+        standardPrice,
+        standardCost,
       });
     }
     selectedAddOns.forEach((item) => {
+      const standardPrice = baseAddonPricesById[item.id] ?? item.price;
+      const standardCost = baseAddonCostsById[item.id] ?? item.cost;
       items.push({
         id: item.id,
         name: item.name,
-        price: item.price,
-        cost: item.cost,
+        standardPrice,
+        standardCost,
       });
     });
     return items;
-  }, [selectedAddOns, selectedPackage]);
+  }, [
+    baseAddonCostsById,
+    baseAddonPricesById,
+    basePackageCostsById,
+    basePackagePricesById,
+    selectedAddOns,
+    selectedPackage,
+  ]);
 
-  const selectionTotal = useMemo(() => {
-    return selectionItems.reduce((sum, item) => sum + (item.price || 0), 0);
-  }, [selectionItems]);
+  const standardTotal = useMemo(
+    () => selectionItems.reduce((sum, item) => sum + (item.standardPrice || 0), 0),
+    [selectionItems]
+  );
+
+  const currentTotal = useMemo(() => {
+    return selectionItems.reduce((sum, item) => {
+      const override = overrides[item.id] || {};
+      const effectivePrice = override.price ?? item.standardPrice;
+      return sum + (effectivePrice || 0);
+    }, 0);
+  }, [overrides, selectionItems]);
+
+  const totalDelta = useMemo(() => currentTotal - standardTotal, [currentTotal, standardTotal]);
 
   const formatMoney = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -100,9 +130,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (!selectedPackage) return;
     const parsed = Number(desiredTotal.trim());
     if (!Number.isFinite(parsed) || parsed < 0) return;
-    const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + (item.price || 0), 0);
+    const addOnsTotal = selectionItems
+      .filter((item) => item.id !== selectedPackage.id)
+      .reduce((sum, item) => {
+        const override = overrides[item.id] || {};
+        const effectivePrice = override.price ?? item.standardPrice;
+        return sum + (effectivePrice || 0);
+      }, 0);
     const newPackagePrice = Math.max(0, Math.round(parsed - addOnsTotal));
     setOverrideNumber(selectedPackage.id, "price", String(newPackagePrice));
+  };
+
+  const clearAllOverrides = () => {
+    setOverrides({});
+    setSaveSuccess(false);
   };
 
   useEffect(() => {
@@ -226,7 +267,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                         Current total
                       </p>
-                      <p className="text-2xl font-teko text-white">{formatMoney(selectionTotal)}</p>
+                      <p className="text-2xl font-teko text-white">{formatMoney(currentTotal)}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Standard: {formatMoney(standardTotal)}
+                        <span className="mx-2 text-gray-600">•</span>
+                        Delta:
+                        <span
+                          className={`ml-1 font-semibold ${
+                            totalDelta > 0
+                              ? "text-emerald-300"
+                              : totalDelta < 0
+                                ? "text-amber-300"
+                                : "text-gray-400"
+                          }`}
+                        >
+                          {totalDelta > 0 ? "+" : ""}
+                          {formatMoney(totalDelta)}
+                        </span>
+                      </p>
                       <p className="text-xs text-gray-500 mt-1">
                         Tip: Use a whole-dollar target for faster quoting.
                       </p>
@@ -268,6 +326,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                     </div>
                   </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-gray-500">Overrides apply only after Save.</p>
+                    <button
+                      type="button"
+                      onClick={clearAllOverrides}
+                      className="text-xs uppercase tracking-[0.2em] text-gray-300 hover:text-white underline underline-offset-4"
+                    >
+                      Clear all overrides
+                    </button>
+                  </div>
                 </div>
 
                 <div className="bg-gray-900/40 border border-gray-700 rounded-lg overflow-hidden">
@@ -281,15 +350,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="divide-y divide-gray-800">
                     {selectionItems.map((item) => {
                       const override = overrides[item.id] || {};
-                      const effectivePrice = override.price ?? item.price;
+                      const effectivePrice = override.price ?? item.standardPrice;
+                      const deltaPrice = effectivePrice - item.standardPrice;
                       return (
                         <div key={item.id} className="p-4">
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-white font-semibold truncate">{item.name}</p>
                               <p className="text-xs text-gray-500 mt-1">
-                                Standard: {formatMoney(item.price)} · Current:{" "}
-                                {formatMoney(effectivePrice)}
+                                Standard: {formatMoney(item.standardPrice)} · Current:{" "}
+                                {formatMoney(effectivePrice)} · Delta:{" "}
+                                <span
+                                  className={`font-semibold ${
+                                    deltaPrice > 0
+                                      ? "text-emerald-300"
+                                      : deltaPrice < 0
+                                        ? "text-amber-300"
+                                        : "text-gray-400"
+                                  }`}
+                                >
+                                  {deltaPrice > 0 ? "+" : ""}
+                                  {formatMoney(deltaPrice)}
+                                </span>
                               </p>
                             </div>
 
@@ -309,7 +391,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     setOverrideNumber(item.id, "price", e.target.value)
                                   }
                                   className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500"
-                                  placeholder={String(item.price)}
+                                  placeholder={String(item.standardPrice)}
                                 />
                               </div>
 
@@ -328,7 +410,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     setOverrideNumber(item.id, "cost", e.target.value)
                                   }
                                   className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500"
-                                  placeholder={String(item.cost)}
+                                  placeholder={String(item.standardCost)}
                                 />
                               </div>
                             </div>

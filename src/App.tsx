@@ -355,10 +355,26 @@ const App: React.FC = () => {
     return record;
   }, [packages]);
 
+  const basePackageCostsById = useMemo(() => {
+    const record: Record<string, number> = {};
+    packages.forEach((pkg) => {
+      record[pkg.id] = pkg.cost;
+    });
+    return record;
+  }, [packages]);
+
   const baseAddonPricesById = useMemo(() => {
     const record: Record<string, number> = {};
     allAlaCarteOptions.forEach((opt) => {
       record[opt.id] = opt.price;
+    });
+    return record;
+  }, [allAlaCarteOptions]);
+
+  const baseAddonCostsById = useMemo(() => {
+    const record: Record<string, number> = {};
+    allAlaCarteOptions.forEach((opt) => {
+      record[opt.id] = opt.cost;
     });
     return record;
   }, [allAlaCarteOptions]);
@@ -933,6 +949,10 @@ const App: React.FC = () => {
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
         currentPriceOverrides={priceOverrides}
+        basePackagePricesById={basePackagePricesById}
+        basePackageCostsById={basePackageCostsById}
+        baseAddonPricesById={baseAddonPricesById}
+        baseAddonCostsById={baseAddonCostsById}
         selectedPackage={
           selectedPackage ? displayPackages.find((p) => p.id === selectedPackage.id) || null : null
         }

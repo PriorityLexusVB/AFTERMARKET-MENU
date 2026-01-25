@@ -72,6 +72,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [showCustomerHint, setShowCustomerHint] = useState(false);
 
   const preparedForName = (customerInfo?.name ?? "").trim();
   const preparedForVehicle = [
@@ -84,6 +85,25 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
     .join(" ");
 
   const reviewCtaName = preparedForName ? preparedForName.toUpperCase() : "";
+
+  useEffect(() => {
+    if (!onSaveCustomerInfo) return;
+    if (typeof window === "undefined") return;
+    // Keep discoverability without clutter: show once per tab session.
+    const key = "am_customer_hint_shown";
+    if (window.sessionStorage.getItem(key) === "1") return;
+
+    // Only hint if there's nothing filled in yet.
+    if (preparedForName) {
+      window.sessionStorage.setItem(key, "1");
+      return;
+    }
+
+    setShowCustomerHint(true);
+    window.sessionStorage.setItem(key, "1");
+    const timeout = window.setTimeout(() => setShowCustomerHint(false), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [onSaveCustomerInfo, preparedForName]);
 
   // Mapping for locally saved PNG files in your /public folder
   const images: Record<number, string> = {
@@ -253,15 +273,27 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(0,145,255,0.05)_0%,transparent_50%)]" />
 
           {onSaveCustomerInfo && (
-            <button
-              type="button"
-              onClick={() => setIsCustomerModalOpen(true)}
-              aria-label="Edit customer and vehicle info"
-              title="Customer / vehicle"
-              className="absolute top-6 right-6 z-20 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition"
-            >
-              <UserCheck size={16} />
-            </button>
+            <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
+              {showCustomerHint && (
+                <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/70">
+                  Customer
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomerHint(false);
+                  setIsCustomerModalOpen(true);
+                }}
+                aria-label="Edit customer and vehicle info"
+                title="Customer / vehicle"
+                className={`p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition ${
+                  showCustomerHint ? "animate-pulse" : ""
+                }`}
+              >
+                <UserCheck size={16} />
+              </button>
+            </div>
           )}
 
           <div

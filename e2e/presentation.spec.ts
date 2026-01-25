@@ -96,10 +96,10 @@ async function expectSlideFitsViewport(
 }
 
 test.describe("Presentation Layout", () => {
-  test("slides 5, 7, 8, 9, 10, and 11 fit iPad viewport", async ({ page }, testInfo) => {
+  test("slides 6, 7, 8, 9, 10, and 11 fit iPad viewport", async ({ page }, testInfo) => {
     await openPresentation(page);
 
-    await expectSlideFitsViewport(page, "rs5", testInfo.outputPath("presentation-slide-5.png"), [
+    await expectSlideFitsViewport(page, "rs6", testInfo.outputPath("presentation-slide-6.png"), [
       "RustGuard",
       "Molecular Barrier",
       "LIFETIME STRUCTURE WARRANTY",
@@ -111,21 +111,21 @@ test.describe("Presentation Layout", () => {
     ]);
 
     await expectSlideFitsViewport(page, "rs8", testInfo.outputPath("presentation-slide-8.png"), [
-      "Highway Hazards: Suntek Film",
-      "Kinetic Impact Defense",
-      "10-YEAR",
-    ]);
-
-    await expectSlideFitsViewport(page, "rs9", testInfo.outputPath("presentation-slide-9.png"), [
       "InteriorGuard",
       "Cabin Preservation",
       "Stain Hydrophobicity",
     ]);
 
-    await expectSlideFitsViewport(page, "rs10", testInfo.outputPath("presentation-slide-10.png"), [
+    await expectSlideFitsViewport(page, "rs9", testInfo.outputPath("presentation-slide-9.png"), [
       "Diamond Shield",
       "Windshield",
       "Impact Resistance",
+    ]);
+
+    await expectSlideFitsViewport(page, "rs10", testInfo.outputPath("presentation-slide-10.png"), [
+      "Highway Hazards: Suntek Film",
+      "Kinetic Impact Defense",
+      "10-YEAR",
     ]);
 
     await expectSlideFitsViewport(page, "rs11", testInfo.outputPath("presentation-slide-11.png"), [

@@ -23,6 +23,7 @@ interface HeaderProps {
   user: User | null;
   guestMode: boolean;
   isDemoMode?: boolean;
+  hasPricingOverrides?: boolean;
   onOpenSettings: () => void;
   onLogout: () => void;
   onToggleAdminView: () => void;
@@ -36,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   guestMode,
   isDemoMode = false,
+  hasPricingOverrides = false,
   onOpenSettings,
   onLogout,
   onToggleAdminView,
@@ -98,9 +100,17 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={onOpenSettings}
                     className="btn-lux-ghost p-2 text-lux-textMuted hover:text-lux-textStrong hover:rotate-90 transition-all duration-300"
                     aria-label="Open pricing settings"
-                    title="Pricing adjustments"
+                    title={hasPricingOverrides ? "Pricing adjustments (active)" : "Pricing adjustments"}
                   >
-                    <SettingsIcon />
+                    <span className="relative inline-flex">
+                      <SettingsIcon />
+                      {hasPricingOverrides && (
+                        <span
+                          className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-slate-950"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </span>
                   </button>
                 </>
               )}

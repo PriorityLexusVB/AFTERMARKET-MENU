@@ -331,6 +331,14 @@ const App: React.FC = () => {
     setCustomerInfo(info);
   }, []);
 
+  const hasPricingOverrides = useMemo(() => {
+    return Object.values(priceOverrides).some(
+      (override) =>
+        Boolean(override) &&
+        (typeof override.price === "number" || typeof override.cost === "number")
+    );
+  }, [priceOverrides]);
+
   // Price calculations and display data (must be before handleShowAgreement)
   const applyOverrides = <T extends { id: string; price: number; cost: number }>(
     items: T[],
@@ -857,6 +865,7 @@ const App: React.FC = () => {
         user={user}
         guestMode={guestMode}
         isDemoMode={isDemoMode}
+        hasPricingOverrides={hasPricingOverrides}
         onOpenSettings={handleOpenSettings}
         onLogout={handleLogout}
         onToggleAdminView={handleToggleAdminView}

@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
 
 async function openPresentation(page: import("@playwright/test").Page) {
+  // This spec validates slide fit against an iPad-landscape viewport.
+  // Keep it explicit so it stays stable even when running under the default chromium project.
+  await page.setViewportSize({ width: 1194, height: 834 });
+
   await page.goto("/");
   await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
@@ -92,7 +96,7 @@ async function expectSlideFitsViewport(
 }
 
 test.describe("Presentation Layout", () => {
-  test("slides 5, 7, 9, 10, and 11 fit iPad viewport", async ({ page }, testInfo) => {
+  test("slides 5, 7, 8, 9, 10, and 11 fit iPad viewport", async ({ page }, testInfo) => {
     await openPresentation(page);
 
     await expectSlideFitsViewport(page, "rs5", testInfo.outputPath("presentation-slide-5.png"), [
@@ -104,6 +108,12 @@ test.describe("Presentation Layout", () => {
     await expectSlideFitsViewport(page, "rs7", testInfo.outputPath("presentation-slide-7.png"), [
       "Chemical Resistance",
       "Climate Barrier",
+    ]);
+
+    await expectSlideFitsViewport(page, "rs8", testInfo.outputPath("presentation-slide-8.png"), [
+      "Highway Hazards: Suntek Film",
+      "Kinetic Impact Defense",
+      "10-YEAR",
     ]);
 
     await expectSlideFitsViewport(page, "rs9", testInfo.outputPath("presentation-slide-9.png"), [

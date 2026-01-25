@@ -25,6 +25,15 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
   const emailRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (firebaseError) return;
+    if (isAuthLoading) return;
+
+    // Avoid `autoFocus` for a11y; focus explicitly after first paint.
+    window.setTimeout(() => emailRef.current?.focus(), 0);
+  }, [firebaseError, isAuthLoading]);
+
   const installSupport = useMemo(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined") {
       return {
@@ -180,7 +189,6 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
               autoComplete="email"
               enterKeyHint="next"
               required
-              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onPointerDown={ensureFocus}

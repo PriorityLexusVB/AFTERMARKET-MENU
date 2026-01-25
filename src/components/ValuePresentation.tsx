@@ -9,12 +9,14 @@ import {
   Atom,
   Zap,
   Maximize,
+  Car,
   Truck,
   FileWarning,
   ShieldCheck,
   Microscope,
   Anchor,
   ThermometerSnowflake,
+  ThermometerSun,
   Droplets,
   Sun,
   Sparkles,
@@ -679,44 +681,119 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
           >
             <div className="max-w-6xl mx-auto w-full">
               <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
-                Impact Protection
+                Advanced Ballistic Shield
               </span>
+              <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+                <Zap size={12} className="text-white" aria-hidden="true" />
+                8-MIL OPTICAL POLYURETHANE
+              </div>
               <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
                 Highway Hazards: Suntek Film
               </h2>
+
               <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-                <div className="order-2 space-y-4">
-                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
-                    I-264 construction and coastal sand effectively &apos;sand-blast&apos; your
-                    front-end at highway speeds.
-                  </p>
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                      <Maximize size={18} className="text-blue-500" aria-hidden="true" />
+                      Kinetic Impact Defense
+                    </h3>
+                    <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                      I-264 construction and coastal sand effectively &apos;sand-blast&apos; your
+                      front-end at highway speeds. Suntek Ultra provides a sacrificial barrier that
+                      absorbs high-velocity impacts.
+                    </p>
+                  </div>
+
                   <ul className="space-y-1 list-none">
                     <li>
                       <BulletRow>
-                        <strong>Rock Chip Immunity:</strong> Invisible barrier stops gravel impacts.
+                        <strong>Rock Chip Immunity:</strong> 8-mil invisible physical barrier stops
+                        gravel and road debris from reaching the paint.
                       </BulletRow>
                     </li>
                     <li>
                       <BulletRow>
-                        <strong>Self-Healing:</strong> Minor scratches disappear with heat.
+                        <strong>Self-Healing Technology:</strong> Specialized top-coat allows minor
+                        surface scratches to disappear with ambient solar heat.
                       </BulletRow>
                     </li>
                     <li>
                       <BulletRow>
-                        <strong>Total Coverage:</strong> Focused protection on high-impact zones.
+                        <strong>Stain Resistance:</strong> Hydrophobic properties repel bird
+                        droppings, insects, and road grime to prevent etching.
+                      </BulletRow>
+                    </li>
+                    <li>
+                      <BulletRow>
+                        <strong>Total Coverage:</strong> Precision-cut focus on high-impact areas:
+                        Hood, Bumpers, Mirrors, and Door Cups.
                       </BulletRow>
                     </li>
                   </ul>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                      <ThermometerSun
+                        size={24}
+                        className="text-blue-500 flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                          Self-Healing
+                        </h4>
+                        <p className="text-[9px] text-white/40 leading-tight mt-1">
+                          Swirl marks and light scratches vanish automatically in the sun.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                      <ShieldAlert
+                        size={24}
+                        className="text-blue-500 flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                          Value Shield
+                        </h4>
+                        <p className="text-[9px] text-white/40 leading-tight mt-1">
+                          Preserves factory paint finish for maximum future trade-in equity.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="order-1 relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
-                  <img src={images[8]} alt="Visual" className="w-full h-full object-cover" />
+
+                <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh] bg-[#111] group">
+                  {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+                  <img
+                    src={images[8]}
+                    alt="Suntek Ultra Paint Protection Film"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/10 uppercase tracking-widest pointer-events-none">
+                    Impact Protection: MENU6.png
+                  </div>
+                  <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,rgba(0,145,255,0.1)_0%,transparent_70%)]" />
+                  <div className="absolute top-4 right-4 text-blue-500/40">
+                    <Car size={48} strokeWidth={1} aria-hidden="true" />
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-end">
-                <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest shrink-0">
+              <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+                <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                  &quot;Suntek Ultra ensures your Lexus front-end remains in showroom condition,
+                  effectively neutralizing the abrasive reality of regional highway travel.&quot;
+                </p>
+                <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
                   <ShieldCheck size={16} aria-hidden="true" />
-                  10-YEAR SUNTEK WARRANTY
+                  10-YEAR MANUFACTURER WARRANTY
                 </div>
               </div>
             </div>
@@ -818,6 +895,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({ onComplete }) => 
               </div>
 
               <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[34vh] bg-[#111]">
+                {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
                 <img
                   src={images[9]}
                   alt="InteriorGuard Cabin Protection"

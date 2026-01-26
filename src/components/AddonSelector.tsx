@@ -27,10 +27,18 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
         className ?? ""
       }`}
     >
-      <h3 className={`${isCompact ? "text-lg" : "text-2xl"} font-teko font-bold tracking-wider text-gray-200 ${isCompact ? "mb-2" : "mb-4"} text-center`}>
+      <h3
+        className={`${isCompact ? "text-base" : "text-2xl"} font-teko font-bold tracking-wider text-gray-200 ${
+          isCompact ? "mb-2" : "mb-4"
+        } text-center`}
+      >
         Add-Ons
       </h3>
-      <div className={`${isCompact ? "space-y-2" : "space-y-3"} flex-grow pr-2 min-h-0 overflow-hidden`}>
+      <div
+        className={`${
+          isCompact ? "space-y-2" : "space-y-3"
+        } flex-grow pr-2 min-h-0 overflow-y-auto overscroll-contain`}
+      >
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">
             <p>No featured add-ons configured yet.</p>
@@ -48,6 +56,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
               isSelected={selectedItems.some((selected) => selected.id === item.id)}
               onToggle={() => onToggleItem(item)}
               onView={() => onViewItem(item)}
+              isCompact={isCompact}
             />
           ))
         )}

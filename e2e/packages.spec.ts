@@ -81,8 +81,13 @@ test.describe("Package Selection", () => {
       expect(featureCount).toBeGreaterThanOrEqual(2);
     }
 
-    // Ensure the Add-Ons section is also loaded
-    await expect(page.locator('h3:has-text("Add-Ons")')).toBeVisible();
+    // Ensure the Add-Ons section is also loaded.
+    // On customer-facing iPad/kiosk layouts, the add-ons drawer starts closed.
+    const addonsHeading = page.locator('h3:has-text("Add-Ons")').first();
+    if (!(await addonsHeading.isVisible())) {
+      await page.getByRole("button", { name: /open add-ons/i }).click();
+    }
+    await expect(addonsHeading).toBeVisible();
 
     // Take a screenshot of the package section
     const packageSection = page.locator("main").first();

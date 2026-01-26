@@ -7,6 +7,7 @@ interface AddonItemProps {
   isSelected: boolean;
   onToggle: () => void;
   onView: () => void;
+  isCompact?: boolean;
 }
 
 const PlusIcon: React.FC = () => (
@@ -41,6 +42,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   isSelected,
   onToggle,
   onView,
+  isCompact = false,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -53,26 +55,40 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex flex-col transition-shadow hover:shadow-md">
+    <div
+      className={`bg-gray-800 border border-gray-700 rounded-lg ${
+        isCompact ? "p-2" : "p-3"
+      } flex flex-col transition-shadow hover:shadow-md`}
+    >
       <div className="flex-grow">
         <button
           onClick={onView}
-          className="font-semibold text-sm text-gray-200 text-left hover:text-blue-400 transition-colors w-full"
+          className={`font-semibold ${
+            isCompact ? "text-xs" : "text-sm"
+          } text-gray-200 text-left hover:text-blue-400 transition-colors w-full`}
           aria-label={`Learn more about ${item.name}`}
         >
           {item.name}
         </button>
         {isDiscounted && (
-          <p className="text-[11px] text-gray-400 line-through decoration-2 decoration-gray-500/60">
+          <p
+            className={`${
+              isCompact ? "text-[10px]" : "text-[11px]"
+            } text-gray-400 line-through decoration-2 decoration-gray-500/60`}
+          >
             {formatPrice(basePrice)}
           </p>
         )}
-        <p className="text-xs text-gray-300">{formatPrice(item.price)}</p>
+        <p className={`${isCompact ? "text-[11px]" : "text-xs"} text-gray-300`}>
+          {formatPrice(item.price)}
+        </p>
       </div>
-      <div className="mt-3">
+      <div className={isCompact ? "mt-2" : "mt-3"}>
         <button
           onClick={onToggle}
-          className={`w-full py-3 px-3 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]
+          className={`w-full ${
+            isCompact ? "py-2 px-2" : "py-3 px-3"
+          } rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]
             ${
               isSelected
                 ? "bg-green-600 text-white hover:bg-green-700"
@@ -80,10 +96,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
             }
           `}
         >
-          <span
-            key={isSelected ? "check" : "plus"}
-            className="inline-block animate-icon-pop-in"
-          >
+          <span key={isSelected ? "check" : "plus"} className="inline-block animate-icon-pop-in">
             {isSelected ? <CheckIcon /> : <PlusIcon />}
           </span>
           {isSelected ? "Added" : "Add"}

@@ -32,18 +32,28 @@ const MagnifyIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const Divider: React.FC<{ connector: "AND" | "OR" }> = ({ connector }) => {
-  // AND is the default connector; showing it repeatedly is noisy on iPad.
-  // Keep OR explicit (it communicates meaningful choice), but make AND implicit.
   if (connector === "AND") {
     return (
-      <div className="flex items-center justify-center my-4">
-        <div className="h-px bg-white/15 flex-grow" />
+      <div
+        className="flex items-center justify-center my-4"
+        data-testid="package-connector"
+        data-connector="AND"
+      >
+        <div className="h-px bg-white/20 flex-grow"></div>
+        <span className="font-bold px-3 text-xs sm:text-sm uppercase tracking-wider text-green-400">
+          AND
+        </span>
+        <div className="h-px bg-white/20 flex-grow"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center my-4">
+    <div
+      className="flex items-center justify-center my-4"
+      data-testid="package-connector"
+      data-connector="OR"
+    >
       <div className="h-px bg-white/20 flex-grow"></div>
       <span className="font-bold px-3 text-xs sm:text-sm uppercase tracking-wider text-yellow-400">
         OR
@@ -112,14 +122,26 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   const CompactDivider: React.FC<{ connector: "AND" | "OR" }> = ({ connector }) => {
     if (connector === "AND") {
       return (
-        <div className="flex items-center justify-center my-1">
-          <div className="h-px bg-white/10 flex-grow" />
+        <div
+          className="flex items-center justify-center my-1"
+          data-testid="package-connector"
+          data-connector="AND"
+        >
+          <div className="h-px bg-white/10 flex-grow"></div>
+          <span className="font-bold px-2 text-[11px] uppercase tracking-wider text-green-400">
+            AND
+          </span>
+          <div className="h-px bg-white/10 flex-grow"></div>
         </div>
       );
     }
 
     return (
-      <div className="flex items-center justify-center my-1">
+      <div
+        className="flex items-center justify-center my-1"
+        data-testid="package-connector"
+        data-connector="OR"
+      >
         <div className="h-px bg-white/10 flex-grow"></div>
         <span className="font-bold px-2 text-[11px] uppercase tracking-wider text-yellow-400">
           OR

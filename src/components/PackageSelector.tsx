@@ -30,6 +30,9 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   const storageKey = "aftermarketMenu:addonDrawerOpen";
   const [isAddonDrawerOpen, setIsAddonDrawerOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return !isIpadLandscape;
+    // iPad/kiosk mode should always start with add-ons closed.
+    // We intentionally do not persist this state across reloads.
+    if (isIpadLandscape) return false;
     try {
       const raw = window.localStorage.getItem(storageKey);
       if (raw === "1") return true;
@@ -51,6 +54,11 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     // Customer-facing iPad/kiosk menu should start with add-ons closed.
     if (!addonColumn) return;
 
+    if (isIpadLandscape) {
+      setIsAddonDrawerOpen(false);
+      return;
+    }
+
     // If the user has already chosen open/closed, respect that.
     let hasStoredPreference = false;
     if (typeof window !== "undefined") {
@@ -69,13 +77,14 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
 
   useEffect(() => {
     if (!addonColumn) return;
+    if (isIpadLandscape) return;
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(storageKey, isAddonDrawerOpen ? "1" : "0");
     } catch {
       // Ignore storage failures
     }
-  }, [addonColumn, isAddonDrawerOpen]);
+  }, [addonColumn, isAddonDrawerOpen, isIpadLandscape]);
 
   const baseGrid = isIpadLandscape
     ? addonColumn

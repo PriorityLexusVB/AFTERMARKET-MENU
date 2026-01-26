@@ -574,6 +574,14 @@ h6,
     display: none;
   }
 
+  /* iOS Safari: ensure nested overflow areas scroll smoothly with touch */
+  .ios-scroll {
+    /* autoprefixer: ignore next */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+
   /* Luxury scrollbar */
   .scrollbar-luxury::-webkit-scrollbar {
     width: 8px;

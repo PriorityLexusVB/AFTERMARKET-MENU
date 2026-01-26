@@ -372,10 +372,7 @@ describe("featureOrdering utility", () => {
 
       const eliteFeatures = deriveTierFeatures("Elite", features);
 
-      expect(eliteFeatures.map((f) => f.name)).toEqual([
-        "Elite Feature 1",
-        "Elite Feature 2",
-      ]);
+      expect(eliteFeatures.map((f) => f.name)).toEqual(["Elite Feature 1", "Elite Feature 2"]);
     });
 
     it("should derive Platinum tier features from column 3 only", () => {
@@ -434,10 +431,7 @@ describe("featureOrdering utility", () => {
 
       const eliteFeatures = deriveTierFeatures("Elite", features);
 
-      expect(eliteFeatures.map((f) => f.name)).toEqual([
-        "Elite Pos 0",
-        "Elite Pos 1",
-      ]);
+      expect(eliteFeatures.map((f) => f.name)).toEqual(["Elite Pos 0", "Elite Pos 1"]);
     });
 
     it("should exclude features without column assignment", () => {

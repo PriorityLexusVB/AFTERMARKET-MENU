@@ -81,11 +81,19 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         } flex items-start justify-between`}
       >
         <div className={`am-package-title-block ${isCompact ? "space-y-0.5" : "space-y-1"}`}>
-          <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted text-left">Plan</p>
+          <p
+            className={`uppercase tracking-[0.28em] text-left text-shadow-sm ${
+              isCompact
+                ? "text-sm font-semibold text-lux-gold"
+                : "text-xs font-semibold text-lux-textMuted"
+            }`}
+          >
+            Plan
+          </p>
           <h3
             className={`font-teko ${
-              isCompact ? "text-lg leading-none" : "text-3xl sm:text-4xl"
-            } font-bold uppercase tracking-wider text-lux-textStrong`}
+              isCompact ? "text-2xl leading-none" : "text-3xl sm:text-4xl"
+            } font-bold uppercase tracking-wider text-lux-textStrong text-shadow`}
           >
             {packageInfo.name}
           </h3>
@@ -118,22 +126,24 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                   <button
                     onClick={() => onViewFeature(feature)}
                     className={`min-h-[44px] font-semibold ${
-                      isCompact ? "text-sm" : "text-lg sm:text-xl"
+                      isCompact ? "text-base" : "text-lg sm:text-xl"
                     } text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
-                    <span className={isCompact ? "clamp-1" : "clamp-2"}>{feature.name}</span>
+                    <span className={isCompact ? "clamp-2 break-words" : "clamp-2 break-words"}>
+                      {feature.name}
+                    </span>
                   </button>
                   <ul
                     className={`text-lux-textMuted ${
-                      isCompact ? "text-xs mt-0.5 space-y-0" : "text-sm sm:text-base mt-2 space-y-1"
+                      isCompact ? "text-sm mt-1 space-y-0.5" : "text-sm sm:text-base mt-2 space-y-1"
                     }`}
                   >
                     {(isCompact ? feature.points.slice(0, 3) : feature.points).map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
-                        className={isCompact ? "clamp-1" : "clamp-3"}
+                        className={isCompact ? "clamp-2 break-words" : "clamp-3 break-words"}
                       >
                         *{p}
                       </li>

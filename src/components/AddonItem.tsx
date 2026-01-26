@@ -64,8 +64,8 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         <button
           onClick={onView}
           className={`font-semibold ${
-            isCompact ? "text-xs" : "text-sm"
-          } text-gray-200 text-left hover:text-blue-400 transition-colors w-full`}
+            isCompact ? "text-sm" : "text-sm"
+          } text-gray-200 text-left hover:text-blue-400 transition-colors w-full leading-snug clamp-2 break-words`}
           aria-label={`Learn more about ${item.name}`}
         >
           {item.name}
@@ -73,13 +73,13 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         {isDiscounted && (
           <p
             className={`${
-              isCompact ? "text-[10px]" : "text-[11px]"
+              isCompact ? "text-xs" : "text-[11px]"
             } text-gray-400 line-through decoration-2 decoration-gray-500/60`}
           >
             {formatPrice(basePrice)}
           </p>
         )}
-        <p className={`${isCompact ? "text-[11px]" : "text-xs"} text-gray-300`}>
+        <p className={`${isCompact ? "text-sm" : "text-xs"} text-gray-300`}>
           {formatPrice(item.price)}
         </p>
       </div>

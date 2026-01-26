@@ -655,7 +655,6 @@ h6,
     height: calc(
       var(--app-height, 100vh) - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 170px)
     );
-    padding-bottom: calc(var(--ipad-bottom-bar-h, 170px) + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
   }
 
@@ -663,7 +662,6 @@ h6,
     height: calc(
       var(--app-height, 100vh) - var(--ipad-header-h, 96px) - var(--ipad-bottom-bar-h, 170px)
     );
-    padding-bottom: calc(var(--ipad-bottom-bar-h, 170px) + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
   }
 

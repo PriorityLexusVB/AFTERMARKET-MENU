@@ -28,9 +28,9 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
       }`}
     >
       <h3
-        className={`${isCompact ? "text-base" : "text-2xl"} font-teko font-bold tracking-wider text-gray-200 ${
-          isCompact ? "mb-2" : "mb-4"
-        } text-center`}
+        className={`${isCompact ? "text-lg" : "text-2xl"} font-teko font-bold tracking-wider ${
+          isCompact ? "text-lux-gold text-shadow-sm" : "text-gray-200"
+        } ${isCompact ? "mb-2" : "mb-4"} text-center`}
       >
         Add-Ons
       </h3>

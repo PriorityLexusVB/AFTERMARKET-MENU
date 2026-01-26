@@ -123,7 +123,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
             <button
               type="button"
               onClick={() => setIsAddonDrawerOpen(false)}
-              className="absolute top-2 right-2 z-10 bg-slate-950/60 hover:bg-slate-950/80 text-white/80 hover:text-white rounded-md px-2 py-1 text-xs uppercase tracking-[0.2em]"
+              className="absolute top-2 right-2 z-10 bg-slate-950/70 hover:bg-slate-950/90 text-white/90 hover:text-white border border-white/10 rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-[0.24em]"
               aria-label="Close add-ons"
               title="Close add-ons"
             >
@@ -137,7 +137,9 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
               aria-label="Open add-ons"
               title="Open add-ons"
             >
-              <span className="text-xs uppercase tracking-[0.35em] rotate-90">Add-Ons</span>
+              <span className="font-teko font-bold text-sm uppercase tracking-[0.32em] rotate-90 text-lux-gold text-shadow-sm">
+                Add-Ons
+              </span>
             </button>
           )}
         </aside>

@@ -71,8 +71,8 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 </p>
               )}
               <div
-                className={`flex items-center gap-2 text-sm text-lux-text ${
-                  isCompact ? "flex-nowrap" : "flex-wrap"
+                className={`flex items-center gap-2 text-lux-text ${
+                  isCompact ? "flex-nowrap text-base" : "flex-wrap text-sm"
                 }`}
               >
                 <span

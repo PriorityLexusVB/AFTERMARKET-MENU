@@ -62,6 +62,34 @@ interface FirebasePackage {
   legacyFeatureIds?: string[]; // Backup of legacy featureIds (added by migration)
 }
 
+function resolvePackageFeatures(
+  pkg: FirebasePackage,
+  allFeatures: ProductFeature[]
+): ProductFeature[] {
+  const ids = (pkg.featureIds?.length ? pkg.featureIds : pkg.legacyFeatureIds) ?? [];
+
+  // Prefer explicit package composition when provided (avoids accidentally including
+  // extra features that may be assigned to a tier column for admin organization).
+  if (ids.length > 0) {
+    const byId = new Map(allFeatures.map((f) => [f.id, f] as const));
+    const resolved: ProductFeature[] = [];
+
+    for (const id of ids) {
+      const feature = byId.get(id);
+      if (feature) {
+        resolved.push(feature);
+      } else {
+        console.warn(`Package ${pkg.name} references missing feature id: ${id}`);
+      }
+    }
+
+    return resolved;
+  }
+
+  // Fallback: derive from tier column assignments.
+  return deriveTierFeatures(pkg.name, allFeatures);
+}
+
 function coerceNumber(value: unknown, fallback: number, context: string): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -135,9 +163,21 @@ export async function fetchAllData(): Promise<FetchDataResult> {
         (data as FirebasePackage).tierColor ??
         fallbackTierColor(name);
 
-      // Derive features from column assignments based on tier name
-      // This makes admin column configuration the single source of truth
-      const derivedFeatures = deriveTierFeatures(name, features);
+      const derivedFeatures = resolvePackageFeatures(
+        {
+          id: doc.id,
+          name,
+          price,
+          cost,
+          isRecommended,
+          is_recommended: (data as FirebasePackage).is_recommended,
+          tier_color,
+          tierColor: (data as FirebasePackage).tierColor,
+          featureIds: (data as FirebasePackage).featureIds,
+          legacyFeatureIds: (data as FirebasePackage).legacyFeatureIds,
+        },
+        features
+      );
 
       return {
         id: doc.id,

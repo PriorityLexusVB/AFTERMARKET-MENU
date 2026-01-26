@@ -277,18 +277,52 @@ const App: React.FC = () => {
       root.style.setProperty("--app-height", `${height}px`);
     };
 
+    // iOS Safari can change the *visual* viewport height as the address bar
+    // shows/hides. This doesn't always trigger a window resize, but it does
+    // commonly trigger visualViewport scroll/resize.
+    let rafId: number | null = null;
+    let delayedId: number | null = null;
+
+    const scheduleViewportVarsUpdate = () => {
+      if (rafId != null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        setViewportVars();
+      });
+
+      // Follow-up update to catch late address-bar settling.
+      if (delayedId != null) {
+        window.clearTimeout(delayedId);
+      }
+      delayedId = window.setTimeout(() => {
+        delayedId = null;
+        setViewportVars();
+      }, 200);
+    };
+
     setViewportVars();
+    scheduleViewportVarsUpdate();
 
-    const onResize = () => setViewportVars();
-
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
+    window.addEventListener("resize", scheduleViewportVarsUpdate);
+    window.addEventListener("orientationchange", scheduleViewportVarsUpdate);
+    window.addEventListener("scroll", scheduleViewportVarsUpdate, { passive: true });
+    window.visualViewport?.addEventListener("resize", scheduleViewportVarsUpdate);
+    window.visualViewport?.addEventListener("scroll", scheduleViewportVarsUpdate);
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-      window.visualViewport?.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", scheduleViewportVarsUpdate);
+      window.removeEventListener("orientationchange", scheduleViewportVarsUpdate);
+      window.removeEventListener("scroll", scheduleViewportVarsUpdate);
+      window.visualViewport?.removeEventListener("resize", scheduleViewportVarsUpdate);
+      window.visualViewport?.removeEventListener("scroll", scheduleViewportVarsUpdate);
+      if (rafId != null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      if (delayedId != null) {
+        window.clearTimeout(delayedId);
+      }
     };
   }, []);
 

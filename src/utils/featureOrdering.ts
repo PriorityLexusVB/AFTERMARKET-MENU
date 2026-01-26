@@ -131,15 +131,12 @@ export function normalizeGroupedPositions(grouped: GroupedFeatures): GroupedFeat
   return normalizeGroupedItems(grouped);
 }
 
- /**
-  * Get the single column number for a tier (1:1 mapping - strict, no inheritance).
-  * Returns null for unknown tiers.
-  * 
-  * Column mapping:
-  * - Gold = Column 1
-  * - Elite = Column 2
-  * - Platinum = Column 3
-  */
+/**
+ * Get the single primary column number for a tier.
+ * Returns null for unknown tiers.
+ *
+ * Note: Feature inclusion uses getTierColumns() which is ladder/inheritance.
+ */
 export function getTierColumn(tier: string): number | null {
   const normalized = tier.toLowerCase();
   
@@ -156,11 +153,11 @@ export function getTierColumn(tier: string): number | null {
 }
 
 /**
- * Strict tier mapping (no inheritance).
+ * Tier mapping (ladder/inheritance).
  *
  * - Gold:     [1]
- * - Elite:    [2]
- * - Platinum: [3]
+ * - Elite:    [1, 2]
+ * - Platinum: [1, 2, 3]
  *
  * Column 4 is "Popular Add-ons" and not part of any tier package.
  */
@@ -171,23 +168,24 @@ export function getTierColumns(tier: string): number[] {
     case 'gold':
       return [1];
     case 'elite':
-      return [2];
+      return [1, 2];
     case 'platinum':
-      return [3];
+      return [1, 2, 3];
     default:
       return [];
   }
 }
 
- /**
-  * Derives the feature list for a tier using strict per-column mapping (no inheritance).
-  *
- * - Gold: column 1 only
- * - Elite: column 2 only
- * - Platinum: column 3 only
-  *
-  * Features are ordered by column and position. Duplicates within the same column are removed (case-insensitive by name), keeping first occurrence.
-  */
+/**
+ * Derives the feature list for a tier using ladder/inheritance mapping.
+ *
+ * - Gold: columns [1]
+ * - Elite: columns [1,2]
+ * - Platinum: columns [1,2,3]
+ *
+ * Features are ordered by column and position. Duplicates within the same column
+ * are removed (case-insensitive by name), keeping first occurrence.
+ */
 export function deriveTierFeatures(
   tier: string,
   features: ProductFeature[]

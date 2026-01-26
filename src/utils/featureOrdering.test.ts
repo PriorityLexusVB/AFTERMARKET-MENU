@@ -343,14 +343,14 @@ describe('featureOrdering utility', () => {
   });
 
   describe('getTierColumns', () => {
-    it('should return [2] for Elite tier', () => {
-      expect(getTierColumns('Elite')).toEqual([2]);
-      expect(getTierColumns('elite')).toEqual([2]);
+    it('should return [1,2] for Elite tier', () => {
+      expect(getTierColumns('Elite')).toEqual([1, 2]);
+      expect(getTierColumns('elite')).toEqual([1, 2]);
     });
 
-    it('should return [3] for Platinum tier', () => {
-      expect(getTierColumns('Platinum')).toEqual([3]);
-      expect(getTierColumns('platinum')).toEqual([3]);
+    it('should return [1,2,3] for Platinum tier', () => {
+      expect(getTierColumns('Platinum')).toEqual([1, 2, 3]);
+      expect(getTierColumns('platinum')).toEqual([1, 2, 3]);
     });
 
     it('should return [1] for Gold tier', () => {
@@ -365,8 +365,9 @@ describe('featureOrdering utility', () => {
   });
 
   describe('deriveTierFeatures', () => {
-    it('should derive Elite tier features from column 2 only', () => {
+    it('should derive Elite tier features from columns 1 and 2', () => {
       const features = [
+        createTestFeature({ id: 'f0', name: 'Gold Feature', column: 1, position: 0 }),
         createTestFeature({ id: 'f1', name: 'Elite Feature 1', column: 2, position: 0 }),
         createTestFeature({ id: 'f2', name: 'Elite Feature 2', column: 2, position: 1 }),
         createTestFeature({ id: 'f3', name: 'Platinum Feature', column: 3, position: 0 }),
@@ -375,10 +376,14 @@ describe('featureOrdering utility', () => {
 
       const eliteFeatures = deriveTierFeatures('Elite', features);
 
-      expect(eliteFeatures.map(f => f.name)).toEqual(['Elite Feature 1', 'Elite Feature 2']);
+      expect(eliteFeatures.map(f => f.name)).toEqual([
+        'Gold Feature',
+        'Elite Feature 1',
+        'Elite Feature 2',
+      ]);
     });
 
-    it('should derive Platinum tier features from column 3 only', () => {
+    it('should derive Platinum tier features from columns 1, 2, and 3', () => {
       const features = [
         createTestFeature({ id: 'f1', name: 'Elite Feature', column: 2, position: 0 }),
         createTestFeature({ id: 'f2', name: 'Platinum Feature', column: 3, position: 1 }),
@@ -389,7 +394,12 @@ describe('featureOrdering utility', () => {
 
       const platinumFeatures = deriveTierFeatures('Platinum', features);
 
-      expect(platinumFeatures.map(f => f.name)).toEqual(['Platinum Feature B', 'Platinum Feature']);
+      expect(platinumFeatures.map(f => f.name)).toEqual([
+        'Gold Feature',
+        'Elite Feature',
+        'Platinum Feature B',
+        'Platinum Feature',
+      ]);
     });
 
     it('should derive Gold tier features from column 1 only', () => {
@@ -434,6 +444,7 @@ describe('featureOrdering utility', () => {
       const eliteFeatures = deriveTierFeatures('Elite', features);
 
       expect(eliteFeatures.map(f => f.name)).toEqual([
+        'Gold Pos 0',
         'Elite Pos 0',
         'Elite Pos 1',
       ]);

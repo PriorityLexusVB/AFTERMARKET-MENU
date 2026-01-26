@@ -31,19 +31,27 @@ const MagnifyIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Divider: React.FC<{ text: string }> = ({ text }) => (
-  <div className="flex items-center justify-center my-4">
-    <div className="h-px bg-white/20 flex-grow"></div>
-    <span
-      className={`font-bold px-3 text-xs sm:text-sm uppercase tracking-wider ${
-        text === "OR" ? "text-yellow-400" : "text-green-400"
-      }`}
-    >
-      {text}
-    </span>
-    <div className="h-px bg-white/20 flex-grow"></div>
-  </div>
-);
+const Divider: React.FC<{ connector: "AND" | "OR" }> = ({ connector }) => {
+  // AND is the default connector; showing it repeatedly is noisy on iPad.
+  // Keep OR explicit (it communicates meaningful choice), but make AND implicit.
+  if (connector === "AND") {
+    return (
+      <div className="flex items-center justify-center my-4">
+        <div className="h-px bg-white/15 flex-grow" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center my-4">
+      <div className="h-px bg-white/20 flex-grow"></div>
+      <span className="font-bold px-3 text-xs sm:text-sm uppercase tracking-wider text-yellow-400">
+        OR
+      </span>
+      <div className="h-px bg-white/20 flex-grow"></div>
+    </div>
+  );
+};
 
 export const PackageCard: React.FC<PackageCardProps> = ({
   packageInfo,
@@ -101,19 +109,25 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
 
-  const CompactDivider: React.FC<{ text: string }> = ({ text }) => (
-    <div className="flex items-center justify-center my-1">
-      <div className="h-px bg-white/10 flex-grow"></div>
-      <span
-        className={`font-bold px-2 text-[11px] uppercase tracking-wider ${
-          text === "OR" ? "text-yellow-400" : "text-green-400"
-        }`}
-      >
-        {text}
-      </span>
-      <div className="h-px bg-white/10 flex-grow"></div>
-    </div>
-  );
+  const CompactDivider: React.FC<{ connector: "AND" | "OR" }> = ({ connector }) => {
+    if (connector === "AND") {
+      return (
+        <div className="flex items-center justify-center my-1">
+          <div className="h-px bg-white/10 flex-grow" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-center my-1">
+        <div className="h-px bg-white/10 flex-grow"></div>
+        <span className="font-bold px-2 text-[11px] uppercase tracking-wider text-yellow-400">
+          OR
+        </span>
+        <div className="h-px bg-white/10 flex-grow"></div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -184,9 +198,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             const divider =
               index > 0 ? (
                 isCompact ? (
-                  <CompactDivider text={connector} />
+                  <CompactDivider connector={connector} />
                 ) : (
-                  <Divider text={connector} />
+                  <Divider connector={connector} />
                 )
               ) : null;
 
@@ -213,7 +227,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                     </span>
                   </button>
                   <ul className={`text-lux-textMuted ${pointsClass}`}>
-                    {(isCompact ? feature.points.slice(0, 3) : feature.points).map((p, idx) => (
+                    {(isCompact ? feature.points.slice(0, 2) : feature.points).map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
                         className={

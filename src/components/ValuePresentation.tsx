@@ -8,18 +8,27 @@ import {
   ShieldAlert,
   Atom,
   Zap,
-  Maximize,
-  Car,
+  Layers,
+  Waves,
   Truck,
   FileWarning,
   ShieldCheck,
+  CircleDollarSign,
+  TrendingDown,
+  ShieldX,
+  Settings,
+  HeartPulse,
+  Wrench,
+  MapPin,
+  Activity,
+  Gauge,
   Microscope,
   Anchor,
-  ThermometerSnowflake,
   ThermometerSun,
   Droplets,
-  Sun,
   Sparkles,
+  CheckCircle2,
+  FlaskConical,
   UserCheck,
 } from "lucide-react";
 
@@ -54,10 +63,36 @@ interface ValuePresentationProps {
  * Technical Restoration: Standardized Bullet Component
  * Ensures 100% UI consistency and vertical alignment for iPad displays.
  */
-const BulletRow = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-start gap-3 text-white/75 font-light leading-relaxed">
-    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full mt-2 flex-shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.6)]" />
-    <div className="text-base md:text-[17px] lg:text-lg">{children}</div>
+const ExecutiveBulletRow = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-start gap-3 text-white/70 font-light leading-snug">
+    <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(37,99,235,0.8)]" />
+    <div className="text-sm lg:text-base leading-relaxed">{children}</div>
+  </div>
+);
+
+const SlidePhoto = ({
+  src,
+  alt,
+  className,
+  children,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  children?: React.ReactNode;
+}) => (
+  <div
+    className={`relative rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/30 ${
+      className ?? "aspect-video max-h-[40vh]"
+    }`}
+  >
+    <img
+      src={src}
+      alt={alt}
+      className="h-full w-full object-cover object-center"
+      draggable={false}
+    />
+    {children}
   </div>
 );
 
@@ -86,6 +121,10 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
 
   const reviewCtaName = preparedForName ? preparedForName.toUpperCase() : "";
 
+  const handleClearCustomerInfo = () => {
+    onSaveCustomerInfo?.({ name: "", year: "", make: "", model: "" });
+  };
+
   useEffect(() => {
     if (!onSaveCustomerInfo) return;
     if (typeof window === "undefined") return;
@@ -104,20 +143,6 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
     const timeout = window.setTimeout(() => setShowCustomerHint(false), 2000);
     return () => window.clearTimeout(timeout);
   }, [onSaveCustomerInfo, preparedForName]);
-
-  // Mapping for locally saved PNG files in your /public folder
-  const images: Record<number, string> = {
-    2: "/MENU1.png",
-    3: "/MENU2.png",
-    4: "/MENU3.png",
-    5: "/MENU4.png",
-    6: "/MENU8.png",
-    7: "/MENU5.png",
-    8: "/MENU7.png",
-    9: "/MENU10.png",
-    10: "/MENU6.png",
-    11: "/MENU9.png",
-  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -216,48 +241,59 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
       </div>
 
       {/* Navigation Controls */}
-      <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] flex items-center gap-3 z-[10000]">
-        <div className="hidden sm:flex items-center gap-3 mr-1">
-          <div className="text-[10px] uppercase tracking-[0.35em] text-white/35">
-            Slide {currentSlide}/{totalSlides}
+      <div className="fixed inset-x-0 bottom-0 z-[10000] pointer-events-none">
+        <div className="pointer-events-auto mx-auto w-full max-w-screen-2xl px-4 md:px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-black/30 backdrop-blur-2xl border border-white/10 shadow-2xl px-3 py-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={onComplete}
+                aria-label="Back to menu"
+                title="Back to menu"
+                className="min-h-[44px] px-4 rounded-xl bg-blue-600/25 hover:bg-blue-600/40 transition-all border border-blue-400/20 flex items-center gap-2"
+              >
+                <PresentationBoardIcon className="w-[18px] h-[18px] text-white" />
+                <span className="text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-white">
+                  Menu
+                </span>
+              </button>
+
+              <div className="text-xs sm:text-sm font-bold uppercase tracking-[0.22em] text-white/70 truncate">
+                Slide {currentSlide} / {totalSlides}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => scrollToSlide(1)}
+                aria-label="Go to first slide"
+                title="Go to first slide"
+                className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10"
+              >
+                <Home size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSlide(currentSlide - 1)}
+                aria-label="Previous slide"
+                title="Previous slide"
+                className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSlide(currentSlide + 1)}
+                aria-label="Next slide"
+                title="Next slide"
+                className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onComplete}
-            aria-label="Review package options"
-            title="Review package options"
-            className="p-3 rounded-full bg-blue-600/20 hover:bg-blue-600/35 transition-all backdrop-blur-2xl border border-blue-400/20 shadow-2xl"
-          >
-            <PresentationBoardIcon className="w-[18px] h-[18px] text-white" />
-          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => scrollToSlide(1)}
-          aria-label="Go to first slide"
-          title="Go to first slide"
-          className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10 shadow-2xl"
-        >
-          <Home size={18} />
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToSlide(currentSlide - 1)}
-          aria-label="Previous slide"
-          title="Previous slide"
-          className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10 shadow-2xl"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToSlide(currentSlide + 1)}
-          aria-label="Next slide"
-          title="Next slide"
-          className="p-3 rounded-full bg-white/5 hover:bg-blue-600 transition-all backdrop-blur-2xl border border-white/10 shadow-2xl"
-        >
-          <ChevronRight size={18} />
-        </button>
       </div>
 
       <div
@@ -279,6 +315,17 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   Customer
                 </span>
               )}
+              {(preparedForName || preparedForVehicle) && (
+                <button
+                  type="button"
+                  onClick={handleClearCustomerInfo}
+                  aria-label="Clear prepared for name and vehicle"
+                  title="Clear"
+                  className="min-h-[32px] px-3 rounded-full bg-white/5 hover:bg-white/10 text-white/55 hover:text-white/80 transition text-[10px] font-black uppercase tracking-[0.25em] border border-white/10"
+                >
+                  Clear
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -299,18 +346,20 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`m-auto text-center z-10 transition-all duration-1000 transform ${activeSlide === 1 ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
-            <h1 className="text-5xl lg:text-7xl font-bold uppercase tracking-widest mb-4 leading-tight">
+            <p className="text-blue-500 font-bold text-[10px] tracking-[0.4em] uppercase mb-6">
+              Virginia Beach Resilience
+            </p>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-5 leading-none">
               Protecting
               <br />
               Your Vehicle
             </h1>
-            <p className="text-xl lg:text-2xl text-blue-500 uppercase tracking-[0.4em] font-light mb-8">
-              Virginia Beach Resilience
-            </p>
             <div className="w-16 h-0.5 bg-blue-600 mx-auto opacity-50" />
 
             <div className="mt-8">
-              <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">Prepared for</p>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-black">
+                Prepared for
+              </p>
               <p className="mt-2 text-lg lg:text-2xl text-white/80 font-light">
                 {preparedForName || "__________"}
               </p>
@@ -321,7 +370,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
               ) : null}
             </div>
 
-            <p className="mt-8 italic text-white/30 font-light text-lg">
+            <p className="mt-8 italic text-white/35 font-light text-lg">
               A value overview for the Lexus Ownership Experience...
             </p>
           </div>
@@ -335,44 +384,103 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
+            {/* Header Section */}
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               Factory Coverage
             </span>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
-              Lexus Manufacturer Warranties
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              WORLD-CLASS MECHANICAL ASSURANCE
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
+              The Lexus Manufacturer Warranties
             </h2>
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-              <div className="space-y-4">
-                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
-                  Your new Lexus comes with world-class mechanical protection designed to cover
-                  manufacturing defects:
-                </p>
-                <ul className="space-y-1 list-none">
-                  <li>
-                    <BulletRow>
-                      <strong>Basic Warranty:</strong> 48 months / 50,000 miles covering components
-                      other than normal wear.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Powertrain:</strong> 72 months / 70,000 miles for engine,
-                      transmission, and drive systems.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Hybrid/EV:</strong> Up to 10 years / 150,000 miles for the hybrid
-                      battery components.
-                    </BulletRow>
-                  </li>
-                </ul>
-                <p className="text-[10px] text-white/30 italic mt-4">
-                  *Subject to Lexus terms and conditions. Focuses on mechanical reliability.
-                </p>
+
+            {/* Content Grid */}
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <Settings size={18} className="text-blue-500" aria-hidden="true" />
+                    Engineering Reliability
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed mt-2">
+                    Your Lexus is built to the highest standards of automotive precision. The
+                    factory coverage is designed to protect your investment against manufacturing
+                    defects.
+                  </p>
+                  <ul className="space-y-2 list-none mt-4">
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Basic Warranty:</strong> 48 Months / 50,000 Miles covering most
+                        non-wear vehicle components.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Powertrain Coverage:</strong> 72 Months / 70,000 Miles for Engine,
+                        Transmission, and Drive systems.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Hybrid/EV Resilience:</strong> 10 Years / 150,000 Miles on
+                        high-voltage battery components.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Corrosion Perforation:</strong> 72 Months / Unlimited Miles for
+                        rust-through on original body panels.
+                      </ExecutiveBulletRow>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Feature Callouts */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <Gauge size={24} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Performance Ops
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Guaranteed mechanical operation across all drive systems.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <Activity
+                      size={24}
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Technical Health
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Lexus Master Technicians handle all warrantied repairs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[40vh]">
-                <img src={images[2]} alt="Warranty" className="w-full h-full object-cover" />
+
+              <SlidePhoto src="/MENU1.png" alt="Menu slide" className="aspect-video max-h-[38vh]" />
+            </div>
+
+            {/* Footer/Warranty Callout */}
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                "Your factory warranty provides the essential mechanical security of a Lexus,
+                ensuring that your vehicle remains technically flawless through its initial years of
+                service."
+              </p>
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                COMPREHENSIVE FACTORY BACKING
               </div>
             </div>
           </div>
@@ -386,52 +494,98 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
+            {/* Header Section */}
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               The Priority Advantage
             </span>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              EXCLUSIVE LIFETIME COMMITMENT
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
               Priorities For Life
             </h2>
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[40vh]">
-                <img src={images[3]} alt="Service" className="w-full h-full object-cover" />
-              </div>
-              <div className="space-y-4">
-                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
-                  We’ve ensured your vehicle’s mechanical health and maintenance are handled for the
-                  long haul:
-                </p>
-                <ul className="space-y-1 list-none">
-                  <li>
-                    <BulletRow>
-                      <strong>Engine For Life:</strong> Lifetime coverage on engine components.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Oil & Filter Changes:</strong> Provided for as long as you own your
-                      vehicle.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>VA State Inspections:</strong> Annual safety inspections covered for
-                      life.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Towing For Life:</strong> Within a 50-mile radius of any Priority
-                      dealership.
-                    </BulletRow>
-                  </li>
-                </ul>
-                <div className="bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl mt-4 shadow-lg">
-                  <p className="text-sm lg:text-base italic font-light text-blue-100 leading-snug">
-                    "Now that your mechanical maintenance is secured, let's protect the aesthetic
-                    integrity."
+
+            {/* Content Grid */}
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <HeartPulse size={18} className="text-blue-500" aria-hidden="true" />
+                    Ownership Vitality
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed mt-2">
+                    We believe the Lexus experience should be seamless for as long as you own your
+                    vehicle. Priorities For Life ensures your mechanical and safety needs are
+                    covered permanently.
                   </p>
+                  <ul className="space-y-2 list-none mt-4">
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Engine For Life:</strong> Guaranteed lifetime coverage on all
+                        internal lubricated engine components.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Oil & Filter Changes:</strong> Complimentary maintenance for the
+                        entire duration of your ownership.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>VA State Inspections:</strong> Annual safety inspections provided
+                        on-site at no additional cost.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Towing For Life:</strong> Within a 50-mile radius of any Priority
+                        dealership for total peace of mind.
+                      </ExecutiveBulletRow>
+                    </li>
+                  </ul>
                 </div>
+
+                {/* Feature Callouts */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <Wrench size={24} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Maintenance Ops
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Zero-cost routine service and filter replacements.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <MapPin size={24} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Regional Safety
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Annual Virginia compliance and safety certification.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <SlidePhoto src="/MENU2.png" alt="Menu slide" className="aspect-video max-h-[38vh]" />
+            </div>
+
+            {/* Footer/Transition Callout */}
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
+                "Now that your mechanical maintenance is secured through the Priority Advantage,
+                let's look at protecting your vehicle's aesthetic and structural integrity."
+              </p>
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
+                <ShieldCheck size={16} aria-hidden="true" />
+                LIFETIME MAINTENANCE VALUE
               </div>
             </div>
           </div>
@@ -447,55 +601,101 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
               activeSlide === 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             }`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
-              The Gap
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
+              Asset Protection
             </span>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
-              Appearance Damage Isn’t Mechanical
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              BRIDGING THE WARRANTY DEFICIT
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
+              Appearance Damage Isn't Mechanical
             </h2>
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-              <div className="space-y-4">
-                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
-                  Lexus warranties protect manufacturing defects — but most real-world ownership
-                  pain comes from environmental exposure, road hazards, and interior wear.
-                </p>
-                <ul className="space-y-1 list-none">
-                  <li>
-                    <BulletRow>
-                      <strong>Environmental Etching:</strong> Bird droppings, tree sap, and
-                      industrial fallout can permanently damage clear coat.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Rock Chips:</strong> Highway debris causes impact points that lead to
-                      paint failure.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Interior Wear:</strong> Stains, tears, and burns directly reduce
-                      trade-in equity.
-                    </BulletRow>
-                  </li>
-                </ul>
-                <div className="bg-red-500/10 border-l-4 border-red-500 p-4 rounded-r-xl backdrop-blur-md shadow-lg">
-                  <p className="text-red-400 font-black text-[10px] uppercase mb-1 tracking-widest">
-                    Coverage Reality
+
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
+                    <TrendingDown size={18} className="text-blue-500" aria-hidden="true" />
+                    The Coverage Reality
+                  </h3>
+                  <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed mt-2">
+                    Lexus warranties protect against manufacturing defects—but most real-world
+                    ownership pain comes from environmental exposure, road hazards, and interior
+                    wear.
                   </p>
-                  <p className="text-xs text-white/90 leading-tight font-light">
-                    These are typically considered <strong>appearance</strong> or{" "}
-                    <strong>environmental</strong>
-                    issues — not mechanical defects.
-                  </p>
+                  <ul className="space-y-2 list-none mt-4">
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Environmental Etching:</strong> Bird droppings, tree sap, and
+                        industrial fallout can permanently damage clear coat.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Rock Chips:</strong> Highway debris causes impact points that lead
+                        to paint failure and structural degradation.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong>Interior Wear:</strong> Accidental stains, tears, and burns directly
+                        reduce your vehicle's trade-in equity.
+                      </ExecutiveBulletRow>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <ShieldX size={24} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Warranty Exclusion
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Hazard damage is typically excluded from factory mechanical coverage.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-center gap-4">
+                    <CircleDollarSign
+                      size={24}
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Equity Shield
+                      </h4>
+                      <p className="text-[9px] text-white/40 leading-tight mt-1">
+                        Preserving the physical asset ensures maximum future resale value.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[40vh]">
-                <img
-                  src={images[4]}
-                  alt="Protection overview"
-                  className="w-full h-full object-cover"
-                />
+
+              <SlidePhoto
+                src="/menu11.png"
+                alt="Bridging the Coverage Gap"
+                className="aspect-video max-h-[38vh]"
+              />
+            </div>
+
+            <div className="mt-8 bg-red-500/5 border-l-4 border-red-600 p-5 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6 border border-white/5">
+              <div className="max-w-2xl">
+                <p className="text-red-500 font-black text-[10px] uppercase mb-1.5 tracking-[0.25em]">
+                  Coverage Reality
+                </p>
+                <p className="text-sm lg:text-base text-white/80 font-light italic leading-relaxed">
+                  "These are typically considered appearance or environmental issues—not mechanical
+                  defects. True peace of mind requires securing the gap between the two."
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-red-500 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
+                <ShieldAlert size={16} aria-hidden="true" />
+                CLOSING THE COVERAGE GAP
               </div>
             </div>
           </div>
@@ -503,73 +703,91 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
 
         {/* Slide 5: Regional Science */}
         <div
-          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative"
+          className="slide-container h-screen w-screen snap-start flex flex-col px-8 md:px-10 lg:px-16 py-10 md:py-12 lg:py-16 relative overflow-hidden bg-[#0d0d0d] font-sans text-white"
           id="rs5"
         >
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.3em] block mb-2 uppercase">
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               Coastal Science
             </span>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-4 pb-4 border-b border-white/10">
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-5 shadow-lg shadow-blue-900/40 w-fit uppercase">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              Electrochemical Degradation
+            </div>
+            <h2 className="text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-8 pb-8 border-b border-white/10 text-white leading-none">
               The "Coastal Corrosion" Reality
             </h2>
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-start">
-              <div className="relative rounded-xl overflow-hidden border border-white/10 h-[280px] lg:h-[350px] shadow-2xl">
-                <img
-                  src={images[5]}
-                  alt="VA Beach Science"
-                  className="w-full h-full object-cover"
-                />
+
+            <div className="grid grid-cols-2 gap-12 items-start">
+              <div className="self-start mt-2">
+                <SlidePhoto
+                  src="/MENU4.png"
+                  alt="Coastal Environmental Threats"
+                  className="aspect-video max-h-[38vh]"
+                >
+                  <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(0,145,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,145,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                  <div className="absolute bottom-4 right-4 text-blue-500/40 pointer-events-none">
+                    <Waves size={48} strokeWidth={1} aria-hidden="true" />
+                  </div>
+                </SlidePhoto>
               </div>
-              <div className="space-y-3">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-2xl shadow-inner">
-                  <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Atom size={14} /> Electrochemical Facts
+
+              <div className="space-y-6">
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 backdrop-blur-2xl shadow-inner text-left">
+                  <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                    <Atom size={16} aria-hidden="true" /> Electrochemical Facts
                   </h3>
-                  <ul className="space-y-1 list-none">
+                  <ul className="space-y-2 list-none">
                     <li>
-                      <BulletRow>
-                        <strong>Salt Air:</strong> Particles suspended for 50+ miles, seeking paint
-                        pores.
-                      </BulletRow>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Salt Air:</strong> Particles suspended for
+                        50+ miles inland, seeking paint pores.
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
-                        <strong>Magnesium Chloride:</strong> Road brines are{" "}
-                        <strong>10x more corrosive</strong> than salt.
-                      </BulletRow>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Magnesium Chloride:</strong> Road brines are{" "}
+                        <strong>10x more corrosive</strong> than traditional salt.
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
-                        <strong>Humid Catalyst:</strong> Coastal humidity accelerates oxidation
-                        speed on raw metal.
-                      </BulletRow>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Humid Catalyst:</strong> Coastal humidity
+                        accelerates oxidation speed on raw metal.
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
-                        <strong>Industrial Fallout:</strong> Industrial port soot creates aggressive
-                        clarity etching.
-                      </BulletRow>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Industrial Fallout:</strong> Port soot and
+                        heavy minerals cause aggressive clarity etching.
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
-                        <strong>Well Water:</strong> Regional mineral content causes permanent
-                        mineral "water spots."
-                      </BulletRow>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Well Water:</strong> Regional mineral content
+                        causes permanent mineral "water spots."
+                      </ExecutiveBulletRow>
                     </li>
                   </ul>
                 </div>
-                <div className="bg-red-500/10 border-l-4 border-red-500 p-3 rounded-r-xl backdrop-blur-md shadow-lg">
-                  <p className="text-red-400 font-black text-[10px] uppercase mb-1 tracking-widest">
-                    FACTORY WARRANTY GAP:
-                  </p>
-                  <p className="text-xs text-white/90 leading-tight font-light">
-                    Standard warranties typically do <strong>not</strong> cover environmental
-                    etching, salt-air corrosion, or highway rock chips.
-                  </p>
-                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 lg:mt-12 bg-red-500/5 border-l-4 border-red-600 p-5 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between border border-white/5">
+              <div className="max-w-3xl text-left">
+                <p className="text-red-500 font-black text-[10px] uppercase mb-1.5 tracking-[0.25em]">
+                  Factory Warranty Gap
+                </p>
+                <p className="text-sm lg:text-base text-white/80 font-light italic leading-relaxed">
+                  "Standard warranties typically do <strong>not</strong> cover environmental
+                  etching, salt-air corrosion, or highway rock chips. These are hazards of the
+                  environment—not manufacturing defects."
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-red-500 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
+                <ShieldAlert size={18} aria-hidden="true" /> Defining the Deficit
               </div>
             </div>
           </div>
@@ -583,18 +801,18 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               Structural Integrity Shield
             </span>
             <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
               <Zap size={12} className="text-white" aria-hidden="true" />
               CORROSION NEUTRALIZATION TECH
             </div>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
               RustGuard Pro: Foundation Defense
             </h2>
 
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
@@ -608,30 +826,30 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   </p>
                 </div>
 
-                <ul className="space-y-1 list-none">
+                <ul className="space-y-2 list-none">
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Salt Air Neutralization:</strong> Active inhibitors stop salt
                       particles from bonding to raw chassis steel.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Magnesium Chloride Defense:</strong> High-density shield against
                       aggressive winter road brines.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Structural Security:</strong> Prevents the &quot;rust-freezing&quot;
                       of critical suspension and braking components.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Hidden Cavity Protection:</strong> Crevice-penetrating formula reaches
                       inner panels where moisture collects.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                 </ul>
 
@@ -665,26 +883,16 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                 </div>
               </div>
 
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
-                <img
-                  src={images[6]}
-                  alt="RustGuard Pro Chassis Protection"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(0,145,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,145,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                <div className="absolute bottom-4 right-4 text-blue-500/40">
-                  <ThermometerSnowflake size={48} strokeWidth={1} aria-hidden="true" />
-                </div>
-              </div>
+              <SlidePhoto src="/MENU8.png" alt="Menu slide" className="aspect-video max-h-[38vh]" />
             </div>
 
-            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
               <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
                 &quot;By protecting the structural foundation of your Lexus, RustGuard ensures your
                 vehicle remains safe, silent, and structurally sound for the life of your
                 ownership.&quot;
               </p>
-              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
                 <ShieldCheck size={16} aria-hidden="true" />
                 LIFETIME STRUCTURE WARRANTY
               </div>
@@ -700,58 +908,119 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 7 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
-              Exterior Protection
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase text-left">
+              Advanced Surface Science
             </span>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
-              ToughGuard: The Clear Coat Shield
-            </h2>
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-              <div className="space-y-4">
-                <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
-                  Modern clear coats are porous. ToughGuard Premium creates a permanent chemical
-                  bond that seals those pores for good.
-                </p>
-                <ul className="space-y-1 list-none">
-                  <li>
-                    <BulletRow>
-                      <strong>One-Time Application:</strong> No more annual waxing or polishing.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Environmental Shield:</strong> Covers damage from bird droppings, tree
-                      sap, and fallout.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Chemical Resistance:</strong> Guards against Bird Droppings, Tree Sap,
-                      and Insects.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>Climate Barrier:</strong> Blocks UV Rays, Road Salt, and Acid Rain
-                      damage.
-                    </BulletRow>
-                  </li>
-                  <li>
-                    <BulletRow>
-                      <strong>The Finish:</strong> A deep, permanent "Liquid-Glass" shine.
-                    </BulletRow>
-                  </li>
-                </ul>
-              </div>
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
-                <img src={images[7]} alt="ToughGuard" className="w-full h-full object-cover" />
-              </div>
+            <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-5 shadow-lg shadow-blue-900/40 w-fit uppercase text-white">
+              <Zap size={12} className="text-white" aria-hidden="true" />
+              Nano-Ceramic Molecular Barrier
             </div>
 
-            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-end">
-              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest shrink-0">
-                <ShieldCheck size={16} aria-hidden="true" />
-                5-YEAR SURFACE GUARANTEE
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 pb-6 border-b border-white/10 text-white text-left leading-none">
+              ToughGuard: Foundation Protection
+            </h2>
+
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-start">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white text-xs font-bold uppercase tracking-[0.2em] mb-3 flex items-center gap-2 text-left">
+                    <Layers size={18} className="text-blue-500" aria-hidden="true" />
+                    Molecular Hardening
+                  </h3>
+                  <p className="text-sm lg:text-base text-white/60 font-light leading-relaxed mb-4 text-left max-w-xl">
+                    Modern clear coats are naturally porous.{" "}
+                    <strong className="text-white">ToughGuard Premium</strong> creates a permanent
+                    chemical bond that seals those pores for good, creating a high-gloss shield that
+                    becomes an extension of your Lexus.
+                  </p>
+                  <ul className="space-y-2 list-none">
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">One-Time Application:</strong> Eliminates the
+                        need for annual waxing, buffing, or polishing.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Environmental Shield:</strong> Complete
+                        defense against bird droppings, tree sap, and industrial fallout.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">Climate Barrier:</strong> Blocks UV rays,
+                        road salt, and acid rain from reaching the paint.
+                      </ExecutiveBulletRow>
+                    </li>
+                    <li>
+                      <ExecutiveBulletRow>
+                        <strong className="text-white">The Finish:</strong> Provides a deep,
+                        permanent <span className="text-blue-400">"Liquid-Glass"</span> showroom
+                        shine.
+                      </ExecutiveBulletRow>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/[0.03] border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-start gap-4">
+                    <FlaskConical
+                      size={20}
+                      className="text-blue-500 flex-shrink-0 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white mb-1">
+                        Chemical Resistance
+                      </h4>
+                      <p className="text-[10px] text-white/40 leading-snug">
+                        Industrial-grade resilience against airborne minerals and insects.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/[0.03] border border-white/10 p-4 rounded-xl backdrop-blur-md flex items-start gap-4">
+                    <Droplets
+                      size={20}
+                      className="text-blue-500 flex-shrink-0 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <div className="text-left">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white mb-1">
+                        Self-Cleaning
+                      </h4>
+                      <p className="text-[10px] text-white/40 leading-snug">
+                        Advanced surface tension allows contaminants to wash away with ease.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <SlidePhoto
+                src="/MENU5.png"
+                alt="ToughGuard Surface Protection"
+                className="aspect-video max-h-[38vh] rounded-2xl"
+              >
+                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(0,145,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,145,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                <div className="absolute bottom-4 right-4 text-blue-500/40">
+                  <Sparkles size={48} strokeWidth={1} aria-hidden="true" />
+                </div>
+              </SlidePhoto>
+            </div>
+
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between border border-white/5 gap-6">
+              <div className="max-w-3xl text-left">
+                <p className="text-blue-400 font-black text-[10px] uppercase mb-1 tracking-[0.25em]">
+                  The Appearance Solution
+                </p>
+                <p className="text-sm lg:text-base text-white/80 font-light italic leading-relaxed">
+                  &quot;By sealing the paint pores and neutralizing environmental catalysts,
+                  ToughGuard ensures your Lexus remains aesthetically flawless for life.&quot;
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
+                <CheckCircle2 size={18} aria-hidden="true" />
+                LIFETIME AESTHETIC WARRANTY
               </div>
             </div>
           </div>
@@ -765,18 +1034,18 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               Signature Interior Defense
             </span>
             <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
               <Zap size={12} className="text-white" aria-hidden="true" />
               NANO-CERAMIC TEXTILE SHIELD
             </div>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
               InteriorGuard: Cabin Preservation
             </h2>
 
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
               <div className="space-y-5">
                 <div className="space-y-2">
                   <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
@@ -790,30 +1059,30 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   </p>
                 </div>
 
-                <ul className="space-y-1 list-none">
+                <ul className="space-y-2 list-none">
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Stain Hydrophobicity:</strong> Immediate repulsion of water and
                       oil-based spills (coffee, soda, and food dye).
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>UV Inhibition:</strong> Prevents leather cracking and vinyl
                       discoloration from intense coastal solar heat.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Antimicrobial Shield:</strong> Inhibits the growth of bacteria, mold,
                       and mildew within deep seat fibers.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Material Conditioning:</strong> Maintains the soft, supple factory
                       feel of NuLuxe and Semi-Aniline leathers.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                 </ul>
 
@@ -851,30 +1120,16 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                 </div>
               </div>
 
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[34vh] bg-[#111]">
-                {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-                <img
-                  src={images[8]}
-                  alt="InteriorGuard Cabin Protection"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(0,145,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,145,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                <div className="absolute bottom-4 right-4 text-blue-500/40 pointer-events-none">
-                  <Sun size={48} strokeWidth={1} aria-hidden="true" />
-                </div>
-              </div>
+              <SlidePhoto src="/MENU7.png" alt="Menu slide" className="aspect-video max-h-[38vh]" />
             </div>
 
-            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
               <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
                 &quot;By sealing your vehicle&apos;s most intimate surfaces, InteriorGuard ensures
                 your Lexus remains as inviting and vibrant as the day you first sat in the
                 driver&apos;s seat.&quot;
               </p>
-              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
                 <ShieldCheck size={16} aria-hidden="true" />
                 5-YEAR INTERIOR GUARANTEE
               </div>
@@ -890,22 +1145,21 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               Structural Glass Defense
             </span>
             <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
               <Zap size={12} className="text-white" aria-hidden="true" />
               NANO-MOLECULAR BONDING
             </div>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
               Diamond Shield: Windshield Protection
             </h2>
 
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
-                    <Maximize size={18} className="text-blue-500" aria-hidden="true" />
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em]">
                     Liquid-Glass Resilience
                   </h3>
                   <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
@@ -914,50 +1168,48 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   </p>
                 </div>
 
-                <ul className="space-y-1 list-none">
+                <ul className="space-y-2 list-none">
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Impact Resistance:</strong> Reduces the likelihood of rock chips and
                       spider-web cracks.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Pitting &amp; Sand-Clouding:</strong> Defends against coastal
                       &quot;sand-blasting&quot; at highway speeds.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Hydrophobic Clarity:</strong> Sheds water, snow, and ice for improved
                       foul-weather visibility.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Optically Clear:</strong> Enhances night-driving clarity by reducing
                       glare and refraction.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                 </ul>
               </div>
 
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh]">
-                <img
-                  src={images[9]}
-                  alt="Diamond Shield Glass Protection"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <SlidePhoto
+                src="/MENU10.png"
+                alt="Menu slide"
+                className="aspect-video max-h-[38vh]"
+              />
             </div>
 
-            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
               <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
                 &quot;Diamond Shield strengthens the structural integrity of your glass while
                 providing a self-cleaning surface that preserves your visibility and your
                 vehicle&apos;s clean history.&quot;
               </p>
-              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
                 <ShieldCheck size={16} aria-hidden="true" />
                 Fully Warrantied Protection
               </div>
@@ -976,55 +1228,54 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
             }`}
           >
             <div className="max-w-6xl mx-auto w-full">
-              <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+              <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
                 Advanced Ballistic Shield
               </span>
               <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
                 <Zap size={12} className="text-white" aria-hidden="true" />
                 8-MIL OPTICAL POLYURETHANE
               </div>
-              <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
                 Highway Hazards: Suntek Film
               </h2>
 
-              <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
-                <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
-                      <Maximize size={18} className="text-blue-500" aria-hidden="true" />
+                    <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em]">
                       Kinetic Impact Defense
                     </h3>
-                    <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
+                    <p className="text-base md:text-base lg:text-xl text-white/80 font-light leading-relaxed">
                       I-264 construction and coastal sand effectively &apos;sand-blast&apos; your
                       front-end at highway speeds. Suntek Ultra provides a sacrificial barrier that
                       absorbs high-velocity impacts.
                     </p>
                   </div>
 
-                  <ul className="space-y-1 list-none">
+                  <ul className="space-y-2 list-none">
                     <li>
-                      <BulletRow>
+                      <ExecutiveBulletRow>
                         <strong>Rock Chip Immunity:</strong> 8-mil invisible physical barrier stops
                         gravel and road debris from reaching the paint.
-                      </BulletRow>
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
+                      <ExecutiveBulletRow>
                         <strong>Self-Healing Technology:</strong> Specialized top-coat allows minor
                         surface scratches to disappear with ambient solar heat.
-                      </BulletRow>
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
+                      <ExecutiveBulletRow>
                         <strong>Stain Resistance:</strong> Hydrophobic properties repel bird
                         droppings, insects, and road grime to prevent etching.
-                      </BulletRow>
+                      </ExecutiveBulletRow>
                     </li>
                     <li>
-                      <BulletRow>
+                      <ExecutiveBulletRow>
                         <strong>Total Coverage:</strong> Precision-cut focus on high-impact areas:
                         Hood, Bumpers, Mirrors, and Door Cups.
-                      </BulletRow>
+                      </ExecutiveBulletRow>
                     </li>
                   </ul>
 
@@ -1062,32 +1313,19 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   </div>
                 </div>
 
-                <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[38vh] bg-[#111] group">
-                  {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-                  <img
-                    src={images[10]}
-                    alt="Suntek Ultra Paint Protection Film"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/10 uppercase tracking-widest pointer-events-none">
-                    Impact Protection: MENU6.png
-                  </div>
-                  <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,rgba(0,145,255,0.1)_0%,transparent_70%)]" />
-                  <div className="absolute top-4 right-4 text-blue-500/40">
-                    <Car size={48} strokeWidth={1} aria-hidden="true" />
-                  </div>
-                </div>
+                <SlidePhoto
+                  src="/MENU6.png"
+                  alt="Menu slide"
+                  className="aspect-video max-h-[38vh]"
+                />
               </div>
 
-              <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+              <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
                 <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
                   &quot;Suntek Ultra ensures your Lexus front-end remains in showroom condition,
                   effectively neutralizing the abrasive reality of regional highway travel.&quot;
                 </p>
-                <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+                <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
                   <ShieldCheck size={16} aria-hidden="true" />
                   10-YEAR MANUFACTURER WARRANTY
                 </div>
@@ -1104,22 +1342,21 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`my-auto z-10 transition-all duration-1000 max-w-6xl mx-auto w-full ${activeSlide === 11 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <span className="text-blue-500 font-bold text-xs tracking-[0.4em] block mb-2 uppercase">
+            <span className="text-blue-500 font-bold text-[10px] tracking-[0.4em] block mb-2 uppercase">
               Premium Aesthetic Restoration
             </span>
             <div className="inline-flex items-center gap-2 bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-lg shadow-blue-900/40">
               <Zap size={12} className="text-white" aria-hidden="true" />
               HIGH-LINE PRECISION SCANNING
             </div>
-            <h2 className="text-3xl lg:text-5xl font-bold uppercase tracking-[0.14em] mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
               Evernew: Appearance Protection
             </h2>
 
-            <div className="grid grid-cols-2 gap-8 lg:gap-10 items-center">
+            <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
-                    <Maximize size={18} className="text-blue-500" aria-hidden="true" />
+                  <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em]">
                     Digital Reconditioning
                   </h3>
                   <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed">
@@ -1128,30 +1365,30 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   </p>
                 </div>
 
-                <ul className="space-y-1 list-none">
+                <ul className="space-y-2 list-none">
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Scratch, Chip &amp; Dent Repair:</strong> Master-level reconditioning
                       for everyday road-borne impacts.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Eliminate Insurance Claims:</strong> Avoid the deductibles and premium
                       hikes of minor dollar repairs.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>Shield Your CARFAX:</strong> Keep cosmetic reconditioning off
                       permanent history reports.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                   <li>
-                    <BulletRow>
+                    <ExecutiveBulletRow>
                       <strong>We Come to You:</strong> Elite mobile service—professional repairs at
                       your home or office.
-                    </BulletRow>
+                    </ExecutiveBulletRow>
                   </li>
                 </ul>
 
@@ -1185,22 +1422,16 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                 </div>
               </div>
 
-              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-video shadow-2xl max-h-[34vh]">
-                <img
-                  src={images[11]}
-                  alt="Evernew Digital Reconditioning"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <SlidePhoto src="/MENU9.png" alt="Menu slide" className="aspect-video max-h-[38vh]" />
             </div>
 
-            <div className="mt-4 bg-blue-600/10 border-l-4 border-blue-600 p-3 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
+            <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
               <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
                 &quot;Evernew helps keep your Lexus in a perpetual state of
                 &apos;newness&apos;—preserving factory paint integrity and peak trade-in equity for
                 the long haul.&quot;
               </p>
-              <div className="flex items-center gap-2 text-blue-400 font-black text-xs uppercase tracking-widest border-l border-white/10 pl-6 shrink-0">
+              <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
                 <ShieldCheck size={16} aria-hidden="true" />
                 Covered for 5 Years
               </div>
@@ -1216,10 +1447,10 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
           <div
             className={`m-auto text-center max-w-5xl z-10 transition-all duration-1000 ${activeSlide === 12 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
-            <h2 className="text-4xl lg:text-6xl font-bold text-blue-500 uppercase tracking-widest mb-6">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-blue-500 uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 leading-none">
               Empowering Ownership
             </h2>
-            <p className="text-base md:text-lg lg:text-xl text-white/55 mb-10 font-light leading-relaxed max-w-3xl mx-auto">
+            <p className="text-base md:text-lg lg:text-xl text-white/65 mb-10 font-light leading-relaxed max-w-3xl mx-auto">
               Based on your driving habits, we have organized our protection into three tailored
               tiers.
             </p>
@@ -1249,10 +1480,10 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   <div className="text-blue-500 mb-6 flex justify-center group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">
                     {tier.icon}
                   </div>
-                  <div className="font-bold text-xl lg:text-2xl mb-2 tracking-widest">
+                  <div className="font-black text-lg lg:text-xl mb-2 tracking-[0.25em] uppercase">
                     {tier.label}
                   </div>
-                  <p className="text-xs text-white/35 uppercase tracking-[0.16em] font-bold leading-snug">
+                  <p className="text-xs text-white/45 uppercase tracking-[0.16em] font-bold leading-snug">
                     {tier.desc}
                   </p>
                 </div>

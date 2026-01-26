@@ -7,10 +7,29 @@ interface PackageCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
+  onMagnify?: () => void;
   basePrice?: number;
   className?: string;
   isCompact?: boolean;
+  isMagnified?: boolean;
+  textSize?: "normal" | "large" | "xl";
 }
+
+const MagnifyIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    className={className ?? "w-5 h-5"}
+    aria-hidden="true"
+  >
+    <path
+      fillRule="evenodd"
+      d="M9 3.5a5.5 5.5 0 1 0 3.477 9.764l2.63 2.63a.75.75 0 1 0 1.06-1.06l-2.63-2.63A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
 
 const Divider: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex items-center justify-center my-4">
@@ -32,9 +51,12 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   isSelected,
   onSelect,
   onViewFeature,
+  onMagnify,
   basePrice,
   className = "",
   isCompact = false,
+  isMagnified = false,
+  textSize = "normal",
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -47,6 +69,34 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   const isRecommended = packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
 
   const isDiscounted = typeof basePrice === "number" && basePrice > packageInfo.price;
+
+  const featureNameClass = isCompact
+    ? textSize === "xl"
+      ? "text-lg"
+      : textSize === "large"
+        ? "text-base"
+        : "text-sm"
+    : isMagnified
+      ? "text-2xl"
+      : textSize === "xl"
+        ? "text-2xl sm:text-3xl"
+        : textSize === "large"
+          ? "text-xl sm:text-2xl"
+          : "text-lg sm:text-xl";
+
+  const pointsClass = isCompact
+    ? textSize === "xl"
+      ? "text-base mt-1.5 space-y-1"
+      : textSize === "large"
+        ? "text-sm mt-1 space-y-1"
+        : "text-xs mt-1 space-y-0.5"
+    : isMagnified
+      ? "text-lg mt-2 space-y-2"
+      : textSize === "xl"
+        ? "text-lg sm:text-xl mt-2 space-y-2"
+        : textSize === "large"
+          ? "text-base sm:text-lg mt-2 space-y-2"
+          : "text-sm sm:text-base mt-2 space-y-1";
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
@@ -84,7 +134,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           <p
             className={`uppercase tracking-[0.28em] text-left text-shadow-sm ${
               isCompact
-                ? "text-sm font-semibold text-lux-gold"
+                ? "text-xs font-semibold text-lux-textMuted"
                 : "text-xs font-semibold text-lux-textMuted"
             }`}
           >
@@ -92,21 +142,42 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           </p>
           <h3
             className={`font-teko ${
-              isCompact ? "text-2xl leading-none" : "text-3xl sm:text-4xl"
-            } font-bold uppercase tracking-wider text-lux-textStrong text-shadow`}
+              isCompact
+                ? "text-2xl leading-none"
+                : isMagnified
+                  ? "text-4xl sm:text-5xl"
+                  : "text-3xl sm:text-4xl"
+            } font-bold uppercase tracking-wider ${
+              isCompact ? "text-lux-gold text-shadow-lg" : "text-lux-textStrong text-shadow"
+            }`}
           >
             {packageInfo.name}
           </h3>
         </div>
-        {isRecommended && <span className="lux-chip-gold shadow-glow-gold">Recommended</span>}
+        <div className="flex items-center gap-2">
+          {onMagnify && (
+            <button
+              type="button"
+              onClick={onMagnify}
+              className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white transition-colors active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70"
+              aria-label={`Magnify ${packageInfo.name} package`}
+              title="Magnify"
+            >
+              <MagnifyIcon className="w-4 h-4" />
+            </button>
+          )}
+          {isRecommended && <span className="lux-chip-gold shadow-glow-gold">Recommended</span>}
+        </div>
       </div>
 
       {/* Features section stretches with page scroll */}
-      <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div
+        className={`relative flex-1 flex flex-col min-h-0 ${isMagnified ? "overflow-y-auto" : "overflow-hidden"}`}
+      >
         <div
           className={`am-package-first-feature ${
             isCompact ? "am-package-body-compact" : "am-package-body"
-          } ${isCompact ? "space-y-1" : "space-y-3"} flex-1 overflow-hidden`}
+          } ${isCompact ? "space-y-1" : "space-y-3"} flex-1 ${isMagnified ? "overflow-visible" : "overflow-hidden"}`}
         >
           {includedPackageFeatures.map((feature, index) => {
             const connector = feature.connector || "AND";
@@ -125,25 +196,33 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                 <div className={`text-center ${isCompact ? "mt-0" : "mt-2"}`}>
                   <button
                     onClick={() => onViewFeature(feature)}
-                    className={`min-h-[44px] font-semibold ${
-                      isCompact ? "text-base" : "text-lg sm:text-xl"
-                    } text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
+                    className={`min-h-[44px] font-semibold ${featureNameClass} text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
-                    <span className={isCompact ? "clamp-2 break-words" : "clamp-2 break-words"}>
+                    <span
+                      className={
+                        isMagnified
+                          ? "clamp-3 break-words"
+                          : isCompact
+                            ? "clamp-2 break-words"
+                            : "clamp-2 break-words"
+                      }
+                    >
                       {feature.name}
                     </span>
                   </button>
-                  <ul
-                    className={`text-lux-textMuted ${
-                      isCompact ? "text-sm mt-1 space-y-0.5" : "text-sm sm:text-base mt-2 space-y-1"
-                    }`}
-                  >
+                  <ul className={`text-lux-textMuted ${pointsClass}`}>
                     {(isCompact ? feature.points.slice(0, 3) : feature.points).map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
-                        className={isCompact ? "clamp-2 break-words" : "clamp-3 break-words"}
+                        className={
+                          isMagnified
+                            ? "clamp-3 break-words"
+                            : isCompact
+                              ? "clamp-2 break-words"
+                              : "clamp-3 break-words"
+                        }
                       >
                         *{p}
                       </li>

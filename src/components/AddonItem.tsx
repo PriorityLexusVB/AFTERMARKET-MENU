@@ -8,6 +8,7 @@ interface AddonItemProps {
   onToggle: () => void;
   onView: () => void;
   isCompact?: boolean;
+  textSize?: "normal" | "large" | "xl";
 }
 
 const PlusIcon: React.FC = () => (
@@ -43,6 +44,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   onToggle,
   onView,
   isCompact = false,
+  textSize = "normal",
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -54,6 +56,30 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
+  const nameClass = isCompact
+    ? textSize === "xl"
+      ? "text-lg"
+      : textSize === "large"
+        ? "text-base"
+        : "text-sm"
+    : textSize === "xl"
+      ? "text-xl"
+      : textSize === "large"
+        ? "text-lg"
+        : "text-sm";
+
+  const priceClass = isCompact
+    ? textSize === "xl"
+      ? "text-base"
+      : textSize === "large"
+        ? "text-sm"
+        : "text-xs"
+    : textSize === "xl"
+      ? "text-lg"
+      : textSize === "large"
+        ? "text-base"
+        : "text-xs";
+
   return (
     <div
       className={`bg-gray-800 border border-gray-700 rounded-lg ${
@@ -63,9 +89,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
       <div className="flex-grow">
         <button
           onClick={onView}
-          className={`font-semibold ${
-            isCompact ? "text-sm" : "text-sm"
-          } text-gray-200 text-left hover:text-blue-400 transition-colors w-full leading-snug clamp-2 break-words`}
+          className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-blue-400 transition-colors w-full leading-snug clamp-2 break-words`}
           aria-label={`Learn more about ${item.name}`}
         >
           {item.name}
@@ -79,9 +103,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
             {formatPrice(basePrice)}
           </p>
         )}
-        <p className={`${isCompact ? "text-sm" : "text-xs"} text-gray-300`}>
-          {formatPrice(item.price)}
-        </p>
+        <p className={`${priceClass} text-gray-300`}>{formatPrice(item.price)}</p>
       </div>
       <div className={isCompact ? "mt-2" : "mt-3"}>
         <button

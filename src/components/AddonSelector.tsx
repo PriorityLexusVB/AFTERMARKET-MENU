@@ -10,6 +10,7 @@ interface AddonSelectorProps {
   basePricesById?: Record<string, number>;
   className?: string;
   isCompact?: boolean;
+  textSize?: "normal" | "large" | "xl";
 }
 
 export const AddonSelector: React.FC<AddonSelectorProps> = ({
@@ -20,7 +21,20 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
   basePricesById,
   className,
   isCompact = false,
+  textSize = "normal",
 }) => {
+  const headerClass = isCompact
+    ? textSize === "xl"
+      ? "text-2xl"
+      : textSize === "large"
+        ? "text-xl"
+        : "text-lg"
+    : textSize === "xl"
+      ? "text-4xl"
+      : textSize === "large"
+        ? "text-3xl"
+        : "text-2xl";
+
   return (
     <div
       className={`bg-gray-800/50 border border-gray-700 rounded-lg ${isCompact ? "p-2" : "p-4"} h-full min-h-0 flex flex-col ${
@@ -28,7 +42,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
       }`}
     >
       <h3
-        className={`${isCompact ? "text-lg" : "text-2xl"} font-teko font-bold tracking-wider ${
+        className={`${headerClass} font-teko font-bold tracking-wider ${
           isCompact ? "text-lux-gold text-shadow-sm" : "text-gray-200"
         } ${isCompact ? "mb-2" : "mb-4"} text-center`}
       >
@@ -57,6 +71,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
               onToggle={() => onToggleItem(item)}
               onView={() => onViewItem(item)}
               isCompact={isCompact}
+              textSize={textSize}
             />
           ))
         )}

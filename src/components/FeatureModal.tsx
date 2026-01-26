@@ -37,10 +37,7 @@ const LightbulbIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-export const FeatureModal: React.FC<FeatureModalProps> = ({
-  feature,
-  onClose,
-}) => {
+export const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -78,7 +75,7 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({
   const isNew = "isNew" in feature ? feature.isNew : false;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center items-center p-4">
+    <div className="fixed inset-0 z-[3000] flex justify-center items-center p-4">
       <button
         type="button"
         className="absolute inset-0 bg-black bg-opacity-70 animate-fade-in"
@@ -154,9 +151,7 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({
                   {feature.points.map((point, index) => (
                     <li key={index} className="flex items-start space-x-3">
                       <CheckIcon className="text-green-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-300 leading-relaxed">
-                        {point}
-                      </span>
+                      <span className="text-gray-300 leading-relaxed">{point}</span>
                     </li>
                   ))}
                 </ul>
@@ -172,9 +167,7 @@ export const FeatureModal: React.FC<FeatureModalProps> = ({
                   {feature.useCases.map((useCase, index) => (
                     <li key={index} className="flex items-start space-x-3">
                       <LightbulbIcon className="text-yellow-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-300 leading-relaxed">
-                        {useCase}
-                      </span>
+                      <span className="text-gray-300 leading-relaxed">{useCase}</span>
                     </li>
                   ))}
                 </ul>

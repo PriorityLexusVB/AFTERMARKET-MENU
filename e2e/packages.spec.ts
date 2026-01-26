@@ -89,13 +89,11 @@ test.describe("Package Selection", () => {
     }
     await expect(addonsHeading).toBeVisible();
 
-    // Take a screenshot of the package section
-    const packageSection = page.locator("main").first();
-    await expect(packageSection).toBeVisible();
-
-    // Visual snapshot for regression testing
-    // Use higher tolerance since mock data may vary slightly
-    await expect(packageSection).toHaveScreenshot("package-cards.png", {
+    // Visual snapshot for regression testing.
+    // Use a fixed-size viewport capture (more stable than element screenshots
+    // whose height can vary slightly with content/fonts).
+    await expect(page).toHaveScreenshot("package-cards.png", {
+      fullPage: false,
       maxDiffPixelRatio: 0.15,
     });
   });

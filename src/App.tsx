@@ -99,6 +99,8 @@ const App: React.FC = () => {
   const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => computeIsIpadLandscape());
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // Lock guest UI to a single optimized size for consistency (no A/A+/A++ toggle).
+  const guestTextSize = "large" as const;
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: "",
     year: "",
@@ -715,6 +717,7 @@ const App: React.FC = () => {
               onSelectPackage={handleSelectPackage}
               onViewFeature={handleViewDetail}
               basePackagePricesById={basePackagePricesById}
+              textSize={guestTextSize}
               addonColumn={
                 <AddonSelector
                   items={mainPageAddons}
@@ -724,6 +727,7 @@ const App: React.FC = () => {
                   basePricesById={baseAddonPricesById}
                   className="h-full min-h-0"
                   isCompact={enableNoScrollLayout}
+                  textSize={guestTextSize}
                 />
               }
               gridClassName={enableNoScrollLayout ? "items-stretch h-full" : "items-stretch"}

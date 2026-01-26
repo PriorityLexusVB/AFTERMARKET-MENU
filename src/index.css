@@ -666,7 +666,7 @@ h6,
   }
 
   .am-main-default {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 170px);
+    padding-bottom: calc(var(--ipad-bottom-bar-h, 170px) + env(safe-area-inset-bottom, 0px));
   }
 
   .am-select-plan-btn {

@@ -12,6 +12,7 @@ interface PackageSelectorProps {
   addonColumn?: React.ReactNode;
   gridClassName?: string;
   isIpadLandscape?: boolean;
+  textSize?: "normal" | "large" | "xl";
 }
 
 export const PackageSelector: React.FC<PackageSelectorProps> = ({
@@ -24,6 +25,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   addonColumn,
   gridClassName,
   isIpadLandscape = false,
+  textSize = "normal",
 }) => {
   const storageKey = "aftermarketMenu:addonDrawerOpen";
   const [isAddonDrawerOpen, setIsAddonDrawerOpen] = useState<boolean>(() => {
@@ -37,6 +39,13 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     }
     return !isIpadLandscape;
   });
+
+  const [magnifiedPackageId, setMagnifiedPackageId] = useState<string | null>(null);
+  const magnifiedPackage = magnifiedPackageId
+    ? packages.find((p) => p.id === magnifiedPackageId) || null
+    : null;
+
+  const closeMagnifier = () => setMagnifiedPackageId(null);
 
   useEffect(() => {
     // Customer-facing iPad/kiosk menu should start with add-ons closed.
@@ -96,8 +105,10 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
                 isSelected={selectedPackage?.id === pkg.id}
                 onSelect={() => onSelectPackage(pkg)}
                 onViewFeature={onViewFeature}
+                onMagnify={() => setMagnifiedPackageId(pkg.id)}
                 className="animate-card-entrance"
                 isCompact={true}
+                textSize={textSize}
               />
             ))}
           </div>
@@ -143,6 +154,51 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
             </button>
           )}
         </aside>
+
+        {magnifiedPackage && (
+          <div
+            className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Magnified package"
+          >
+            <button
+              type="button"
+              className="absolute inset-0"
+              onClick={closeMagnifier}
+              aria-label="Close magnified view (backdrop)"
+            />
+            <div className="relative w-[min(900px,96vw)] max-h-[92vh] overflow-y-auto">
+              <button
+                type="button"
+                onClick={closeMagnifier}
+                className="absolute -top-2 -right-2 z-10 bg-slate-950/90 hover:bg-slate-950 text-white border border-white/10 rounded-full w-10 h-10 flex items-center justify-center"
+                aria-label="Close magnified view"
+                title="Close"
+              >
+                <span className="text-xl leading-none">×</span>
+              </button>
+
+              <PackageCard
+                packageInfo={magnifiedPackage}
+                allFeaturesForDisplay={allFeaturesForDisplay}
+                basePrice={basePackagePricesById?.[magnifiedPackage.id]}
+                isSelected={selectedPackage?.id === magnifiedPackage.id}
+                onSelect={() => {
+                  onSelectPackage(magnifiedPackage);
+                  closeMagnifier();
+                }}
+                onViewFeature={(f) => {
+                  onViewFeature(f);
+                }}
+                className="animate-card-entrance"
+                isCompact={false}
+                isMagnified={true}
+                textSize={textSize}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -158,11 +214,58 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           isSelected={selectedPackage?.id === pkg.id}
           onSelect={() => onSelectPackage(pkg)}
           onViewFeature={onViewFeature}
+          onMagnify={() => setMagnifiedPackageId(pkg.id)}
           className="animate-card-entrance"
           isCompact={isIpadLandscape}
+          textSize={textSize}
         />
       ))}
       {addonColumn}
+
+      {magnifiedPackage && (
+        <div
+          className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Magnified package"
+        >
+          <button
+            type="button"
+            className="absolute inset-0"
+            onClick={closeMagnifier}
+            aria-label="Close magnified view (backdrop)"
+          />
+          <div className="relative w-[min(900px,96vw)] max-h-[92vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={closeMagnifier}
+              className="absolute -top-2 -right-2 z-10 bg-slate-950/90 hover:bg-slate-950 text-white border border-white/10 rounded-full w-10 h-10 flex items-center justify-center"
+              aria-label="Close magnified view"
+              title="Close"
+            >
+              <span className="text-xl leading-none">×</span>
+            </button>
+
+            <PackageCard
+              packageInfo={magnifiedPackage}
+              allFeaturesForDisplay={allFeaturesForDisplay}
+              basePrice={basePackagePricesById?.[magnifiedPackage.id]}
+              isSelected={selectedPackage?.id === magnifiedPackage.id}
+              onSelect={() => {
+                onSelectPackage(magnifiedPackage);
+                closeMagnifier();
+              }}
+              onViewFeature={(f) => {
+                onViewFeature(f);
+              }}
+              className="animate-card-entrance"
+              isCompact={false}
+              isMagnified={true}
+              textSize={textSize}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

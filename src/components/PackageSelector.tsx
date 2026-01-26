@@ -94,7 +94,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
 
     return (
       <div className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
-        <div className="flex-1 min-w-0 min-h-0 overflow-y-auto scrollbar-hide ios-scroll">
+        <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
           <div className={`${packageGridClasses} min-h-0`}>
             {packages.map((pkg) => (
               <PackageCard

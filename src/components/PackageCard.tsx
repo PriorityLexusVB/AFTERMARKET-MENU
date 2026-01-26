@@ -100,9 +100,12 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
+  const displayedPackageFeatures = isCompact
+    ? includedPackageFeatures.slice(0, 2)
+    : includedPackageFeatures;
 
   const CompactDivider: React.FC<{ text: string }> = ({ text }) => (
-    <div className="flex items-center justify-center my-1">
+    <div className="flex items-center justify-center my-0.5">
       <div className="h-px bg-white/10 flex-grow"></div>
       <span
         className={`font-bold px-2 text-[11px] uppercase tracking-wider ${
@@ -143,7 +146,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           <h3
             className={`font-teko ${
               isCompact
-                ? "text-2xl leading-none"
+                ? "text-xl leading-none"
                 : isMagnified
                   ? "text-4xl sm:text-5xl"
                   : "text-3xl sm:text-4xl"
@@ -170,7 +173,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         </div>
       </div>
 
-      {/* Features section stretches with page scroll */}
+      {/* Features section */}
       <div
         className={`relative flex-1 flex flex-col min-h-0 ${isMagnified ? "overflow-y-auto" : "overflow-hidden"}`}
       >
@@ -179,7 +182,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             isCompact ? "am-package-body-compact" : "am-package-body"
           } ${isCompact ? "space-y-1" : "space-y-3"} flex-1 ${isMagnified ? "overflow-visible" : "overflow-hidden"}`}
         >
-          {includedPackageFeatures.map((feature, index) => {
+          {displayedPackageFeatures.map((feature, index) => {
             const connector = feature.connector || "AND";
             const divider =
               index > 0 ? (
@@ -196,7 +199,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                 <div className={`text-center ${isCompact ? "mt-0" : "mt-2"}`}>
                   <button
                     onClick={() => onViewFeature(feature)}
-                    className={`min-h-[44px] font-semibold ${featureNameClass} text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
+                    className={`${
+                      isCompact ? "min-h-[36px]" : "min-h-[44px]"
+                    } font-semibold ${featureNameClass} text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
                     aria-label={`Learn more about ${feature.name}`}
                     data-testid="package-feature"
                   >
@@ -205,7 +210,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                         isMagnified
                           ? "clamp-3 break-words"
                           : isCompact
-                            ? "clamp-2 break-words"
+                            ? "clamp-1 break-words"
                             : "clamp-2 break-words"
                       }
                     >
@@ -213,14 +218,14 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                     </span>
                   </button>
                   <ul className={`text-lux-textMuted ${pointsClass}`}>
-                    {(isCompact ? feature.points.slice(0, 3) : feature.points).map((p, idx) => (
+                    {(isCompact ? feature.points.slice(0, 2) : feature.points).map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
                         className={
                           isMagnified
                             ? "clamp-3 break-words"
                             : isCompact
-                              ? "clamp-2 break-words"
+                              ? "clamp-1 break-words"
                               : "clamp-3 break-words"
                         }
                       >
@@ -232,6 +237,12 @@ export const PackageCard: React.FC<PackageCardProps> = ({
               </div>
             );
           })}
+
+          {isCompact && includedPackageFeatures.length > displayedPackageFeatures.length && (
+            <p className="pt-1 text-center text-[11px] text-lux-textMuted">
+              +{includedPackageFeatures.length - displayedPackageFeatures.length} more coverages
+            </p>
+          )}
         </div>
       </div>
 

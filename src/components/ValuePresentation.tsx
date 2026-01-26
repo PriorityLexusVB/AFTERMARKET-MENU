@@ -1046,7 +1046,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
             </h2>
 
             <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] flex items-center gap-2">
                     <Sparkles size={18} className="text-blue-500" aria-hidden="true" />

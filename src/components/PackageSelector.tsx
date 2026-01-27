@@ -123,43 +123,41 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           </div>
         </div>
 
-        <aside
-          className={`relative min-h-0 transition-[width] duration-300 ease-out ${
-            isAddonDrawerOpen ? "w-[320px]" : "w-[44px]"
-          }`}
-          aria-label="Add-ons"
-        >
-          {/* Drawer contents */}
+        <aside className="relative min-h-0 w-[320px]" aria-label="Add-ons">
+          {/* Column content stays visible (paper-like). When "closed", lock interactions. */}
           <div
-            className={`h-full min-h-0 ${
-              isAddonDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none"
-            } transition-opacity duration-200`}
+            className={`h-full min-h-0 transition-opacity duration-200 ${
+              isAddonDrawerOpen ? "opacity-100" : "opacity-95 pointer-events-none select-none"
+            }`}
           >
             {addonColumn}
           </div>
 
-          {/* Toggle */}
-          {isAddonDrawerOpen ? (
+          {/* Closed overlay (visible column, but locked) */}
+          {!isAddonDrawerOpen ? (
+            <div className="absolute inset-0 z-10 rounded-lg bg-black/15 border border-white/5">
+              <button
+                type="button"
+                onClick={() => setIsAddonDrawerOpen(true)}
+                className="absolute top-2 right-2 z-20 bg-slate-950/75 hover:bg-slate-950/90 text-white/90 hover:text-white border border-white/10 rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-[0.24em]"
+                aria-label="Open add-ons"
+                title="Open add-ons"
+              >
+                Open
+              </button>
+              <div className="absolute top-2 left-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">
+                Add-Ons
+              </div>
+            </div>
+          ) : (
             <button
               type="button"
               onClick={() => setIsAddonDrawerOpen(false)}
-              className="absolute top-2 right-2 z-10 bg-slate-950/70 hover:bg-slate-950/90 text-white/90 hover:text-white border border-white/10 rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-[0.24em]"
+              className="absolute top-2 right-2 z-20 bg-slate-950/70 hover:bg-slate-950/90 text-white/90 hover:text-white border border-white/10 rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-[0.24em]"
               aria-label="Close add-ons"
               title="Close add-ons"
             >
               Close
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsAddonDrawerOpen(true)}
-              className="absolute inset-0 z-10 bg-gray-800/70 hover:bg-gray-800/85 border border-gray-700 rounded-lg text-gray-200 flex items-center justify-center"
-              aria-label="Open add-ons"
-              title="Open add-ons"
-            >
-              <span className="font-teko font-bold text-sm uppercase tracking-[0.32em] rotate-90 text-lux-gold text-shadow-sm">
-                Add-Ons
-              </span>
             </button>
           )}
         </aside>

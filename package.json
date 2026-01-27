@@ -30,6 +30,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:webkit:smoke": "cross-env PW_WEBKIT=1 playwright test e2e/ipad-fit.spec.ts e2e/presentation.spec.ts",
     "test:e2e:update": "playwright test --update-snapshots",
     "test:e2e:install": "playwright install chromium",
     "typecheck": "tsc --noEmit",

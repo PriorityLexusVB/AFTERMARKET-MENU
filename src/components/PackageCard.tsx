@@ -118,9 +118,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
-  const displayedPackageFeatures = isCompact
-    ? includedPackageFeatures.slice(0, 2)
-    : includedPackageFeatures;
+  const displayedPackageFeatures = includedPackageFeatures;
 
   const CompactDivider: React.FC<{ connector: "AND" | "OR" }> = ({ connector }) => {
     if (connector === "AND") {
@@ -254,7 +252,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                     </span>
                   </button>
                   <ul className={`text-lux-textMuted ${pointsClass}`}>
-                    {(isCompact ? feature.points.slice(0, 2) : feature.points).map((p, idx) => (
+                    {feature.points.map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
                         className={

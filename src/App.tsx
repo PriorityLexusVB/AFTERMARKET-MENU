@@ -108,9 +108,39 @@ const App: React.FC = () => {
     model: "",
   });
 
-  const showBuildBadge = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return new URLSearchParams(window.location.search).get("debugBuild") === "1";
+  const [showBuildBadge, setShowBuildBadge] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = "aftermarketMenu:debugBuild";
+    const params = new URLSearchParams(window.location.search);
+
+    const q = params.get("debugBuild");
+    if (q === "1") {
+      try {
+        window.localStorage.setItem(key, "1");
+      } catch {
+        // ignore
+      }
+      setShowBuildBadge(true);
+      return;
+    }
+
+    if (q === "0") {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // ignore
+      }
+      setShowBuildBadge(false);
+      return;
+    }
+
+    try {
+      setShowBuildBadge(window.localStorage.getItem(key) === "1");
+    } catch {
+      setShowBuildBadge(false);
+    }
   }, []);
 
   // Auth State
@@ -277,7 +307,19 @@ const App: React.FC = () => {
     const root = document.documentElement;
 
     const setViewportVars = () => {
-      const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
+      const visualHeight = window.visualViewport?.height;
+      const innerHeight = window.innerHeight;
+      // iOS/iPadOS can briefly report incorrect visualViewport.height (including 0) during
+      // orientation changes or initial paint. Using the larger of innerHeight/visualViewport
+      // prevents the no-scroll layout from collapsing until the viewport settles.
+      let height = Math.round(
+        Math.max(innerHeight, typeof visualHeight === "number" ? visualHeight : 0)
+      );
+
+      // Absolute last-resort fallback.
+      if (!Number.isFinite(height) || height < 300) {
+        height = Math.round(innerHeight);
+      }
       root.style.setProperty("--app-vh", `${height}px`);
       root.style.setProperty("--app-height", `${height}px`);
     };
@@ -905,7 +947,7 @@ const App: React.FC = () => {
       }`}
     >
       {showBuildBadge ? (
-        <div className="fixed bottom-2 right-2 z-[99999] rounded-lg bg-black/70 backdrop-blur px-3 py-2 border border-white/10 text-[11px] text-white/80">
+        <div className="fixed left-2 top-[calc(env(safe-area-inset-top,0px)+8px)] z-[99999] pointer-events-none rounded-lg bg-black/70 backdrop-blur px-3 py-2 border border-white/10 text-[11px] text-white/80">
           <div className="font-mono">build {__BUILD_INFO__.sha}</div>
           <div className="font-mono">{__BUILD_INFO__.time}</div>
         </div>

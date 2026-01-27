@@ -429,6 +429,27 @@ h6,
     animation-delay: 500ms;
   }
 
+  /* iPad/kiosk no-scroll: avoid delayed entrance animations on critical content.
+     On iOS/iPadOS Safari (and some standalone PWAs), delayed animations can
+     intermittently stall at their initial keyframe (opacity: 0), making the
+     package grid appear blank until another interaction triggers a repaint.
+  */
+  .ipad-landscape-lock .stagger-children > * {
+    animation: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stagger-children > * {
+      animation: none !important;
+    }
+
+    .animate-card-entrance,
+    .animate-fade-in,
+    .animate-slide-up {
+      animation: none !important;
+    }
+  }
+
   /* Button styles */
   .btn-luxury-primary {
     @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;

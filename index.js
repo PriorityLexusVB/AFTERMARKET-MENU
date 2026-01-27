@@ -3,10 +3,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
-import {
-  logStartupDiagnostics,
-  startMemoryMonitoring,
-} from "./utils/runtime-checks.js";
+import { logStartupDiagnostics, startMemoryMonitoring } from "./utils/runtime-checks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +37,7 @@ const distDir = path.join(__dirname, "dist");
 const publicDir = path.join(__dirname, "public");
 const manifestPath = path.join(distDir, "manifest.webmanifest");
 const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
+const buildInfoPath = path.join(distDir, "build-info.json");
 
 let manifestPayload = null;
 let lastManifestLoadAttempt = 0;
@@ -70,12 +68,7 @@ const loadManifest = () => {
     console.log("[BOOT] Loaded manifest from", file);
     return manifestPayload;
   } catch (error) {
-    console.warn(
-      "[BOOT WARNING] Failed to read manifest from",
-      file,
-      ":",
-      error
-    );
+    console.warn("[BOOT WARNING] Failed to read manifest from", file, ":", error);
     manifestLoadFailed = true;
     return null;
   }
@@ -124,8 +117,10 @@ const debugLimiter = rateLimit({
 const indexHtml = path.join(distDir, "index.html");
 const distExists = fs.existsSync(distDir);
 const indexExists = fs.existsSync(indexHtml);
+const buildInfoExists = fs.existsSync(buildInfoPath);
 let indexHtmlPayload = null;
 let debugDistFiles = [];
+let buildInfoPayload = null;
 
 if (indexExists) {
   try {
@@ -143,13 +138,20 @@ if (distExists) {
   }
 }
 
+if (buildInfoExists) {
+  try {
+    const raw = fs.readFileSync(buildInfoPath, "utf8");
+    buildInfoPayload = JSON.parse(raw);
+  } catch (error) {
+    console.warn("[BOOT WARNING] Failed to read build-info.json:", error);
+  }
+}
+
 console.log("[BOOT] distDir:", distDir, "exists?", distExists);
 console.log("[BOOT] indexHtml:", indexHtml, "exists?", indexExists);
 
 if (!distExists || !indexExists) {
-  console.warn(
-    "[BOOT WARNING] Build artifacts missing - app will show splash page"
-  );
+  console.warn("[BOOT WARNING] Build artifacts missing - app will show splash page");
   console.warn("[BOOT WARNING] This may indicate:");
   console.warn("[BOOT WARNING]   1. Build step was skipped or failed");
   console.warn("[BOOT WARNING]   2. GCS volume mount overwrote /app/dist");
@@ -164,8 +166,7 @@ const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Afte
 
 // Never cache HTML (SPA)
 app.use((req, res, next) => {
-  if (req.path.endsWith(".html") || req.path === "/")
-    res.setHeader("Cache-Control", "no-store");
+  if (req.path.endsWith(".html") || req.path === "/") res.setHeader("Cache-Control", "no-store");
   next();
 });
 
@@ -234,6 +235,8 @@ app.get("/__debug", debugLimiter, (_req, res) => {
     node: process.version,
     distExists,
     indexExists,
+    buildInfoExists,
+    buildInfo: buildInfoPayload,
     distFiles: debugDistFiles,
   });
 });
@@ -243,6 +246,8 @@ app.get("*", (_req, res) => {
   if (_req.path === "/index.html" && process.env.NODE_ENV === "test") {
     return res.status(404).send("Not found");
   }
+  // Never cache HTML shells (important behind proxies/CDNs and for iPad/PWA refreshes).
+  res.setHeader("Cache-Control", "no-store");
   if (indexHtmlPayload) return res.type("html").send(indexHtmlPayload);
   return res.status(200).send(splashHtml);
 });

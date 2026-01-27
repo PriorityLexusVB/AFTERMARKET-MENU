@@ -108,6 +108,11 @@ const App: React.FC = () => {
     model: "",
   });
 
+  const showBuildBadge = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("debugBuild") === "1";
+  }, []);
+
   // Auth State
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -899,6 +904,12 @@ const App: React.FC = () => {
           : ""
       }`}
     >
+      {showBuildBadge ? (
+        <div className="fixed bottom-2 right-2 z-[99999] rounded-lg bg-black/70 backdrop-blur px-3 py-2 border border-white/10 text-[11px] text-white/80">
+          <div className="font-mono">build {__BUILD_INFO__.sha}</div>
+          <div className="font-mono">{__BUILD_INFO__.time}</div>
+        </div>
+      ) : null}
       <Header
         user={user}
         guestMode={guestMode}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { PackageTier, ProductFeature, AlaCarteOption } from "../types";
 import { PackageCard } from "./PackageCard";
 
@@ -47,6 +47,70 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   const magnifiedPackage = magnifiedPackageId
     ? packages.find((p) => p.id === magnifiedPackageId) || null
     : null;
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isIpadLandscape || !addonColumn) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const w = Math.round(el.getBoundingClientRect().width);
+      setContainerWidth(Number.isFinite(w) ? w : 0);
+    };
+
+    update();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }
+
+    const ro = new ResizeObserver(() => update());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isIpadLandscape, addonColumn]);
+
+  const drawerWidths = useMemo(() => {
+    // Targets match the desired iPad look, but we clamp based on available width so
+    // the 3 package columns remain visible in PWA (no URL bar) or Safari (URL bar).
+    const closedTarget = 260;
+    const openTarget = 320;
+    const minClosed = 220;
+    const minOpen = 280;
+
+    // Conservative minimum for 3 package columns + internal gaps.
+    const minPackageCol = 240;
+    const packageGridGaps = 2 * 12; // two gaps between 3 columns
+    const interPaneGap = 12; // gap between packages area and add-ons pane
+    const safety = 16;
+    const minPackagesTotal = minPackageCol * 3 + packageGridGaps + interPaneGap + safety;
+
+    const w = containerWidth || 0;
+    const maxDrawer = w > 0 ? Math.max(0, w - minPackagesTotal) : openTarget;
+
+    const closed = Math.max(0, Math.min(closedTarget, maxDrawer > 0 ? maxDrawer : closedTarget));
+    const open = Math.max(0, Math.min(openTarget, maxDrawer > 0 ? maxDrawer : openTarget));
+
+    // Enforce minimums when possible; fall back if the container is too tight.
+    const closedFinal = maxDrawer >= minClosed ? Math.max(minClosed, closed) : Math.max(0, closed);
+    const openFinal = maxDrawer >= minOpen ? Math.max(minOpen, open) : Math.max(closedFinal, open);
+
+    return {
+      closed: Math.round(closedFinal),
+      open: Math.round(Math.max(openFinal, closedFinal)),
+    };
+  }, [containerWidth]);
+
+  useEffect(() => {
+    if (!isIpadLandscape || !addonColumn) return;
+    const el = containerRef.current;
+    if (!el) return;
+    el.style.setProperty("--am-addon-w-closed", `${drawerWidths.closed}px`);
+    el.style.setProperty("--am-addon-w-open", `${drawerWidths.open}px`);
+  }, [drawerWidths, isIpadLandscape, addonColumn]);
 
   const closeMagnifier = () => setMagnifiedPackageId(null);
 
@@ -102,7 +166,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     const packageGridClasses = `grid grid-cols-3 gap-2 lg:gap-3 ${outerClasses}`;
 
     return (
-      <div className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
+      <div ref={containerRef} className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
         <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
           <div className={`${packageGridClasses} min-h-0`}>
             {packages.map((pkg) => (
@@ -123,7 +187,14 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           </div>
         </div>
 
-        <aside className="relative min-h-0 w-[320px]" aria-label="Add-ons">
+        <aside
+          className={`relative min-h-0 transition-[width] duration-300 ease-out ${
+            isAddonDrawerOpen
+              ? "w-[var(--am-addon-w-open,320px)]"
+              : "w-[var(--am-addon-w-closed,260px)]"
+          }`}
+          aria-label="Add-ons"
+        >
           {/* Column content stays visible (paper-like). When "closed", lock interactions. */}
           <div
             className={`h-full min-h-0 transition-opacity duration-200 ${
@@ -135,7 +206,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
 
           {/* Closed overlay (visible column, but locked) */}
           {!isAddonDrawerOpen ? (
-            <div className="absolute inset-0 z-10 rounded-lg bg-black/15 border border-white/5">
+            <div className="absolute inset-0 z-10 rounded-lg bg-black/10 border border-white/5">
               <button
                 type="button"
                 onClick={() => setIsAddonDrawerOpen(true)}

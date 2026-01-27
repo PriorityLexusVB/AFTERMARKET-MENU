@@ -5,7 +5,7 @@ async function openPresentation(page: import("@playwright/test").Page) {
   // Keep it explicit so it stays stable even when running under the default chromium project.
   await page.setViewportSize({ width: 1194, height: 834 });
 
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
   const showButton = page.locator('button[aria-label="Show presentation"]');

@@ -44,11 +44,9 @@ export default defineConfig({
         ? "npm run e2e:dev"
         : "npm run e2e:web",
     url: "http://localhost:4173",
-    // CI should be strict and deterministic: always start a fresh web server.
-    // Locally, reuse an existing server on the port by default to avoid flaky
-    // "port already in use" failures when a dev/preview server is already running.
-    // Set `PW_REUSE_SERVER=0` to force starting a fresh server locally.
-    reuseExistingServer: process.env["CI"] ? false : process.env["PW_REUSE_SERVER"] !== "0",
+    // Keep e2e deterministic: only reuse a server when explicitly requested.
+    // Otherwise we can accidentally run tests against a non-demo server (login screen).
+    reuseExistingServer: process.env["CI"] ? false : process.env["PW_REUSE_SERVER"] === "1",
     timeout: 120000,
   },
 });

@@ -145,14 +145,59 @@ const App: React.FC = () => {
 
   // Auth State
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const forcedDemoMode = (() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const fromSearch = new URLSearchParams(window.location.search).get("demo") === "1";
+      if (fromSearch) return true;
+
+      // Some deployments/test runners may use hash routing where the query string
+      // ends up inside `location.hash` (e.g. `/#/path?demo=1`).
+      const hash = window.location.hash || "";
+      const qIndex = hash.indexOf("?");
+      if (qIndex >= 0) {
+        const fromHash = new URLSearchParams(hash.slice(qIndex)).get("demo") === "1";
+        if (fromHash) return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  })();
+
+  const [isAuthLoading, setIsAuthLoading] = useState(() => !forcedDemoMode);
+  const [isDemoMode, setIsDemoMode] = useState(() => forcedDemoMode);
   const guestMode = !user;
   const isLoginView = !user && !isDemoMode;
 
   useEffect(() => {
     // Initialize Firebase Analytics
     initializeAnalytics();
+
+    // Allow a deterministic guest/demo entry point for kiosk verification and automated tests.
+    // This intentionally overrides auth-driven routing when present.
+    if (typeof window !== "undefined") {
+      try {
+        const search = window.location.search || "";
+        const hash = window.location.hash || "";
+        const qIndex = hash.indexOf("?");
+        const hashQuery = qIndex >= 0 ? hash.slice(qIndex) : "";
+        const demo =
+          new URLSearchParams(search).get("demo") || new URLSearchParams(hashQuery).get("demo");
+        if (demo === "1") {
+          setUser(null);
+          setIsAdminView(false);
+          setCurrentView("menu");
+          setCurrentPage("packages");
+          setIsAuthLoading(false);
+          setIsDemoMode(true);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+    }
 
     if (firebaseInitializationError || !auth) {
       setIsAuthLoading(false);

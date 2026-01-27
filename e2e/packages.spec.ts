@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Package Selection", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/?demo=1");
     // Wait for the app to load
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
   });

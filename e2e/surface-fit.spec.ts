@@ -5,7 +5,7 @@ test.describe("Surface Pro / desktop kiosk fit", () => {
     // Surface Pro-ish landscape viewport (common kiosk size).
     await page.setViewportSize({ width: 1368, height: 912 });
 
-    await page.goto("/");
+    await page.goto("/?demo=1");
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
     // In kiosk/no-scroll layouts we rely on fixed-height regions.

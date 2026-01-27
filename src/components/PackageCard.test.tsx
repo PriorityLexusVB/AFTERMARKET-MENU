@@ -81,6 +81,34 @@ describe("PackageCard", () => {
     expect(screen.getByText("*Hydrophobic protection")).toBeInTheDocument();
   });
 
+  it("should not truncate feature points in compact mode", () => {
+    const featureWithManyPoints = createMockFeature({
+      id: "feature-many-points",
+      name: "Wheel & Tire",
+      points: ["Point A", "Point B", "Point C"],
+    });
+
+    const pkg = createMockPackageTier({
+      name: "Gold",
+      price: 3500,
+      tier_color: "yellow-400",
+      features: [featureWithManyPoints],
+    });
+
+    render(
+      <PackageCard
+        {...defaultProps}
+        packageInfo={pkg}
+        allFeaturesForDisplay={[featureWithManyPoints]}
+        isCompact={true}
+      />
+    );
+
+    expect(screen.getByText("*Point A")).toBeInTheDocument();
+    expect(screen.getByText("*Point B")).toBeInTheDocument();
+    expect(screen.getByText("*Point C")).toBeInTheDocument();
+  });
+
   it('should display "AND" dividers between features by default', () => {
     render(<PackageCard {...defaultProps} />);
 

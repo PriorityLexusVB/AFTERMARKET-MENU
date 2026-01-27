@@ -107,7 +107,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       ? "text-base mt-1.5 space-y-1"
       : textSize === "large"
         ? "text-sm mt-1 space-y-1"
-        : "text-xs mt-1 space-y-0.5"
+        : "text-[11px] mt-1"
     : isMagnified
       ? "text-lg mt-2 space-y-2"
       : textSize === "xl"
@@ -115,6 +115,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         : textSize === "large"
           ? "text-base sm:text-lg mt-2 space-y-2"
           : "text-sm sm:text-base mt-2 space-y-1";
+
+  const pointsListLayoutClass = isCompact ? "columns-2 gap-x-4" : "";
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
@@ -208,13 +210,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({
       </div>
 
       {/* Features section stretches with page scroll */}
-      <div
-        className={`relative flex-1 flex flex-col min-h-0 ${isMagnified ? "overflow-y-auto" : "overflow-hidden"}`}
-      >
+      <div className={`relative flex-1 flex flex-col min-h-0 overflow-hidden`}>
         <div
           className={`am-package-first-feature ${
             isCompact ? "am-package-body-compact" : "am-package-body"
-          } ${isCompact ? "space-y-1" : "space-y-3"} flex-1 ${isMagnified ? "overflow-visible" : "overflow-hidden"}`}
+          } ${isCompact ? "space-y-1" : "space-y-3"} flex-1 overflow-hidden`}
         >
           {displayedPackageFeatures.map((feature, index) => {
             const connector = feature.connector || "AND";
@@ -244,14 +244,14 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                         isMagnified
                           ? "clamp-3 break-words"
                           : isCompact
-                            ? "clamp-1 break-words"
+                            ? "break-words"
                             : "clamp-2 break-words"
                       }
                     >
                       {feature.name}
                     </span>
                   </button>
-                  <ul className={`text-lux-textMuted ${pointsClass}`}>
+                  <ul className={`text-lux-textMuted ${pointsClass} ${pointsListLayoutClass}`}>
                     {feature.points.map((p, idx) => (
                       <li
                         key={`${feature.id}-point-${idx}`}
@@ -259,7 +259,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                           isMagnified
                             ? "clamp-3 break-words"
                             : isCompact
-                              ? "clamp-2 break-words"
+                              ? "break-inside-avoid break-words mb-0.5"
                               : "clamp-3 break-words"
                         }
                       >

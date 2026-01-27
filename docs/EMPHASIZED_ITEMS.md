@@ -1,0 +1,609 @@
+# Emphasized Items
+
+Scanned Markdown files (excluding node_modules and generated folders): 23
+
+## Bold (double asterisks)
+Total unique matches: 508
+
+- **"Add project"**
+- **"Add user"**
+- **"Create database"**
+- **"Create project"**
+- **"Deploy"**
+- **"Done"**
+- **"Edit & Deploy New Revision"**
+- **"Enable"**
+- **"Get started"**
+- **"Variables & Secrets"**
+- **"Your apps"**
+- **⚠️ Experiencing deployment failures?**
+- **⚠️ Warning**
+- **📖 For detailed troubleshooting**
+- **90+ tests**
+- **A GCSFuse volume mounted to `/app/dist`**
+- **A La Carte Admin Panel**
+- **A La Carte Form**
+- **A La Carte loses the “Page X / Y” indicator**
+- **A La Carte Options (Column 4):**
+- **A La Carte Options**
+- **A La Carte page**
+- **Accessibility**
+- **Actions**
+- **Add count badge to Package Features tab:**
+- **Add Error Boundary Around AdminPanel**
+- **Add keyboard shortcuts guide:**
+- **Add Package Features Count Badge**
+- **Add sticky column headers:**
+- **Add the secret to your repository**
+- **Add to Home Screen**
+- **Add User-Facing Error Toast for Drag/Drop**
+- **Add visual hierarchy:**
+- **Add Zod Validation for Packages**
+- **Add-Ons panel no longer errors**
+- **Add-Ons Panel**
+- **Adding new tabs or sections:**
+- **Adding server-side filtering:**
+- **Admin Actions**
+- **Admin drag/drop defines what customers see.**
+- **Admin page shows grouped/bundled same-name items**
+- **Admin Panel Tabs**
+- **Admin Panel**
+- **Admin UI Enhancements**
+- **AdminPanel**
+- **After:**
+- **After**
+- **Already optimal:**
+- **Analysis Scope**
+- **Analysis**
+- **Analytics > Dashboard**
+- **Analytics Tracking**
+- **AND**
+- **Animated transitions:**
+- **Apple Design**
+- **Application may not bind to PORT correctly**
+- **ARIA labels**
+- **Author:**
+- **Auto-fix Attempt**
+- **Auto-merge**
+- **Automated Actions**
+- **Backend**
+- **Backward Compatible**
+- **Before:**
+- **Before**
+- **Benefits**
+- **Between Columns**
+- **bottom bar**
+- **Branch Discovery & Classification**
+- **Branch Health**
+- **Branch**
+- **Brand Alignment**
+- **Breaking API changes**
+- **Build > Analytics**
+- **Build > Authentication**
+- **Build > Firestore Database**
+- **Build > Storage**
+- **Build artifacts are baked into the container image**
+- **Build Locally**
+- **Build Size:**
+- **Build Status:**
+- **Build Time:**
+- **build time**
+- **Build Tool**
+- **Build-time configuration fails**
+- **BUILD**
+- **built**
+- **Cannot merge PRs**
+- **Cannot push to protected branches**
+- **Case Sensitivity**
+- **Cause:**
+- **CDN Integration**
+- **Changes:**
+- **Changing drag-and-drop library:**
+- **Check Environment Variables**
+- **Check the logs**
+- **Checklist:**
+- **CI**
+- **Clean Imports**
+- **Close**
+- **Code scanning**
+- **CODEBASE_ANALYSIS_REPORT.md**
+- **CodeQL Alert**
+- **CodeQL Alerts**
+- **CodeQL**
+- **Collection:**
+- **Color Contrast**
+- **Column 1**
+- **Column 2**
+- **Column 3**
+- **Column 4**
+- **Column Indicators**
+- **Column Order**
+- **Command Breakdown:**
+- **Commit**
+- **Commits**
+- **Common debugging steps**
+- **Companion to:**
+- **Complex lint errors**
+- **Comprehensive Comments**
+- **Conclusion**
+- **Configurable ignore patterns**
+- **Configure substitution variables**
+- **Conflict detection**
+- **Connector:**
+- **Conservative Fixes**
+- **Consistent**
+- **Container may fail health checks**
+- **Content Security Policy**
+- **Context**
+- **cost**
+- **Coverage:**
+- **CPU**
+- **Create a Cloud Build trigger**
+- **Create a Personal Access Token (PAT)**
+- **CSS custom properties**
+- **Current Issues:**
+- **Current State:**
+- **Current:**
+- **Dark/light theme toggle:**
+- **Data Layer Functions**
+- **Data**
+- **Date**
+- **Default Behavior**
+- **Defense in Depth**
+- **Deferred (complex):**
+- **Deferred (medium risk):**
+- **Deferred (requires modal):**
+- **Deferred (requires testing):**
+- **Dependabot alerts**
+- **Dependabot security updates**
+- **Dependabot version updates**
+- **Dependabot**
+- **Dependency graph**
+- **Deploy the New Revision**
+- **Deploy to Cloud Run**
+- **Deployment**
+- **description**
+- **desktop device emulation**
+- **Details**
+- **Detection**
+- **Distinguish Popular Add-ons Column**
+- **Document Version:**
+- **Documentation**
+- **Don't mount dist**
+- **Drag & Drop**
+- **Dry-run by default**
+- **Duration:**
+- **during the build process**
+- **Edit the Service**
+- **Elite Package**
+- **Elite**
+- **Email/Password**
+- **Empty State Message**
+- **Enable code splitting**
+- **Enable required APIs**
+- **Enhance Position Indicators**
+- **Enhanced Price Validation**
+- **Enhanced Server Startup**
+- **Enhanced:**
+- **Enhancements:**
+- **Environment Variable Validation**
+- **Estimated Effort:**
+- **exact**
+- **Expand/Collapse**
+- **Express Normalization**
+- **express-rate-limit**
+- **Fail Securely**
+- **Feature templates or cloning:**
+- **Feature Views**
+- **Features (with column/position/connector):**
+- **File:**
+- **Files Modified**
+- **Files to modify:**
+- **Files updated:**
+- **Filter Compatible**
+- **Filter:**
+- **Firebase Analytics**
+- **Firebase initialization fails**
+- **Fix Applied**
+- **Fix**
+- **Focus visible styles**
+- **Friction Points Identified:**
+- **Frontend**
+- **Full Edit Access**
+- **Get your Firebase credentials**
+- **GitHub Advanced Security**
+- **github-actions ecosystem**
+- **Glassmorphism utilities**
+- **Goal:**
+- **Gold Package**
+- **Gold**
+- **Google Cloud CLI**
+- **Group Display**
+- **Grouping Scope**
+- **Hard rule:**
+- **Hidden items**
+- **High contrast mode**
+- **If the bucket is empty or doesn't contain the built files**
+- **ignored**
+- **Image Upload**
+- **Impact:**
+- **Implementation Priority:**
+- **Implementation Time:**
+- **Implementation:**
+- **Important flags explained:**
+- **Important:**
+- **Important**
+- **Improve Auth Error Messages**
+- **Improve Empty State Messages**
+- **Improve empty state:**
+- **Improve focus states:**
+- **Improve position visibility:**
+- **Improved Focus States**
+- **Increase: <10KB (<0.2%)**
+- **Initial Checks**
+- **Interaction**
+- **Interactive Package Selection**
+- **iPad breakpoints**
+- **iPad grid layout**
+- **iPad Specifications**
+- **iPad-Specific Design**
+- **isNew**
+- **isRecommended**
+- **Items remain in correct columns**
+- **Job:**
+- **Key Metrics:**
+- **key name**
+- **Key Settings:**
+- **Keyboard Navigation**
+- **Keyboard Shortcuts Guide**
+- **landscape**
+- **Languages analyzed**
+- **Last Updated:**
+- **layout-based media query**
+- **legacyFeatureIds**
+- **Lexus Website**
+- **Location**
+- **Log Security Events**
+- **Luxury Aesthetics**
+- **Luxury Automotive UI**
+- **Luxury color palette**
+- **Luxury shadows**
+- **Major redesign of column layout:**
+- **Make "Show unassigned" more prominent:**
+- **Manual UI Testing**
+- **Mapping (strict):**
+- **Matrix Testing**
+- **Maximum requests per container**
+- **Memory**
+- **menu view**
+- **Merge Status Analysis**
+- **Merged-only deletion**
+- **Minimum age requirement**
+- **Minimum instances**
+- **Minimum touch target**
+- **Mode**
+- **Monitor Rate Limits**
+- **name**
+- **narrow iPad UA fallback**
+- **Navigate to your project directory**
+- **NEW CodeQL Security Alerts**
+- **New Order:**
+- **Next Steps**
+- **NEXT**
+- **No action required**
+- **No Breaking Changes**
+- **No Changes Required**
+- **No Data Changes**
+- **No Runtime Errors**
+- **no whitespace**
+- **Not allowed here:**
+- **NOT**
+- **Note:**
+- **Note**
+- **npm ecosystem**
+- **obsolete**
+- **Open Cloud Run Console**
+- **Optimize images**
+- **Optimized Header:**
+- **Optimized Modal:**
+- **Optimized Navigation:**
+- **Optimized Package Card:**
+- **Optimized Summary:**
+- **Option A (Recommended):**
+- **Option A: Sophisticated Serif + Sans**
+- **Option B (Gradual):**
+- **Option B: Luxury Sans-Serif (Current Enhanced)**
+- **Option C: Keep Current Fonts, Refined**
+- **Options**
+- **OR**
+- **Ordering:**
+- **Orientation**
+- **Overall Risk**
+- **overflow-hidden wrapper**
+- **Package features columns display in Elite, Platinum, Gold order**
+- **Package Selection**
+- **Packages page**
+- **Packages:**
+- **page must not scroll**
+- **Page X / Y**
+- **paginate**
+- **pagination**
+- **PASSING**
+- **Path Resolution**
+- **Performance**
+- **Phase 1:**
+- **Phase 2:**
+- **Phase 3:**
+- **Platinum Package**
+- **Platinum**
+- **Playwright**
+- **points**
+- **Popular Add-Ons**
+- **Post to issue**
+- **Potential Quick Wins (Low Risk):**
+- **PR includes issue list + TODO list + implemented fixes**
+- **Prefix Validation**
+- **Premium animations**
+- **Premium Materials**
+- **Prepared by**
+- **Prepared For:**
+- **Prev/Next**
+- **Previous Order:**
+- **price**
+- **Primary deployment:**
+- **Primary device target:**
+- **Primary Device**
+- **Print Actions**
+- **Print styles**
+- **Problem**
+- **Product Grouping**
+- **ProductHub**
+- **Production mode**
+- **Project Settings**
+- **Prominent Unassigned Toggle**
+- **Protected branch detection**
+- **Purpose:**
+- **Push protection**
+- **Quote Finalization**
+- **Rate Limiting**
+- **Rationale:**
+- **Re-add Variables with Correct Names**
+- **Re-run the workflow**
+- **Re-test**
+- **React Testing Library**
+- **Ready for:**
+- **Recommended Order:**
+- **Recommended**
+- **Reduce bundle size**
+- **Reduced motion support**
+- **Refined Interactions**
+- **Regular Updates**
+- **Relative Path Check**
+- **Remove Bad Variables**
+- **Removed:**
+- **Replace all the `YOUR_...` placeholders with your actual keys and settings.**
+- **Replace these values:**
+- **Repo:**
+- **Report Prepared By**
+- **Reporting**
+- **Request timeout**
+- **Requirement 1**
+- **Requirement 2**
+- **Requirement 3**
+- **Requirement 4**
+- **Requirement 5**
+- **Requirement 6**
+- **Requirement 7**
+- **Requirement 8**
+- **Respects Branch Protection**
+- **Responsive**
+- **Review & Merge**
+- **Review dependencies**
+- **Review related documentation**
+- **Review Status**
+- **Risk**
+- **Roboto**
+- **Root Cause**
+- **Root Causes Identified**
+- **Rule:**
+- **Rules**
+- **Run diagnostics locally**
+- **Run dry-run first**
+- **Run Tests**
+- **Run the migration**
+- **Run workflow**
+- **Running from Cloud Shell**
+- **Safari on iPad Pro 12.9"**
+- **same as feature.id**
+- **Script:**
+- **Secret scanning**
+- **Security Audits**
+- **Security Headers**
+- **Security**
+- **Server Improvements**
+- **Set up credentials**
+- **Share**
+- **Show legacy/unpublished in lanes**
+- **Signed URLs**
+- **Solution Implemented**
+- **Solution:**
+- **Solutions Implemented**
+- **source mismatch**
+- **Spacing**
+- **Spacious & Breathable**
+- **src/components/AdminPanel.tsx**
+- **src/components/Login.tsx**
+- **src/components/ProductHub.test.tsx**
+- **src/components/ProductHub.tsx**
+- **src/components/SettingsModal.tsx**
+- **Stagger animations**
+- **Staleness Detection**
+- **Startup probe period**
+- **Status:**
+- **Status**
+- **Sticky Column Headers**
+- **Store build artifacts in GCS bucket**
+- **strict per-tier column mapping**
+- **Styling**
+- **Symptom:**
+- **Symptom**
+- **Tailwind CSS Docs**
+- **Teko**
+- **Test failures**
+- **Test Results:**
+- **Test Server Locally**
+- **Test the build locally first**
+- **Tested**
+- **Testing**
+- **Tests**
+- **Tests/build run and results recorded**
+- **tier_color**
+- **Time Estimate:**
+- **Timeless Elegance**
+- **Toggle Control**
+- **Total Changes**
+- **Total:**
+- **Total**
+- **Touch feedback**
+- **Touch Optimization**
+- **Touch spacing**
+- **Touch Target Minimum**
+- **Touch Target Sizes**
+- **Touch-First**
+- **touch/coarse-pointer heuristic**
+- **Transparency**
+- **Triggers**
+- **Type Check**
+- **Type Safety**
+- **Type-Safe**
+- **TypeScript errors**
+- **Unassigned**
+- **Undo/redo functionality:**
+- **Updated Tests**
+- **Use different mount path**
+- **Use this cloudbuild.yaml**
+- **Use when:**
+- **useCases**
+- **User can still access/edit individual variants**
+- **User Request**
+- **Users**
+- **Uses GitHub's Autobuild**
+- **UX goal:**
+- **Validate Environment Variables**
+- **Validation**
+- **Variable is effectively missing**
+- **Variant Count**
+- **Verbose**
+- **Verification**
+- **Verify CodeQL**
+- **Verify Dependabot**
+- **Verify deployment**
+- **Verify Secret Scanning**
+- **Via Cloud Console**
+- **Via Logs**
+- **Visual Hierarchy**
+- **Vite**
+- **Vitest**
+- **Wait for deployment to complete**
+- **Warnings:**
+- **warranty**
+- **WCAG 2.1 Guidelines**
+- **Within Column**
+- **Works with empty configuration and configured add-ons**
+- **Would require more extensive testing and validation:**
+- **Zero breaking changes**
+- **Zero TypeScript errors**
+
+## Bold (double underscores)
+Total unique matches: 0
+
+## Italic (single asterisks)
+Total unique matches: 87
+
+- - ...checkmark icon... *
+- - ...close icon... *
+- - ...settings icon SVG... *
+- - 1024 *
+- - 14px - Captions *
+- - 16px - Secondary text *
+- - 18px - Primary text *
+- - 24px - Subsections *
+- - 32px - Card titles *
+- - 32px *
+- - 44px - Section headers *
+- - 48px *
+- - 56px - Hero headings *
+- - 60 *
+- - 64px *
+- - Actions - Larger touch targets *
+- - Actions Section - Larger touch targets *
+- - Admin Panel Toggle *
+- - Admin Toggle *
+- - Base: 16px → 18px on iPad *
+- - Body text *
+- - Close Button - Larger touch target *
+- - Close Button *
+- - Content - Better spacing and hierarchy *
+- - Content *
+- - Customer Info - Larger text *
+- - Customer Info Section *
+- - Divider - Hidden on small screens *
+- - Divider *
+- - Elegant card entrance *
+- - Enhanced type scale for iPad readability *
+- - Feature Name - Larger touch target *
+- - Feature Points - Better spacing *
+- - Features - Better readability *
+- - Features Section - Better readability *
+- - Finalize Button - Larger touch target *
+- - Finalize Button *
+- - Footer - Prominent pricing *
+- - Footer - Prominent pricing and CTA *
+- - Header - Larger, more spacious *
+- - Header - More spacious *
+- - Header *
+- - Headings scaled for impact *
+- - iPad Pro 12.9": More spacing *
+- - iPad-optimized containers *
+- - Keep Roboto + Teko but refine usage *
+- - Key Features *
+- - Landscape: 3 columns for comparison *
+- - Lighter for luxury feel *
+- - Line heights for readability *
+- - Loading Text *
+- - Logo - Larger, more prominent *
+- - Logo Section - Larger, more prominent *
+- - Logout *
+- - Logout Button *
+- - Luxury gradient backgrounds for iPad *
+- - Medium instead of bold *
+- - Minimum touch target mixin *
+- - More refined spacing *
+- - Package cards grid - iPad optimized *
+- - Portrait: 1 column for focus *
+- - Premium easing curves *
+- - Price & CTA - Much larger *
+- - Price & CTA Section *
+- - Price Display - Much larger *
+- - Recommended Badge - Larger, more elegant *
+- - Remove hover states on touch devices *
+- - Reset all hover states *
+- - Select Button - Larger touch target *
+- - Selected Items - Larger chips *
+- - Selected Items Chips *
+- - Settings Icon - Larger touch target *
+- - Slightly looser *
+- - Smooth modal transitions *
+- - Smooth, refined transitions *
+- - Spinner *
+- - Stagger children *
+- - Subtle scroll indicator for iPad *
+- - Tagline - Hidden on smaller iPads *
+- - Tagline *
+- - Total Price - Prominent display *
+- - Total Price Display *
+- - Use active states for touch feedback *
+- - Use Cases *
+- *Based on: PR #61 analysis and Claude branch review*
+- *Created: 2025-12-03*
+- *Updated: 2025-12-05 (PR #69 implementation complete)*

@@ -1,15 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { sortFeaturesByPosition, groupFeaturesByColumn, upsertAlaCarteFromFeature, unpublishAlaCarteFromFeature, setRecommendedPackage } from './data';
-import { writeBatch, getDocs, doc, setDoc, deleteField } from 'firebase/firestore/lite';
-import type { ProductFeature } from './types';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  sortFeaturesByPosition,
+  groupFeaturesByColumn,
+  upsertAlaCarteFromFeature,
+  unpublishAlaCarteFromFeature,
+  setRecommendedPackage,
+} from "./data";
+import { writeBatch, getDocs, doc, setDoc, updateDoc, deleteField } from "firebase/firestore/lite";
+import type { ProductFeature } from "./types";
 
 // Mock firebase
-vi.mock('./firebase', () => ({
+vi.mock("./firebase", () => ({
   db: null,
 }));
 
 // Mock the entire firebase/firestore/lite module
-vi.mock('firebase/firestore/lite', () => ({
+vi.mock("firebase/firestore/lite", () => ({
   collection: vi.fn(),
   getDocs: vi.fn(),
   addDoc: vi.fn(),
@@ -17,14 +23,14 @@ vi.mock('firebase/firestore/lite', () => ({
   doc: vi.fn(),
   writeBatch: vi.fn(),
   setDoc: vi.fn(),
-  deleteField: vi.fn(() => ({ _type: 'deleteField' })),
+  deleteField: vi.fn(() => ({ _type: "deleteField" })),
 }));
 
-describe('sortFeaturesByPosition', () => {
+describe("sortFeaturesByPosition", () => {
   const createFeature = (overrides: Partial<ProductFeature>): ProductFeature => ({
-    id: 'test-id',
-    name: 'Test Feature',
-    description: 'Test description',
+    id: "test-id",
+    name: "Test Feature",
+    description: "Test description",
     points: [],
     useCases: [],
     price: 100,
@@ -36,11 +42,11 @@ describe('sortFeaturesByPosition', () => {
     vi.clearAllMocks();
   });
 
-  it('should sort features by column first', () => {
+  it("should sort features by column first", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Feature A', column: 3 }),
-      createFeature({ id: '2', name: 'Feature B', column: 1 }),
-      createFeature({ id: '3', name: 'Feature C', column: 2 }),
+      createFeature({ id: "1", name: "Feature A", column: 3 }),
+      createFeature({ id: "2", name: "Feature B", column: 1 }),
+      createFeature({ id: "3", name: "Feature C", column: 2 }),
     ];
 
     const sorted = sortFeaturesByPosition(features);
@@ -50,25 +56,25 @@ describe('sortFeaturesByPosition', () => {
     expect(sorted[2]?.column).toBe(3);
   });
 
-  it('should sort features by position within the same column', () => {
+  it("should sort features by position within the same column", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Feature A', column: 1, position: 2 }),
-      createFeature({ id: '2', name: 'Feature B', column: 1, position: 0 }),
-      createFeature({ id: '3', name: 'Feature C', column: 1, position: 1 }),
+      createFeature({ id: "1", name: "Feature A", column: 1, position: 2 }),
+      createFeature({ id: "2", name: "Feature B", column: 1, position: 0 }),
+      createFeature({ id: "3", name: "Feature C", column: 1, position: 1 }),
     ];
 
     const sorted = sortFeaturesByPosition(features);
 
-    expect(sorted[0]?.name).toBe('Feature B');
-    expect(sorted[1]?.name).toBe('Feature C');
-    expect(sorted[2]?.name).toBe('Feature A');
+    expect(sorted[0]?.name).toBe("Feature B");
+    expect(sorted[1]?.name).toBe("Feature C");
+    expect(sorted[2]?.name).toBe("Feature A");
   });
 
-  it('should place features without column at the end', () => {
+  it("should place features without column at the end", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Feature A', column: undefined }),
-      createFeature({ id: '2', name: 'Feature B', column: 1 }),
-      createFeature({ id: '3', name: 'Feature C', column: 2 }),
+      createFeature({ id: "1", name: "Feature A", column: undefined }),
+      createFeature({ id: "2", name: "Feature B", column: 1 }),
+      createFeature({ id: "3", name: "Feature C", column: 2 }),
     ];
 
     const sorted = sortFeaturesByPosition(features);
@@ -78,24 +84,24 @@ describe('sortFeaturesByPosition', () => {
     expect(sorted[2]?.column).toBeUndefined();
   });
 
-  it('should place features without position at the end within their column', () => {
+  it("should place features without position at the end within their column", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Feature A', column: 1, position: undefined }),
-      createFeature({ id: '2', name: 'Feature B', column: 1, position: 0 }),
-      createFeature({ id: '3', name: 'Feature C', column: 1, position: 1 }),
+      createFeature({ id: "1", name: "Feature A", column: 1, position: undefined }),
+      createFeature({ id: "2", name: "Feature B", column: 1, position: 0 }),
+      createFeature({ id: "3", name: "Feature C", column: 1, position: 1 }),
     ];
 
     const sorted = sortFeaturesByPosition(features);
 
-    expect(sorted[0]?.name).toBe('Feature B');
-    expect(sorted[1]?.name).toBe('Feature C');
-    expect(sorted[2]?.name).toBe('Feature A');
+    expect(sorted[0]?.name).toBe("Feature B");
+    expect(sorted[1]?.name).toBe("Feature C");
+    expect(sorted[2]?.name).toBe("Feature A");
   });
 
-  it('should not mutate the original array', () => {
+  it("should not mutate the original array", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Feature A', column: 2 }),
-      createFeature({ id: '2', name: 'Feature B', column: 1 }),
+      createFeature({ id: "1", name: "Feature A", column: 2 }),
+      createFeature({ id: "2", name: "Feature B", column: 1 }),
     ];
     const originalOrder = [...features];
 
@@ -105,47 +111,45 @@ describe('sortFeaturesByPosition', () => {
     expect(features[1]?.id).toBe(originalOrder[1]?.id);
   });
 
-  it('should handle empty array', () => {
+  it("should handle empty array", () => {
     const features: ProductFeature[] = [];
     const sorted = sortFeaturesByPosition(features);
     expect(sorted).toEqual([]);
   });
 
-  it('should handle single feature', () => {
-    const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Only Feature' }),
-    ];
+  it("should handle single feature", () => {
+    const features: ProductFeature[] = [createFeature({ id: "1", name: "Only Feature" })];
     const sorted = sortFeaturesByPosition(features);
     expect(sorted).toHaveLength(1);
-    expect(sorted[0]?.name).toBe('Only Feature');
+    expect(sorted[0]?.name).toBe("Only Feature");
   });
 
-  it('should sort correctly with mixed column and position values', () => {
+  it("should sort correctly with mixed column and position values", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Col2-Pos1', column: 2, position: 1 }),
-      createFeature({ id: '2', name: 'Col1-Pos0', column: 1, position: 0 }),
-      createFeature({ id: '3', name: 'Col2-Pos0', column: 2, position: 0 }),
-      createFeature({ id: '4', name: 'Col1-Pos1', column: 1, position: 1 }),
-      createFeature({ id: '5', name: 'NoCol', column: undefined }),
+      createFeature({ id: "1", name: "Col2-Pos1", column: 2, position: 1 }),
+      createFeature({ id: "2", name: "Col1-Pos0", column: 1, position: 0 }),
+      createFeature({ id: "3", name: "Col2-Pos0", column: 2, position: 0 }),
+      createFeature({ id: "4", name: "Col1-Pos1", column: 1, position: 1 }),
+      createFeature({ id: "5", name: "NoCol", column: undefined }),
     ];
 
     const sorted = sortFeaturesByPosition(features);
 
-    expect(sorted.map(f => f.name)).toEqual([
-      'Col1-Pos0',
-      'Col1-Pos1',
-      'Col2-Pos0',
-      'Col2-Pos1',
-      'NoCol',
+    expect(sorted.map((f) => f.name)).toEqual([
+      "Col1-Pos0",
+      "Col1-Pos1",
+      "Col2-Pos0",
+      "Col2-Pos1",
+      "NoCol",
     ]);
   });
 });
 
-describe('groupFeaturesByColumn', () => {
+describe("groupFeaturesByColumn", () => {
   const createFeature = (overrides: Partial<ProductFeature>): ProductFeature => ({
-    id: 'test-id',
-    name: 'Test Feature',
-    description: 'Test description',
+    id: "test-id",
+    name: "Test Feature",
+    description: "Test description",
     points: [],
     useCases: [],
     price: 100,
@@ -153,11 +157,11 @@ describe('groupFeaturesByColumn', () => {
     ...overrides,
   });
 
-  it('should group features by column number', () => {
+  it("should group features by column number", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Col1-Feature', column: 1, position: 0 }),
-      createFeature({ id: '2', name: 'Col2-Feature', column: 2, position: 0 }),
-      createFeature({ id: '3', name: 'Col1-Feature2', column: 1, position: 1 }),
+      createFeature({ id: "1", name: "Col1-Feature", column: 1, position: 0 }),
+      createFeature({ id: "2", name: "Col2-Feature", column: 2, position: 0 }),
+      createFeature({ id: "3", name: "Col1-Feature2", column: 1, position: 1 }),
     ];
 
     const grouped = groupFeaturesByColumn(features);
@@ -168,46 +172,46 @@ describe('groupFeaturesByColumn', () => {
     expect(grouped[4]).toHaveLength(0);
   });
 
-  it('should sort features by position within each column', () => {
+  it("should sort features by position within each column", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Col1-Pos2', column: 1, position: 2 }),
-      createFeature({ id: '2', name: 'Col1-Pos0', column: 1, position: 0 }),
-      createFeature({ id: '3', name: 'Col1-Pos1', column: 1, position: 1 }),
+      createFeature({ id: "1", name: "Col1-Pos2", column: 1, position: 2 }),
+      createFeature({ id: "2", name: "Col1-Pos0", column: 1, position: 0 }),
+      createFeature({ id: "3", name: "Col1-Pos1", column: 1, position: 1 }),
     ];
 
     const grouped = groupFeaturesByColumn(features);
 
-    expect(grouped[1]?.[0]?.name).toBe('Col1-Pos0');
-    expect(grouped[1]?.[1]?.name).toBe('Col1-Pos1');
-    expect(grouped[1]?.[2]?.name).toBe('Col1-Pos2');
+    expect(grouped[1]?.[0]?.name).toBe("Col1-Pos0");
+    expect(grouped[1]?.[1]?.name).toBe("Col1-Pos1");
+    expect(grouped[1]?.[2]?.name).toBe("Col1-Pos2");
   });
 
-  it('should place unassigned features in the unassigned group', () => {
+  it("should place unassigned features in the unassigned group", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Assigned', column: 1, position: 0 }),
-      createFeature({ id: '2', name: 'Unassigned', column: undefined }),
+      createFeature({ id: "1", name: "Assigned", column: 1, position: 0 }),
+      createFeature({ id: "2", name: "Unassigned", column: undefined }),
     ];
 
     const grouped = groupFeaturesByColumn(features);
 
     expect(grouped[1]).toHaveLength(1);
     expect(grouped.unassigned).toHaveLength(1);
-    expect(grouped.unassigned?.[0]?.name).toBe('Unassigned');
+    expect(grouped.unassigned?.[0]?.name).toBe("Unassigned");
   });
 
-  it('should preserve connector information when grouping', () => {
+  it("should preserve connector information when grouping", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Feature1', column: 1, position: 0, connector: 'AND' }),
-      createFeature({ id: '2', name: 'Feature2', column: 1, position: 1, connector: 'OR' }),
+      createFeature({ id: "1", name: "Feature1", column: 1, position: 0, connector: "AND" }),
+      createFeature({ id: "2", name: "Feature2", column: 1, position: 1, connector: "OR" }),
     ];
 
     const grouped = groupFeaturesByColumn(features);
 
-    expect(grouped[1]?.[0]?.connector).toBe('AND');
-    expect(grouped[1]?.[1]?.connector).toBe('OR');
+    expect(grouped[1]?.[0]?.connector).toBe("AND");
+    expect(grouped[1]?.[1]?.connector).toBe("OR");
   });
 
-  it('should handle empty array', () => {
+  it("should handle empty array", () => {
     const features: ProductFeature[] = [];
     const grouped = groupFeaturesByColumn(features);
 
@@ -218,67 +222,76 @@ describe('groupFeaturesByColumn', () => {
     expect(grouped.unassigned).toHaveLength(0);
   });
 
-  it('should return features grouped by all four columns', () => {
+  it("should return features grouped by all four columns", () => {
     const features: ProductFeature[] = [
-      createFeature({ id: '1', name: 'Col1', column: 1, position: 0 }),
-      createFeature({ id: '2', name: 'Col2', column: 2, position: 0 }),
-      createFeature({ id: '3', name: 'Col3', column: 3, position: 0 }),
-      createFeature({ id: '4', name: 'Col4', column: 4, position: 0 }),
+      createFeature({ id: "1", name: "Col1", column: 1, position: 0 }),
+      createFeature({ id: "2", name: "Col2", column: 2, position: 0 }),
+      createFeature({ id: "3", name: "Col3", column: 3, position: 0 }),
+      createFeature({ id: "4", name: "Col4", column: 4, position: 0 }),
     ];
 
     const grouped = groupFeaturesByColumn(features);
 
-    expect(grouped[1]?.[0]?.name).toBe('Col1');
-    expect(grouped[2]?.[0]?.name).toBe('Col2');
-    expect(grouped[3]?.[0]?.name).toBe('Col3');
-    expect(grouped[4]?.[0]?.name).toBe('Col4');
+    expect(grouped[1]?.[0]?.name).toBe("Col1");
+    expect(grouped[2]?.[0]?.name).toBe("Col2");
+    expect(grouped[3]?.[0]?.name).toBe("Col3");
+    expect(grouped[4]?.[0]?.name).toBe("Col4");
   });
 });
 
-describe('A La Carte Publishing', () => {
+describe("A La Carte Publishing", () => {
   const createFeature = (overrides: Partial<ProductFeature>): ProductFeature => ({
-    id: 'test-id',
-    name: 'Test Feature',
-    description: 'Test description',
-    points: ['Point 1', 'Point 2'],
-    useCases: ['Use case 1'],
+    id: "test-id",
+    name: "Test Feature",
+    description: "Test description",
+    points: ["Point 1", "Point 2"],
+    useCases: ["Use case 1"],
     price: 100,
     cost: 50,
-    warranty: 'Standard warranty',
+    warranty: "Standard warranty",
     publishToAlaCarte: false,
     ...overrides,
   });
 
   afterEach(async () => {
-    const firebaseModule = await import('./firebase');
+    const firebaseModule = await import("./firebase");
     (firebaseModule as any).db = null;
     vi.clearAllMocks();
   });
 
-  describe('upsertAlaCarteFromFeature', () => {
-    it('should throw error if firebase is not initialized', async () => {
+  describe("upsertAlaCarteFromFeature", () => {
+    it("should throw error if firebase is not initialized", async () => {
       const feature = createFeature({ publishToAlaCarte: true, alaCartePrice: 150 });
-      
-      await expect(upsertAlaCarteFromFeature(feature)).rejects.toThrow('Firebase is not initialized');
+
+      await expect(upsertAlaCarteFromFeature(feature)).rejects.toThrow(
+        "Firebase is not initialized"
+      );
     });
 
-    it('should validate publishToAlaCarte and alaCartePrice before firebase operations', async () => {
+    it("should validate publishToAlaCarte and alaCartePrice before firebase operations", async () => {
       // These tests verify the validation logic happens after firebase check
       // Since db is mocked as null, we always get firebase error first
       const featureWithoutPublish = createFeature({ publishToAlaCarte: false, alaCartePrice: 150 });
-      const featureWithoutPrice = createFeature({ publishToAlaCarte: true, alaCartePrice: undefined });
-      
+      const featureWithoutPrice = createFeature({
+        publishToAlaCarte: true,
+        alaCartePrice: undefined,
+      });
+
       // Both will throw firebase error since that check happens first
-      await expect(upsertAlaCarteFromFeature(featureWithoutPublish)).rejects.toThrow('Firebase is not initialized');
-      await expect(upsertAlaCarteFromFeature(featureWithoutPrice)).rejects.toThrow('Firebase is not initialized');
+      await expect(upsertAlaCarteFromFeature(featureWithoutPublish)).rejects.toThrow(
+        "Firebase is not initialized"
+      );
+      await expect(upsertAlaCarteFromFeature(featureWithoutPrice)).rejects.toThrow(
+        "Firebase is not initialized"
+      );
     });
 
-    it('cleans undefined fields before writing to Firestore', async () => {
-      const firebaseModule = await import('./firebase');
+    it("cleans undefined fields before writing to Firestore", async () => {
+      const firebaseModule = await import("./firebase");
       (firebaseModule as any).db = {} as any;
-      vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
+      vi.mocked(doc).mockReturnValue({ path: "ala_carte_options/test-id" } as any);
       vi.mocked(setDoc).mockResolvedValue(undefined as any);
-      vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+      vi.mocked(deleteField).mockReturnValue({ _type: "deleteField" } as any);
 
       const feature = createFeature({
         publishToAlaCarte: true,
@@ -291,22 +304,22 @@ describe('A La Carte Publishing', () => {
       await upsertAlaCarteFromFeature(feature, { price: 150 });
 
       expect(setDoc).toHaveBeenCalledWith(
-        { path: 'ala_carte_options/test-id' },
+        { path: "ala_carte_options/test-id" },
         expect.objectContaining({
-          imageUrl: expect.objectContaining({ _type: 'deleteField' }),
-          thumbnailUrl: expect.objectContaining({ _type: 'deleteField' }),
-          videoUrl: expect.objectContaining({ _type: 'deleteField' }),
+          imageUrl: expect.objectContaining({ _type: "deleteField" }),
+          thumbnailUrl: expect.objectContaining({ _type: "deleteField" }),
+          videoUrl: expect.objectContaining({ _type: "deleteField" }),
         }),
         { merge: true }
       );
     });
 
-    it('treats undefined placement overrides as field deletions', async () => {
-      const firebaseModule = await import('./firebase');
+    it("treats undefined placement overrides as field deletions", async () => {
+      const firebaseModule = await import("./firebase");
       (firebaseModule as any).db = {} as any;
-      vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
+      vi.mocked(doc).mockReturnValue({ path: "ala_carte_options/test-id" } as any);
       vi.mocked(setDoc).mockResolvedValue(undefined as any);
-      vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+      vi.mocked(deleteField).mockReturnValue({ _type: "deleteField" } as any);
 
       const feature = createFeature({
         publishToAlaCarte: true,
@@ -321,114 +334,134 @@ describe('A La Carte Publishing', () => {
       });
 
       expect(setDoc).toHaveBeenCalledWith(
-        { path: 'ala_carte_options/test-id' },
+        { path: "ala_carte_options/test-id" },
         expect.objectContaining({
-          column: expect.objectContaining({ _type: 'deleteField' }),
-          position: expect.objectContaining({ _type: 'deleteField' }),
-          connector: expect.objectContaining({ _type: 'deleteField' }),
+          column: expect.objectContaining({ _type: "deleteField" }),
+          position: expect.objectContaining({ _type: "deleteField" }),
+          connector: expect.objectContaining({ _type: "deleteField" }),
         }),
         { merge: true }
       );
     });
   });
 
-  describe('unpublishAlaCarteFromFeature', () => {
-    it('should throw error if firebase is not initialized', async () => {
-      await expect(unpublishAlaCarteFromFeature('test-id')).rejects.toThrow('Firebase is not initialized');
+  describe("unpublishAlaCarteFromFeature", () => {
+    it("should throw error if firebase is not initialized", async () => {
+      await expect(unpublishAlaCarteFromFeature("test-id")).rejects.toThrow(
+        "Firebase is not initialized"
+      );
     });
 
-    it('clears placement fields when unpublishing', async () => {
-      const firebaseModule = await import('./firebase');
+    it("clears placement fields when unpublishing", async () => {
+      const firebaseModule = await import("./firebase");
       (firebaseModule as any).db = {} as any;
-      vi.mocked(doc).mockReturnValue({ path: 'ala_carte_options/test-id' } as any);
-      vi.mocked(setDoc).mockResolvedValue(undefined as any);
-      vi.mocked(deleteField).mockReturnValue({ _type: 'deleteField' } as any);
+      vi.mocked(doc).mockReturnValue({ path: "ala_carte_options/test-id" } as any);
+      vi.mocked(updateDoc).mockResolvedValue(undefined as any);
+      vi.mocked(deleteField).mockReturnValue({ _type: "deleteField" } as any);
 
-      await unpublishAlaCarteFromFeature('test-id');
+      await unpublishAlaCarteFromFeature("test-id");
 
-      expect(setDoc).toHaveBeenCalledWith(
-        { path: 'ala_carte_options/test-id' },
+      expect(updateDoc).toHaveBeenCalledWith(
+        { path: "ala_carte_options/test-id" },
         expect.objectContaining({
           isPublished: false,
-          column: expect.objectContaining({ _type: 'deleteField' }),
-          position: expect.objectContaining({ _type: 'deleteField' }),
-          connector: expect.objectContaining({ _type: 'deleteField' }),
-        }),
-        { merge: true }
+          column: expect.objectContaining({ _type: "deleteField" }),
+          position: expect.objectContaining({ _type: "deleteField" }),
+          connector: expect.objectContaining({ _type: "deleteField" }),
+        })
       );
     });
-  });
 
+    it("treats missing doc as already unpublished", async () => {
+      const firebaseModule = await import("./firebase");
+      (firebaseModule as any).db = {} as any;
+      vi.mocked(doc).mockReturnValue({ path: "ala_carte_options/test-id" } as any);
+      vi.mocked(updateDoc).mockRejectedValue({ code: "not-found" } as any);
+
+      await expect(unpublishAlaCarteFromFeature("test-id")).resolves.toBeUndefined();
+    });
+  });
 });
 
-describe('setRecommendedPackage', () => {
+describe("setRecommendedPackage", () => {
   const mockUpdate = vi.fn();
   const mockCommit = vi.fn();
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    const firebaseModule = await import('./firebase');
+    const firebaseModule = await import("./firebase");
     (firebaseModule as any).db = {} as any;
     vi.mocked(writeBatch).mockReturnValue({
       update: mockUpdate,
       commit: mockCommit,
     } as any);
-    vi.mocked(doc).mockImplementation((_db: any, _collection: string, id: string) => ({ path: id }) as any);
+    vi.mocked(doc).mockImplementation(
+      (_db: any, _collection: string, id: string) => ({ path: id }) as any
+    );
     mockUpdate.mockClear();
     mockCommit.mockClear();
   });
 
   afterEach(async () => {
-    const firebaseModule = await import('./firebase');
+    const firebaseModule = await import("./firebase");
     (firebaseModule as any).db = null;
   });
 
-  it('sets one package as recommended and clears the rest', async () => {
+  it("sets one package as recommended and clears the rest", async () => {
     vi.mocked(getDocs).mockResolvedValue({
       docs: [
-        { id: 'elite', data: () => ({ name: 'Elite', isRecommended: false }) },
-        { id: 'platinum', data: () => ({ name: 'Platinum', isRecommended: true }) },
+        { id: "elite", data: () => ({ name: "Elite", isRecommended: false }) },
+        { id: "platinum", data: () => ({ name: "Platinum", isRecommended: true }) },
       ],
       empty: false,
     } as any);
 
-    await setRecommendedPackage('elite');
+    await setRecommendedPackage("elite");
 
-    expect(mockUpdate).toHaveBeenCalledWith({ path: 'elite' }, { isRecommended: true, is_recommended: true });
-    expect(mockUpdate).toHaveBeenCalledWith({ path: 'platinum' }, { isRecommended: false, is_recommended: false });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      { path: "elite" },
+      { isRecommended: true, is_recommended: true }
+    );
+    expect(mockUpdate).toHaveBeenCalledWith(
+      { path: "platinum" },
+      { isRecommended: false, is_recommended: false }
+    );
     expect(mockCommit).toHaveBeenCalledTimes(1);
   });
 
-  it('clears all recommendations when passed null', async () => {
+  it("clears all recommendations when passed null", async () => {
     vi.mocked(getDocs).mockResolvedValue({
-      docs: [
-        { id: 'elite', data: () => ({ name: 'Elite', isRecommended: true }) },
-      ],
+      docs: [{ id: "elite", data: () => ({ name: "Elite", isRecommended: true }) }],
       empty: false,
     } as any);
 
     await setRecommendedPackage(null);
 
-    expect(mockUpdate).toHaveBeenCalledWith({ path: 'elite' }, { isRecommended: false, is_recommended: false });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      { path: "elite" },
+      { isRecommended: false, is_recommended: false }
+    );
     expect(mockCommit).toHaveBeenCalledTimes(1);
   });
 
-  it('throws when firebase is not initialized', async () => {
-    const firebaseModule = await import('./firebase');
+  it("throws when firebase is not initialized", async () => {
+    const firebaseModule = await import("./firebase");
     (firebaseModule as any).db = null;
 
-    await expect(setRecommendedPackage('any')).rejects.toThrow('Firebase is not initialized. Cannot update recommended package.');
+    await expect(setRecommendedPackage("any")).rejects.toThrow(
+      "Firebase is not initialized. Cannot update recommended package."
+    );
   });
 });
 
-describe('Package FeatureIds Fallback Behavior', () => {
+describe("Package FeatureIds Fallback Behavior", () => {
   let consoleWarnSpy: any;
   let consoleErrorSpy: any;
 
   beforeEach(() => {
     // Spy on console methods
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.clearAllMocks();
   });
 
@@ -445,10 +478,10 @@ describe('Package FeatureIds Fallback Behavior', () => {
   // 2. Integration tests with the full application
   // 3. The AdminPanel component tests that verify the warning banner
 
-  describe('getBooleanEnvVar helper', () => {
+  describe("getBooleanEnvVar helper", () => {
     // We cannot easily test getBooleanEnvVar directly as it's not exported,
     // but we document its expected behavior for reference
-    
+
     it('should parse "true" string as true', () => {
       // getBooleanEnvVar('VITE_TEST', true) would return true when env var is "true"
       // This is tested indirectly through the fallback behavior in production
@@ -467,15 +500,15 @@ describe('Package FeatureIds Fallback Behavior', () => {
       expect(true).toBe(true);
     });
 
-    it('should return default value when env var is not set', () => {
+    it("should return default value when env var is not set", () => {
       // getBooleanEnvVar returns the defaultValue parameter when env var is undefined/null/empty
       // Verified through code inspection at data.ts:16-18
       expect(true).toBe(true);
     });
   });
 
-  describe('Strict mapping behavior', () => {
-    it('renders packages from column mapping only (no legacy featureIds fallback)', () => {
+  describe("Strict mapping behavior", () => {
+    it("renders packages from column mapping only (no legacy featureIds fallback)", () => {
       // Packages derive their feature lists exclusively from column assignments:
       // - Gold = column 1
       // - Elite = column 2

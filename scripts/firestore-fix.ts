@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import { applicationDefault, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 type Args = {
@@ -123,9 +123,9 @@ function requireProjectId(projectId?: string): string {
 }
 
 function initAdmin(projectId: string): void {
-  if (admin.apps.length) return;
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
+  if (getApps().length) return;
+  initializeApp({
+    credential: applicationDefault(),
     projectId,
   });
 }
@@ -136,6 +136,7 @@ async function main(): Promise<void> {
   initAdmin(projectId);
 
   const db = getFirestore();
+  let plannedChanges = 0;
   const writes: Array<() => Promise<unknown>> = [];
 
   // ala_carte_options deletes
@@ -148,6 +149,7 @@ async function main(): Promise<void> {
     }
 
     console.log(`[PLAN] Delete ala_carte_options/${id}`);
+    plannedChanges += 1;
     if (args.apply) {
       writes.push(async () => ref.delete());
     }
@@ -194,6 +196,7 @@ async function main(): Promise<void> {
     }
 
     console.log(`[PLAN] Hydrate ala_carte_options/${id}: ${patchKeys.join(", ")}`);
+    plannedChanges += 1;
     if (args.apply) {
       writes.push(async () => ref.set(patch, { merge: true }));
     }
@@ -208,6 +211,7 @@ async function main(): Promise<void> {
       continue;
     }
     console.log(`[PLAN] Set packages/${id}.cost = ${cost}`);
+    plannedChanges += 1;
     if (args.apply) {
       writes.push(async () => ref.update({ cost }));
     }
@@ -221,6 +225,7 @@ async function main(): Promise<void> {
       continue;
     }
     console.log(`[PLAN] Set packages/${id}.price = ${price}`);
+    plannedChanges += 1;
     if (args.apply) {
       writes.push(async () => ref.update({ price }));
     }
@@ -233,6 +238,7 @@ async function main(): Promise<void> {
       const data = doc.data() as Record<string, unknown>;
       if (data["cost"] === undefined) {
         console.log(`[PLAN] Set packages/${doc.id}.cost = 0 (was missing)`);
+        plannedChanges += 1;
         if (args.apply) {
           const ref = db.collection("packages").doc(doc.id);
           writes.push(async () => ref.update({ cost: 0 }));
@@ -249,6 +255,7 @@ async function main(): Promise<void> {
       const cost = data["cost"];
       if (cost === undefined || cost === null || cost === 0) {
         console.log(`[PLAN] Set packages/${doc.id}.cost = 100 (was ${String(cost)})`);
+        plannedChanges += 1;
         if (args.apply) {
           const ref = db.collection("packages").doc(doc.id);
           writes.push(async () => ref.update({ cost: 100 }));
@@ -271,6 +278,7 @@ async function main(): Promise<void> {
       if (!keys.length) continue;
 
       console.log(`[PLAN] Patch ala_carte_options/${doc.id}: ${keys.join(", ")}`);
+      plannedChanges += 1;
       if (args.apply) {
         const ref = db.collection("ala_carte_options").doc(doc.id);
         writes.push(async () => ref.set(patch, { merge: true }));
@@ -278,13 +286,15 @@ async function main(): Promise<void> {
     }
   }
 
-  if (!writes.length) {
+  if (!plannedChanges) {
     console.log(args.apply ? "No changes to apply." : "No changes planned.");
     return;
   }
 
   if (!args.apply) {
-    console.log(`\nDry-run complete. Re-run with --apply to write changes.`);
+    console.log(
+      `\nDry-run complete. Planned ${plannedChanges} change(s). Re-run with --apply to write changes.`
+    );
     return;
   }
 

@@ -611,23 +611,25 @@ export async function unpublishAlaCarteFromFeature(featureId: string): Promise<v
 
   try {
     const alaCarteRef = doc(db, "ala_carte_options", featureId);
-    await setDoc(
+    // Use updateDoc (not setDoc) so we don't accidentally create an invalid stub doc
+    // (e.g. `{ isPublished: false }`) when unpublishing something that was never published.
+    await updateDoc(
       alaCarteRef,
       prepareUpdateData({
         isPublished: false,
         column: undefined,
         position: undefined,
         connector: undefined,
-      } as Record<string, unknown>),
-      { merge: true }
+      } as Record<string, unknown>)
     );
   } catch (error) {
-    console.error("Error unpublishing feature from A La Carte:", error);
     // If the doc doesn't exist, we can ignore the error (already unpublished)
     if (error && typeof error === "object" && "code" in error && error.code === "not-found") {
       console.warn(`A La Carte option ${featureId} not found, treating as already unpublished.`);
       return;
     }
+
+    console.error("Error unpublishing feature from A La Carte:", error);
     throw new Error(
       "Failed to unpublish feature from A La Carte. Please check your connection and Firestore rules."
     );

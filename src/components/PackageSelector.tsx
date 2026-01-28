@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { PackageTier, ProductFeature, AlaCarteOption } from "../types";
 import { PackageCard } from "./PackageCard";
 
@@ -30,6 +30,8 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   const storageKey = "aftermarketMenu:addonDrawerOpen";
   const enableMagnify = Boolean(isIpadLandscape);
   const [magnifiedPackageId, setMagnifiedPackageId] = useState<string | null>(null);
+  const prevIsIpadLandscapeRef = useRef<boolean>(isIpadLandscape);
+  const didInitAddonDrawerRef = useRef<boolean>(false);
   const [isAddonDrawerOpen, setIsAddonDrawerOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return !isIpadLandscape;
     // iPad/kiosk mode should always start with add-ons closed.
@@ -46,28 +48,38 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   });
 
   useEffect(() => {
-    // Customer-facing iPad/kiosk menu should start with add-ons closed.
     if (!addonColumn) return;
 
+    const wasIpadLandscape = prevIsIpadLandscapeRef.current;
+    prevIsIpadLandscapeRef.current = isIpadLandscape;
+
+    // Only force-close when transitioning INTO iPad landscape.
+    // Otherwise preserve the user's open state so adding items doesn't collapse the drawer.
     if (isIpadLandscape) {
-      setIsAddonDrawerOpen(false);
+      if (!wasIpadLandscape) setIsAddonDrawerOpen(false);
+      didInitAddonDrawerRef.current = true;
       return;
     }
 
-    // If the user has already chosen open/closed, respect that.
-    let hasStoredPreference = false;
-    if (typeof window !== "undefined") {
-      try {
-        const raw = window.localStorage.getItem(storageKey);
-        hasStoredPreference = raw === "1" || raw === "0";
-      } catch {
-        hasStoredPreference = false;
+    // Non-iPad: only apply default behavior once (or when transitioning out of iPad).
+    if (!didInitAddonDrawerRef.current || wasIpadLandscape) {
+      // If the user has already chosen open/closed, respect that.
+      let hasStoredPreference = false;
+      if (typeof window !== "undefined") {
+        try {
+          const raw = window.localStorage.getItem(storageKey);
+          hasStoredPreference = raw === "1" || raw === "0";
+        } catch {
+          hasStoredPreference = false;
+        }
+      }
+
+      if (!hasStoredPreference) {
+        setIsAddonDrawerOpen(true);
       }
     }
 
-    if (!hasStoredPreference) {
-      setIsAddonDrawerOpen(!isIpadLandscape);
-    }
+    didInitAddonDrawerRef.current = true;
   }, [addonColumn, isIpadLandscape]);
 
   useEffect(() => {
@@ -122,71 +134,70 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     return (
       <>
         <div className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
-        <div className="flex-1 min-w-0 min-h-0">
-          <div className={`${packageGridClasses} min-h-0`}>
-            {packages.map((pkg) => (
-              <PackageCard
-                key={pkg.id}
-                packageInfo={pkg}
-                allFeaturesForDisplay={allFeaturesForDisplay}
-                basePrice={basePackagePricesById?.[pkg.id]}
-                isSelected={selectedPackage?.id === pkg.id}
-                onSelect={() => onSelectPackage(pkg)}
-                onViewFeature={onViewFeature}
-                className="animate-card-entrance"
-                isCompact={true}
-                textSize={textSize}
-                onMagnify={
-                  enableMagnify
-                    ? () => {
-                        setMagnifiedPackageId(pkg.id);
-                      }
-                    : undefined
-                }
-              />
-            ))}
+          <div className="flex-1 min-w-0 min-h-0">
+            <div className={`${packageGridClasses} min-h-0`}>
+              {packages.map((pkg) => (
+                <PackageCard
+                  key={pkg.id}
+                  packageInfo={pkg}
+                  allFeaturesForDisplay={allFeaturesForDisplay}
+                  basePrice={basePackagePricesById?.[pkg.id]}
+                  isSelected={selectedPackage?.id === pkg.id}
+                  onSelect={() => onSelectPackage(pkg)}
+                  onViewFeature={onViewFeature}
+                  className="animate-card-entrance"
+                  isCompact={true}
+                  textSize={textSize}
+                  onMagnify={
+                    enableMagnify
+                      ? () => {
+                          setMagnifiedPackageId(pkg.id);
+                        }
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
           </div>
-        </div>
 
-        <aside
-          className={`relative min-h-0 transition-[width] duration-300 ease-out ${
-            isAddonDrawerOpen ? "w-[320px]" : "w-[44px]"
-          }`}
-          aria-label="Add-ons"
-        >
-          {/* Drawer contents */}
-          <div
-            className={`h-full min-h-0 ${
-              isAddonDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none"
-            } transition-opacity duration-200`}
+          <aside
+            className={`relative min-h-0 transition-[width] duration-300 ease-out ${
+              isAddonDrawerOpen ? "w-[320px]" : "w-[44px]"
+            }`}
+            aria-label="Add-ons"
           >
-            {addonColumn}
-          </div>
-
-          {/* Toggle */}
-          {isAddonDrawerOpen ? (
-            <button
-              type="button"
-              onClick={() => setIsAddonDrawerOpen(false)}
-              className="absolute top-2 right-2 z-10 bg-slate-950/60 hover:bg-slate-950/80 text-white/80 hover:text-white rounded-md px-2 py-1 text-xs uppercase tracking-[0.2em]"
-              aria-label="Close add-ons"
-              title="Close add-ons"
+            {/* Drawer contents */}
+            <div
+              className={`h-full min-h-0 ${
+                isAddonDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none"
+              } transition-opacity duration-200`}
             >
-              Close
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsAddonDrawerOpen(true)}
-              className="absolute inset-0 z-10 bg-gray-800/70 hover:bg-gray-800/85 border border-gray-700 rounded-lg text-gray-200 flex items-center justify-center"
-              aria-label="Open add-ons"
-              title="Open add-ons"
-            >
-              <span className="text-xs uppercase tracking-[0.35em] rotate-90">Add-Ons</span>
-            </button>
-          )}
-        </aside>
+              {addonColumn}
+            </div>
 
+            {/* Toggle */}
+            {isAddonDrawerOpen ? (
+              <button
+                type="button"
+                onClick={() => setIsAddonDrawerOpen(false)}
+                className="absolute top-2 right-2 z-10 bg-slate-950/60 hover:bg-slate-950/80 text-white/80 hover:text-white rounded-md px-2 py-1 text-xs uppercase tracking-[0.2em]"
+                aria-label="Close add-ons"
+                title="Close add-ons"
+              >
+                Close
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsAddonDrawerOpen(true)}
+                className="absolute inset-0 z-10 bg-gray-800/70 hover:bg-gray-800/85 border border-gray-700 rounded-lg text-gray-200 flex items-center justify-center"
+                aria-label="Open add-ons"
+                title="Open add-ons"
+              >
+                <span className="text-xs uppercase tracking-[0.35em] rotate-90">Add-Ons</span>
+              </button>
+            )}
+          </aside>
         </div>
 
         {magnifiedPackage ? (

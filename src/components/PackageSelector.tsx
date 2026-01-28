@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { PackageTier, ProductFeature, AlaCarteOption } from "../types";
 import { PackageCard } from "./PackageCard";
 
@@ -28,6 +28,8 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   textSize = "normal",
 }) => {
   const storageKey = "aftermarketMenu:addonDrawerOpen";
+  const enableMagnify = Boolean(isIpadLandscape);
+  const [magnifiedPackageId, setMagnifiedPackageId] = useState<string | null>(null);
   const [isAddonDrawerOpen, setIsAddonDrawerOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return !isIpadLandscape;
     // iPad/kiosk mode should always start with add-ons closed.
@@ -79,6 +81,29 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     }
   }, [addonColumn, isAddonDrawerOpen, isIpadLandscape]);
 
+  const magnifiedPackage = useMemo(() => {
+    if (!magnifiedPackageId) return null;
+    return packages.find((pkg) => pkg.id === magnifiedPackageId) ?? null;
+  }, [magnifiedPackageId, packages]);
+
+  useEffect(() => {
+    if (!magnifiedPackage) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMagnifiedPackageId(null);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [magnifiedPackage]);
+
   const baseGrid = isIpadLandscape
     ? addonColumn
       ? "grid grid-cols-4 gap-3 lg:gap-4"
@@ -95,7 +120,8 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     const packageGridClasses = `grid grid-cols-3 gap-2 lg:gap-3 ${outerClasses}`;
 
     return (
-      <div className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
+      <>
+        <div className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
         <div className="flex-1 min-w-0 min-h-0">
           <div className={`${packageGridClasses} min-h-0`}>
             {packages.map((pkg) => (
@@ -110,6 +136,13 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
                 className="animate-card-entrance"
                 isCompact={true}
                 textSize={textSize}
+                onMagnify={
+                  enableMagnify
+                    ? () => {
+                        setMagnifiedPackageId(pkg.id);
+                      }
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -153,7 +186,52 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
             </button>
           )}
         </aside>
-      </div>
+
+        </div>
+
+        {magnifiedPackage ? (
+          <div
+            className="fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Magnified ${magnifiedPackage.name} package`}
+          >
+            <button
+              type="button"
+              className="absolute inset-0 cursor-default"
+              aria-label="Dismiss magnified package"
+              onClick={() => setMagnifiedPackageId(null)}
+            />
+
+            <div className="relative z-10 w-full max-w-[980px] max-h-[92vh]">
+              <div className="flex justify-end mb-2">
+                <button
+                  type="button"
+                  onClick={() => setMagnifiedPackageId(null)}
+                  className="bg-slate-950/70 hover:bg-slate-950/90 text-white/90 rounded-md px-3 py-2 text-xs uppercase tracking-[0.2em]"
+                  aria-label="Close magnified package"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="max-h-[calc(92vh-48px)] overflow-auto rounded-2xl">
+                <PackageCard
+                  packageInfo={magnifiedPackage}
+                  allFeaturesForDisplay={allFeaturesForDisplay}
+                  basePrice={basePackagePricesById?.[magnifiedPackage.id]}
+                  isSelected={selectedPackage?.id === magnifiedPackage.id}
+                  onSelect={() => onSelectPackage(magnifiedPackage)}
+                  onViewFeature={onViewFeature}
+                  isCompact={false}
+                  isMagnified={true}
+                  textSize="xl"
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </>
     );
   }
 

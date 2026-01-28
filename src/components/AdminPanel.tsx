@@ -962,6 +962,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             onAlaCarteChange={fetchAlaCarteCount}
             scrollTargetId={productHubScrollTarget}
             onScrollHandled={() => setProductHubScrollTarget(null)}
+            packages={packages}
+            recommendedSelection={recommendedSelection}
+            isSavingRecommended={isSavingRecommended}
+            recommendedMessage={recommendedMessage}
+            recommendedError={recommendedError}
+            onRecommendedChange={handleRecommendedChange}
           />
         ) : (
           <>

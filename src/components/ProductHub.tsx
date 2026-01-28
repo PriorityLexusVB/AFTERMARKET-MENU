@@ -22,7 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { db } from "../firebase";
-import type { AlaCarteOption, ProductFeature } from "../types";
+import type { AlaCarteOption, ProductFeature, PackageTier } from "../types";
 import {
   updateFeature,
   upsertAlaCarteFromFeature,
@@ -40,6 +40,14 @@ interface ProductHubProps {
   initialAlaCarteOptions?: AlaCarteOption[];
   scrollTargetId?: string | null;
   onScrollHandled?: () => void;
+
+  // Optional: allow AdminPanel to surface Recommended package controls here too.
+  packages?: PackageTier[];
+  recommendedSelection?: string;
+  isSavingRecommended?: boolean;
+  recommendedMessage?: string | null;
+  recommendedError?: string | null;
+  onRecommendedChange?: (packageId: string | "none") => void;
 }
 
 // Default package column when moving items to packages section
@@ -58,6 +66,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   initialAlaCarteOptions,
   scrollTargetId,
   onScrollHandled,
+  packages,
+  recommendedSelection,
+  isSavingRecommended,
+  recommendedMessage,
+  recommendedError,
+  onRecommendedChange,
 }) => {
   const [features, setFeatures] = useState<ProductFeature[]>(initialFeatures ?? []);
   const [alaCarteOptions, setAlaCarteOptions] = useState<AlaCarteOption[]>(
@@ -104,6 +118,19 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
+  );
+
+  const elitePackageId = useMemo(
+    () => packages?.find((pkg) => pkg.name.toLowerCase().includes("elite"))?.id,
+    [packages]
+  );
+  const platinumPackageId = useMemo(
+    () => packages?.find((pkg) => pkg.name.toLowerCase().includes("platinum"))?.id,
+    [packages]
+  );
+  const goldPackageId = useMemo(
+    () => packages?.find((pkg) => pkg.name.toLowerCase().includes("gold"))?.id,
+    [packages]
   );
 
   const clearRowError = (featureId: string) => {
@@ -1368,6 +1395,80 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           />
         </div>
       </div>
+
+      {packages && onRecommendedChange && typeof recommendedSelection === "string" ? (
+        <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <p className="text-sm text-gray-300 font-semibold">Recommended package</p>
+              <p className="text-xs text-gray-500">
+                Choose which package shows the recommended badge to customers.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              {isSavingRecommended ? (
+                <span className="text-blue-400 flex items-center gap-1">Saving...</span>
+              ) : null}
+              {recommendedMessage && !isSavingRecommended ? (
+                <span className="text-green-400 flex items-center gap-1">Saved</span>
+              ) : null}
+            </div>
+          </div>
+          <div
+            className="flex flex-wrap gap-4 mt-3"
+            role="radiogroup"
+            aria-label="Recommended package"
+          >
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="radio"
+                name="recommended-package-product-hub"
+                checked={recommendedSelection === elitePackageId}
+                disabled={!elitePackageId || Boolean(isSavingRecommended)}
+                onChange={() => elitePackageId && onRecommendedChange(elitePackageId)}
+                className="form-radio h-4 w-4 text-blue-500"
+              />
+              Elite
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="radio"
+                name="recommended-package-product-hub"
+                checked={recommendedSelection === platinumPackageId}
+                disabled={!platinumPackageId || Boolean(isSavingRecommended)}
+                onChange={() => platinumPackageId && onRecommendedChange(platinumPackageId)}
+                className="form-radio h-4 w-4 text-blue-500"
+              />
+              Platinum
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="radio"
+                name="recommended-package-product-hub"
+                checked={recommendedSelection === goldPackageId}
+                disabled={!goldPackageId || Boolean(isSavingRecommended)}
+                onChange={() => goldPackageId && onRecommendedChange(goldPackageId)}
+                className="form-radio h-4 w-4 text-blue-500"
+              />
+              Gold
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="radio"
+                name="recommended-package-product-hub"
+                checked={recommendedSelection === "none"}
+                disabled={Boolean(isSavingRecommended)}
+                onChange={() => onRecommendedChange("none")}
+                className="form-radio h-4 w-4 text-blue-500"
+              />
+              None
+            </label>
+          </div>
+          {recommendedError ? (
+            <p className="text-red-400 text-sm mt-2">{recommendedError}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-3 text-sm text-gray-300">
         <label className="flex items-center gap-2">

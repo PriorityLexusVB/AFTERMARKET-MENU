@@ -139,16 +139,22 @@ export async function fetchAllData(): Promise<FetchDataResult> {
       "features"
     );
 
-    // Fetch and validate a la carte options with Zod
-    const rawAlaCarteOptions = alaCarteSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    const alaCarteOptions: AlaCarteOption[] = validateDataArray(
-      AlaCarteOptionSchema,
-      rawAlaCarteOptions,
-      "ala_carte_options"
-    );
+    // Fetch and validate a la carte options with Zod.
+    // Validate per-doc so console output includes the Firestore document id.
+    const alaCarteOptions: AlaCarteOption[] = [];
+    alaCarteSnapshot.docs.forEach((doc) => {
+      const raw = { id: doc.id, ...doc.data() };
+      const result = AlaCarteOptionSchema.safeParse(raw);
+      if (result.success) {
+        alaCarteOptions.push(result.data);
+      } else {
+        console.warn(
+          `Validation error in ala_carte_options.${doc.id}:`,
+          result.error.format(),
+          raw
+        );
+      }
+    });
 
     // Map and prepare packages for validation
     const rawPackages = packagesSnapshot.docs.map((doc) => {

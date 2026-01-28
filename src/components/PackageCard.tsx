@@ -116,7 +116,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           ? "text-base sm:text-lg mt-2 space-y-2"
           : "text-sm sm:text-base mt-2 space-y-1";
 
-  const pointsListLayoutClass = isCompact ? "columns-2 gap-x-4" : "";
+  const pointsListLayoutClass = "";
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];

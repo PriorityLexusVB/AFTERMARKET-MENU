@@ -46,13 +46,26 @@ describe("PackageCard", () => {
     expect(container.textContent).toContain("$1,500");
   });
 
-  it("should display recommended badge when isRecommended is true", () => {
+  it("should not display recommended badge by default even when isRecommended is true", () => {
     const recommendedPackage = createMockPackageTier({
       ...defaultProps.packageInfo,
       isRecommended: true,
     });
 
     render(<PackageCard {...defaultProps} packageInfo={recommendedPackage} />);
+
+    expect(screen.queryByText(/Recommended/i)).not.toBeInTheDocument();
+  });
+
+  it("should display recommended badge when explicitly enabled", () => {
+    const recommendedPackage = createMockPackageTier({
+      ...defaultProps.packageInfo,
+      isRecommended: true,
+    });
+
+    render(
+      <PackageCard {...defaultProps} packageInfo={recommendedPackage} showRecommendedBadge={true} />
+    );
 
     expect(screen.getByText(/Recommended/i)).toBeInTheDocument();
   });

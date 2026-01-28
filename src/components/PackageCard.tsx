@@ -8,6 +8,7 @@ interface PackageCardProps {
   onSelect: () => void;
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
   onMagnify?: () => void;
+  showRecommendedBadge?: boolean;
   basePrice?: number;
   className?: string;
   isCompact?: boolean;
@@ -70,6 +71,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   onSelect,
   onViewFeature,
   onMagnify,
+  showRecommendedBadge = false,
   basePrice,
   className = "",
   isCompact = false,
@@ -85,6 +87,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   };
 
   const isRecommended = packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
+  const shouldShowRecommended = Boolean(showRecommendedBadge && isRecommended);
 
   const isDiscounted = typeof basePrice === "number" && basePrice > packageInfo.price;
 
@@ -157,10 +160,19 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   return (
     <div
       data-testid="package-card"
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       className={`
       lux-card am-package-card flex flex-col h-full min-h-0 relative overflow-hidden
       ${isSelected ? "lux-card-selected" : ""}
-      ${isRecommended ? "lux-card-recommended" : ""}
+      ${shouldShowRecommended ? "lux-card-recommended" : ""}
       ${className}
     `}
     >
@@ -197,7 +209,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           {onMagnify && (
             <button
               type="button"
-              onClick={onMagnify}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMagnify();
+              }}
               className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white transition-colors active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70"
               aria-label={`Magnify ${packageInfo.name} package`}
               title="Magnify"
@@ -205,7 +220,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({
               <MagnifyIcon className="w-4 h-4" />
             </button>
           )}
-          {isRecommended && <span className="lux-chip-gold shadow-glow-gold">Recommended</span>}
+          {shouldShowRecommended && (
+            <span className="lux-chip-gold shadow-glow-gold">Recommended</span>
+          )}
         </div>
       </div>
 
@@ -232,7 +249,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({
                 {divider}
                 <div className={`text-center ${isCompact ? "mt-0" : "mt-2"}`}>
                   <button
-                    onClick={() => onViewFeature(feature)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewFeature(feature);
+                    }}
                     className={`${
                       isCompact ? "min-h-[36px]" : "min-h-[44px]"
                     } font-semibold ${featureNameClass} text-lux-textStrong hover:text-lux-blue transition-colors underline decoration-2 decoration-lux-border underline-offset-4 active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/60 focus:ring-offset-2 focus:ring-offset-lux-bg1`}
@@ -300,7 +320,10 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           </div>
         </div>
         <button
-          onClick={onSelect}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect();
+          }}
           className={`am-select-plan-btn w-full ${isCompact ? "text-sm" : "text-base lg:text-lg"} font-semibold uppercase tracking-wider transition-all duration-300 transform active:scale-98 focus:outline-none focus:ring-2 focus:ring-lux-blue/70 focus:ring-offset-2 focus:ring-offset-lux-bg1 rounded-xl ${isCompact ? "min-h-[44px] py-2" : "min-h-[48px]"}
             ${
               isSelected

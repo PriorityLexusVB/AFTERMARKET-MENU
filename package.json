@@ -46,6 +46,7 @@
     "emulators:wait": "node scripts/wait-for-port.mjs 127.0.0.1 8081 60000",
     "emulators:seed": "npm run emulators:wait && cross-env FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 npm run seed:emulator",
     "firebase:mcp": "npx -y firebase-tools@latest mcp",
+    "firestore:fix": "tsx scripts/firestore-fix.ts",
     "check:unicode": "node scripts/check-hidden-unicode.mjs",
     "fix:unicode": "node scripts/check-hidden-unicode.mjs --fix"
   },

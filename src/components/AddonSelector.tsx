@@ -52,7 +52,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
       </h3>
 
       {items.length > 0 ? (
-        <div className={`${isCompact ? "mb-2" : "mb-3"} text-center`}> 
+        <div className={`${isCompact ? "mb-2" : "mb-3"} text-center`}>
           <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-300">
             {selectedCount} selected
           </span>
@@ -60,6 +60,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
       ) : null}
 
       <div
+        data-testid="addons-drawer-list"
         className={`${
           isCompact ? "space-y-2" : "space-y-3"
         } flex-grow pr-2 min-h-0 overflow-y-auto ios-scroll scrollbar-luxury`}

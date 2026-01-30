@@ -148,7 +148,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           className={`w-full ${isCompact ? "py-2 px-2" : "py-3 px-3"} rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-2 min-h-touch
             ${isSelected ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700" : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"}
           `}
-          aria-pressed={isSelected ? "true" : "false"}
+          aria-label={isSelected ? `Remove ${item.name} from quote` : `Add ${item.name} to quote`}
         >
           {isSelected ? (
             <span>Added ✓</span>

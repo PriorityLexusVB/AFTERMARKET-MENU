@@ -271,6 +271,15 @@ export const MOCK_PACKAGES: PackageTier[] = [
   },
 ];
 
+// MOCK PICK2 CONFIG (app_config/pick2)
+// Demo mode will treat this as the default config until Firestore plumbing is added.
+export const MOCK_PICK2_CONFIG = {
+  enabled: true,
+  price: 995,
+  title: "You Pick 2",
+  subtitle: "Choose any 2 featured add-ons for one price",
+} as const;
+
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)
 // Column 4 = Popular Add-ons
 export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
@@ -282,6 +291,10 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       cost: 550,
       description:
         "Protects the most vulnerable parts of your vehicle from rock chips and scratches.",
+      pick2Eligible: true,
+      pick2Sort: 10,
+      shortValue: "Stops rock chips before they become repainting.",
+      highlights: ["Self-healing film", "10-year warranty"],
       points: [
         "Prevents Rock Chips",
         'Protects 18"-24" Hood',
@@ -302,6 +315,10 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       cost: 350,
       description:
         "10 Year Warranty — essential protection for the most vulnerable front-facing areas.",
+      pick2Eligible: true,
+      pick2Sort: 20,
+      shortValue: "Protects high-impact front areas from daily highway damage.",
+      highlights: ["Invisible protection", "10-year warranty"],
       points: ['Protects 18"-24" Hood', "Fenders", "Mirrors"],
       warranty: "10 Year Warranty",
       column: 4, // Popular add-on
@@ -315,6 +332,10 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       cost: 125,
       description:
         "A durable film to prevent hazing, yellowing, and cracking of headlight lenses.",
+      pick2Eligible: true,
+      pick2Sort: 30,
+      shortValue: "Prevents hazing and keeps night visibility sharp.",
+      highlights: ["Clear film barrier", "Maintains resale appeal"],
       points: ["Maintains clarity for optimal night visibility."],
       column: 4, // Popular add-on
       position: 2,
@@ -327,6 +348,10 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       cost: 75,
       description:
         "Invisible film applied behind door handles to prevent scratches from keys and fingernails.",
+      pick2Eligible: true,
+      pick2Sort: 40,
+      shortValue: "Prevents scratches where hands hit every day.",
+      highlights: ["Invisible film", "High-wear zone protection"],
       points: ["Protects a high-wear area from daily use."],
       column: 4, // Popular add-on
       position: 3,

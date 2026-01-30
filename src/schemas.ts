@@ -92,6 +92,11 @@ export const AlaCarteOptionSchema = z.object({
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
   position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
+  // Pick2 fields
+  pick2Eligible: z.boolean().optional(),
+  pick2Sort: z.number().int().optional(),
+  shortValue: z.string().optional().or(z.literal("")),
+  highlights: z.array(z.string()).optional(),
   // Publishing fields
   sourceFeatureId: z.string().optional(),
   isPublished: z.boolean().optional().default(false),

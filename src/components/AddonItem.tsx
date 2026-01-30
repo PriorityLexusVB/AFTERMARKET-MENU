@@ -56,6 +56,8 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
+  const highlights = (item.points ?? []).filter(Boolean).slice(0, 2);
+
   const nameClass = isCompact
     ? textSize === "xl"
       ? "text-lg"
@@ -82,46 +84,82 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   return (
     <div
-      className={`bg-gray-800 border border-gray-700 rounded-lg ${
-        isCompact ? "p-2" : "p-3"
-      } flex flex-col transition-shadow hover:shadow-md`}
+      className={`bg-gray-800 border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
+        isSelected ? "border-lux-gold/70 ring-1 ring-lux-gold/20" : "border-gray-700"
+      }`}
     >
       <div className="flex-grow">
-        <button
-          onClick={onView}
-          className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-blue-400 transition-colors w-full leading-snug clamp-2 break-words`}
-          aria-label={`Learn more about ${item.name}`}
-        >
-          {item.name}
-        </button>
-        {isDiscounted && (
-          <p
-            className={`${
-              isCompact ? "text-xs" : "text-[11px]"
-            } text-gray-400 line-through decoration-2 decoration-gray-500/60`}
+        <div className="flex items-start justify-between gap-3">
+          <button
+            type="button"
+            onClick={onView}
+            className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-lux-blue transition-colors w-full leading-snug clamp-2 break-words`}
+            aria-label={`Learn more about ${item.name}`}
           >
-            {formatPrice(basePrice)}
+            {item.name}
+          </button>
+
+          <div className="shrink-0 text-right">
+            {isDiscounted ? (
+              <p
+                className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-400 line-through decoration-2 decoration-gray-500/60`}
+              >
+                {formatPrice(basePrice)}
+              </p>
+            ) : null}
+            <p className={`${priceClass} text-gray-200 font-semibold`}>{formatPrice(item.price)}</p>
+          </div>
+        </div>
+
+        {item.description ? (
+          <p
+            className={`${isCompact ? "mt-1 text-xs" : "mt-1.5 text-[11px]"} text-gray-300/90 leading-snug clamp-2`}
+          >
+            {item.description}
           </p>
-        )}
-        <p className={`${priceClass} text-gray-300`}>{formatPrice(item.price)}</p>
+        ) : null}
+
+        {highlights.length > 0 ? (
+          <ul className={`${isCompact ? "mt-2" : "mt-2.5"} space-y-1`}>
+            {highlights.map((point, idx) => (
+              <li
+                key={`${item.id}-highlight-${idx}`}
+                className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-300 flex gap-2`}
+              >
+                <span className="mt-[2px] inline-block h-1.5 w-1.5 rounded-full bg-lux-gold/80" />
+                <span className="min-w-0 clamp-2">{point}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {item.warranty ? (
+          <div className={`${isCompact ? "mt-2" : "mt-2.5"}`}>
+            <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200">
+              {item.warranty}
+            </span>
+          </div>
+        ) : null}
       </div>
       <div className={isCompact ? "mt-2" : "mt-3"}>
         <button
+          type="button"
           onClick={onToggle}
-          className={`w-full ${
-            isCompact ? "py-2 px-2" : "py-3 px-3"
-          } rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]
-            ${
-              isSelected
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-600 text-gray-200 hover:bg-blue-500 hover:text-white"
-            }
+          className={`w-full ${isCompact ? "py-2 px-2" : "py-3 px-3"} rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-2 min-h-touch
+            ${isSelected ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700" : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"}
           `}
+          aria-pressed={isSelected ? "true" : "false"}
         >
-          <span key={isSelected ? "check" : "plus"} className="inline-block animate-icon-pop-in">
-            {isSelected ? <CheckIcon /> : <PlusIcon />}
-          </span>
-          {isSelected ? "Added" : "Add"}
+          {isSelected ? (
+            <span>Added ✓</span>
+          ) : (
+            <>
+              <span className="inline-block animate-icon-pop-in">
+                <PlusIcon />
+              </span>
+              <span>Add to Quote</span>
+            </>
+          )}
         </button>
       </div>
     </div>

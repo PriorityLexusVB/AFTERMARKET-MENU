@@ -23,6 +23,8 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
   isCompact = false,
   textSize = "normal",
 }) => {
+  const selectedCount = selectedItems.length;
+
   const headerClass = isCompact
     ? textSize === "xl"
       ? "text-2xl"
@@ -37,7 +39,7 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
 
   return (
     <div
-      className={`bg-gray-800/50 border border-gray-700 rounded-lg ${isCompact ? "p-2" : "p-4"} h-full min-h-0 flex flex-col ${
+      className={`bg-gray-800/50 border border-gray-700 rounded-xl shadow-lg ${isCompact ? "p-2" : "p-4"} h-full min-h-0 flex flex-col ${
         className ?? ""
       }`}
     >
@@ -48,10 +50,19 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
       >
         Add-Ons
       </h3>
+
+      {items.length > 0 ? (
+        <div className={`${isCompact ? "mb-2" : "mb-3"} text-center`}> 
+          <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-300">
+            {selectedCount} selected
+          </span>
+        </div>
+      ) : null}
+
       <div
         className={`${
           isCompact ? "space-y-2" : "space-y-3"
-        } flex-grow pr-2 min-h-0 overflow-y-auto overscroll-contain`}
+        } flex-grow pr-2 min-h-0 overflow-y-auto ios-scroll scrollbar-luxury`}
       >
         {items.length === 0 ? (
           <div className="text-sm text-gray-400 space-y-1">

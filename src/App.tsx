@@ -15,9 +15,9 @@ import { SetupGuide } from "./components/SetupGuide";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ValuePresentation from "./components/ValuePresentation";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
-import { fetchAllData } from "./data";
+import { fetchAllData, fetchPick2Config } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
-import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides } from "./types";
+import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides, Pick2Config } from "./types";
 import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
 import { sortPackagesForDisplay } from "./utils/packageOrder";
 import {
@@ -48,6 +48,7 @@ const App: React.FC = () => {
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [allFeatures, setAllFeatures] = useState<ProductFeature[]>([]);
   const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<AlaCarteOption[]>([]);
+  const [, setPick2Config] = useState<Pick2Config | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // UI State
@@ -327,10 +328,14 @@ const App: React.FC = () => {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    const { packages, features, alaCarteOptions } = await fetchAllData();
+    const [{ packages, features, alaCarteOptions }, pick2Config] = await Promise.all([
+      fetchAllData(),
+      fetchPick2Config(),
+    ]);
     setPackages(packages);
     setAllFeatures(features);
     setAllAlaCarteOptions(alaCarteOptions);
+    setPick2Config(pick2Config);
     setIsLoading(false);
   }, []);
 

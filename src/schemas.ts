@@ -104,6 +104,18 @@ export const AlaCarteOptionSchema = z.object({
 
 export type AlaCarteOption = z.infer<typeof AlaCarteOptionSchema>;
 
+// Pick2 Config Schema (app_config/pick2)
+export const Pick2ConfigSchema = z.object({
+  enabled: z.boolean(),
+  price: z.number().nonnegative("Price must be non-negative"),
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  // Optional in DB, defaulted to 2 at read-time.
+  maxSelections: z.number().int().min(1).optional(),
+});
+
+export type Pick2Config = z.infer<typeof Pick2ConfigSchema>;
+
 // Package Tier Schema
 export const PackageTierSchema = z.object({
   id: z.string().min(1, "ID is required"),

@@ -70,3 +70,11 @@ export interface PriceOverrides {
     cost?: number;
   };
 }
+
+export interface Pick2Config {
+  enabled: boolean;
+  price: number;
+  title?: string;
+  subtitle?: string;
+  maxSelections?: number;
+}

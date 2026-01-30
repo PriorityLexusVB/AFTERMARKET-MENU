@@ -4,6 +4,7 @@ import type { AlaCarteOption, PackageTier } from "../types";
 interface SelectionDrawerProps {
   selectedPackage: PackageTier | null;
   customItems: AlaCarteOption[];
+  pick2?: { price: number; items: AlaCarteOption[]; cost: number };
   totalPrice: number;
   baseTotalPrice?: number;
   basePackagePricesById?: Record<string, number>;
@@ -26,6 +27,7 @@ const formatPrice = (price: number) =>
 export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   selectedPackage,
   customItems,
+  pick2,
   totalPrice,
   onRemoveItem,
   onPrint,
@@ -88,8 +90,8 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 </span>
                 {!isCompact && (
                   <span className="px-2 py-1 rounded-full bg-gray-800 text-gray-200 text-xs">
-                    {customItems.length} add-on
-                    {customItems.length === 1 ? "" : "s"}
+                    {customItems.length} add-on{customItems.length === 1 ? "" : "s"}
+                    {pick2 ? " + Pick2" : ""}
                   </span>
                 )}
               </div>
@@ -212,6 +214,26 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
       </div>
 
       <div className="space-y-3">
+        {pick2 ? (
+          <>
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">You Pick 2</p>
+              <span className="text-xs text-lux-textMuted">{formatPrice(pick2.price)}</span>
+            </div>
+            <div className="space-y-1">
+              {pick2.items.map((item) => (
+                <div
+                  key={`pick2-${item.id}`}
+                  className="flex items-center justify-between bg-lux-bg2/40 border border-lux-border/40 rounded-lg px-3 py-2"
+                >
+                  <p className="text-sm font-semibold text-lux-text">{item.name}</p>
+                </div>
+              ))}
+            </div>
+            <div className="lux-divider" />
+          </>
+        ) : null}
+
         <div className="flex items-center justify-between">
           <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Add-ons</p>
           <span className="text-xs text-lux-textMuted">{customItems.length} selected</span>

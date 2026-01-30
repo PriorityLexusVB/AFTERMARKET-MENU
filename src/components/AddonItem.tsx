@@ -9,6 +9,10 @@ interface AddonItemProps {
   onView: () => void;
   isCompact?: boolean;
   textSize?: "normal" | "large" | "xl";
+  ctaAddLabel?: string;
+  ctaSelectedLabel?: string;
+  ariaAddLabel?: string;
+  ariaSelectedLabel?: string;
 }
 
 const PlusIcon: React.FC = () => (
@@ -45,6 +49,10 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   onView,
   isCompact = false,
   textSize = "normal",
+  ctaAddLabel,
+  ctaSelectedLabel,
+  ariaAddLabel,
+  ariaSelectedLabel,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -56,7 +64,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
-  const highlights = (item.points ?? []).filter(Boolean).slice(0, 2);
+  const highlightsSource =
+    item.highlights && item.highlights.length > 0 ? item.highlights : item.points ?? [];
+  const highlights = highlightsSource.filter(Boolean).slice(0, 2);
 
   const nameClass = isCompact
     ? textSize === "xl"
@@ -115,7 +125,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           <p
             className={`${isCompact ? "mt-1 text-xs" : "mt-1.5 text-[11px]"} text-gray-300/90 leading-snug clamp-2`}
           >
-            {item.description}
+            {item.shortValue || item.description}
           </p>
         ) : null}
 
@@ -148,16 +158,20 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           className={`w-full ${isCompact ? "py-2 px-2" : "py-3 px-3"} rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-2 min-h-touch
             ${isSelected ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700" : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"}
           `}
-          aria-label={isSelected ? `Remove ${item.name} from quote` : `Add ${item.name} to quote`}
+          aria-label={
+            isSelected
+              ? ariaSelectedLabel ?? `Remove ${item.name} from quote`
+              : ariaAddLabel ?? `Add ${item.name} to quote`
+          }
         >
           {isSelected ? (
-            <span>Added ✓</span>
+            <span>{ctaSelectedLabel ?? "Added ✓"}</span>
           ) : (
             <>
               <span className="inline-block animate-icon-pop-in">
                 <PlusIcon />
               </span>
-              <span>Add to Quote</span>
+              <span>{ctaAddLabel ?? "Add to Quote"}</span>
             </>
           )}
         </button>

@@ -6,6 +6,7 @@ import { AlaCarteSelector } from "./components/AlaCarteSelector";
 import { FeatureModal } from "./components/FeatureModal";
 import { CustomPackageBuilder } from "./components/CustomPackageBuilder";
 import { AddonSelector } from "./components/AddonSelector";
+import { Pick2Selector } from "./components/Pick2Selector";
 import { SettingsModal } from "./components/SettingsModal";
 import { SelectionDrawer } from "./components/SelectionDrawer";
 import { AgreementView } from "./components/AgreementView";
@@ -33,7 +34,7 @@ import {
   trackUserLogout,
 } from "./analytics";
 
-type Page = "packages" | "alacarte";
+type Page = "packages" | "alacarte" | "pick2";
 type View = "menu" | "agreement" | "presentation";
 
 interface CustomerInfo {
@@ -48,7 +49,7 @@ const App: React.FC = () => {
   const [packages, setPackages] = useState<PackageTier[]>([]);
   const [allFeatures, setAllFeatures] = useState<ProductFeature[]>([]);
   const [allAlaCarteOptions, setAllAlaCarteOptions] = useState<AlaCarteOption[]>([]);
-  const [, setPick2Config] = useState<Pick2Config | null>(null);
+  const [pick2Config, setPick2Config] = useState<Pick2Config | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // UI State
@@ -59,6 +60,7 @@ const App: React.FC = () => {
   }>(null);
   const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(null);
   const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
+  const [pick2SelectedIds, setPick2SelectedIds] = useState<string[]>([]);
   const [viewingDetailItem, setViewingDetailItem] = useState<
     ProductFeature | AlaCarteOption | null
   >(null);
@@ -529,6 +531,36 @@ const App: React.FC = () => {
     () => applyOverrides(allAlaCarteOptions, priceOverrides),
     [allAlaCarteOptions, priceOverrides]
   );
+
+  const displayAlaCarteById = useMemo(() => {
+    const map = new Map<string, AlaCarteOption>();
+    displayAllAlaCarteOptions.forEach((opt) => map.set(opt.id, opt));
+    return map;
+  }, [displayAllAlaCarteOptions]);
+
+  const pick2MaxSelections = pick2Config?.maxSelections ?? 2;
+  const pick2Enabled = pick2Config?.enabled === true;
+  const pick2BundlePrice = pick2Config?.price ?? 0;
+  const pick2SelectedItems = useMemo(() => {
+    return pick2SelectedIds
+      .map((id) => displayAlaCarteById.get(id))
+      .filter((item): item is AlaCarteOption => Boolean(item));
+  }, [pick2SelectedIds, displayAlaCarteById]);
+
+  const pick2BundleActive = pick2Enabled && pick2SelectedItems.length === pick2MaxSelections;
+  const pick2BundleCost = useMemo(() => {
+    if (!pick2BundleActive) return 0;
+    return pick2SelectedItems.reduce((sum, item) => sum + item.cost, 0);
+  }, [pick2BundleActive, pick2SelectedItems]);
+
+  const pick2Selection = useMemo(() => {
+    if (!pick2BundleActive) return undefined;
+    return {
+      price: pick2BundlePrice,
+      items: pick2SelectedItems,
+      cost: pick2BundleCost,
+    };
+  }, [pick2BundleActive, pick2BundlePrice, pick2SelectedItems, pick2BundleCost]);
   const curatedSelectedItems = useMemo(
     () => customPackageItems.filter(isCuratedOption),
     [customPackageItems]
@@ -553,8 +585,19 @@ const App: React.FC = () => {
       price += item.price;
       cost += item.cost;
     });
+    if (pick2BundleActive) {
+      price += pick2BundlePrice;
+      cost += pick2BundleCost;
+    }
     return { totalPrice: price, totalCost: cost };
-  }, [selectedPackage, displayPackages, displayCustomPackageItems]);
+  }, [
+    selectedPackage,
+    displayPackages,
+    displayCustomPackageItems,
+    pick2BundleActive,
+    pick2BundlePrice,
+    pick2BundleCost,
+  ]);
 
   const baseTotalPrice = useMemo(() => {
     let price = 0;
@@ -564,8 +607,18 @@ const App: React.FC = () => {
     customPackageItems.forEach((item) => {
       price += baseAddonPricesById[item.id] ?? item.price;
     });
+    if (pick2BundleActive) {
+      price += pick2BundlePrice;
+    }
     return price;
-  }, [selectedPackage, customPackageItems, basePackagePricesById, baseAddonPricesById]);
+  }, [
+    selectedPackage,
+    customPackageItems,
+    basePackagePricesById,
+    baseAddonPricesById,
+    pick2BundleActive,
+    pick2BundlePrice,
+  ]);
 
   const baseCustomPackageSubtotal = useMemo(() => {
     let price = 0;
@@ -584,6 +637,29 @@ const App: React.FC = () => {
       return posA - posB;
     });
   }, [displayAllAlaCarteOptions]);
+
+  const pick2EligibleItems = useMemo(() => {
+    return [...curatedAlaCarteOptions]
+      .filter((option) => option.pick2Eligible)
+      .sort((a, b) => {
+        const sortA = a.pick2Sort ?? Number.MAX_SAFE_INTEGER;
+        const sortB = b.pick2Sort ?? Number.MAX_SAFE_INTEGER;
+        if (sortA !== sortB) return sortA - sortB;
+        const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
+        if (columnDiff !== 0) return columnDiff;
+        const posA = a.position ?? Number.MAX_SAFE_INTEGER;
+        const posB = b.position ?? Number.MAX_SAFE_INTEGER;
+        return posA - posB;
+      });
+  }, [curatedAlaCarteOptions]);
+
+  const showPick2Tab = pick2Enabled && pick2EligibleItems.length > 0;
+
+  useEffect(() => {
+    if (currentPage === "pick2" && !showPick2Tab) {
+      setCurrentPage("packages");
+    }
+  }, [currentPage, showPick2Tab]);
 
   const mainPageAddons = useMemo(() => {
     // The Packages page "Add Ons" column prefers a tight, explicit whitelist
@@ -643,6 +719,7 @@ const App: React.FC = () => {
         trackAlaCarteRemove(item);
         return prev.filter((i) => i.id !== item.id);
       } else {
+        setPick2SelectedIds((prevPick2) => prevPick2.filter((id) => id !== item.id));
         trackAlaCarteAdd(item);
         return [...prev, item];
       }
@@ -654,10 +731,31 @@ const App: React.FC = () => {
       if (prev.find((i) => i.id === item.id)) {
         return prev;
       }
+      setPick2SelectedIds((prevPick2) => prevPick2.filter((id) => id !== item.id));
       trackAlaCarteAdd(item);
       return [...prev, item];
     });
   }, []);
+
+  const handleTogglePick2Item = useCallback(
+    (item: AlaCarteOption) => {
+      setPick2SelectedIds((prev) => {
+        const isSelected = prev.includes(item.id);
+        if (isSelected) {
+          return prev.filter((id) => id !== item.id);
+        }
+
+        if (prev.length >= pick2MaxSelections) {
+          return prev;
+        }
+
+        // Conflict rule: selecting via Pick2 removes the item from individually-priced add-ons.
+        setCustomPackageItems((prevCustom) => prevCustom.filter((i) => i.id !== item.id));
+        return [...prev, item.id];
+      });
+    },
+    [pick2MaxSelections]
+  );
 
   const handleRemoveAlaCarte = useCallback((itemId: string) => {
     setCustomPackageItems((prev) => {
@@ -779,9 +877,13 @@ const App: React.FC = () => {
   const enableIpadMenuLayout = isIpadLandscape && currentView === "menu" && !isAdminView;
   const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
   const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
+  const enableIpadPick2Layout = enableIpadMenuLayout && currentPage === "pick2";
   const enableKioskAlaCarteLayout =
     isDesktopKiosk && currentView === "menu" && !isAdminView && currentPage === "alacarte";
+  const enableKioskPick2Layout =
+    isDesktopKiosk && currentView === "menu" && !isAdminView && currentPage === "pick2";
   const enableCompactAlaCarteLayout = enableIpadAlaCarteLayout || enableKioskAlaCarteLayout;
+  const enableCompactPick2Layout = enableIpadPick2Layout || enableKioskPick2Layout;
   const disableAlaCarteDrag = enableCompactAlaCarteLayout || guestMode;
 
   useEffect(() => {
@@ -931,6 +1033,24 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+
+        {currentPage === "pick2" && showPick2Tab && (
+          <div className={enableCompactPick2Layout ? "flex flex-1 min-h-0 overflow-hidden" : ""}>
+            <div className={enableCompactPick2Layout ? "flex-1 min-h-0 overflow-hidden" : ""}>
+              <Pick2Selector
+                items={pick2EligibleItems}
+                selectedIds={pick2SelectedIds}
+                maxSelections={pick2MaxSelections}
+                onToggle={handleTogglePick2Item}
+                onView={handleViewDetail}
+                bundlePrice={pick2BundlePrice}
+                isCompact={enableCompactPick2Layout}
+                textSize={guestTextSize}
+                className={enableCompactPick2Layout ? "h-full min-h-0" : undefined}
+              />
+            </div>
+          </div>
+        )}
       </>
     );
 
@@ -949,6 +1069,7 @@ const App: React.FC = () => {
         <div className={tabsRowClass}>
           <NavButton page="packages" label="Protection Packages" />
           <NavButton page="alacarte" label="A La Carte Options" />
+          {showPick2Tab ? <NavButton page="pick2" label="You Pick 2" /> : null}
         </div>
 
         {enableNoScrollLayout ? (
@@ -1049,6 +1170,7 @@ const App: React.FC = () => {
                     : null
                 }
                 customPackageItems={displayCustomPackageItems}
+                pick2={pick2Selection}
                 totalPrice={totalPrice}
                 totalCost={totalCost}
                 customerInfo={customerInfo}
@@ -1075,6 +1197,7 @@ const App: React.FC = () => {
                     : null
                 }
                 customItems={displayCustomPackageItems}
+                pick2={pick2Selection}
                 totalPrice={totalPrice}
                 baseTotalPrice={baseTotalPrice}
                 basePackagePricesById={basePackagePricesById}

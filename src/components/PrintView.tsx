@@ -11,6 +11,7 @@ interface CustomerInfo {
 interface PrintViewProps {
   selectedPackage: PackageTier | null;
   customPackageItems: AlaCarteOption[];
+  pick2?: { price: number; items: AlaCarteOption[]; cost: number };
   totalPrice: number;
   totalCost: number;
   customerInfo: CustomerInfo;
@@ -39,6 +40,7 @@ const formatCurrency = (amount: number) =>
 export const PrintView: React.FC<PrintViewProps> = ({
   selectedPackage,
   customPackageItems,
+  pick2,
   totalPrice,
   totalCost,
   customerInfo,
@@ -47,12 +49,10 @@ export const PrintView: React.FC<PrintViewProps> = ({
   basePackagePricesById,
   baseAddonPricesById,
 }) => {
-  const allItems = [
-    ...(selectedPackage
-      ? [{ ...selectedPackage, name: `${selectedPackage.name} Package` }]
-      : []),
-    ...customPackageItems,
-  ];
+  const packageLine = selectedPackage
+    ? ({ ...selectedPackage, name: `${selectedPackage.name} Package` } as const)
+    : null;
+  const pick2Line = pick2 && pick2.items.length > 0 ? pick2 : null;
   const vehicleString = [
     customerInfo.year,
     customerInfo.make,
@@ -122,7 +122,52 @@ export const PrintView: React.FC<PrintViewProps> = ({
           </tr>
         </thead>
         <tbody>
-          {allItems.map((item) => (
+          {packageLine ? (
+            <tr key={packageLine.id} className="border-b border-gray-300">
+              <td className="py-3 pr-2">{packageLine.name}</td>
+              <td className="text-right font-mono pr-2">
+                {(() => {
+                  const baseRetail = getBaseRetailPrice(packageLine.id, packageLine.price);
+                  const isDiscounted = baseRetail > packageLine.price;
+                  if (!isDiscounted) return formatCurrency(packageLine.price);
+                  return (
+                    <div className="inline-flex flex-col items-end">
+                      <span className="text-xs text-gray-500 line-through decoration-2 decoration-gray-400/60">
+                        {formatCurrency(baseRetail)}
+                      </span>
+                      <span className="text-black">{formatCurrency(packageLine.price)}</span>
+                    </div>
+                  );
+                })()}
+              </td>
+              {isManagerView && (
+                <td className="text-right font-mono">{formatCurrency(packageLine.cost)}</td>
+              )}
+            </tr>
+          ) : null}
+
+          {pick2Line ? (
+            <>
+              <tr key="pick2-bundle" className="border-b border-gray-300">
+                <td className="py-3 pr-2">You Pick 2 Bundle</td>
+                <td className="text-right font-mono pr-2">{formatCurrency(pick2Line.price)}</td>
+                {isManagerView && (
+                  <td className="text-right font-mono">{formatCurrency(pick2Line.cost)}</td>
+                )}
+              </tr>
+              {pick2Line.items.map((item) => (
+                <tr key={`pick2-${item.id}`} className="border-b border-gray-200">
+                  <td className="py-2 pr-2 pl-6 text-xs text-gray-700">• {item.name}</td>
+                  <td className="text-right font-mono pr-2 text-xs text-gray-500"></td>
+                  {isManagerView && (
+                    <td className="text-right font-mono text-xs text-gray-500"></td>
+                  )}
+                </tr>
+              ))}
+            </>
+          ) : null}
+
+          {customPackageItems.map((item) => (
             <tr key={item.id} className="border-b border-gray-300">
               <td className="py-3 pr-2">{item.name}</td>
               <td className="text-right font-mono pr-2">
@@ -135,17 +180,13 @@ export const PrintView: React.FC<PrintViewProps> = ({
                       <span className="text-xs text-gray-500 line-through decoration-2 decoration-gray-400/60">
                         {formatCurrency(baseRetail)}
                       </span>
-                      <span className="text-black">
-                        {formatCurrency(item.price)}
-                      </span>
+                      <span className="text-black">{formatCurrency(item.price)}</span>
                     </div>
                   );
                 })()}
               </td>
               {isManagerView && (
-                <td className="text-right font-mono">
-                  {formatCurrency(item.cost)}
-                </td>
+                <td className="text-right font-mono">{formatCurrency(item.cost)}</td>
               )}
             </tr>
           ))}

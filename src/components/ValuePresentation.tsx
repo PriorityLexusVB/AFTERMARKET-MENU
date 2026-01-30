@@ -347,12 +347,12 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
             className={`m-auto text-center z-10 transition-all duration-1000 transform ${activeSlide === 1 ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
             <p className="text-blue-500 font-bold text-[10px] tracking-[0.4em] uppercase mb-6">
-              Virginia Beach Resilience
+              2-Minute Protection Overview
             </p>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-5 leading-none">
-              Protecting
+              Protect
               <br />
-              Your Vehicle
+              Your Lexus
             </h1>
             <div className="w-16 h-0.5 bg-blue-600 mx-auto opacity-50" />
 
@@ -371,7 +371,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
             </div>
 
             <p className="mt-8 italic text-white/35 font-light text-lg">
-              A value overview for the Lexus Ownership Experience...
+              We'll focus on what real-world driving can do, and how to keep your Lexus looking new.
             </p>
           </div>
         </div>
@@ -609,7 +609,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
               BRIDGING THE WARRANTY DEFICIT
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 lg:mb-8 pb-6 border-b border-white/10 leading-none">
-              Appearance Damage Isn't Mechanical
+              Most Damage Isn't Mechanical
             </h2>
 
             <div className="grid grid-cols-2 gap-10 lg:gap-12 items-center">
@@ -1448,11 +1448,11 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
             className={`m-auto text-center max-w-5xl z-10 transition-all duration-1000 ${activeSlide === 12 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-blue-500 uppercase tracking-[0.06em] lg:tracking-[0.08em] mb-6 leading-none">
-              Empowering Ownership
+              Choose Your Protection
             </h2>
             <p className="text-base md:text-lg lg:text-xl text-white/65 mb-10 font-light leading-relaxed max-w-3xl mx-auto">
-              Based on your driving habits, we have organized our protection into three tailored
-              tiers.
+              Pick the coverage level that matches how you drive, then we'll review the exact options
+              for your vehicle.
             </p>
 
             <div className="grid grid-cols-3 gap-6 mb-12">
@@ -1460,17 +1460,17 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                 {
                   icon: <Crown size={32} />,
                   label: "ELITE",
-                  desc: "Total regional immunity & max trade-in equity.",
+                  desc: "Maximum protection + maximum trade-in confidence.",
                 },
                 {
                   icon: <Gem size={32} />,
                   label: "PLATINUM",
-                  desc: "Complete appearance shield defense.",
+                  desc: "Most popular: strong protection for daily driving.",
                 },
                 {
                   icon: <ShieldAlert size={32} />,
                   label: "GOLD",
-                  desc: "Essential Choice for Primary Needs.",
+                  desc: "Essential coverage for the biggest risks.",
                 },
               ].map((tier, i) => (
                 <div

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { addAlaCarteOption, updateAlaCarteOption } from '../data';
-import { MIN_COLUMN, MAX_COLUMN } from '../constants';
-import type { AlaCarteOption, FeatureConnector } from '../types';
+import React, { useState, useEffect } from "react";
+import { addAlaCarteOption, updateAlaCarteOption } from "../data";
+import { MIN_COLUMN, MAX_COLUMN } from "../constants";
+import type { AlaCarteOption, FeatureConnector } from "../types";
 
 interface AlaCarteFormProps {
   onSaveSuccess: () => void;
@@ -10,22 +10,26 @@ interface AlaCarteFormProps {
 }
 
 const initialFormState = {
-  name: '',
-  price: '',
-  cost: '',
-  description: '',
-  warranty: '',
-  points: '',
-  useCases: '',
-  imageUrl: '',
-  thumbnailUrl: '',
-  videoUrl: '',
-  column: '',
-  connector: 'AND' as FeatureConnector,
+  name: "",
+  price: "",
+  cost: "",
+  description: "",
+  warranty: "",
+  points: "",
+  useCases: "",
+  imageUrl: "",
+  thumbnailUrl: "",
+  videoUrl: "",
+  column: "",
+  connector: "AND" as FeatureConnector,
   isNew: false,
 };
 
-export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editingOption, onCancelEdit }) => {
+export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({
+  onSaveSuccess,
+  editingOption,
+  onCancelEdit,
+}) => {
   const [formData, setFormData] = useState(initialFormState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,14 +45,14 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
         price: editingOption.price.toString(),
         cost: editingOption.cost.toString(),
         description: editingOption.description,
-        warranty: editingOption.warranty || '',
-        points: editingOption.points.join('\n'),
-        useCases: (editingOption.useCases || []).join('\n'),
-        imageUrl: editingOption.imageUrl || '',
-        thumbnailUrl: editingOption.thumbnailUrl || '',
-        videoUrl: editingOption.videoUrl || '',
-        column: editingOption.column?.toString() || '',
-        connector: editingOption.connector || 'AND',
+        warranty: editingOption.warranty || "",
+        points: editingOption.points.join("\n"),
+        useCases: (editingOption.useCases || []).join("\n"),
+        imageUrl: editingOption.imageUrl || "",
+        thumbnailUrl: editingOption.thumbnailUrl || "",
+        videoUrl: editingOption.videoUrl || "",
+        column: editingOption.column?.toString() || "",
+        connector: editingOption.connector || "AND",
         isNew: editingOption.isNew || false,
       });
     } else {
@@ -56,13 +60,15 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
     }
   }, [editingOption]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
-    if (type === 'checkbox') {
+    if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -72,7 +78,7 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
       setError("Please fill out all required fields.");
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -92,15 +98,17 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
       }
 
       // Build the option data object with proper typing
-      const optionData: Omit<AlaCarteOption, 'id'> = {
+      const optionData: Omit<AlaCarteOption, "id"> = {
         name: formData.name,
         price: parseFloat(price),
         cost: parseFloat(cost),
         description: formData.description,
-        points: formData.points.split('\n').filter(line => line.trim() !== ''),
+        points: formData.points.split("\n").filter((line) => line.trim() !== ""),
         connector: formData.connector,
         ...(formData.warranty && { warranty: formData.warranty }),
-        ...(formData.useCases && { useCases: formData.useCases.split('\n').filter(line => line.trim() !== '') }),
+        ...(formData.useCases && {
+          useCases: formData.useCases.split("\n").filter((line) => line.trim() !== ""),
+        }),
         ...(formData.imageUrl && { imageUrl: formData.imageUrl.trim() }),
         ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl.trim() }),
         ...(formData.videoUrl && { videoUrl: formData.videoUrl.trim() }),
@@ -171,13 +179,12 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
                 Price <span className="text-red-400">*</span>
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 id="price"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
-                step="0.01"
-                min="0"
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
                 required
               />
@@ -188,13 +195,12 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
                 Cost <span className="text-red-400">*</span>
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 id="cost"
                 name="cost"
                 value={formData.cost}
                 onChange={handleChange}
-                step="0.01"
-                min="0"
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
                 required
               />
@@ -374,12 +380,28 @@ export const AlaCarteForm: React.FC<AlaCarteFormProps> = ({ onSaveSuccess, editi
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {isLoading && (
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
             )}
-            {isEditMode ? 'Update Option' : 'Add Option'}
+            {isEditMode ? "Update Option" : "Add Option"}
           </button>
         </div>
       </form>

@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "demo-aftermarket-menu"
-  }
+    "default": "demo-aftermarket-menu",
+    "dev": "gen-lang-client-0877787739"
+  },
+  "targets": {},
+  "etags": {}
 }

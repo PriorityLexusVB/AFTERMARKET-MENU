@@ -39,6 +39,10 @@ test.describe("Surface Pro fit guardrails", () => {
     expect(fits, "Selection bar should fit within viewport").toMatchObject({ ok: true });
 
     // Key CTAs visible.
+    await expect(page.getByText("Investment").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /select plan/i }).first()).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
       timeout: 10000,
     });

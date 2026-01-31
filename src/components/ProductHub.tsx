@@ -454,15 +454,8 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     try {
       await updateFeature(feature.id, { alaCartePrice: parsed });
       const option = alaCarteMap.get(feature.id);
-      if (option?.isPublished) {
-        await upsertAlaCarteFromFeature(
-          {
-            ...feature,
-            alaCartePrice: parsed,
-            publishToAlaCarte: feature.publishToAlaCarte ?? true,
-          },
-          { isPublished: true, price: parsed }
-        );
+      if (option) {
+        await updateAlaCarteOption(feature.id, { price: parsed });
         upsertOptionState(feature, { price: parsed });
       }
       markSaved(feature.id);
@@ -1126,7 +1119,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     const isExpanded = expandedIds.has(feature.id);
     const duplicateMenuRef = useRef<HTMLDivElement>(null);
 
-    const canEditPick2Fields = Boolean(option?.isPublished);
     const [pick2EligibleDraft, setPick2EligibleDraft] = useState<boolean>(
       Boolean(option?.pick2Eligible)
     );
@@ -1158,37 +1150,96 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       option?.highlights?.[1],
     ]);
 
+    const canEditPick2Fields = Boolean(option) || pick2EligibleDraft;
+
+    const getPick2DraftHighlights = () =>
+      [pick2Highlight1Draft.trim(), pick2Highlight2Draft.trim()].filter(Boolean).slice(0, 2);
+
+    const getPick2DraftSort = () => {
+      const trimmed = pick2SortDraft.trim();
+      if (!trimmed) return undefined;
+      const parsed = Number(trimmed);
+      if (!Number.isFinite(parsed) || parsed < 0) return undefined;
+      return parsed;
+    };
+
+    const ensurePick2Option = async (updates: Partial<AlaCarteOption>) => {
+      const resolvedPrice = feature.alaCartePrice ?? option?.price ?? feature.price;
+      await upsertAlaCarteFromFeature(
+        {
+          ...feature,
+          alaCartePrice: resolvedPrice,
+          publishToAlaCarte: feature.publishToAlaCarte ?? false,
+        },
+        {
+          isPublished: false,
+          price: resolvedPrice,
+          ...updates,
+        }
+      );
+      upsertOptionState(feature, { isPublished: false, price: resolvedPrice, ...updates });
+    };
+
     const savePick2Eligible = async (next: boolean) => {
-      if (!option?.isPublished) return;
-      const previous = Boolean(option.pick2Eligible);
+      const previous = Boolean(option?.pick2Eligible);
       setPick2EligibleDraft(next);
-      upsertOptionState(feature, { pick2Eligible: next });
+      if (option || next) {
+        upsertOptionState(feature, { pick2Eligible: next });
+      }
       clearRowError(feature.id);
       try {
+        if (!option) {
+          if (next) {
+            await ensurePick2Option({
+              pick2Eligible: true,
+              pick2Sort: getPick2DraftSort(),
+              shortValue: pick2ShortValueDraft.trim() || undefined,
+              highlights: getPick2DraftHighlights(),
+            });
+          }
+          markSaved(feature.id);
+          return;
+        }
         await updateAlaCarteOption(feature.id, { pick2Eligible: next });
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save pick2Eligible", err);
-        upsertOptionState(feature, { pick2Eligible: previous });
+        if (option || next) {
+          upsertOptionState(feature, { pick2Eligible: previous });
+        }
         setPick2EligibleDraft(previous);
         setRowErrorMessage(feature.id, "Failed to save Pick2 Eligible.");
       }
     };
 
     const savePick2Sort = async (raw: string) => {
-      if (!option?.isPublished) return;
+      if (!option && !pick2EligibleDraft) return;
       const trimmed = raw.trim();
-      const previous = option.pick2Sort;
+      const previous = option?.pick2Sort;
 
       if (!trimmed) {
-        upsertOptionState(feature, { pick2Sort: undefined });
+        if (option || pick2EligibleDraft) {
+          upsertOptionState(feature, { pick2Sort: undefined });
+        }
         clearRowError(feature.id);
         try {
+          if (!option) {
+            await ensurePick2Option({
+              pick2Eligible: true,
+              pick2Sort: undefined,
+              shortValue: pick2ShortValueDraft.trim() || undefined,
+              highlights: getPick2DraftHighlights(),
+            });
+            markSaved(feature.id);
+            return;
+          }
           await updateAlaCarteOption(feature.id, { pick2Sort: undefined });
           markSaved(feature.id);
         } catch (err) {
           console.error("Failed to clear pick2Sort", err);
-          upsertOptionState(feature, { pick2Sort: previous });
+          if (option || pick2EligibleDraft) {
+            upsertOptionState(feature, { pick2Sort: previous });
+          }
           setPick2SortDraft(previous !== undefined ? String(previous) : "");
           setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
         }
@@ -1202,53 +1253,95 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         return;
       }
 
-      upsertOptionState(feature, { pick2Sort: parsed });
+      if (option || pick2EligibleDraft) {
+        upsertOptionState(feature, { pick2Sort: parsed });
+      }
       clearRowError(feature.id);
       try {
+        if (!option) {
+          await ensurePick2Option({
+            pick2Eligible: true,
+            pick2Sort: parsed,
+            shortValue: pick2ShortValueDraft.trim() || undefined,
+            highlights: getPick2DraftHighlights(),
+          });
+          markSaved(feature.id);
+          return;
+        }
         await updateAlaCarteOption(feature.id, { pick2Sort: parsed });
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save pick2Sort", err);
-        upsertOptionState(feature, { pick2Sort: previous });
+        if (option || pick2EligibleDraft) {
+          upsertOptionState(feature, { pick2Sort: previous });
+        }
         setPick2SortDraft(previous !== undefined ? String(previous) : "");
         setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
       }
     };
 
     const savePick2ShortValue = async (raw: string) => {
-      if (!option?.isPublished) return;
+      if (!option && !pick2EligibleDraft) return;
       const trimmed = raw.trim();
       const next = trimmed ? trimmed : undefined;
-      const previous = option.shortValue;
+      const previous = option?.shortValue;
 
-      upsertOptionState(feature, { shortValue: next });
+      if (option || pick2EligibleDraft) {
+        upsertOptionState(feature, { shortValue: next });
+      }
       clearRowError(feature.id);
       try {
+        if (!option) {
+          await ensurePick2Option({
+            pick2Eligible: true,
+            pick2Sort: getPick2DraftSort(),
+            shortValue: next,
+            highlights: getPick2DraftHighlights(),
+          });
+          markSaved(feature.id);
+          return;
+        }
         await updateAlaCarteOption(feature.id, { shortValue: next });
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save shortValue", err);
-        upsertOptionState(feature, { shortValue: previous });
+        if (option || pick2EligibleDraft) {
+          upsertOptionState(feature, { shortValue: previous });
+        }
         setPick2ShortValueDraft(previous ?? "");
         setRowErrorMessage(feature.id, "Failed to save Short Value.");
       }
     };
 
     const savePick2Highlights = async (line1: string, line2: string) => {
-      if (!option?.isPublished) return;
+      if (!option && !pick2EligibleDraft) return;
 
       const nextHighlights = [line1.trim(), line2.trim()].filter(Boolean).slice(0, 2);
       const next = nextHighlights.length > 0 ? nextHighlights : undefined;
-      const previous = option.highlights;
+      const previous = option?.highlights;
 
-      upsertOptionState(feature, { highlights: next });
+      if (option || pick2EligibleDraft) {
+        upsertOptionState(feature, { highlights: next });
+      }
       clearRowError(feature.id);
       try {
+        if (!option) {
+          await ensurePick2Option({
+            pick2Eligible: true,
+            pick2Sort: getPick2DraftSort(),
+            shortValue: pick2ShortValueDraft.trim() || undefined,
+            highlights: nextHighlights,
+          });
+          markSaved(feature.id);
+          return;
+        }
         await updateAlaCarteOption(feature.id, { highlights: next });
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save highlights", err);
-        upsertOptionState(feature, { highlights: previous });
+        if (option || pick2EligibleDraft) {
+          upsertOptionState(feature, { highlights: previous });
+        }
         setPick2Highlight1Draft(previous?.[0] ?? "");
         setPick2Highlight2Draft(previous?.[1] ?? "");
         setRowErrorMessage(feature.id, "Failed to save Highlights.");
@@ -1484,11 +1577,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   <p className="text-sm text-gray-200 font-semibold">You Pick 2 (Pick2) Fields</p>
                   {canEditPick2Fields ? (
                     <p className="text-xs text-gray-500">
-                      These fields are stored on <span className="text-gray-400">ala_carte_options</span>.
+                      These fields are stored on{" "}
+                      <span className="text-gray-400">ala_carte_options</span>.
                     </p>
                   ) : (
                     <p className="text-xs text-gray-500">
-                      Publish to A La Carte to edit Pick2 fields.
+                      Enable Pick2 to create a hidden A La Carte record.
                     </p>
                   )}
                 </div>
@@ -1500,7 +1594,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     <input
                       type="checkbox"
                       checked={pick2EligibleDraft}
-                      disabled={!canEditPick2Fields}
+                      disabled={false}
                       onChange={(e) => savePick2Eligible(e.target.checked)}
                     />
                     <span>Pick2 Eligible</span>
@@ -1556,9 +1650,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                       value={pick2Highlight1Draft}
                       disabled={!canEditPick2Fields}
                       onChange={(e) => setPick2Highlight1Draft(e.target.value)}
-                      onBlur={() =>
-                        savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)
-                      }
+                      onBlur={() => savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)}
                       className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
                       placeholder="Highlight line 1"
                     />
@@ -1567,9 +1659,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                       value={pick2Highlight2Draft}
                       disabled={!canEditPick2Fields}
                       onChange={(e) => setPick2Highlight2Draft(e.target.value)}
-                      onBlur={() =>
-                        savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)
-                      }
+                      onBlur={() => savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)}
                       className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
                       placeholder="Highlight line 2"
                     />
@@ -1748,9 +1838,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           </div>
         </div>
 
-        {pick2ConfigError ? (
-          <p className="text-red-400 text-sm mt-2">{pick2ConfigError}</p>
-        ) : null}
+        {pick2ConfigError ? <p className="text-red-400 text-sm mt-2">{pick2ConfigError}</p> : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
           <div>

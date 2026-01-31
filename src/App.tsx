@@ -18,7 +18,13 @@ import ValuePresentation from "./components/ValuePresentation";
 import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData, fetchPick2Config } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
-import type { PackageTier, AlaCarteOption, ProductFeature, PriceOverrides, Pick2Config } from "./types";
+import type {
+  PackageTier,
+  AlaCarteOption,
+  ProductFeature,
+  PriceOverrides,
+  Pick2Config,
+} from "./types";
 import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
 import { sortPackagesForDisplay } from "./utils/packageOrder";
 import {
@@ -639,7 +645,7 @@ const App: React.FC = () => {
   }, [displayAllAlaCarteOptions]);
 
   const pick2EligibleItems = useMemo(() => {
-    return [...curatedAlaCarteOptions]
+    return [...displayAllAlaCarteOptions]
       .filter((option) => option.pick2Eligible)
       .sort((a, b) => {
         const sortA = a.pick2Sort ?? Number.MAX_SAFE_INTEGER;
@@ -651,7 +657,7 @@ const App: React.FC = () => {
         const posB = b.position ?? Number.MAX_SAFE_INTEGER;
         return posA - posB;
       });
-  }, [curatedAlaCarteOptions]);
+  }, [displayAllAlaCarteOptions]);
 
   const showPick2Tab = pick2Enabled && pick2EligibleItems.length > 0;
 

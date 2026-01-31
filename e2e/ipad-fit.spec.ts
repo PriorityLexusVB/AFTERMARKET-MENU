@@ -19,6 +19,10 @@ test.describe("iPad / kiosk fit", () => {
 
     // Ensure primary CTAs remain visible in locked no-scroll mode.
     await expect(page.locator('button:has-text("Select Plan")')).toHaveCount(3);
+    await expect(page.getByText("Investment").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /select plan/i }).first()).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
       timeout: 10000,
     });

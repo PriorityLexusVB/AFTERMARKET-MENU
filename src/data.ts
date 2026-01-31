@@ -1,21 +1,29 @@
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
   doc,
   writeBatch,
   setDoc,
   deleteField,
+  type DocumentData,
 } from "firebase/firestore/lite";
 import { db } from "./firebase";
-import type { PackageTier, ProductFeature, AlaCarteOption } from "./types";
-import { MOCK_PACKAGES, MOCK_FEATURES, MOCK_ALA_CARTE_OPTIONS } from "./mock";
+import type { PackageTier, ProductFeature, AlaCarteOption, Pick2Config } from "./types";
+import {
+  MOCK_PACKAGES,
+  MOCK_FEATURES,
+  MOCK_ALA_CARTE_OPTIONS,
+  MOCK_PICK2_CONFIG,
+} from "./mock";
 import {
   validateDataArray,
   ProductFeatureSchema,
   AlaCarteOptionSchema,
   PackageTierSchema,
+  Pick2ConfigSchema,
 } from "./schemas";
 import { deriveTierFeatures } from "./utils/featureOrdering";
 
@@ -220,6 +228,54 @@ export async function fetchAllData(): Promise<FetchDataResult> {
       alaCarteOptions: MOCK_ALA_CARTE_OPTIONS,
     };
   }
+}
+
+export async function fetchPick2Config(): Promise<Pick2Config> {
+  const fallback: Pick2Config = { ...MOCK_PICK2_CONFIG, maxSelections: 2 };
+
+  if (!db) {
+    return fallback;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, "app_config", "pick2"));
+    if (!snap.exists()) {
+      console.warn("Pick2 config missing in Firestore; falling back to mock config.");
+      return fallback;
+    }
+
+    const raw = snap.data() as DocumentData;
+    const parsed = Pick2ConfigSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      console.warn(
+        "Pick2 config invalid in Firestore; falling back to mock config.",
+        parsed.error.format(),
+        raw
+      );
+      return fallback;
+    }
+
+    return {
+      ...parsed.data,
+      maxSelections: parsed.data.maxSelections ?? 2,
+    };
+  } catch (error) {
+    console.warn("Error fetching Pick2 config; falling back to mock config.", error);
+    return fallback;
+  }
+}
+
+export async function updatePick2Config(partial: Partial<Pick2Config>): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase is not initialized. Cannot update Pick2 config.");
+  }
+
+  await setDoc(
+    doc(db, "app_config", "pick2"),
+    prepareUpdateData(partial as Record<string, unknown>),
+    { merge: true }
+  );
 }
 
 export async function setRecommendedPackage(packageIdOrNull: string | null): Promise<void> {

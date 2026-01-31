@@ -9,6 +9,10 @@ interface AddonItemProps {
   onView: () => void;
   isCompact?: boolean;
   textSize?: "normal" | "large" | "xl";
+  ctaAddLabel?: string;
+  ctaSelectedLabel?: string;
+  ariaAddLabel?: string;
+  ariaSelectedLabel?: string;
 }
 
 const PlusIcon: React.FC = () => (
@@ -22,21 +26,6 @@ const PlusIcon: React.FC = () => (
   </svg>
 );
 
-const CheckIcon: React.FC = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    className="w-5 h-5"
-  >
-    <path
-      fillRule="evenodd"
-      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
-
 export const AddonItem: React.FC<AddonItemProps> = ({
   item,
   basePrice,
@@ -45,6 +34,10 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   onView,
   isCompact = false,
   textSize = "normal",
+  ctaAddLabel,
+  ctaSelectedLabel,
+  ariaAddLabel,
+  ariaSelectedLabel,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -55,6 +48,10 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   };
 
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
+
+  const highlightsSource =
+    item.highlights && item.highlights.length > 0 ? item.highlights : item.points ?? [];
+  const highlights = highlightsSource.filter(Boolean).slice(0, 2);
 
   const nameClass = isCompact
     ? textSize === "xl"
@@ -82,46 +79,86 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   return (
     <div
-      className={`bg-gray-800 border border-gray-700 rounded-lg ${
-        isCompact ? "p-2" : "p-3"
-      } flex flex-col transition-shadow hover:shadow-md`}
+      className={`bg-gray-800 border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
+        isSelected ? "border-lux-gold/70 ring-1 ring-lux-gold/20" : "border-gray-700"
+      }`}
     >
       <div className="flex-grow">
-        <button
-          onClick={onView}
-          className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-blue-400 transition-colors w-full leading-snug clamp-2 break-words`}
-          aria-label={`Learn more about ${item.name}`}
-        >
-          {item.name}
-        </button>
-        {isDiscounted && (
-          <p
-            className={`${
-              isCompact ? "text-xs" : "text-[11px]"
-            } text-gray-400 line-through decoration-2 decoration-gray-500/60`}
+        <div className="flex items-start justify-between gap-3">
+          <button
+            type="button"
+            onClick={onView}
+            className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-lux-blue transition-colors w-full leading-snug clamp-2 break-words`}
+            aria-label={`Learn more about ${item.name}`}
           >
-            {formatPrice(basePrice)}
+            {item.name}
+          </button>
+
+          <div className="shrink-0 text-right">
+            {isDiscounted ? (
+              <p
+                className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-400 line-through decoration-2 decoration-gray-500/60`}
+              >
+                {formatPrice(basePrice)}
+              </p>
+            ) : null}
+            <p className={`${priceClass} text-gray-200 font-semibold`}>{formatPrice(item.price)}</p>
+          </div>
+        </div>
+
+        {item.description ? (
+          <p
+            className={`${isCompact ? "mt-1 text-xs" : "mt-1.5 text-[11px]"} text-gray-300/90 leading-snug clamp-2`}
+          >
+            {item.shortValue || item.description}
           </p>
-        )}
-        <p className={`${priceClass} text-gray-300`}>{formatPrice(item.price)}</p>
+        ) : null}
+
+        {highlights.length > 0 ? (
+          <ul className={`${isCompact ? "mt-2" : "mt-2.5"} space-y-1`}>
+            {highlights.map((point, idx) => (
+              <li
+                key={`${item.id}-highlight-${idx}`}
+                className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-300 flex gap-2`}
+              >
+                <span className="mt-[2px] inline-block h-1.5 w-1.5 rounded-full bg-lux-gold/80" />
+                <span className="min-w-0 clamp-2">{point}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {item.warranty ? (
+          <div className={`${isCompact ? "mt-2" : "mt-2.5"}`}>
+            <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200">
+              {item.warranty}
+            </span>
+          </div>
+        ) : null}
       </div>
       <div className={isCompact ? "mt-2" : "mt-3"}>
         <button
+          type="button"
           onClick={onToggle}
-          className={`w-full ${
-            isCompact ? "py-2 px-2" : "py-3 px-3"
-          } rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]
-            ${
-              isSelected
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-600 text-gray-200 hover:bg-blue-500 hover:text-white"
-            }
+          className={`w-full ${isCompact ? "py-2 px-2" : "py-3 px-3"} rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-2 min-h-touch
+            ${isSelected ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700" : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"}
           `}
+          aria-label={
+            isSelected
+              ? ariaSelectedLabel ?? `Remove ${item.name} from quote`
+              : ariaAddLabel ?? `Add ${item.name} to quote`
+          }
         >
-          <span key={isSelected ? "check" : "plus"} className="inline-block animate-icon-pop-in">
-            {isSelected ? <CheckIcon /> : <PlusIcon />}
-          </span>
-          {isSelected ? "Added" : "Add"}
+          {isSelected ? (
+            <span>{ctaSelectedLabel ?? "Added ✓"}</span>
+          ) : (
+            <>
+              <span className="inline-block animate-icon-pop-in">
+                <PlusIcon />
+              </span>
+              <span>{ctaAddLabel ?? "Add to Quote"}</span>
+            </>
+          )}
         </button>
       </div>
     </div>

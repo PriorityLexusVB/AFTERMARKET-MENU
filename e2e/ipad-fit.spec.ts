@@ -40,6 +40,9 @@ test.describe("iPad / kiosk fit", () => {
     expect(fits, "Selection bar should fit within viewport").toMatchObject({ ok: true });
 
     // Confirm add-ons can be opened without hiding package CTAs.
+    await expect(page.getByRole("button", { name: /open add-ons/i })).toBeVisible({
+      timeout: 10000,
+    });
     await page.getByRole("button", { name: /open add-ons/i }).click();
     await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
       timeout: 10000,
@@ -56,6 +59,38 @@ test.describe("iPad / kiosk fit", () => {
       return before === 0 && after === 0;
     });
     expect(scrollLocked).toBe(true);
+
+    // Confirm internal scroll happens only inside the add-ons list (when it overflows).
+    const list = page.getByTestId("addons-drawer-list");
+    await expect(list).toBeVisible({ timeout: 10000 });
+
+    const dims = await list.evaluate((el) => ({
+      sh: el.scrollHeight,
+      ch: el.clientHeight,
+      top: el.scrollTop,
+    }));
+
+    if (dims.sh > dims.ch + 2) {
+      await list.evaluate((el) => {
+        el.scrollTop = 250;
+      });
+      await expect
+        .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
+        .toBeGreaterThan(0);
+
+      const windowStillLocked = await page.evaluate(async () => {
+        const before = window.scrollY;
+        await new Promise((r) => setTimeout(r, 50));
+        const after = window.scrollY;
+        return before === 0 && after === 0;
+      });
+      expect(windowStillLocked).toBe(true);
+    } else {
+      await testInfo.attach("addons-list-note", {
+        body: "Add-Ons list did not overflow; scroll assertion skipped",
+        contentType: "text/plain",
+      });
+    }
 
     // Artifact screenshots for quick visual verification.
     await page.screenshot({ path: testInfo.outputPath("ipad-menu.png"), fullPage: false });

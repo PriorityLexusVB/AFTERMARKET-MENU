@@ -22,12 +22,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { db } from "../firebase";
-import type { AlaCarteOption, ProductFeature, PackageTier } from "../types";
+import type { AlaCarteOption, Pick2Config, ProductFeature, PackageTier } from "../types";
 import {
   updateFeature,
   upsertAlaCarteFromFeature,
   unpublishAlaCarteFromFeature,
   updateAlaCarteOption,
+  fetchPick2Config,
+  updatePick2Config,
   batchUpdateFeaturesPositions,
 } from "../data";
 import { FeatureForm } from "./FeatureForm";
@@ -96,6 +98,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const [pick2Config, setPick2Config] = useState<Pick2Config | null>(null);
+  const [pick2Enabled, setPick2Enabled] = useState(false);
+  const [pick2PriceInput, setPick2PriceInput] = useState("");
+  const [pick2TitleInput, setPick2TitleInput] = useState("");
+  const [pick2SubtitleInput, setPick2SubtitleInput] = useState("");
+  const [pick2ConfigError, setPick2ConfigError] = useState<string | null>(null);
+  const [isSavingPick2Config, setIsSavingPick2Config] = useState(false);
 
   // Drag-and-drop state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -229,6 +239,32 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
     fetchData();
   }, [fetchData, initialFeatures]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const config = await fetchPick2Config();
+        if (cancelled) return;
+        setPick2Config(config);
+        setPick2Enabled(Boolean(config.enabled));
+        setPick2PriceInput(String(config.price ?? ""));
+        setPick2TitleInput(config.title ?? "");
+        setPick2SubtitleInput(config.subtitle ?? "");
+        setPick2ConfigError(null);
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Failed to load Pick2 config", err);
+        setPick2Config(null);
+        setPick2ConfigError("Failed to load Pick2 config.");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setSelectedIds((prev) => {
@@ -1090,6 +1126,135 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     const isExpanded = expandedIds.has(feature.id);
     const duplicateMenuRef = useRef<HTMLDivElement>(null);
 
+    const canEditPick2Fields = Boolean(option?.isPublished);
+    const [pick2EligibleDraft, setPick2EligibleDraft] = useState<boolean>(
+      Boolean(option?.pick2Eligible)
+    );
+    const [pick2SortDraft, setPick2SortDraft] = useState<string>(
+      option?.pick2Sort !== undefined ? String(option.pick2Sort) : ""
+    );
+    const [pick2ShortValueDraft, setPick2ShortValueDraft] = useState<string>(
+      option?.shortValue ?? ""
+    );
+    const [pick2Highlight1Draft, setPick2Highlight1Draft] = useState<string>(
+      option?.highlights?.[0] ?? ""
+    );
+    const [pick2Highlight2Draft, setPick2Highlight2Draft] = useState<string>(
+      option?.highlights?.[1] ?? ""
+    );
+
+    useEffect(() => {
+      setPick2EligibleDraft(Boolean(option?.pick2Eligible));
+      setPick2SortDraft(option?.pick2Sort !== undefined ? String(option.pick2Sort) : "");
+      setPick2ShortValueDraft(option?.shortValue ?? "");
+      setPick2Highlight1Draft(option?.highlights?.[0] ?? "");
+      setPick2Highlight2Draft(option?.highlights?.[1] ?? "");
+    }, [
+      option?.pick2Eligible,
+      option?.pick2Sort,
+      option?.shortValue,
+      option?.highlights,
+      option?.highlights?.[0],
+      option?.highlights?.[1],
+    ]);
+
+    const savePick2Eligible = async (next: boolean) => {
+      if (!option?.isPublished) return;
+      const previous = Boolean(option.pick2Eligible);
+      setPick2EligibleDraft(next);
+      upsertOptionState(feature, { pick2Eligible: next });
+      clearRowError(feature.id);
+      try {
+        await updateAlaCarteOption(feature.id, { pick2Eligible: next });
+        markSaved(feature.id);
+      } catch (err) {
+        console.error("Failed to save pick2Eligible", err);
+        upsertOptionState(feature, { pick2Eligible: previous });
+        setPick2EligibleDraft(previous);
+        setRowErrorMessage(feature.id, "Failed to save Pick2 Eligible.");
+      }
+    };
+
+    const savePick2Sort = async (raw: string) => {
+      if (!option?.isPublished) return;
+      const trimmed = raw.trim();
+      const previous = option.pick2Sort;
+
+      if (!trimmed) {
+        upsertOptionState(feature, { pick2Sort: undefined });
+        clearRowError(feature.id);
+        try {
+          await updateAlaCarteOption(feature.id, { pick2Sort: undefined });
+          markSaved(feature.id);
+        } catch (err) {
+          console.error("Failed to clear pick2Sort", err);
+          upsertOptionState(feature, { pick2Sort: previous });
+          setPick2SortDraft(previous !== undefined ? String(previous) : "");
+          setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
+        }
+        return;
+      }
+
+      const parsed = Number(trimmed);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        setRowErrorMessage(feature.id, "Pick2 Sort must be a valid number (0 or greater).");
+        setPick2SortDraft(previous !== undefined ? String(previous) : "");
+        return;
+      }
+
+      upsertOptionState(feature, { pick2Sort: parsed });
+      clearRowError(feature.id);
+      try {
+        await updateAlaCarteOption(feature.id, { pick2Sort: parsed });
+        markSaved(feature.id);
+      } catch (err) {
+        console.error("Failed to save pick2Sort", err);
+        upsertOptionState(feature, { pick2Sort: previous });
+        setPick2SortDraft(previous !== undefined ? String(previous) : "");
+        setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
+      }
+    };
+
+    const savePick2ShortValue = async (raw: string) => {
+      if (!option?.isPublished) return;
+      const trimmed = raw.trim();
+      const next = trimmed ? trimmed : undefined;
+      const previous = option.shortValue;
+
+      upsertOptionState(feature, { shortValue: next });
+      clearRowError(feature.id);
+      try {
+        await updateAlaCarteOption(feature.id, { shortValue: next });
+        markSaved(feature.id);
+      } catch (err) {
+        console.error("Failed to save shortValue", err);
+        upsertOptionState(feature, { shortValue: previous });
+        setPick2ShortValueDraft(previous ?? "");
+        setRowErrorMessage(feature.id, "Failed to save Short Value.");
+      }
+    };
+
+    const savePick2Highlights = async (line1: string, line2: string) => {
+      if (!option?.isPublished) return;
+
+      const nextHighlights = [line1.trim(), line2.trim()].filter(Boolean).slice(0, 2);
+      const next = nextHighlights.length > 0 ? nextHighlights : undefined;
+      const previous = option.highlights;
+
+      upsertOptionState(feature, { highlights: next });
+      clearRowError(feature.id);
+      try {
+        await updateAlaCarteOption(feature.id, { highlights: next });
+        markSaved(feature.id);
+      } catch (err) {
+        console.error("Failed to save highlights", err);
+        upsertOptionState(feature, { highlights: previous });
+        setPick2Highlight1Draft(previous?.[0] ?? "");
+        setPick2Highlight2Draft(previous?.[1] ?? "");
+        setRowErrorMessage(feature.id, "Failed to save Highlights.");
+      }
+    };
+
     // Click-outside handler to close duplicate menu
     useEffect(() => {
       if (!showDuplicateMenu) return;
@@ -1312,6 +1477,106 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 )}
               </div>
             </div>
+
+            <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-gray-200 font-semibold">You Pick 2 (Pick2) Fields</p>
+                  {canEditPick2Fields ? (
+                    <p className="text-xs text-gray-500">
+                      These fields are stored on <span className="text-gray-400">ala_carte_options</span>.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Publish to A La Carte to edit Pick2 fields.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <div>
+                  <label className="flex items-center gap-2 text-sm text-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={pick2EligibleDraft}
+                      disabled={!canEditPick2Fields}
+                      onChange={(e) => savePick2Eligible(e.target.checked)}
+                    />
+                    <span>Pick2 Eligible</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={`pick2-sort-${feature.id}`}
+                    className="text-xs text-gray-400 block mb-1"
+                  >
+                    Pick2 Sort
+                  </label>
+                  <input
+                    id={`pick2-sort-${feature.id}`}
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    value={pick2SortDraft}
+                    disabled={!canEditPick2Fields}
+                    onChange={(e) => setPick2SortDraft(e.target.value)}
+                    onBlur={() => savePick2Sort(pick2SortDraft)}
+                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
+                    placeholder="(optional)"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={`pick2-shortvalue-${feature.id}`}
+                    className="text-xs text-gray-400 block mb-1"
+                  >
+                    Short Value (single line)
+                  </label>
+                  <input
+                    id={`pick2-shortvalue-${feature.id}`}
+                    type="text"
+                    value={pick2ShortValueDraft}
+                    disabled={!canEditPick2Fields}
+                    onChange={(e) => setPick2ShortValueDraft(e.target.value)}
+                    onBlur={() => savePick2ShortValue(pick2ShortValueDraft)}
+                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
+                    placeholder="e.g. $599"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-400 block mb-1">Highlights (up to 2 lines)</p>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={pick2Highlight1Draft}
+                      disabled={!canEditPick2Fields}
+                      onChange={(e) => setPick2Highlight1Draft(e.target.value)}
+                      onBlur={() =>
+                        savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)
+                      }
+                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
+                      placeholder="Highlight line 1"
+                    />
+                    <input
+                      type="text"
+                      value={pick2Highlight2Draft}
+                      disabled={!canEditPick2Fields}
+                      onChange={(e) => setPick2Highlight2Draft(e.target.value)}
+                      onBlur={() =>
+                        savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)
+                      }
+                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
+                      placeholder="Highlight line 2"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1469,6 +1734,168 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           ) : null}
         </div>
       ) : null}
+
+      <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
+        <div className="flex items-start justify-between flex-wrap gap-2">
+          <div>
+            <p className="text-sm text-gray-300 font-semibold">You Pick 2 Config</p>
+            <p className="text-xs text-gray-500">
+              Stored at <span className="text-gray-400">app_config/pick2</span>.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            {isSavingPick2Config ? <span className="text-blue-400">Saving...</span> : null}
+          </div>
+        </div>
+
+        {pick2ConfigError ? (
+          <p className="text-red-400 text-sm mt-2">{pick2ConfigError}</p>
+        ) : null}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="checkbox"
+                checked={pick2Enabled}
+                onChange={async (e) => {
+                  const next = e.target.checked;
+                  const prev = pick2Enabled;
+                  setPick2Enabled(next);
+                  setPick2Config((cfg) => (cfg ? { ...cfg, enabled: next } : cfg));
+                  setPick2ConfigError(null);
+                  setIsSavingPick2Config(true);
+                  try {
+                    await updatePick2Config({ enabled: next });
+                  } catch (err) {
+                    console.error("Failed to save Pick2 enabled", err);
+                    setPick2Enabled(prev);
+                    setPick2Config((cfg) => (cfg ? { ...cfg, enabled: prev } : cfg));
+                    setPick2ConfigError("Failed to save Pick2 enabled.");
+                  } finally {
+                    setIsSavingPick2Config(false);
+                  }
+                }}
+              />
+              <span>Enabled</span>
+            </label>
+          </div>
+
+          <div>
+            <label htmlFor="pick2-bundle-price" className="text-xs text-gray-400 block mb-1">
+              Bundle Price
+            </label>
+            <input
+              id="pick2-bundle-price"
+              type="number"
+              min="0"
+              step="1"
+              inputMode="numeric"
+              value={pick2PriceInput}
+              onChange={(e) => setPick2PriceInput(e.target.value)}
+              onBlur={async () => {
+                const trimmed = pick2PriceInput.trim();
+                if (!trimmed) {
+                  setPick2ConfigError("Bundle price is required.");
+                  setPick2PriceInput(pick2Config ? String(pick2Config.price) : "");
+                  return;
+                }
+
+                const parsed = Number(trimmed);
+                if (!Number.isFinite(parsed) || parsed < 0) {
+                  setPick2ConfigError("Enter a valid bundle price (0 or greater). ");
+                  setPick2PriceInput(pick2Config ? String(pick2Config.price) : "");
+                  return;
+                }
+
+                setPick2ConfigError(null);
+                setIsSavingPick2Config(true);
+                const prev = pick2Config?.price;
+                setPick2Config((cfg) => (cfg ? { ...cfg, price: parsed } : cfg));
+                try {
+                  await updatePick2Config({ price: parsed });
+                } catch (err) {
+                  console.error("Failed to save Pick2 price", err);
+                  if (prev !== undefined) {
+                    setPick2Config((cfg) => (cfg ? { ...cfg, price: prev } : cfg));
+                    setPick2PriceInput(String(prev));
+                  }
+                  setPick2ConfigError("Failed to save bundle price.");
+                } finally {
+                  setIsSavingPick2Config(false);
+                }
+              }}
+              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="pick2-title" className="text-xs text-gray-400 block mb-1">
+              Optional Title
+            </label>
+            <input
+              id="pick2-title"
+              type="text"
+              value={pick2TitleInput}
+              onChange={(e) => setPick2TitleInput(e.target.value)}
+              onBlur={async () => {
+                const trimmed = pick2TitleInput.trim();
+                const next = trimmed ? trimmed : undefined;
+                const prev = pick2Config?.title;
+
+                setPick2ConfigError(null);
+                setIsSavingPick2Config(true);
+                setPick2Config((cfg) => (cfg ? { ...cfg, title: next } : cfg));
+                try {
+                  await updatePick2Config({ title: next });
+                } catch (err) {
+                  console.error("Failed to save Pick2 title", err);
+                  setPick2Config((cfg) => (cfg ? { ...cfg, title: prev } : cfg));
+                  setPick2TitleInput(prev ?? "");
+                  setPick2ConfigError("Failed to save Pick2 title.");
+                } finally {
+                  setIsSavingPick2Config(false);
+                }
+              }}
+              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
+              placeholder={pick2Config?.title ?? "(optional)"}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="pick2-subtitle" className="text-xs text-gray-400 block mb-1">
+              Optional Subtitle
+            </label>
+            <input
+              id="pick2-subtitle"
+              type="text"
+              value={pick2SubtitleInput}
+              onChange={(e) => setPick2SubtitleInput(e.target.value)}
+              onBlur={async () => {
+                const trimmed = pick2SubtitleInput.trim();
+                const next = trimmed ? trimmed : undefined;
+                const prev = pick2Config?.subtitle;
+
+                setPick2ConfigError(null);
+                setIsSavingPick2Config(true);
+                setPick2Config((cfg) => (cfg ? { ...cfg, subtitle: next } : cfg));
+                try {
+                  await updatePick2Config({ subtitle: next });
+                } catch (err) {
+                  console.error("Failed to save Pick2 subtitle", err);
+                  setPick2Config((cfg) => (cfg ? { ...cfg, subtitle: prev } : cfg));
+                  setPick2SubtitleInput(prev ?? "");
+                  setPick2ConfigError("Failed to save Pick2 subtitle.");
+                } finally {
+                  setIsSavingPick2Config(false);
+                }
+              }}
+              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
+              placeholder={pick2Config?.subtitle ?? "(optional)"}
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-3 text-sm text-gray-300">
         <label className="flex items-center gap-2">

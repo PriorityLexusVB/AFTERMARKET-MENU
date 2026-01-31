@@ -54,6 +54,11 @@ export interface AlaCarteOption extends OrderableItem {
   imageUrl?: string;      // URL to main product image
   thumbnailUrl?: string;  // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string;      // URL to product video (optional)
+  // Pick2 fields
+  pick2Eligible?: boolean;
+  pick2Sort?: number;
+  shortValue?: string;
+  highlights?: string[];
   // Publishing fields
   sourceFeatureId?: string;  // Set to feature.id when published from a feature
   isPublished?: boolean;     // true/false; customer A La Carte filters on this
@@ -64,4 +69,12 @@ export interface PriceOverrides {
     price?: number;
     cost?: number;
   };
+}
+
+export interface Pick2Config {
+  enabled: boolean;
+  price: number;
+  title?: string;
+  subtitle?: string;
+  maxSelections?: number;
 }

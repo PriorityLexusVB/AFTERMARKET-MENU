@@ -15,6 +15,7 @@ interface SelectionDrawerProps {
   onShowAgreement?: () => void;
   variant?: "panel" | "bar";
   isCompact?: boolean;
+  barRef?: React.Ref<HTMLDivElement>;
 }
 
 const formatPrice = (price: number) =>
@@ -38,6 +39,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   onShowAgreement,
   variant = "panel",
   isCompact = false,
+  barRef,
 }) => {
   const showDiscountTotal = typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
 
@@ -53,6 +55,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   if (variant === "bar") {
     return (
       <div
+        ref={barRef}
         className={`am-selection-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden ${
           isCompact ? "am-selection-bar--compact" : ""
         }`}

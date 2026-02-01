@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { User, onAuthStateChanged, signOut } from "firebase/auth";
 import { Header } from "./components/Header";
 import { PackageSelector } from "./components/PackageSelector";
@@ -61,6 +61,8 @@ const App: React.FC = () => {
   // UI State
   const [currentView, setCurrentView] = useState<View>("menu");
   const hasShownPresentationRef = useRef(false);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const selectionBarRef = useRef<HTMLDivElement | null>(null);
   const [pendingPrint, setPendingPrint] = useState<null | {
     returnToMenu: boolean;
   }>(null);
@@ -256,78 +258,53 @@ const App: React.FC = () => {
     };
   }, [isIpadLandscape, currentView, isAdminView, isLoginView]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isLoading || typeof document === "undefined" || typeof window === "undefined") return;
     const shouldLock = currentView === "menu" && !isAdminView && !isLoginView;
     if (!shouldLock) return;
+
     const root = document.documentElement;
-    let header: Element | null = document.querySelector("header");
-    let selectionBar: Element | null = document.querySelector(".am-selection-bar");
-
     let resizeObserver: ResizeObserver | null = null;
-    let handleResize: (() => void) | null = null;
-    let observedHeader = false;
-    let observedSelectionBar = false;
 
-    const updateHeaderHeight = () => {
-      if (!header) {
-        header = document.querySelector("header");
-      }
-      if (!selectionBar) {
-        selectionBar = document.querySelector(".am-selection-bar");
+    const updateHeights = () => {
+      const headerEl = headerRef.current;
+      const barEl = selectionBarRef.current;
+
+      if (headerEl) {
+        const height = headerEl.getBoundingClientRect().height;
+        root.style.setProperty("--ipad-header-h", `${Math.round(height)}px`);
       }
 
-      if (resizeObserver && header && !observedHeader) {
-        resizeObserver.observe(header);
-        observedHeader = true;
-      }
-      if (resizeObserver && selectionBar && !observedSelectionBar) {
-        resizeObserver.observe(selectionBar);
-        observedSelectionBar = true;
-      }
-
-      if (header) {
-        const height = (header as HTMLElement).getBoundingClientRect().height;
-        root.style.setProperty("--ipad-header-h", `${height}px`);
-      }
-      const barHeight = selectionBar
-        ? (selectionBar as HTMLElement).getBoundingClientRect().height
-        : 170;
+      const barHeight = barEl ? barEl.getBoundingClientRect().height : 170;
       root.style.setProperty("--ipad-bottom-bar-h", `${Math.round(barHeight)}px`);
     };
 
-    updateHeaderHeight();
+    updateHeights();
+    const rafId = window.requestAnimationFrame(updateHeights);
 
-    const rafId = window.requestAnimationFrame(() => {
-      updateHeaderHeight();
-    });
+    const handleResize = () => {
+      updateHeights();
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
 
     if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
-        updateHeaderHeight();
+        updateHeights();
       });
-      // Observe elements lazily once they exist.
-      updateHeaderHeight();
-    } else {
-      handleResize = () => {
-        updateHeaderHeight();
-      };
-      window.addEventListener("resize", handleResize);
+      if (headerRef.current) resizeObserver.observe(headerRef.current);
+      if (selectionBarRef.current) resizeObserver.observe(selectionBarRef.current);
     }
 
     return () => {
       window.cancelAnimationFrame(rafId);
-      if (resizeObserver && header) {
-        resizeObserver.unobserve(header);
-      }
-      if (resizeObserver && selectionBar) {
-        resizeObserver.unobserve(selectionBar);
-      }
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
       if (resizeObserver) {
         resizeObserver.disconnect();
-      }
-      if (handleResize) {
-        window.removeEventListener("resize", handleResize);
       }
       root.style.removeProperty("--ipad-header-h");
       root.style.removeProperty("--ipad-bottom-bar-h");
@@ -1130,6 +1107,7 @@ const App: React.FC = () => {
         </div>
       ) : null}
       <Header
+        ref={headerRef}
         user={user}
         guestMode={guestMode}
         isDemoMode={isDemoMode}
@@ -1216,6 +1194,7 @@ const App: React.FC = () => {
                 onShowAgreement={handleShowAgreement}
                 variant="bar"
                 isCompact={enableNoScrollLayout}
+                barRef={selectionBarRef}
               />
             </>
           )}

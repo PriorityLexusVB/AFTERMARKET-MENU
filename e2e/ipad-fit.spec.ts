@@ -17,6 +17,11 @@ test.describe("iPad / kiosk fit", () => {
     const selectionBar = page.locator(".am-selection-bar").first();
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
+    const openAddonsButton = page.getByRole("button", { name: /open add-ons/i });
+    await expect(openAddonsButton).toBeVisible({ timeout: 10000 });
+    await expect(openAddonsButton).toContainText(/add-ons/i);
+    await expect(page.getByRole("button", { name: /close add-ons/i })).toHaveCount(0);
+
     // Ensure primary CTAs remain visible in locked no-scroll mode.
     const packageCards = page.getByTestId("package-card");
     await expect(packageCards).toHaveCount(3);
@@ -48,10 +53,7 @@ test.describe("iPad / kiosk fit", () => {
     expect(fits, "Selection bar should fit within viewport").toMatchObject({ ok: true });
 
     // Confirm add-ons can be opened without hiding package CTAs.
-    await expect(page.getByRole("button", { name: /open add-ons/i })).toBeVisible({
-      timeout: 10000,
-    });
-    await page.getByRole("button", { name: /open add-ons/i }).click();
+    await openAddonsButton.click();
     await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
       timeout: 10000,
     });

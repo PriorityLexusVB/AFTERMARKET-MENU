@@ -162,7 +162,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
 
           <aside
             className={`relative h-full min-h-0 flex flex-col transition-[width] duration-300 ease-out ${
-              isAddonDrawerOpen ? "w-[320px]" : "w-[44px]"
+              isAddonDrawerOpen ? "w-[320px]" : "w-[56px]"
             }`}
             aria-label="Add-ons"
           >
@@ -190,11 +190,11 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAddonDrawerOpen(true)}
-                className="absolute inset-0 z-10 bg-gray-800/70 hover:bg-gray-800/85 border border-gray-700 rounded-lg text-gray-200 flex items-center justify-center"
+                className="absolute inset-0 z-10 bg-gray-800/85 hover:bg-gray-800/95 border border-gray-600 rounded-lg text-white flex items-center justify-center"
                 aria-label="Open add-ons"
                 title="Open add-ons"
               >
-                <span className="text-xs uppercase tracking-[0.35em] rotate-90">Add-Ons</span>
+                <span className="text-[11px] uppercase tracking-[0.35em] [writing-mode:vertical-rl]">Add-Ons</span>
               </button>
             )}
           </aside>

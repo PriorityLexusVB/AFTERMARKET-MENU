@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { User } from "firebase/auth";
 
 const SettingsIcon: React.FC = () => (
@@ -33,21 +33,28 @@ interface HeaderProps {
   showPresentationButton?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  user,
-  guestMode,
-  isDemoMode = false,
-  hasPricingOverrides = false,
-  onOpenSettings,
-  onLogout,
-  onToggleAdminView,
-  isAdminView,
-  onPrint,
-  onShowPresentation,
-  showPresentationButton = false,
-}) => {
-  return (
-    <header className="am-app-header bg-lux-bg1/80 backdrop-blur-sm py-4 border-b border-lux-border/60 sticky top-0 z-header">
+export const Header = forwardRef<HTMLElement, HeaderProps>(
+  (
+    {
+      user,
+      guestMode,
+      isDemoMode = false,
+      hasPricingOverrides = false,
+      onOpenSettings,
+      onLogout,
+      onToggleAdminView,
+      isAdminView,
+      onPrint,
+      onShowPresentation,
+      showPresentationButton = false,
+    },
+    ref
+  ) => {
+    return (
+      <header
+        ref={ref}
+        className="am-app-header bg-lux-bg1/80 backdrop-blur-sm py-4 border-b border-lux-border/60 sticky top-0 z-header"
+      >
       <div className="am-app-header-inner container mx-auto px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="am-app-header-brand text-center sm:text-left">
           <h1 className="am-app-header-title text-3xl sm:text-4xl font-bold tracking-widest font-teko text-lux-textStrong">
@@ -118,6 +125,9 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
-    </header>
-  );
-};
+      </header>
+    );
+  }
+);
+
+Header.displayName = "Header";

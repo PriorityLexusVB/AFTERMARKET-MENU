@@ -4,6 +4,8 @@
 
 Use a locked, no-scroll page with internal scrolling only in the list regions.
 
+- Paper-mode relies on `--ipad-header-h` and `--ipad-bottom-bar-h` (measured from the header and selection bar) to size the no-scroll container.
+
 ### Add-Ons drawer (PackageSelector + AddonSelector)
 
 - Parent drawer container must fill available height:

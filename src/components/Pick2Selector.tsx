@@ -79,13 +79,17 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     ? `${selectedCount}/${maxSelections} ✓`
     : `${selectedCount}/${maxSelections}`;
 
+  const headerWrapperClass = isCompact
+    ? "sticky top-0 z-10 -mx-2 px-2 pt-2 pb-2 bg-gray-900/80 backdrop-blur-sm"
+    : "sticky top-0 z-10 -mx-4 px-4 pt-4 pb-3 bg-gray-900/80 backdrop-blur-sm";
+
   return (
     <div
       className={`bg-gray-800/50 border border-gray-700 rounded-xl shadow-lg ${
         isCompact ? "p-2" : "p-4"
       } h-full min-h-0 flex flex-col ${className ?? ""}`}
     >
-      <div className="shrink-0">
+      <header className={headerWrapperClass}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3
@@ -96,7 +100,8 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
               You Pick 2
             </h3>
             <p className={`${isCompact ? "mt-0.5 text-xs" : "mt-1 text-sm"} text-gray-300/90`}>
-              Bundle price: <span className="font-semibold text-gray-100">{formatPrice(bundlePrice)}</span>
+              Bundle price:{" "}
+              <span className="font-semibold text-gray-100">{formatPrice(bundlePrice)}</span>
             </p>
           </div>
 
@@ -122,7 +127,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
             {blockedMessage}
           </div>
         ) : null}
-      </div>
+      </header>
 
       <div
         className={`${isCompact ? "mt-2 space-y-2" : "mt-3 space-y-3"} flex-grow pr-2 min-h-0 overflow-y-auto ios-scroll scrollbar-luxury`}

@@ -39,10 +39,15 @@ test.describe("Surface Pro fit guardrails", () => {
     expect(fits, "Selection bar should fit within viewport").toMatchObject({ ok: true });
 
     // Key CTAs visible.
-    await expect(page.getByText("Investment").first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: /select plan/i }).first()).toBeVisible({
-      timeout: 10000,
-    });
+    const packageCards = page.getByTestId("package-card");
+    await expect(packageCards).toHaveCount(3);
+    for (let i = 0; i < (await packageCards.count()); i += 1) {
+      const card = packageCards.nth(i);
+      await expect(card.getByText("Investment")).toBeVisible({ timeout: 10000 });
+      await expect(card.getByRole("button", { name: /select plan/i })).toBeVisible({
+        timeout: 10000,
+      });
+    }
     await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
       timeout: 10000,
     });
@@ -55,6 +60,38 @@ test.describe("Surface Pro fit guardrails", () => {
     await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
       timeout: 10000,
     });
+    await expect(selectionBar).toBeVisible({ timeout: 10000 });
+
+    const list = page.getByTestId("addons-drawer-list");
+    await expect(list).toBeVisible({ timeout: 10000 });
+
+    const dims = await list.evaluate((el) => ({
+      sh: el.scrollHeight,
+      ch: el.clientHeight,
+      top: el.scrollTop,
+    }));
+
+    if (dims.sh > dims.ch + 2) {
+      await list.evaluate((el) => {
+        el.scrollTop = 250;
+      });
+      await expect
+        .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
+        .toBeGreaterThan(0);
+
+      const windowStillLocked = await page.evaluate(async () => {
+        const before = window.scrollY;
+        await new Promise((r) => setTimeout(r, 50));
+        const after = window.scrollY;
+        return before === 0 && after === 0;
+      });
+      expect(windowStillLocked).toBe(true);
+    } else {
+      await testInfo.attach("addons-list-note", {
+        body: "Add-Ons list did not overflow; scroll assertion skipped",
+        contentType: "text/plain",
+      });
+    }
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
     await page.getByRole("button", { name: /close add-ons/i }).click();
     await expect(selectionBar).toBeVisible({ timeout: 10000 });

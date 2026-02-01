@@ -18,11 +18,15 @@ test.describe("iPad / kiosk fit", () => {
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     // Ensure primary CTAs remain visible in locked no-scroll mode.
-    await expect(page.locator('button:has-text("Select Plan")')).toHaveCount(3);
-    await expect(page.getByText("Investment").first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: /select plan/i }).first()).toBeVisible({
-      timeout: 10000,
-    });
+    const packageCards = page.getByTestId("package-card");
+    await expect(packageCards).toHaveCount(3);
+    for (let i = 0; i < (await packageCards.count()); i += 1) {
+      const card = packageCards.nth(i);
+      await expect(card.getByText("Investment")).toBeVisible({ timeout: 10000 });
+      await expect(card.getByRole("button", { name: /select plan/i })).toBeVisible({
+        timeout: 10000,
+      });
+    }
     await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
       timeout: 10000,
     });
@@ -51,7 +55,14 @@ test.describe("iPad / kiosk fit", () => {
     await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.locator('button:has-text("Select Plan")')).toHaveCount(3);
+    await expect(packageCards).toHaveCount(3);
+    for (let i = 0; i < (await packageCards.count()); i += 1) {
+      const card = packageCards.nth(i);
+      await expect(card.getByText("Investment")).toBeVisible({ timeout: 10000 });
+      await expect(card.getByRole("button", { name: /select plan/i })).toBeVisible({
+        timeout: 10000,
+      });
+    }
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     // Ensure scrolling is effectively disabled in paper-mode.

@@ -76,13 +76,19 @@ test.describe("Pick2 flow", () => {
     expect(totalAfterBlocked).toBe(totalAfter2);
 
     // Swap: remove one, then select a different item.
-    await list.getByRole("button", { name: /Remove .* from Pick 2/i }).first().click();
+    await list
+      .getByRole("button", { name: /Remove .* from Pick 2/i })
+      .first()
+      .click();
     await expect(page.getByRole("status")).toHaveCount(0);
 
     if (extraSelectLabel) {
       await list.getByRole("button", { name: extraSelectLabel }).click();
     } else {
-      await list.getByRole("button", { name: /Select .* for Pick 2/i }).first().click();
+      await list
+        .getByRole("button", { name: /Select .* for Pick 2/i })
+        .first()
+        .click();
     }
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("✓");
 
@@ -100,6 +106,11 @@ test.describe("Pick2 flow", () => {
 
     await page.getByRole("button", { name: /you pick 2/i }).click();
     await page.waitForSelector("text=Bundle price:", { timeout: 10000 });
+
+    await expect(page.getByTestId("selection-drawer-bar")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
+      timeout: 10000,
+    });
 
     const scrollLocked = await page.evaluate(async () => {
       const before = window.scrollY;

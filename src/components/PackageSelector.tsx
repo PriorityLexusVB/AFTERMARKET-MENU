@@ -133,8 +133,8 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
 
     return (
       <>
-        <div className={`flex min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
-          <div className="flex-1 min-w-0 min-h-0">
+        <div className={`flex h-full min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
+          <div className="flex-1 min-w-0 min-h-0 h-full">
             <div className={`${packageGridClasses} min-h-0`}>
               {packages.map((pkg) => (
                 <PackageCard
@@ -161,14 +161,14 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           </div>
 
           <aside
-            className={`relative min-h-0 transition-[width] duration-300 ease-out ${
+            className={`relative h-full min-h-0 flex flex-col transition-[width] duration-300 ease-out ${
               isAddonDrawerOpen ? "w-[320px]" : "w-[44px]"
             }`}
             aria-label="Add-ons"
           >
             {/* Drawer contents */}
             <div
-              className={`h-full min-h-0 ${
+              className={`h-full min-h-0 flex flex-col ${
                 isAddonDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none"
               } transition-opacity duration-200`}
             >

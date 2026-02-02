@@ -13,6 +13,11 @@ interface AddonItemProps {
   ctaSelectedLabel?: string;
   ariaAddLabel?: string;
   ariaSelectedLabel?: string;
+  variant?: "default" | "pick2";
+  cardTestId?: string;
+  ctaTestId?: string;
+  isCtaDisabled?: boolean;
+  priceLabel?: string;
 }
 
 const PlusIcon: React.FC = () => (
@@ -38,6 +43,11 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   ctaSelectedLabel,
   ariaAddLabel,
   ariaSelectedLabel,
+  variant = "default",
+  cardTestId,
+  ctaTestId,
+  isCtaDisabled = false,
+  priceLabel,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -50,8 +60,15 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
   const highlightsSource =
-    item.highlights && item.highlights.length > 0 ? item.highlights : item.points ?? [];
+    item.highlights && item.highlights.length > 0 ? item.highlights : (item.points ?? []);
   const highlights = highlightsSource.filter(Boolean).slice(0, 2);
+
+  const description =
+    variant === "pick2"
+      ? item.shortValue || item.description
+      : item.description
+        ? item.shortValue || item.description
+        : undefined;
 
   const nameClass = isCompact
     ? textSize === "xl"
@@ -82,6 +99,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
       className={`bg-gray-800 border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
         isSelected ? "border-lux-gold/70 ring-1 ring-lux-gold/20" : "border-gray-700"
       }`}
+      data-testid={cardTestId}
     >
       <div className="flex-grow">
         <div className="flex items-start justify-between gap-3">
@@ -102,15 +120,22 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                 {formatPrice(basePrice)}
               </p>
             ) : null}
+            {variant === "pick2" ? (
+              <p
+                className={`${isCompact ? "text-[10px]" : "text-[11px]"} text-gray-400 uppercase tracking-[0.2em]`}
+              >
+                {priceLabel ?? "Value"}
+              </p>
+            ) : null}
             <p className={`${priceClass} text-gray-200 font-semibold`}>{formatPrice(item.price)}</p>
           </div>
         </div>
 
-        {item.description ? (
+        {description ? (
           <p
             className={`${isCompact ? "mt-1 text-xs" : "mt-1.5 text-[11px]"} text-gray-300/90 leading-snug clamp-2`}
           >
-            {item.shortValue || item.description}
+            {description}
           </p>
         ) : null}
 
@@ -140,14 +165,21 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         <button
           type="button"
           onClick={onToggle}
+          disabled={isCtaDisabled}
           className={`w-full ${isCompact ? "py-2 px-2" : "py-3 px-3"} rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-2 min-h-touch
-            ${isSelected ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700" : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"}
+            ${
+              isSelected
+                ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700"
+                : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"
+            }
+            ${isCtaDisabled && !isSelected ? "opacity-60 cursor-not-allowed hover:bg-lux-gold" : ""}
           `}
           aria-label={
             isSelected
-              ? ariaSelectedLabel ?? `Remove ${item.name} from quote`
-              : ariaAddLabel ?? `Add ${item.name} to quote`
+              ? (ariaSelectedLabel ?? `Remove ${item.name} from quote`)
+              : (ariaAddLabel ?? `Add ${item.name} to quote`)
           }
+          data-testid={ctaTestId}
         >
           {isSelected ? (
             <span>{ctaSelectedLabel ?? "Added ✓"}</span>

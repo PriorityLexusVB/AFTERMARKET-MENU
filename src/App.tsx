@@ -1027,6 +1027,8 @@ const App: React.FC = () => {
                 onToggle={handleTogglePick2Item}
                 onView={handleViewDetail}
                 bundlePrice={pick2BundlePrice}
+                title={pick2Config?.title}
+                subtitle={pick2Config?.subtitle}
                 isCompact={enableCompactPick2Layout}
                 textSize={guestTextSize}
                 className={enableCompactPick2Layout ? "h-full min-h-0" : undefined}

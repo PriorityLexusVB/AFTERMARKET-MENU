@@ -17,10 +17,11 @@ const getSelectionTotal = async (page: import("@playwright/test").Page) => {
 };
 
 const getPick2BundlePrice = async (page: import("@playwright/test").Page) => {
-  // Pick2Selector renders: "Bundle price: $X".
-  const line = page.locator("text=Bundle price:").first();
-  await expect(line).toBeVisible({ timeout: 10000 });
-  const raw = await line.innerText();
+  const header = page.getByTestId("pick2-header");
+  await expect(header).toBeVisible({ timeout: 10000 });
+  const priceLine = page.getByTestId("pick2-price");
+  await expect(priceLine).toBeVisible({ timeout: 10000 });
+  const raw = await priceLine.innerText();
   return parseUsd(raw);
 };
 
@@ -37,7 +38,8 @@ test.describe("Pick2 flow", () => {
     await expect(pick2Tab).toBeVisible({ timeout: 10000 });
     await pick2Tab.click();
 
-    await page.waitForSelector("text=Bundle price:", { timeout: 10000 });
+    await page.waitForSelector("text=Any 2 for", { timeout: 10000 });
+    await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
 
     const bundlePrice = await getPick2BundlePrice(page);
 
@@ -52,22 +54,22 @@ test.describe("Pick2 flow", () => {
 
     // Select first item: bundle not complete -> total unchanged.
     await selectButtons.nth(0).click();
-    await expect(page.getByRole("status")).toHaveCount(0);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("1/2 selected");
     const totalAfter1 = await getSelectionTotal(page);
     expect(totalAfter1).toBe(totalBefore);
 
     // Select second item: bundle completes -> total increases by bundle price once.
     await selectButtons.nth(1).click();
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("✓");
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("2/2 selected");
 
     const totalAfter2 = await getSelectionTotal(page);
     expect(totalAfter2 - totalBefore).toBe(bundlePrice);
 
-    // Attempt third selection: blocked.
+    // Attempt third selection: blocked (CTA disabled) and message visible.
     const extraSelect = list.getByRole("button", { name: /Select .* for Pick 2/i }).first();
     const extraSelectLabel = await extraSelect.getAttribute("aria-label");
     await extraSelect.scrollIntoViewIfNeeded();
-    await extraSelect.click();
+    await expect(extraSelect).toBeDisabled();
     await expect(page.getByRole("status")).toContainText(
       "You’ve selected 2 — remove one to swap.",
       { timeout: 2000 }
@@ -80,7 +82,6 @@ test.describe("Pick2 flow", () => {
       .getByRole("button", { name: /Remove .* from Pick 2/i })
       .first()
       .click();
-    await expect(page.getByRole("status")).toHaveCount(0);
 
     if (extraSelectLabel) {
       await list.getByRole("button", { name: extraSelectLabel }).click();
@@ -90,7 +91,7 @@ test.describe("Pick2 flow", () => {
         .first()
         .click();
     }
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("✓");
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("2/2 selected");
 
     const totalAfterSwap = await getSelectionTotal(page);
     expect(totalAfterSwap).toBe(totalAfter2);
@@ -105,7 +106,7 @@ test.describe("Pick2 flow", () => {
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
     await page.getByRole("button", { name: /you pick 2/i }).click();
-    await page.waitForSelector("text=Bundle price:", { timeout: 10000 });
+    await page.waitForSelector("text=Any 2 for", { timeout: 10000 });
 
     await expect(page.getByTestId("selection-drawer-bar")).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
@@ -160,7 +161,7 @@ test.describe("Pick2 flow", () => {
     await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
 
     await page.getByRole("button", { name: /you pick 2/i }).click();
-    await page.waitForSelector("text=Bundle price:", { timeout: 10000 });
+    await page.waitForSelector("text=Any 2 for", { timeout: 10000 });
 
     const metrics = await page.evaluate(() => {
       const el = document.documentElement;

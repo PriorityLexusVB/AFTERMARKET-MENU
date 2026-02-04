@@ -34,6 +34,7 @@
     "test:e2e:update": "playwright test --update-snapshots",
     "test:e2e:install": "playwright install chromium",
     "typecheck": "tsc --noEmit",
+    "healthcheck": "npm run lint && npm run typecheck && npm run test:run && npm run test:e2e",
     "import-data": "tsx scripts/import-mock-data.ts",
     "migrate:feature-positions": "tsx scripts/migrate/add-feature-position-connector.ts",
     "migrate:packages:remove-featureids": "tsx scripts/migrate/remove-package-featureIds.ts",

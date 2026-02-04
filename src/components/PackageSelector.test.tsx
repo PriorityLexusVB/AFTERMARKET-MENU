@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { PackageSelector } from "./PackageSelector";
-import { createMockFeature, createMockPackageTier, render, screen } from "../test/test-utils";
+import {
+  createMockAlaCarteOption,
+  createMockFeature,
+  createMockPackageTier,
+  render,
+  screen,
+} from "../test/test-utils";
 import userEvent from "@testing-library/user-event";
 
 describe("PackageSelector layout", () => {
@@ -23,6 +29,8 @@ describe("PackageSelector layout", () => {
       }),
     ];
 
+    const addonItems = [createMockAlaCarteOption({ id: "addon-1", name: "Wheel Protection" })];
+
     render(
       <PackageSelector
         packages={packages}
@@ -30,7 +38,10 @@ describe("PackageSelector layout", () => {
         selectedPackage={null}
         onSelectPackage={() => {}}
         onViewFeature={() => {}}
-        addonColumn={<div data-testid="addon-column">Addons</div>}
+        addonItems={addonItems}
+        selectedAddons={[]}
+        onToggleAddon={() => {}}
+        onViewAddon={() => {}}
       />
     );
 
@@ -38,7 +49,7 @@ describe("PackageSelector layout", () => {
     expect(grid.className).toContain("grid-cols-1");
     expect(grid.className).toContain("md:grid-cols-2");
     expect(grid.className).toContain("lg:grid-cols-4");
-    expect(screen.getByTestId("addon-column")).toBeInTheDocument();
+    expect(screen.getByText("Add-Ons")).toBeInTheDocument();
   });
 
   it("shows magnify control in iPad layout and opens a magnified modal", async () => {
@@ -61,6 +72,8 @@ describe("PackageSelector layout", () => {
       }),
     ];
 
+    const addonItems = [createMockAlaCarteOption({ id: "addon-1", name: "Wheel Protection" })];
+
     render(
       <PackageSelector
         packages={packages}
@@ -68,7 +81,10 @@ describe("PackageSelector layout", () => {
         selectedPackage={null}
         onSelectPackage={() => {}}
         onViewFeature={() => {}}
-        addonColumn={<div data-testid="addon-column">Addons</div>}
+        addonItems={addonItems}
+        selectedAddons={[]}
+        onToggleAddon={() => {}}
+        onViewAddon={() => {}}
         isIpadLandscape={true}
       />
     );

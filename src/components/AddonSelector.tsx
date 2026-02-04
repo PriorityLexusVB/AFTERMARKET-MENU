@@ -11,6 +11,8 @@ interface AddonSelectorProps {
   className?: string;
   isCompact?: boolean;
   textSize?: "normal" | "large" | "xl";
+  showHeader?: boolean;
+  variant?: "panel" | "drawer";
 }
 
 export const AddonSelector: React.FC<AddonSelectorProps> = ({
@@ -22,6 +24,8 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
   className,
   isCompact = false,
   textSize = "normal",
+  showHeader = true,
+  variant = "panel",
 }) => {
   const selectedCount = selectedItems.length;
 
@@ -41,30 +45,33 @@ export const AddonSelector: React.FC<AddonSelectorProps> = ({
     ? "sticky top-0 z-10 -mx-2 px-2 pt-2 pb-2 bg-gray-900/80 backdrop-blur-sm"
     : "sticky top-0 z-10 -mx-4 px-4 pt-4 pb-3 bg-gray-900/80 backdrop-blur-sm";
 
-  return (
-    <div
-      className={`bg-gray-800/50 border border-gray-700 rounded-xl shadow-lg ${isCompact ? "p-2" : "p-4"} h-full min-h-0 flex flex-col ${
-        className ?? ""
-      }`}
-    >
-      <div className="flex flex-col h-full min-h-0">
-        <header className={headerWrapperClass}>
-          <h3
-            className={`${headerClass} font-teko font-bold tracking-wider ${
-              isCompact ? "text-lux-gold text-shadow-sm" : "text-gray-200"
-            } ${isCompact ? "mb-2" : "mb-4"} text-center`}
-          >
-            Add-Ons
-          </h3>
+  const containerClass =
+    variant === "drawer"
+      ? `bg-transparent border-0 shadow-none ${isCompact ? "p-0" : "p-0"}`
+      : `bg-gray-800/50 border border-gray-700 rounded-xl shadow-lg ${isCompact ? "p-2" : "p-4"}`;
 
-          {items.length > 0 ? (
-            <div className={`${isCompact ? "mb-2" : "mb-3"} text-center`}>
-              <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-300">
-                {selectedCount} selected
-              </span>
-            </div>
-          ) : null}
-        </header>
+  return (
+    <div className={`${containerClass} h-full min-h-0 flex flex-col ${className ?? ""}`}>
+      <div className="flex flex-col h-full min-h-0">
+        {showHeader ? (
+          <header className={headerWrapperClass}>
+            <h3
+              className={`${headerClass} font-teko font-bold tracking-wider ${
+                isCompact ? "text-lux-gold text-shadow-sm" : "text-gray-200"
+              } ${isCompact ? "mb-2" : "mb-4"} text-center`}
+            >
+              Add-Ons
+            </h3>
+
+            {items.length > 0 ? (
+              <div className={`${isCompact ? "mb-2" : "mb-3"} text-center`}>
+                <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-300">
+                  {selectedCount} selected
+                </span>
+              </div>
+            ) : null}
+          </header>
+        ) : null}
 
         <div
           data-testid="addons-drawer-list"

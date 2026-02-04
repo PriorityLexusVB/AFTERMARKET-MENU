@@ -5,7 +5,6 @@ import { PackageSelector } from "./components/PackageSelector";
 import { AlaCarteSelector } from "./components/AlaCarteSelector";
 import { FeatureModal } from "./components/FeatureModal";
 import { CustomPackageBuilder } from "./components/CustomPackageBuilder";
-import { AddonSelector } from "./components/AddonSelector";
 import { Pick2Selector } from "./components/Pick2Selector";
 import { SettingsModal } from "./components/SettingsModal";
 import { SelectionDrawer } from "./components/SelectionDrawer";
@@ -530,6 +529,15 @@ const App: React.FC = () => {
       .filter((item): item is AlaCarteOption => Boolean(item));
   }, [pick2SelectedIds, displayAlaCarteById]);
 
+  const pick2SummaryText = useMemo(() => {
+    if (!pick2Enabled) return undefined;
+    if (pick2SelectedItems.length === 0) return `0/${pick2MaxSelections}`;
+    if (pick2SelectedItems.length < pick2MaxSelections) {
+      return `${pick2SelectedItems.length}/${pick2MaxSelections}`;
+    }
+    return pick2SelectedItems.map((item) => item.name).join(" + ");
+  }, [pick2Enabled, pick2SelectedItems, pick2MaxSelections]);
+
   const pick2BundleActive = pick2Enabled && pick2SelectedItems.length === pick2MaxSelections;
   const pick2BundleCost = useMemo(() => {
     if (!pick2BundleActive) return 0;
@@ -933,19 +941,13 @@ const App: React.FC = () => {
               onSelectPackage={handleSelectPackage}
               onViewFeature={handleViewDetail}
               basePackagePricesById={basePackagePricesById}
+              addonItems={mainPageAddons}
+              selectedAddons={customPackageItems}
+              onToggleAddon={handleToggleAlaCarteItem}
+              onViewAddon={handleViewDetail}
+              baseAddonPricesById={baseAddonPricesById}
+              pick2Summary={pick2SummaryText}
               textSize={guestTextSize}
-              addonColumn={
-                <AddonSelector
-                  items={mainPageAddons}
-                  selectedItems={customPackageItems}
-                  onToggleItem={handleToggleAlaCarteItem}
-                  onViewItem={handleViewDetail}
-                  basePricesById={baseAddonPricesById}
-                  className="h-full min-h-0"
-                  isCompact={enableNoScrollLayout}
-                  textSize={guestTextSize}
-                />
-              }
               gridClassName={enableNoScrollLayout ? "items-stretch h-full" : "items-stretch"}
               isIpadLandscape={enableNoScrollLayout}
             />
@@ -1184,6 +1186,7 @@ const App: React.FC = () => {
                 }
                 customItems={displayCustomPackageItems}
                 pick2={pick2Selection}
+                pick2Summary={pick2SummaryText}
                 totalPrice={totalPrice}
                 baseTotalPrice={baseTotalPrice}
                 basePackagePricesById={basePackagePricesById}

@@ -14,6 +14,7 @@ interface PackageCardProps {
   isCompact?: boolean;
   isMagnified?: boolean;
   textSize?: "normal" | "large" | "xl";
+  pick2Summary?: string;
 }
 
 const MagnifyIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -77,6 +78,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   isCompact = false,
   isMagnified = false,
   textSize = "normal",
+  pick2Summary,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -123,7 +125,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
-  const displayedPackageFeatures = includedPackageFeatures;
+  const maxFeatureCount = isCompact ? 6 : 7;
+  const displayedPackageFeatures = isMagnified
+    ? includedPackageFeatures
+    : includedPackageFeatures.slice(0, maxFeatureCount);
+  const hasMoreFeatures = includedPackageFeatures.length > displayedPackageFeatures.length;
 
   const CompactDivider: React.FC<{ connector: "AND" | "OR" }> = ({ connector }) => {
     if (connector === "AND") {
@@ -182,13 +188,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         } flex items-start justify-between`}
       >
         <div className={`am-package-title-block ${isCompact ? "space-y-0.5" : "space-y-1"}`}>
-          <p
-            className={`uppercase tracking-[0.28em] text-left text-shadow-sm ${
-              isCompact
-                ? "text-xs font-semibold text-lux-textMuted"
-                : "text-xs font-semibold text-lux-textMuted"
-            }`}
-          >
+          <p className={`am-text-label text-left text-shadow-sm font-semibold text-lux-textMuted`}>
             Plan
           </p>
           <h3
@@ -291,6 +291,23 @@ export const PackageCard: React.FC<PackageCardProps> = ({
               </div>
             );
           })}
+          {hasMoreFeatures && onMagnify ? (
+            <div
+              className={`mt-2 text-center ${isCompact ? "text-[11px]" : "text-xs"} text-lux-textMuted`}
+            >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMagnify();
+                }}
+                className="underline underline-offset-4 hover:text-white transition-colors"
+                aria-label="View all package details"
+              >
+                View all details
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -299,19 +316,21 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           isCompact ? "am-package-footer-compact" : "am-package-footer"
         }`}
       >
+        {pick2Summary ? (
+          <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-200">
+            <span className="text-gray-400 uppercase tracking-[0.2em]">Pick-2:</span>
+            <span className="ml-2 font-semibold">{pick2Summary}</span>
+          </div>
+        ) : null}
         <div className="lux-price-plaque">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-lux-textMuted">Investment</p>
+            <p className="am-text-label text-lux-textMuted">Investment</p>
             {isDiscounted && (
               <p className="text-sm text-lux-textMuted line-through decoration-2 decoration-lux-textMuted/60">
                 {formatPrice(basePrice)}
               </p>
             )}
-            <p
-              className={`${
-                isCompact ? "text-xl" : "text-4xl sm:text-5xl"
-              } font-teko text-lux-textStrong`}
-            >
+            <p className="am-text-price font-teko text-lux-textStrong">
               {formatPrice(packageInfo.price)}
             </p>
           </div>

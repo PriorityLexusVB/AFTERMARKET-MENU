@@ -355,7 +355,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <p className="text-2xl font-teko text-white">{formatMoney(currentTotal)}</p>
                       <p className="text-xs text-gray-500 mt-1">
                         Standard: {formatMoney(standardTotal)}
-                        <span className="mx-2 text-gray-600"></span>
+                        <span className="mx-2 text-gray-600" aria-hidden="true">
+                          &bull;
+                        </span>
                         Delta:
                         <span
                           className={`ml-1 font-semibold ${
@@ -445,8 +447,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <div className="min-w-0">
                               <p className="text-white font-semibold truncate">{item.name}</p>
                               <p className="text-xs text-gray-500 mt-1">
-                                Standard: {formatMoney(item.standardPrice)}  Current:{" "}
-                                {formatMoney(effectivePrice)}  Delta:{" "}
+                                Standard: {formatMoney(item.standardPrice)}
+                                <span className="mx-2 text-gray-600" aria-hidden="true">
+                                  &bull;
+                                </span>
+                                Current: {formatMoney(effectivePrice)}
+                                <span className="mx-2 text-gray-600" aria-hidden="true">
+                                  &bull;
+                                </span>
+                                Delta:{" "}
                                 <span
                                   className={`font-semibold ${
                                     deltaPrice > 0

@@ -131,15 +131,11 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   }, [magnifiedPackage]);
 
   const baseGrid = isIpadLandscape
-    ? hasAddonColumn
-      ? "am-packages-grid-compact"
-      : "am-packages-grid-compact"
+    ? "am-packages-grid-compact"
     : hasAddonColumn
       ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
       : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8";
-  const gridClasses = gridClassName
-    ? `${baseGrid} stagger-children ${gridClassName}`
-    : `${baseGrid} stagger-children`;
+  const gridClasses = `${baseGrid} stagger-children${gridClassName ? ` ${gridClassName}` : ""}`;
 
   if (isIpadLandscape && hasAddonColumn) {
     const outerClasses = gridClassName ? `stagger-children ${gridClassName}` : "stagger-children";

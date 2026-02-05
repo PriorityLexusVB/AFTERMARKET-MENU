@@ -188,7 +188,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         } flex items-start justify-between`}
       >
         <div className={`am-package-title-block ${isCompact ? "space-y-0.5" : "space-y-1"}`}>
-          <p className={`am-text-label text-left text-shadow-sm font-semibold text-lux-textMuted`}>
+          <p className="am-text-label text-left text-shadow-sm font-semibold text-lux-textMuted">
             Plan
           </p>
           <h3
@@ -351,7 +351,14 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             }
           `}
         >
-          {isSelected ? " Selected" : "Select Plan"}
+          {isSelected ? (
+            <span className="inline-flex items-center gap-1">
+              <span aria-hidden="true">&#10003;</span>
+              <span>Selected</span>
+            </span>
+          ) : (
+            "Select Plan"
+          )}
         </button>
       </div>
     </div>

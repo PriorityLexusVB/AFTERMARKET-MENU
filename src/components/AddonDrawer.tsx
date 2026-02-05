@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
 interface AddonDrawerProps {
   isOpen: boolean;
@@ -15,6 +15,23 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
   selectedCount,
   children,
 }) => {
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lastOpenerRef = useRef<HTMLElement | null>(null);
+
+  const handleOpen = () => {
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement) {
+        lastOpenerRef.current = activeElement;
+      }
+    }
+    onOpen();
+  };
+
+  const handleClose = () => {
+    onClose();
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -31,11 +48,23 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus();
+      return;
+    }
+
+    if (lastOpenerRef.current) {
+      lastOpenerRef.current.focus();
+      lastOpenerRef.current = null;
+    }
+  }, [isOpen]);
+
   return (
     <>
       <button
         type="button"
-        onClick={onOpen}
+        onClick={handleOpen}
         className="fixed right-3 top-[calc(env(safe-area-inset-top,0px)+120px)] z-40 bg-gray-900/90 border border-gray-700 text-white rounded-xl px-3 py-2 text-xs uppercase tracking-[0.3em] hover:bg-gray-900 min-h-[44px]"
         aria-label="Open add-ons"
         title="Open add-ons"
@@ -48,14 +77,14 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             style={{ bottom: "var(--ipad-bottom-bar-h, 170px)" }}
-            onClick={onClose}
+            onClick={handleClose}
             role="button"
             tabIndex={0}
             aria-label="Dismiss add-ons"
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                onClose();
+                handleClose();
               }
             }}
           />
@@ -72,12 +101,13 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="min-h-[44px] min-w-[44px] rounded-xl border border-gray-600 text-white/90 hover:text-white hover:border-white/40"
+                  onClick={handleClose}
+                  ref={closeButtonRef}
+                  className="min-h-[44px] min-w-[44px] rounded-xl border border-gray-600 text-white/90 hover:text-white hover:border-white/40 flex items-center justify-center text-lg"
                   aria-label="Close add-ons"
                   title="Close"
                 >
-                  
+                  <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <div className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-300">
@@ -90,7 +120,7 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
             </div>
 
             <footer className="sticky bottom-0 z-10 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] pt-3 border-t border-gray-700 bg-gray-900/95">
-              <button type="button" onClick={onClose} className="btn-lux-primary w-full">
+              <button type="button" onClick={handleClose} className="btn-lux-primary w-full">
                 Done
               </button>
             </footer>

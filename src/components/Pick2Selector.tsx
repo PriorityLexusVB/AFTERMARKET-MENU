@@ -205,7 +205,9 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                 data-testid="pick2-selected-chip"
               >
                 <span className="max-w-[160px] truncate">{item.name}</span>
-                <span className="text-[11px] text-gray-300"></span>
+                <span className="text-[11px] text-gray-300" aria-hidden="true">
+                  &times;
+                </span>
               </button>
             ))
           )}
@@ -247,7 +249,6 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   isCompact={isCompact}
                   textSize={textSize}
                   ctaAddLabel="Select"
-                  ctaSelectedLabel="Added "
                   ariaAddLabel={`Select ${item.name} for Pick 2`}
                   ariaSelectedLabel={`Remove ${item.name} from Pick 2`}
                   variant="pick2"

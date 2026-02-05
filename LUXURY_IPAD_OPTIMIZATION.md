@@ -144,7 +144,7 @@ h1, h2, h3, .font-teko {
 ```css
 /* Enhanced type scale for iPad readability */
 .text-scale-ipad {
-  /* Base: 16px → 18px on iPad */
+  /* Base: 16px  18px on iPad */
   --text-base: 1.125rem;
 
   /* Headings scaled for impact */
@@ -831,7 +831,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             }
           `}
         >
-          {isSelected ? '✓ Selected' : 'Select Plan'}
+          {isSelected ? ' Selected' : 'Select Plan'}
         </button>
       </div>
     </div>
@@ -1256,10 +1256,10 @@ Priority components:
 
 | Device | Portrait | Landscape | Notes |
 |--------|----------|-----------|-------|
-| iPad 10.2" | ✓ | ✓ | Most common |
-| iPad Air 11" | ✓ | ✓ | Growing adoption |
-| iPad Pro 11" | ✓ | ✓ | Sales professional |
-| iPad Pro 12.9" | ✓ | ✓ | Premium experience |
+| iPad 10.2" |  |  | Most common |
+| iPad Air 11" |  |  | Growing adoption |
+| iPad Pro 11" |  |  | Sales professional |
+| iPad Pro 12.9" |  |  | Premium experience |
 
 ### Interaction Testing
 

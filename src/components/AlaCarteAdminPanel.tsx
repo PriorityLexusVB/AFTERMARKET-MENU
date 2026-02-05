@@ -600,7 +600,7 @@ export const AlaCarteAdminPanel: React.FC<AlaCarteAdminPanelProps> = ({
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h4 className="text-xl font-teko tracking-wider text-gray-300">A La Carte Options</h4>
           <p className="text-sm text-gray-500">
-            Drag to reorder or move between lanes • Click AND/OR to toggle
+            Drag to reorder or move between lanes  Click AND/OR to toggle
           </p>
         </div>
         {isLoading && <p className="text-gray-400">Loading A La Carte options...</p>}

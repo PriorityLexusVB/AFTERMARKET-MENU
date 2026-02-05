@@ -6,8 +6,8 @@
 ## Current State Assessment
 
 ### Completed Changes
-1. ✅ Column order updated: Elite → Platinum → Gold (was Gold → Elite → Platinum)
-2. ✅ "Yellow thing" warning banner removed (empty package column warning)
+1.  Column order updated: Elite  Platinum  Gold (was Gold  Elite  Platinum)
+2.  "Yellow thing" warning banner removed (empty package column warning)
 
 ### Areas Analyzed for Quick-Win Improvements
 
@@ -25,11 +25,11 @@
 - Unassigned features appear below the grid, easy to lose track of
 
 **Potential Quick Wins (Low Risk):**
-- ✨ **Add visual hierarchy:** Make Popular Add-ons column visually distinct (different background shade)
-- ✨ **Improve empty state:** Add tier-specific placeholders ("No Elite features yet - drag items here")
-- ✨ **Make "Show unassigned" more prominent:** Convert to a larger toggle switch with count badge
-- ✨ **Add sticky column headers:** Keep column titles visible when scrolling long lists
-- ⚠️ **Deferred (medium risk):** Quick filter/search for features (requires state management)
+-  **Add visual hierarchy:** Make Popular Add-ons column visually distinct (different background shade)
+-  **Improve empty state:** Add tier-specific placeholders ("No Elite features yet - drag items here")
+-  **Make "Show unassigned" more prominent:** Convert to a larger toggle switch with count badge
+-  **Add sticky column headers:** Keep column titles visible when scrolling long lists
+-  **Deferred (medium risk):** Quick filter/search for features (requires state management)
 
 #### 2. Tab Navigation
 **Current State:**
@@ -43,8 +43,8 @@
 - Tab labels are text-only (no icons)
 
 **Potential Quick Wins (Low Risk):**
-- ✨ **Add count badge to Package Features tab:** Show total features and unassigned count
-- ⚠️ **Deferred (requires testing):** Add icons to tabs for visual scanning
+-  **Add count badge to Package Features tab:** Show total features and unassigned count
+-  **Deferred (requires testing):** Add icons to tabs for visual scanning
 
 #### 3. Informational Banner (A La Carte)
 **Current State:**
@@ -57,7 +57,7 @@
 - Only shows on Package Features tab, not contextual
 
 **Potential Quick Wins (Low Risk):**
-- ✅ **Already optimal:** Banner is well-designed, dismissible, and informational
+-  **Already optimal:** Banner is well-designed, dismissible, and informational
 - No changes needed
 
 #### 4. Feature Cards
@@ -71,9 +71,9 @@
 - No quick preview of feature details
 
 **Potential Quick Wins (Low Risk):**
-- ✨ **Improve position visibility:** Larger, more prominent position indicators
-- ⚠️ **Deferred (medium risk):** Hide price, show other metadata (isPublished, etc.)
-- ⚠️ **Deferred (requires modal):** Add quick view icon for feature details
+-  **Improve position visibility:** Larger, more prominent position indicators
+-  **Deferred (medium risk):** Hide price, show other metadata (isPublished, etc.)
+-  **Deferred (requires modal):** Add quick view icon for feature details
 
 #### 5. Bulk Actions
 **Current State:**
@@ -85,8 +85,8 @@
 - No way to select multiple features at once
 
 **Potential Quick Wins (Low Risk):**
-- ⚠️ **Deferred (complex):** Multi-select with checkbox + bulk move dropdown
-- ⚠️ **Deferred (complex):** Bulk connector toggle (change multiple AND to OR)
+-  **Deferred (complex):** Multi-select with checkbox + bulk move dropdown
+-  **Deferred (complex):** Bulk connector toggle (change multiple AND to OR)
 
 #### 6. Accessibility
 **Current State:**
@@ -100,9 +100,9 @@
 - Color contrast on some elements could be improved
 
 **Potential Quick Wins (Low Risk):**
-- ✨ **Improve focus states:** Add more prominent focus rings on interactive elements
-- ✨ **Add keyboard shortcuts guide:** Tooltip or help icon explaining keyboard navigation
-- ⚠️ **Deferred (requires testing):** Improve color contrast ratios
+-  **Improve focus states:** Add more prominent focus rings on interactive elements
+-  **Add keyboard shortcuts guide:** Tooltip or help icon explaining keyboard navigation
+-  **Deferred (requires testing):** Improve color contrast ratios
 
 ## Recommended Quick-Win Implementation Plan
 
@@ -161,9 +161,9 @@
 ## Implementation Guardrails
 
 ### Before Making Changes:
-- ✅ All tests pass (unit + integration)
-- ✅ Build succeeds without warnings
-- ✅ TypeScript type checking passes
+-  All tests pass (unit + integration)
+-  Build succeeds without warnings
+-  TypeScript type checking passes
 
 ### During Implementation:
 - Make one improvement at a time
@@ -185,7 +185,7 @@
   - Check localStorage persistence
 
 ### Visual Inspection Checklist:
-- [ ] Column order is Elite → Platinum → Gold → Popular Add-ons
+- [ ] Column order is Elite  Platinum  Gold  Popular Add-ons
 - [ ] Empty columns show helpful messages
 - [ ] Position indicators are visible and readable
 - [ ] Focus states are prominent during keyboard navigation

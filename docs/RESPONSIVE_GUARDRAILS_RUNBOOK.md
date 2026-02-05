@@ -1,10 +1,10 @@
 # Responsive Guardrails Runbook (E2E)
 
-This runbook defines and verifies the responsive layout contracts for AFTERMARKET-MENU across iPad “paper mode” and desktop kiosk-style viewports.
+This runbook defines and verifies the responsive layout contracts for AFTERMARKET-MENU across iPad "paper mode" and desktop kiosk-style viewports.
 
 ## What we guarantee
 
-### iPad “Paper Mode” (Safari landscape behavior)
+### iPad "Paper Mode" (Safari landscape behavior)
 
 On iPad Pro landscape, the app must behave like a single-screen printed menu:
 
@@ -25,26 +25,26 @@ Source of truth: [docs/IPAD_PAPER_MODE_GUARDRAILS.md](IPAD_PAPER_MODE_GUARDRAILS
 
 | Device / contract | Viewport (px) | URL params | Tests |
 |---|---:|---|---|
-| iPad Pro 12.9 landscape (paper mode) | 1366×1024 | `/?forceIpad=1&demo=1` | `e2e/ipad-12_9-paper-mode.spec.ts` |
-| iPad Pro 12.9 landscape (A La Carte pager) | 1366×1024 | `/?forceIpad=1&demo=1` | `e2e/ipad-alacarte-pager.spec.ts` |
-| iPad Pro 11 landscape (existing fit + scroll lock) | 1194×834 | `/?forceIpad=1&demo=1` | `e2e/ipad-fit.spec.ts` |
-| Surface-ish landscape (guardrails) | 1368×912 | `/?demo=1` | `e2e/surface-pro-fit.spec.ts` + `e2e/responsive-guardrails.spec.ts` |
-| Desktop baseline (guardrails) | 1440×900 | `/?demo=1` | `e2e/responsive-guardrails.spec.ts` |
-| Desktop baseline (guardrails) | 1920×1080 | `/?demo=1` | `e2e/responsive-guardrails.spec.ts` |
+| iPad Pro 12.9 landscape (paper mode) | 13661024 | `/?forceIpad=1&demo=1` | `e2e/ipad-12_9-paper-mode.spec.ts` |
+| iPad Pro 12.9 landscape (A La Carte pager) | 13661024 | `/?forceIpad=1&demo=1` | `e2e/ipad-alacarte-pager.spec.ts` |
+| iPad Pro 11 landscape (existing fit + scroll lock) | 1194834 | `/?forceIpad=1&demo=1` | `e2e/ipad-fit.spec.ts` |
+| Surface-ish landscape (guardrails) | 1368912 | `/?demo=1` | `e2e/surface-pro-fit.spec.ts` + `e2e/responsive-guardrails.spec.ts` |
+| Desktop baseline (guardrails) | 1440900 | `/?demo=1` | `e2e/responsive-guardrails.spec.ts` |
+| Desktop baseline (guardrails) | 19201080 | `/?demo=1` | `e2e/responsive-guardrails.spec.ts` |
 
 ## Acceptance criteria per spec
 
 ### e2e/ipad-12_9-paper-mode.spec.ts
 
-- Viewport 1366×1024, `/?forceIpad=1&demo=1`
+- Viewport 13661024, `/?forceIpad=1&demo=1`
 - `ipad-landscape-lock` is applied to both `html` and `body`
-- `.am-selection-bar` is visible and fits within viewport (±4px tolerance)
+- `.am-selection-bar` is visible and fits within viewport (4px tolerance)
 - Page scroll is disabled (`window.scrollY` remains `0` after `scrollTo`)
 - Key CTAs visible (reuses existing selectors/roles from existing E2E tests)
 
 ### e2e/ipad-alacarte-pager.spec.ts
 
-- Viewport 1366×1024, `/?forceIpad=1&demo=1`
+- Viewport 13661024, `/?forceIpad=1&demo=1`
 - Navigate to **A La Carte Options**
 - Pager UI is present using the exact component contract from [src/components/AlaCarteSelector.tsx](../src/components/AlaCarteSelector.tsx):
   - A `Page` label
@@ -57,9 +57,9 @@ Source of truth: [docs/IPAD_PAPER_MODE_GUARDRAILS.md](IPAD_PAPER_MODE_GUARDRAILS
 
 ### e2e/surface-pro-fit.spec.ts
 
-- Viewport 1368×912, `/?demo=1`
+- Viewport 1368912, `/?demo=1`
 - No horizontal overflow (`scrollWidth <= clientWidth + 2`)
-- `.am-selection-bar` visible and within viewport (±4px tolerance)
+- `.am-selection-bar` visible and within viewport (4px tolerance)
 - Print + Finalize CTAs visible
 - Open/close Add-Ons works and does not hide the selection bar
 - No-scroll layout is enforced at kiosk viewports (attempted scroll keeps `scrollY = 0`)
@@ -116,7 +116,7 @@ Use WebKit smoke when:
 
 ## Stop conditions / regression rules
 
-- If a responsive guardrail test fails, do **not** “fix” it by changing UI/UX/styling casually.
+- If a responsive guardrail test fails, do **not** "fix" it by changing UI/UX/styling casually.
 - Do **not** touch `src/**`, CSS, or runtime logic in this guardrails PR unless a new/updated test clearly demonstrates a real regression and the fix is minimal and targeted.
 - If a production fix is needed and non-trivial, stop and open a separate PR with focused scope and review.
 

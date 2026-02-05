@@ -968,7 +968,7 @@ function generateMarkdownReport(report: BranchHealthReport): string {
     lines.push("|--------|--------|--------|---------|");
 
     for (const action of report.actions) {
-      const resultEmoji = action.success ? "✅" : "❌";
+      const resultEmoji = action.success ? "" : "";
       lines.push(
         `| \`${action.branch}\` | ${action.action} | ${resultEmoji} | ${action.message} |`
       );
@@ -1038,32 +1038,32 @@ function generateMarkdownReport(report: BranchHealthReport): string {
 function getStatusEmoji(status: MergeStatus): string {
   switch (status) {
     case "merged":
-      return "✅";
+      return "";
     case "unmerged":
-      return "🔀";
+      return "";
     case "in-conflict":
-      return "⚠️";
+      return "";
     case "protected":
-      return "🔒";
+      return "";
     case "ignored":
-      return "⏭️";
+      return "";
   }
 }
 
 function getActionEmoji(action: ProposedAction): string {
   switch (action) {
     case "keep":
-      return "📌";
+      return "";
     case "open-pr":
-      return "📝";
+      return "";
     case "update-pr":
-      return "🔄";
+      return "";
     case "auto-merge":
-      return "🚀";
+      return "";
     case "delete":
-      return "🗑️";
+      return "";
     case "review":
-      return "👀";
+      return "";
   }
 }
 
@@ -1118,7 +1118,7 @@ Options:
     }
   }
 
-  console.log("🔍 Branch Health Analysis");
+  console.log(" Branch Health Analysis");
   console.log("=".repeat(50));
 
   // Load configuration
@@ -1154,14 +1154,14 @@ Options:
   if (config.reporting.json) {
     const jsonPath = path.join(outputDir, "branch-health-report.json");
     fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
-    console.log(`\n📄 JSON report saved: ${jsonPath}`);
+    console.log(`\n JSON report saved: ${jsonPath}`);
   }
 
   if (config.reporting.markdown) {
     const mdPath = path.join(outputDir, "branch-health-report.md");
     const markdown = generateMarkdownReport(report);
     fs.writeFileSync(mdPath, markdown);
-    console.log(`📄 Markdown report saved: ${mdPath}`);
+    console.log(` Markdown report saved: ${mdPath}`);
   }
 
   // Post to issue if configured
@@ -1171,14 +1171,14 @@ Options:
       const markdown = generateMarkdownReport(report);
       const posted = await postIssueComment(ctx, config.reporting.issueNumber, markdown);
       if (posted) {
-        console.log(`💬 Report posted to issue #${config.reporting.issueNumber}`);
+        console.log(` Report posted to issue #${config.reporting.issueNumber}`);
       }
     }
   }
 
   // Print summary
   console.log("\n" + "=".repeat(50));
-  console.log("📊 Summary");
+  console.log(" Summary");
   console.log("=".repeat(50));
   console.log(`Total branches: ${report.summary.totalBranches}`);
   console.log(`Active: ${report.summary.activeBranches}`);
@@ -1195,7 +1195,7 @@ Options:
     console.log(`Failed: ${actions.length - successful}`);
   }
 
-  console.log("\n✅ Branch health analysis complete");
+  console.log("\n Branch health analysis complete");
 
   // Set outputs for GitHub Actions
   const githubOutput = process.env["GITHUB_OUTPUT"];

@@ -212,7 +212,7 @@ describe("AdminPanel", () => {
     await renderAdminPanel();
 
     // The help text should mention cross-column drag and connector toggle
-    expect(screen.getByText(/Drag using the ≡ handle/i)).toBeInTheDocument();
+    expect(screen.getByText(/Drag using the handle/i)).toBeInTheDocument();
     expect(
       screen.getByText(/AND\/OR controls the connector to the NEXT item below/)
     ).toBeInTheDocument();
@@ -239,7 +239,7 @@ describe("AdminPanel", () => {
       expect(screen.getByText("Features by Column")).toBeInTheDocument();
     });
 
-    // Check that all column headers are present with new tier order (Elite → Platinum → Gold)
+    // Check that all column headers are present with new tier order (Elite  Platinum  Gold)
     expect(screen.getByText(/Column\s+2/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+3/)).toBeInTheDocument();
     expect(screen.getByText(/Column\s+1/)).toBeInTheDocument();

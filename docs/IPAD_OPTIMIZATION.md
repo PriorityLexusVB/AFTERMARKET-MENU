@@ -123,7 +123,7 @@ Potential areas for further optimization:
 
 ## Paper Mode (No-Scroll) guardrails
 
-The iPad Safari landscape menu has a strict “paper mode” requirement: the menu view must not scroll.
+The iPad Safari landscape menu has a strict "paper mode" requirement: the menu view must not scroll.
 
 For the authoritative implementation notes, regression causes, and a test checklist, see:
 

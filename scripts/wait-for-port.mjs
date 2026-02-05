@@ -36,7 +36,7 @@ async function main() {
     const ok = await tryConnectOnce();
     if (ok) {
       const elapsed = Date.now() - startedAt;
-      process.stdout.write(`✓ ${host}:${port} is reachable (${elapsed}ms)\n`);
+      process.stdout.write(` ${host}:${port} is reachable (${elapsed}ms)\n`);
       return;
     }
 
@@ -51,6 +51,6 @@ async function main() {
 
 main().catch((err) => {
   const message = err instanceof Error ? err.message : String(err);
-  console.error(`❌ ${message}`);
+  console.error(` ${message}`);
   process.exit(1);
 });

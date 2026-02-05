@@ -77,7 +77,7 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
                   aria-label="Close add-ons"
                   title="Close"
                 >
-                  ✕
+                  
                 </button>
               </div>
               <div className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-300">

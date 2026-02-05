@@ -23,11 +23,11 @@ These are legitimate dependency update PRs that should be reviewed and merged if
 
 | PR                                                                 | Title                               | Packages        | Action                     |
 | ------------------------------------------------------------------ | ----------------------------------- | --------------- | -------------------------- |
-| [#42](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/42) | Bump @vitejs/plugin-react           | 4.7.0 → 5.1.1   | **Review & Merge**         |
+| [#42](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/42) | Bump @vitejs/plugin-react           | 4.7.0  5.1.1   | **Review & Merge**         |
 | [#43](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/43) | Bump react and @types/react         | Multi-package   | **Review & Merge**         |
 | [#44](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/44) | Bump react-dom and @types/react-dom | Multi-package   | **Review & Merge**         |
-| [#46](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/46) | Bump express                        | 4.21.2 → 5.1.0  | **Review & Merge** (major) |
-| [#47](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/47) | Bump tailwindcss                    | 3.4.18 → 4.1.17 | **Review & Merge** (major) |
+| [#46](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/46) | Bump express                        | 4.21.2  5.1.0  | **Review & Merge** (major) |
+| [#47](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/47) | Bump tailwindcss                    | 3.4.18  4.1.17 | **Review & Merge** (major) |
 
 > **Note**: PRs #46 (Express) and #47 (Tailwind CSS) are major version bumps. Test thoroughly before merging.
 
@@ -81,10 +81,10 @@ These will be automatically deleted when you merge their respective PRs:
 
 ### Step 1: Close Duplicate PRs
 
-1. Go to [PR #48](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/48) → Click "Close pull request"
-2. Go to [PR #49](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/49) → Click "Close pull request"
-3. Go to [PR #50](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/50) → Click "Close pull request"
-4. Go to [PR #51](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/51) → Click "Close pull request"
+1. Go to [PR #48](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/48)  Click "Close pull request"
+2. Go to [PR #49](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/49)  Click "Close pull request"
+3. Go to [PR #50](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/50)  Click "Close pull request"
+4. Go to [PR #51](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/51)  Click "Close pull request"
 
 ### Step 2: Delete Outdated Branches
 
@@ -104,8 +104,8 @@ Review each Dependabot PR, run tests, and merge if safe:
 1. [PR #42](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/42) - @vitejs/plugin-react
 2. [PR #43](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/43) - react and @types/react
 3. [PR #44](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/44) - react-dom and @types/react-dom
-4. [PR #46](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/46) - express ⚠️ Major version
-5. [PR #47](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/47) - tailwindcss ⚠️ Major version
+4. [PR #46](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/46) - express  Major version
+5. [PR #47](https://github.com/PriorityLexusVB/AFTERMARKET-MENU/pull/47) - tailwindcss  Major version
 
 ---
 
@@ -119,9 +119,9 @@ Review each Dependabot PR, run tests, and merge if safe:
 
 After completing these actions, the repository will have:
 
-- ✅ Clean branch list (only `main` + active Dependabot branches)
-- ✅ No duplicate or conflicting PRs
-- ✅ Updated Dependabot configuration on main
+-  Clean branch list (only `main` + active Dependabot branches)
+-  No duplicate or conflicting PRs
+-  Updated Dependabot configuration on main
 
 ---
 

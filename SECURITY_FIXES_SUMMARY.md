@@ -13,9 +13,9 @@ PR #114 adds PWA (Progressive Web App) installability for iPad Safari, including
 - iOS-specific meta tags
 
 ### Initial Status
-- ✅ CI Workflow: **PASSING** (after several iterations)
-- ✅ CodeQL Workflow: **PASSING** (after several iterations)
-- ⚠️ **NEW CodeQL Security Alerts**: Identified after fixes were applied
+-  CI Workflow: **PASSING** (after several iterations)
+-  CodeQL Workflow: **PASSING** (after several iterations)
+-  **NEW CodeQL Security Alerts**: Identified after fixes were applied
 
 ## Issues Identified
 

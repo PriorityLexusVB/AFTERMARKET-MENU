@@ -1,4 +1,4 @@
-# UX / UI Optional Features Review — 2026-01-27
+# UX / UI Optional Features Review - 2026-01-27
 
 This document is a **meticulous checklist** of UX/UI features discussed in this chat, what was added upstream, what we reverted/disabled to preserve the exact iPad layout, and what optional features you may want to enable.
 
@@ -17,15 +17,15 @@ This document is a **meticulous checklist** of UX/UI features discussed in this 
 - What changed locally:
   - Package cards are tappable as a whole (role/button + click + keyboard).
   - Feature-name clicks still open the feature modal (stopPropagation).
-  - “Select Plan” still works (stopPropagation to avoid double-toggle).
+  - "Select Plan" still works (stopPropagation to avoid double-toggle).
 - Relevant files:
   - `src/components/PackageCard.tsx`
 
-### 3) “Recommended” should be an option available in Product Hub
+### 3) "Recommended" should be an option available in Product Hub
 
 - Status: **IMPLEMENTED LOCALLY (not committed yet)**
 - What changed locally:
-  - Product Hub now displays the same Recommended package radio controls (it reuses AdminPanel’s existing `setRecommendedPackage` flow).
+  - Product Hub now displays the same Recommended package radio controls (it reuses AdminPanel's existing `setRecommendedPackage` flow).
 - Relevant files:
   - `src/components/ProductHub.tsx`
   - `src/components/AdminPanel.tsx`
@@ -41,11 +41,11 @@ This document is a **meticulous checklist** of UX/UI features discussed in this 
 - Relevant files:
   - `src/components/PackageSelector.tsx`
 
-## Upstream UX features that were introduced (and your “options”)
+## Upstream UX features that were introduced (and your "options")
 
-### A) “Recommended” badge on customer cards
+### A) "Recommended" badge on customer cards
 
-- Upstream introduced support for `isRecommended` / `is_recommended` fields and a “Recommended” chip.
+- Upstream introduced support for `isRecommended` / `is_recommended` fields and a "Recommended" chip.
 - Current local approach:
   - Keep the underlying data fields (so Admin/ProductHub can set it).
   - **Do not show the badge by default** on the customer menu unless we explicitly enable it.
@@ -60,7 +60,7 @@ This document is a **meticulous checklist** of UX/UI features discussed in this 
 
 ### C) Build badge toggle
 
-- Upstream added a build SHA/time badge (useful during rollout) that’s pointer-events none.
+- Upstream added a build SHA/time badge (useful during rollout) that's pointer-events none.
 - File: `src/App.tsx`
 
 ### D) Drawer behavior options (right add-ons panel)

@@ -208,11 +208,11 @@ describe("ProductHub drag-and-drop interface", () => {
     
     // Wait for dropdown menu to appear
     await waitFor(() => {
-      expect(within(card).queryByText("→ Gold")).toBeInTheDocument();
+      expect(within(card).queryByRole("button", { name: /Gold/i })).toBeInTheDocument();
     }, { timeout: 1000 });
     
-    // Click "→ Gold" option in dropdown menu
-    const goldOption = within(card).getByText("→ Gold");
+    // Click " Gold" option in dropdown menu
+    const goldOption = within(card).getByRole("button", { name: /Gold/i });
     await userEvent.click(goldOption);
     
     await waitFor(() => expect(mockAddDoc).toHaveBeenCalled());

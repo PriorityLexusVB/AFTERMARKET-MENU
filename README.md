@@ -4,19 +4,19 @@ This is an interactive digital menu for customers to explore and select vehicle 
 
 ## Features
 
-- 🎨 **Interactive Package Selection** - Browse and select from curated protection packages
-- 🛒 **A La Carte Options** - Build custom packages with individual options
-- 📊 **Analytics Tracking** - Comprehensive Firebase Analytics integration
-- 📸 **Image Upload** - Firebase Storage integration for product images
-- 🔒 **Admin Panel** - Secure admin interface for managing products
-- ✅ **Type-Safe** - Full TypeScript with strict mode enabled
-- 🧪 **Tested** - Comprehensive test coverage with Vitest
-- 📱 **Responsive** - Mobile-friendly design with Tailwind CSS
-- ⭐ **Popular Add-Ons** come from A La Carte Featured (Column 4)
+-  **Interactive Package Selection** - Browse and select from curated protection packages
+-  **A La Carte Options** - Build custom packages with individual options
+-  **Analytics Tracking** - Comprehensive Firebase Analytics integration
+-  **Image Upload** - Firebase Storage integration for product images
+-  **Admin Panel** - Secure admin interface for managing products
+-  **Type-Safe** - Full TypeScript with strict mode enabled
+-  **Tested** - Comprehensive test coverage with Vitest
+-  **Responsive** - Mobile-friendly design with Tailwind CSS
+-  **Popular Add-Ons** come from A La Carte Featured (Column 4)
 
 ## Install on iPad
 
-Open the site in Safari on iPad → tap **Share** → **Add to Home Screen** → launch from the new icon for a full-screen experience.
+Open the site in Safari on iPad  tap **Share**  **Add to Home Screen**  launch from the new icon for a full-screen experience.
 
 ## Local Development Setup
 
@@ -610,17 +610,17 @@ npm run dev
 
 ```
 src/
-├── components/       # React components
-│   ├── *.tsx        # Component files
-│   └── *.test.tsx   # Component tests
-├── test/            # Test utilities
-│   ├── setup.ts     # Test setup and global mocks
-│   ├── test-utils.tsx # Custom render and mock factories
-│   └── vitest.d.ts  # Type declarations for tests
-├── analytics.ts     # Firebase Analytics utilities
-├── firebase.ts      # Firebase initialization
-├── schemas.ts       # Zod validation schemas
-├── types.ts         # TypeScript type definitions
-├── data.ts          # Firestore data access layer
-└── App.tsx          # Main application component
+ components/       # React components
+    *.tsx        # Component files
+    *.test.tsx   # Component tests
+ test/            # Test utilities
+    setup.ts     # Test setup and global mocks
+    test-utils.tsx # Custom render and mock factories
+    vitest.d.ts  # Type declarations for tests
+ analytics.ts     # Firebase Analytics utilities
+ firebase.ts      # Firebase initialization
+ schemas.ts       # Zod validation schemas
+ types.ts         # TypeScript type definitions
+ data.ts          # Firestore data access layer
+ App.tsx          # Main application component
 ```

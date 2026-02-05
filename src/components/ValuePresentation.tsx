@@ -620,7 +620,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                     The Coverage Reality
                   </h3>
                   <p className="text-base md:text-lg lg:text-xl text-white/80 font-light leading-relaxed mt-2">
-                    Lexus warranties protect against manufacturing defects—but most real-world
+                    Lexus warranties protect against manufacturing defects-but most real-world
                     ownership pain comes from environmental exposure, road hazards, and interior
                     wear.
                   </p>
@@ -689,7 +689,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   Coverage Reality
                 </p>
                 <p className="text-sm lg:text-base text-white/80 font-light italic leading-relaxed">
-                  "These are typically considered appearance or environmental issues—not mechanical
+                  "These are typically considered appearance or environmental issues-not mechanical
                   defects. True peace of mind requires securing the gap between the two."
                 </p>
               </div>
@@ -783,7 +783,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                 <p className="text-sm lg:text-base text-white/80 font-light italic leading-relaxed">
                   "Standard warranties typically do <strong>not</strong> cover environmental
                   etching, salt-air corrosion, or highway rock chips. These are hazards of the
-                  environment—not manufacturing defects."
+                  environment-not manufacturing defects."
                 </p>
               </div>
               <div className="flex items-center gap-3 text-red-500 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">
@@ -1386,7 +1386,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
                   </li>
                   <li>
                     <ExecutiveBulletRow>
-                      <strong>We Come to You:</strong> Elite mobile service—professional repairs at
+                      <strong>We Come to You:</strong> Elite mobile service-professional repairs at
                       your home or office.
                     </ExecutiveBulletRow>
                   </li>
@@ -1428,7 +1428,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
             <div className="mt-6 bg-blue-600/10 border-l-4 border-blue-600 p-4 rounded-r-xl backdrop-blur-xl shadow-lg flex items-center justify-between gap-6">
               <p className="text-xs lg:text-sm text-white/90 font-light italic max-w-2xl">
                 &quot;Evernew helps keep your Lexus in a perpetual state of
-                &apos;newness&apos;—preserving factory paint integrity and peak trade-in equity for
+                &apos;newness&apos;-preserving factory paint integrity and peak trade-in equity for
                 the long haul.&quot;
               </p>
               <div className="flex items-center gap-3 text-blue-400 font-black text-xs uppercase tracking-[0.2em] border-l border-white/10 pl-8 shrink-0">

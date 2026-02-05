@@ -75,7 +75,7 @@ const App: React.FC = () => {
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isAdminView, setIsAdminView] = useState(false);
   const ipadLandscapeQuery =
-    // iPad “paper mode” should stay enabled on 12.9" iPads even if iPadOS
+    // iPad "paper mode" should stay enabled on 12.9" iPads even if iPadOS
     // changes the effective width (e.g. Display Zoom / More Space / windowed).
     // Prefer a height bound over a tight max-width bound.
     "(min-width: 1024px) and (min-height: 740px) and (max-height: 1100px) and (orientation: landscape)";
@@ -93,7 +93,7 @@ const App: React.FC = () => {
     }
 
     // Prefer layout-based detection over user agent parsing.
-    // This keeps the iPad “paper mode” lock stable across iOS/Safari UA changes.
+    // This keeps the iPad "paper mode" lock stable across iOS/Safari UA changes.
     const matchesLayout = window.matchMedia(ipadLandscapeQuery).matches;
     if (!matchesLayout) return false;
 
@@ -505,7 +505,7 @@ const App: React.FC = () => {
   }, [allAlaCarteOptions]);
 
   const displayPackages = useMemo(() => {
-    // Deterministic customer-facing order: Elite → Platinum → Gold (matches requested layout).
+    // Deterministic customer-facing order: Elite  Platinum  Gold (matches requested layout).
     const sorted = sortPackagesForDisplay(packages);
     return applyOverrides(sorted, priceOverrides);
   }, [packages, priceOverrides]);

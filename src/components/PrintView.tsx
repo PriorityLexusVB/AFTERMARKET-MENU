@@ -157,7 +157,7 @@ export const PrintView: React.FC<PrintViewProps> = ({
               </tr>
               {pick2Line.items.map((item) => (
                 <tr key={`pick2-${item.id}`} className="border-b border-gray-200">
-                  <td className="py-2 pr-2 pl-6 text-xs text-gray-700">• {item.name}</td>
+                  <td className="py-2 pr-2 pl-6 text-xs text-gray-700"> {item.name}</td>
                   <td className="text-right font-mono pr-2 text-xs text-gray-500"></td>
                   {isManagerView && (
                     <td className="text-right font-mono text-xs text-gray-500"></td>

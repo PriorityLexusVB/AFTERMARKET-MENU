@@ -1,4 +1,4 @@
-# Pick2 (“You Pick 2”) Spec
+# Pick2 ("You Pick 2") Spec
 
 ## Overview
 Pick2 is a curated 2-item bundle built from a subset of published A La Carte items.
@@ -7,7 +7,7 @@ Pick2 is a curated 2-item bundle built from a subset of published A La Carte ite
 - When exactly `maxSelections` items are selected, the bundle becomes active
 - The bundle adds a single bundle price line item (no per-item add-on pricing for the included items)
 
-This feature is intentionally designed to be “safe” for iPad/kiosk paper-mode:
+This feature is intentionally designed to be "safe" for iPad/kiosk paper-mode:
 - No window/page scrolling is introduced
 - Any scrolling happens only within contained list panels
 
@@ -20,10 +20,10 @@ TypeScript: `Pick2Config` ([src/types.ts](../src/types.ts))
 
 Fields:
 - `enabled: boolean` (required)
-- `price: number` (required) — bundle price applied once when complete
-- `title?: string` (optional) — display name (defaults are handled by mock/fallback)
-- `subtitle?: string` (optional) — display subtext
-- `maxSelections?: number` (optional) — selection cap; defaults to `2` when missing
+- `price: number` (required) - bundle price applied once when complete
+- `title?: string` (optional) - display name (defaults are handled by mock/fallback)
+- `subtitle?: string` (optional) - display subtext
+- `maxSelections?: number` (optional) - selection cap; defaults to `2` when missing
 
 Runtime validation:
 - Zod schema: `Pick2ConfigSchema`
@@ -35,10 +35,10 @@ Collection: `ala_carte_options`
 TypeScript: `AlaCarteOption` ([src/types.ts](../src/types.ts))
 
 Fields:
-- `pick2Eligible?: boolean` — include this item in Pick2 list when `true`
-- `pick2Sort?: number` — optional sort priority (lower sorts first)
-- `shortValue?: string` — single-line value statement shown on the card
-- `highlights?: string[]` — up to 2 short highlight lines shown on the card
+- `pick2Eligible?: boolean` - include this item in Pick2 list when `true`
+- `pick2Sort?: number` - optional sort priority (lower sorts first)
+- `shortValue?: string` - single-line value statement shown on the card
+- `highlights?: string[]` - up to 2 short highlight lines shown on the card
 
 Notes:
 - These fields live ONLY on the A La Carte option document.
@@ -58,7 +58,7 @@ Ordering:
 
 ### Max selections
 - User can select at most `maxSelections` items
-- Attempting to select more shows a friendly “blocked” message
+- Attempting to select more shows a friendly "blocked" message
 - Deselecting below the cap clears the blocked message
 
 ### Conflict rules (no double-charge)
@@ -78,14 +78,14 @@ This prevents the same item from being charged twice.
 - When active (exactly max selected): **add `Pick2Config.price` once**
 
 ### Cost (manager view)
-- Bundle cost is the sum of included items’ costs
+- Bundle cost is the sum of included items' costs
 
 ## Product Hub Admin Setup
 
 Product Hub now provides two configuration surfaces:
 
 ### A La Carte item Pick2 fields
-Location: Product Hub → expand a product → “You Pick 2 (Pick2) Fields”
+Location: Product Hub  expand a product  "You Pick 2 (Pick2) Fields"
 
 Rules:
 - Inputs are enabled only when the item is Published to A La Carte
@@ -95,10 +95,10 @@ Fields:
 - Pick2 Eligible (toggle)
 - Pick2 Sort (number)
 - Short Value (text, single line)
-- Highlights (two text inputs → stored as a string array)
+- Highlights (two text inputs  stored as a string array)
 
 ### Global Pick2 config
-Location: Product Hub → “You Pick 2 Config” card near the top
+Location: Product Hub  "You Pick 2 Config" card near the top
 
 Fields:
 - Enabled (toggle)

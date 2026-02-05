@@ -26,7 +26,7 @@ Use a locked, no-scroll page with internal scrolling only in the list regions.
 
 - Card root should be `flex flex-col h-full`.
 - Feature list area must scroll internally with `overflow-y-auto` and `min-h-0`.
-- Footer should use `mt-auto` so “Investment” and “Select Plan” stay visible.
+- Footer should use `mt-auto` so "Investment" and "Select Plan" stay visible.
 
 ## Tests
 

@@ -217,18 +217,18 @@ function main() {
         if (fixed) {
           filesFixed++;
           console.log(
-            `✓ Fixed: ${result.filepath} (${result.matches.length} character${
+            ` Fixed: ${result.filepath} (${result.matches.length} character${
               result.matches.length > 1 ? "s" : ""
             } removed)`
           );
         } else {
           filesFailed++;
-          console.log(`✗ Failed to fix: ${result.filepath}`);
+          console.log(` Failed to fix: ${result.filepath}`);
         }
       } else {
         // Report up to 3 matches per file to avoid noisy output
         const reportMatches = result.matches.slice(0, 3);
-        console.log(`✗ ${result.filepath}`);
+        console.log(` ${result.filepath}`);
         for (const m of reportMatches) {
           console.log(`  Line ${m.line}, Col ${m.col}: ${getCharName(m.char)}`);
         }
@@ -242,7 +242,7 @@ function main() {
 
   // Summary
   console.log("");
-  console.log("═".repeat(60));
+  console.log("".repeat(60));
   if (fixMode) {
     console.log(`Fixed ${filesFixed} file${filesFixed !== 1 ? "s" : ""}`);
     console.log(
@@ -254,14 +254,14 @@ function main() {
     if (filesFailed > 0) {
       console.log("");
       console.log(
-        `⚠ Failed to fix ${filesFailed} file${filesFailed !== 1 ? "s" : ""}`
+        ` Failed to fix ${filesFailed} file${filesFailed !== 1 ? "s" : ""}`
       );
     }
 
     if (filesWithErrors > 0) {
       console.log("");
       console.log(
-        `⚠ Could not read ${filesWithErrors} file${
+        ` Could not read ${filesWithErrors} file${
           filesWithErrors !== 1 ? "s" : ""
         }:`
       );
@@ -270,18 +270,18 @@ function main() {
 
     if (filesFixed > 0) {
       console.log("");
-      console.log("✓ Files have been cleaned!");
+      console.log(" Files have been cleaned!");
       // Exit with error if any fixes failed
       process.exit(filesFailed > 0 || filesWithErrors > 0 ? 1 : 0);
     } else {
       console.log("");
-      console.log("✓ No issues found!");
+      console.log(" No issues found!");
       process.exit(0);
     }
   } else {
     if (filesWithErrors > 0) {
       console.log(
-        `⚠ Could not read ${filesWithErrors} file${
+        ` Could not read ${filesWithErrors} file${
           filesWithErrors !== 1 ? "s" : ""
         }:`
       );
@@ -300,10 +300,10 @@ function main() {
       console.log("  node scripts/check-hidden-unicode.mjs --fix");
       process.exit(1);
     } else {
-      console.log("✓ No hidden unicode characters found!");
+      console.log(" No hidden unicode characters found!");
       if (filesWithErrors > 0) {
         console.log("");
-        console.log("⚠ Scan may be incomplete due to read errors");
+        console.log(" Scan may be incomplete due to read errors");
         process.exit(1);
       }
       process.exit(0);

@@ -254,10 +254,10 @@ app.get("*", (_req, res) => {
 
 // Start server with proper error handling
 const server = app.listen(portNum, () => {
-  console.log(`[BOOT] ✓ Aftermarket Menu listening on :${portNum}`);
-  console.log(`[BOOT] ✓ Health check available at /health-check`);
-  console.log(`[BOOT] ✓ Debug info available at /__debug`);
-  console.log(`[BOOT] ✓ Server ready to accept connections`);
+  console.log(`[BOOT]  Aftermarket Menu listening on :${portNum}`);
+  console.log(`[BOOT]  Health check available at /health-check`);
+  console.log(`[BOOT]  Debug info available at /__debug`);
+  console.log(`[BOOT]  Server ready to accept connections`);
 });
 
 server.on("error", (error) => {

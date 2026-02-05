@@ -161,11 +161,11 @@ jobs:
       - name: Generate summary
         run: |
           if [ -f "branch-health-reports/branch-health-report.md" ]; then
-            echo "## 🌿 Branch Health Report" >> $GITHUB_STEP_SUMMARY
+            echo "##  Branch Health Report" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             cat branch-health-reports/branch-health-report.md >> $GITHUB_STEP_SUMMARY
           else
-            echo "## ⚠️ No report generated" >> $GITHUB_STEP_SUMMARY
+            echo "##  No report generated" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "The branch health analysis did not produce a report." >> $GITHUB_STEP_SUMMARY
           fi

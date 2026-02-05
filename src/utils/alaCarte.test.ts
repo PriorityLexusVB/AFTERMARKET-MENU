@@ -13,7 +13,7 @@ const baseOption: AlaCarteOption = {
 
 describe('alaCarte utils', () => {
   describe('columnOrderValue', () => {
-    it('uses Elite → Platinum → Gold ordering with Featured last', () => {
+    it('uses Elite  Platinum  Gold ordering with Featured last', () => {
       expect(columnOrderValue(2)).toBe(1);
       expect(columnOrderValue(3)).toBe(2);
       expect(columnOrderValue(1)).toBe(3);

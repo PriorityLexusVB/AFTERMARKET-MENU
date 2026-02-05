@@ -46,11 +46,11 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 
 **Verification**:
 
-- ✅ Server starts successfully on localhost:8080
-- ✅ Health check endpoint returns `ok`
-- ✅ Debug endpoint shows dist artifacts present
-- ✅ Env validation correctly detects invalid PORT
-- ✅ Graceful shutdown on signals
+-  Server starts successfully on localhost:8080
+-  Health check endpoint returns `ok`
+-  Debug endpoint shows dist artifacts present
+-  Env validation correctly detects invalid PORT
+-  Graceful shutdown on signals
 
 ### Issue #2: A La Carte Options Not in Admin Panel
 
@@ -111,10 +111,10 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 
 **Verification**:
 
-- ✅ UI compiles with TypeScript strict mode
-- ✅ Follows same pattern as feature management
-- ✅ All admin capabilities available (drag-drop, pricing, columns, etc.)
-- ✅ Consistent with existing sale setup patterns
+-  UI compiles with TypeScript strict mode
+-  Follows same pattern as feature management
+-  All admin capabilities available (drag-drop, pricing, columns, etc.)
+-  Consistent with existing sale setup patterns
 
 ## Files Changed
 
@@ -196,7 +196,7 @@ gcloud run deploy aftermarket-menu \
 
 If using GCSFuse to mount a volume to `/app/dist`:
 
-**⚠️ Warning**: This will overwrite build artifacts!
+** Warning**: This will overwrite build artifacts!
 
 **Options**:
 
@@ -210,28 +210,28 @@ If using GCSFuse to mount a volume to `/app/dist`:
 
 ### Automated Tests
 
-- ✅ All 169 unit tests passing
-- ✅ TypeScript strict mode passes (0 errors)
-- ✅ CodeQL security scan passes (0 vulnerabilities)
-- ✅ Build succeeds with validation checks
+-  All 169 unit tests passing
+-  TypeScript strict mode passes (0 errors)
+-  CodeQL security scan passes (0 vulnerabilities)
+-  Build succeeds with validation checks
 
 ### Manual Verification
 
-- ✅ Server starts on localhost:8080
-- ✅ `/health-check` returns 200 OK
-- ✅ `/__debug` shows dist artifacts
-- ✅ Env validation detects invalid PORT
-- ✅ Graceful shutdown works
+-  Server starts on localhost:8080
+-  `/health-check` returns 200 OK
+-  `/__debug` shows dist artifacts
+-  Env validation detects invalid PORT
+-  Graceful shutdown works
 
 ### Admin UI Verification
 
-- ✅ A La Carte tab appears in Admin Panel
-- ✅ Can add new A La Carte options
-- ✅ Can edit existing options
-- ✅ Drag-and-drop reordering works
-- ✅ Column assignments work
-- ✅ AND/OR connectors toggle correctly
-- ✅ Form validation prevents invalid data
+-  A La Carte tab appears in Admin Panel
+-  Can add new A La Carte options
+-  Can edit existing options
+-  Drag-and-drop reordering works
+-  Column assignments work
+-  AND/OR connectors toggle correctly
+-  Form validation prevents invalid data
 
 ## Future Enhancements
 

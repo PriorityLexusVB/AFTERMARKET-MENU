@@ -351,7 +351,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             }
           `}
         >
-          {isSelected ? "✓ Selected" : "Select Plan"}
+          {isSelected ? " Selected" : "Select Plan"}
         </button>
       </div>
     </div>

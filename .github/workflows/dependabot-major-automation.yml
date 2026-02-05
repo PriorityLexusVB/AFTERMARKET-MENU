@@ -278,13 +278,13 @@ jobs:
             const doNotMerge = '${{ steps.check-labels.outputs.do-not-merge }}';
             
             const statusIcon = (outcome) => {
-              if (outcome === 'success') return '✅';
-              if (outcome === 'failure') return '❌';
-              if (outcome === 'skipped') return '⏭️';
-              return '⚪';
+              if (outcome === 'success') return '';
+              if (outcome === 'failure') return '';
+              if (outcome === 'skipped') return '';
+              return '';
             };
             
-            let body = `## 🤖 Dependabot Automation Report (Node ${nodeVersion})\n\n`;
+            let body = `##  Dependabot Automation Report (Node ${nodeVersion})\n\n`;
             
             body += `### Initial Checks\n`;
             body += `| Step | Status |\n`;
@@ -298,7 +298,7 @@ jobs:
             if (needsFix === 'true') {
               body += `### Auto-fix Attempt\n`;
               if (doNotAutofix === 'true') {
-                body += `⚠️ Auto-fix skipped due to \`do-not-autofix\` label.\n\n`;
+                body += ` Auto-fix skipped due to \`do-not-autofix\` label.\n\n`;
               } else {
                 body += `| Step | Status |\n`;
                 body += `|------|--------|\n`;
@@ -308,16 +308,16 @@ jobs:
             }
             
             body += `### Final Result\n`;
-            body += `- All checks passed: ${allPassed === 'true' ? '✅ Yes' : '❌ No'}\n`;
+            body += `- All checks passed: ${allPassed === 'true' ? ' Yes' : ' No'}\n`;
             
             if (doNotMerge === 'true') {
-              body += `- Auto-merge: ⚠️ Skipped due to \`do-not-merge\` label\n`;
+              body += `- Auto-merge:  Skipped due to \`do-not-merge\` label\n`;
             } else if (allPassed === 'true') {
-              body += `- Auto-merge: ${mergeOutcome === 'success' ? '✅ Merged' : '❌ Failed'}\n`;
+              body += `- Auto-merge: ${mergeOutcome === 'success' ? ' Merged' : ' Failed'}\n`;
             }
             
             if (mergeOutcome !== 'success' && allPassed === 'true' && doNotMerge !== 'true') {
-              body += `\n### ⚠️ Merge Failed\n`;
+              body += `\n###  Merge Failed\n`;
               body += `The workflow could not merge this PR automatically. This is likely due to insufficient permissions.\n\n`;
               body += `**To enable auto-merge:**\n`;
               body += `1. Create a Personal Access Token (PAT) with \`repo\` scope\n`;
@@ -327,7 +327,7 @@ jobs:
             }
             
             body += `\n---\n`;
-            body += `📋 [View workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
+            body += ` [View workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
             
             // Post comment
             await github.rest.issues.createComment({

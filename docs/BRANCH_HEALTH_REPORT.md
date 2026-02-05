@@ -18,7 +18,7 @@ The branch health automation provides:
 
 The workflow can be triggered manually from the GitHub Actions tab:
 
-1. Go to **Actions** → **Branch Health**
+1. Go to **Actions**  **Branch Health**
 2. Click **Run workflow**
 3. Select options:
    - **Mode**: `dry-run` (default) or `apply`

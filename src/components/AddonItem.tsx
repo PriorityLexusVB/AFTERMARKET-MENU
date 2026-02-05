@@ -182,7 +182,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           data-testid={ctaTestId}
         >
           {isSelected ? (
-            <span>{ctaSelectedLabel ?? "Added ✓"}</span>
+            <span>{ctaSelectedLabel ?? "Added "}</span>
           ) : (
             <>
               <span className="inline-block animate-icon-pop-in">

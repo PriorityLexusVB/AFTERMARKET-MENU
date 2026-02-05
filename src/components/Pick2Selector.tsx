@@ -81,7 +81,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     }
 
     if (selectedCount >= maxSelections) {
-      setBlockedMessage("You’ve selected 2 — remove one to swap.");
+      setBlockedMessage("You've selected 2 - remove one to swap.");
       return;
     }
 
@@ -91,7 +91,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
 
   const progressText = `${selectedCount}/${maxSelections} selected`;
   const blockedText =
-    blockedMessage ?? (isComplete ? "You’ve selected 2 — remove one to swap." : null);
+    blockedMessage ?? (isComplete ? "You've selected 2 - remove one to swap." : null);
 
   const headerWrapperClass = isCompact
     ? "sticky top-0 z-20 -mx-2 px-2 pt-2 pb-2 bg-gray-900/90 backdrop-blur-sm"
@@ -184,7 +184,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   className="min-h-[36px] min-w-[36px] rounded-lg border border-white/10 text-gray-200 hover:text-white"
                   aria-label={`Clear ${slotItem.name} from slot ${index + 1}`}
                 >
-                  ✕
+                  
                 </button>
               ) : null}
             </div>
@@ -205,7 +205,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                 data-testid="pick2-selected-chip"
               >
                 <span className="max-w-[160px] truncate">{item.name}</span>
-                <span className="text-[11px] text-gray-300">✕</span>
+                <span className="text-[11px] text-gray-300"></span>
               </button>
             ))
           )}
@@ -247,7 +247,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   isCompact={isCompact}
                   textSize={textSize}
                   ctaAddLabel="Select"
-                  ctaSelectedLabel="Added ✓"
+                  ctaSelectedLabel="Added "
                   ariaAddLabel={`Select ${item.name} for Pick 2`}
                   ariaSelectedLabel={`Remove ${item.name} from Pick 2`}
                   variant="pick2"

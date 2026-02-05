@@ -6,6 +6,7 @@ interface SelectionDrawerProps {
   customItems: AlaCarteOption[];
   pick2?: { price: number; items: AlaCarteOption[]; cost: number };
   pick2Summary?: string;
+  pick2NeedsAttention?: boolean;
   totalPrice: number;
   baseTotalPrice?: number;
   basePackagePricesById?: Record<string, number>;
@@ -14,6 +15,7 @@ interface SelectionDrawerProps {
   onPrint: () => void;
   onDeselectPackage?: () => void;
   onShowAgreement?: () => void;
+  onShowPick2?: () => void;
   variant?: "panel" | "bar";
   isCompact?: boolean;
   barRef?: React.Ref<HTMLDivElement>;
@@ -31,6 +33,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   customItems,
   pick2,
   pick2Summary,
+  pick2NeedsAttention = false,
   totalPrice,
   onRemoveItem,
   onPrint,
@@ -39,6 +42,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   baseAddonPricesById,
   onDeselectPackage,
   onShowAgreement,
+  onShowPick2,
   variant = "panel",
   isCompact = false,
   barRef,
@@ -134,6 +138,16 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 </p>
               </div>
               <div className={`flex items-center gap-2 ${isCompact ? "flex-nowrap" : ""}`}>
+                {pick2NeedsAttention && onShowPick2 ? (
+                  <button
+                    onClick={onShowPick2}
+                    className={`btn-lux-ghost min-h-[44px] ${isCompact ? "px-3" : "px-4"}`}
+                    aria-label="Finish Pick-2 selection"
+                    data-testid="pick2-fix-action"
+                  >
+                    Finish Pick-2
+                  </button>
+                ) : null}
                 <button
                   onClick={onPrint}
                   className={`btn-lux-ghost min-h-[44px] ${isCompact ? "px-3" : "px-4"}`}

@@ -22,6 +22,11 @@ vi.mock("../data", () => ({
   upsertAlaCarteFromFeature: (...args: unknown[]) => mockUpsert(...args),
   unpublishAlaCarteFromFeature: (...args: unknown[]) => mockUnpublish(...args),
   batchUpdateFeaturePositions: vi.fn().mockResolvedValue(undefined),
+  fetchPick2Config: vi.fn().mockResolvedValue({
+    enabled: false,
+    price: 0,
+    maxSelections: 2,
+  }),
 }));
 
 vi.mock("../firebase", () => ({

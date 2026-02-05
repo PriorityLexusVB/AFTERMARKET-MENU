@@ -538,6 +538,9 @@ const App: React.FC = () => {
     return pick2SelectedItems.map((item) => item.name).join(" + ");
   }, [pick2Enabled, pick2SelectedItems, pick2MaxSelections]);
 
+  const pick2NeedsAttention =
+    pick2Enabled && pick2SelectedItems.length > 0 && pick2SelectedItems.length < pick2MaxSelections;
+
   const pick2BundleActive = pick2Enabled && pick2SelectedItems.length === pick2MaxSelections;
   const pick2BundleCost = useMemo(() => {
     if (!pick2BundleActive) return 0;
@@ -1187,6 +1190,7 @@ const App: React.FC = () => {
                 customItems={displayCustomPackageItems}
                 pick2={pick2Selection}
                 pick2Summary={pick2SummaryText}
+                pick2NeedsAttention={pick2NeedsAttention}
                 totalPrice={totalPrice}
                 baseTotalPrice={baseTotalPrice}
                 basePackagePricesById={basePackagePricesById}
@@ -1197,6 +1201,7 @@ const App: React.FC = () => {
                   selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined
                 }
                 onShowAgreement={handleShowAgreement}
+                onShowPick2={showPick2Tab ? () => setCurrentPage("pick2") : undefined}
                 variant="bar"
                 isCompact={enableNoScrollLayout}
                 barRef={selectionBarRef}

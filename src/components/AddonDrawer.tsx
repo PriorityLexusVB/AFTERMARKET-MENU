@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 interface AddonDrawerProps {
   isOpen: boolean;
@@ -15,6 +15,22 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
   selectedCount,
   children,
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   return (
     <>
       <button
@@ -69,7 +85,7 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
               </div>
             </header>
 
-            <div className="flex-1 min-h-0 overflow-y-auto ios-scroll scrollbar-luxury px-4 py-3">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain ios-scroll scrollbar-luxury px-4 py-3">
               {children}
             </div>
 

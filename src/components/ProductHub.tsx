@@ -1135,19 +1135,21 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       option?.highlights?.[1] ?? ""
     );
 
+    const pick2Highlight1 = option?.highlights?.[0];
+    const pick2Highlight2 = option?.highlights?.[1];
+
     useEffect(() => {
       setPick2EligibleDraft(Boolean(option?.pick2Eligible));
       setPick2SortDraft(option?.pick2Sort !== undefined ? String(option.pick2Sort) : "");
       setPick2ShortValueDraft(option?.shortValue ?? "");
-      setPick2Highlight1Draft(option?.highlights?.[0] ?? "");
-      setPick2Highlight2Draft(option?.highlights?.[1] ?? "");
+      setPick2Highlight1Draft(pick2Highlight1 ?? "");
+      setPick2Highlight2Draft(pick2Highlight2 ?? "");
     }, [
       option?.pick2Eligible,
       option?.pick2Sort,
       option?.shortValue,
-      option?.highlights,
-      option?.highlights?.[0],
-      option?.highlights?.[1],
+      pick2Highlight1,
+      pick2Highlight2,
     ]);
 
     const canEditPick2Fields = Boolean(option) || pick2EligibleDraft;

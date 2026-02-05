@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertScrollLocked } from "./utils/scroll-lock";
 
 test.describe("iPad / kiosk fit", () => {
   test("menu fits iPad viewport without clipping", async ({ page }, testInfo) => {
@@ -86,16 +87,7 @@ test.describe("iPad / kiosk fit", () => {
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     // Ensure scrolling is effectively disabled in paper-mode.
-    const scrollLocked = await page.evaluate(async () => {
-      const beforeWindow = window.scrollY;
-      const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
-      window.scrollTo(0, 1000);
-      await new Promise((r) => setTimeout(r, 50));
-      const afterWindow = window.scrollY;
-      const afterDoc = document.scrollingElement?.scrollTop ?? 0;
-      return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
-    });
-    expect(scrollLocked).toBe(true);
+    await assertScrollLocked(page);
 
     // Confirm internal scroll happens only inside the add-ons list (when it overflows).
     const list = page.getByTestId("addons-drawer-list");
@@ -115,18 +107,10 @@ test.describe("iPad / kiosk fit", () => {
         .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
         .toBeGreaterThan(0);
 
-      const windowStillLocked = await page.evaluate(async () => {
-        const before = window.scrollY;
-        const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
-        await new Promise((r) => setTimeout(r, 50));
-        const after = window.scrollY;
-        const afterDoc = document.scrollingElement?.scrollTop ?? 0;
-        return before === 0 && after === 0 && beforeDoc === 0 && afterDoc === 0;
-      });
-      expect(windowStillLocked).toBe(true);
+      await assertScrollLocked(page);
     } else {
       await testInfo.attach("addons-list-note", {
-        body: "Add-Ons list did not overflow; scroll assertion skipped",
+        body: "Add-ons list did not overflow; scroll assertion skipped",
         contentType: "text/plain",
       });
     }

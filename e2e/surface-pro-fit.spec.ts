@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { assertScrollLocked } from "./utils/scroll-lock";
 
 test.describe("Surface Pro fit guardrails", () => {
-  test("no horizontal overflow + key CTAs visible (1368×912)", async ({ page }, testInfo) => {
+  test("no horizontal overflow + key CTAs visible (1368x912)", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1368, height: 912 });
 
     await page.goto("/?demo=1");
@@ -78,18 +79,10 @@ test.describe("Surface Pro fit guardrails", () => {
         .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
         .toBeGreaterThan(0);
 
-      const windowStillLocked = await page.evaluate(async () => {
-        const beforeWindow = window.scrollY;
-        const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
-        await new Promise((r) => setTimeout(r, 50));
-        const afterWindow = window.scrollY;
-        const afterDoc = document.scrollingElement?.scrollTop ?? 0;
-        return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
-      });
-      expect(windowStillLocked).toBe(true);
+      await assertScrollLocked(page);
     } else {
       await testInfo.attach("addons-list-note", {
-        body: "Add-Ons list did not overflow; scroll assertion skipped",
+        body: "Add-ons list did not overflow; scroll assertion skipped",
         contentType: "text/plain",
       });
     }
@@ -98,16 +91,7 @@ test.describe("Surface Pro fit guardrails", () => {
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     // Desktop kiosk is intended to use a no-scroll layout at this viewport.
-    const scrollLocked = await page.evaluate(async () => {
-      const beforeWindow = window.scrollY;
-      const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
-      window.scrollTo(0, 1000);
-      await new Promise((r) => setTimeout(r, 50));
-      const afterWindow = window.scrollY;
-      const afterDoc = document.scrollingElement?.scrollTop ?? 0;
-      return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
-    });
-    expect(scrollLocked).toBe(true);
+    await assertScrollLocked(page);
 
     await page.screenshot({
       path: testInfo.outputPath("surface-pro-fit.png"),

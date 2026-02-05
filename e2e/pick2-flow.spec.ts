@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertScrollLocked } from "./utils/scroll-lock";
 
 const parseUsd = (raw: string): number => {
   const cleaned = raw.replace(/[^0-9.]/g, "");
@@ -76,7 +77,7 @@ test.describe("Pick2 flow", () => {
     await extraSelect.scrollIntoViewIfNeeded();
     await expect(extraSelect).toBeDisabled();
     await expect(page.getByRole("status")).toContainText(
-      "You’ve selected 2 — remove one to swap.",
+      /You.ve selected 2 .*remove one to swap\./,
       { timeout: 2000 }
     );
     const totalAfterBlocked = await getSelectionTotal(page);
@@ -158,16 +159,7 @@ test.describe("Pick2 flow", () => {
       timeout: 10000,
     });
 
-    const scrollLocked = await page.evaluate(async () => {
-      const beforeWindow = window.scrollY;
-      const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
-      window.scrollTo(0, 1000);
-      await new Promise((r) => setTimeout(r, 50));
-      const afterWindow = window.scrollY;
-      const afterDoc = document.scrollingElement?.scrollTop ?? 0;
-      return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
-    });
-    expect(scrollLocked).toBe(true);
+    await assertScrollLocked(page);
 
     const list = page.getByTestId("pick2-list");
     await expect(list).toBeVisible({ timeout: 10000 });
@@ -186,15 +178,7 @@ test.describe("Pick2 flow", () => {
         .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
         .toBeGreaterThan(0);
 
-      const windowStillLocked = await page.evaluate(async () => {
-        const beforeWindow = window.scrollY;
-        const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
-        await new Promise((r) => setTimeout(r, 50));
-        const afterWindow = window.scrollY;
-        const afterDoc = document.scrollingElement?.scrollTop ?? 0;
-        return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
-      });
-      expect(windowStillLocked).toBe(true);
+      await assertScrollLocked(page);
     } else {
       await testInfo.attach("pick2-list-note", {
         body: "Pick2 list did not overflow; scroll assertion skipped",

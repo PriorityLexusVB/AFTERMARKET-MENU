@@ -16,14 +16,14 @@ Total unique matches: 508
 - **"Get started"**
 - **"Variables & Secrets"**
 - **"Your apps"**
-- **⚠️ Experiencing deployment failures?**
-- **⚠️ Warning**
-- **📖 For detailed troubleshooting**
+- ** Experiencing deployment failures?**
+- ** Warning**
+- ** For detailed troubleshooting**
 - **90+ tests**
 - **A GCSFuse volume mounted to `/app/dist`**
 - **A La Carte Admin Panel**
 - **A La Carte Form**
-- **A La Carte loses the “Page X / Y” indicator**
+- **A La Carte loses the "Page X / Y" indicator**
 - **A La Carte Options (Column 4):**
 - **A La Carte Options**
 - **A La Carte page**
@@ -539,7 +539,7 @@ Total unique matches: 87
 - - Actions Section - Larger touch targets *
 - - Admin Panel Toggle *
 - - Admin Toggle *
-- - Base: 16px → 18px on iPad *
+- - Base: 16px  18px on iPad *
 - - Body text *
 - - Close Button - Larger touch target *
 - - Close Button *

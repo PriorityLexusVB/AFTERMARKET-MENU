@@ -24,7 +24,7 @@ interface MigrationStats {
 async function run(): Promise<void> {
   const stats: MigrationStats = { scanned: 0, updated: 0, skipped: 0, errors: 0 };
 
-  console.log('🚀 Starting package featureIds removal');
+  console.log(' Starting package featureIds removal');
   console.log(DIVIDER);
   console.log(`Mode: ${isDryRun ? 'DRY RUN (set DRY_RUN=0 to commit)' : 'LIVE (writes enabled)'}`);
 
@@ -34,7 +34,7 @@ async function run(): Promise<void> {
     });
     const db = admin.firestore();
 
-    console.log('\n📦 Fetching packages...');
+    console.log('\n Fetching packages...');
     const snapshot = await db.collection('packages').get();
     stats.scanned = snapshot.size;
     console.log(`Found ${stats.scanned} package doc(s)\n`);
@@ -71,7 +71,7 @@ async function run(): Promise<void> {
 
       if (isDryRun) {
         console.log(
-          `🔎 DRY RUN: Would update package ${doc.id} (${data['name'] ?? 'unnamed'}) - ` +
+          ` DRY RUN: Would update package ${doc.id} (${data['name'] ?? 'unnamed'}) - ` +
           `${hasLegacyBackup ? 'remove featureIds only' : 'backup to legacyFeatureIds and remove featureIds'}`
         );
         continue;
@@ -82,7 +82,7 @@ async function run(): Promise<void> {
 
       if (batchCount >= MAX_BATCH_SIZE) {
         await batch.commit();
-        console.log(`💾 Committed batch of ${batchCount} updates`);
+        console.log(` Committed batch of ${batchCount} updates`);
         batch = db.batch();
         batchCount = 0;
       }
@@ -90,11 +90,11 @@ async function run(): Promise<void> {
 
     if (!isDryRun && batchCount > 0) {
       await batch.commit();
-      console.log(`💾 Committed final batch of ${batchCount} updates`);
+      console.log(` Committed final batch of ${batchCount} updates`);
     }
 
     console.log('\n' + DIVIDER);
-    console.log('📈 Migration Summary');
+    console.log(' Migration Summary');
     console.log(DIVIDER);
     console.log(`Scanned : ${stats.scanned}`);
     console.log(`Updated : ${stats.updated}`);
@@ -102,16 +102,16 @@ async function run(): Promise<void> {
     console.log(`Errors  : ${stats.errors}`);
 
     if (!isDryRun && stats.errors > 0) {
-      console.error('\n⚠️  Completed with errors. Please review logs.');
+      console.error('\n  Completed with errors. Please review logs.');
       await admin.app().delete();
       process.exit(1);
     }
 
-    console.log('\n✅ Migration finished.');
+    console.log('\n Migration finished.');
     await admin.app().delete();
   } catch (err) {
     stats.errors++;
-    console.error('\n❌ Fatal error during migration:', err);
+    console.error('\n Fatal error during migration:', err);
     try {
       await admin.app().delete();
     } catch {

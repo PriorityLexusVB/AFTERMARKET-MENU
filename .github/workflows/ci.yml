@@ -158,14 +158,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright WebKit
+      - name: Install Playwright browsers (webkit only)
         run: npx playwright install --with-deps webkit
 
       - name: Build application
         run: npm run build
 
-      - name: Run WebKit iPad smoke tests
-        run: npm run test:e2e:webkit:smoke
+      - name: WebKit iPad smoke
+        run: PW_WEBKIT=1 npx playwright test --project=webkit-ipad e2e/ipad-fit.spec.ts e2e/pick2-flow.spec.ts
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

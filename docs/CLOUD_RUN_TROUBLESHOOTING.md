@@ -29,10 +29,10 @@ The Cloud Run revision has environment variables with leading or trailing spaces
 Check your Cloud Run service logs for diagnostic messages:
 
 ```
-[DIAGNOSTICS] ⚠️  WARNING: Environment variables with whitespace detected!
-[DIAGNOSTICS]   ❌ " VITE_FIREBASE_PROJECT_ID" (has whitespace)
+[DIAGNOSTICS]   WARNING: Environment variables with whitespace detected!
+[DIAGNOSTICS]    " VITE_FIREBASE_PROJECT_ID" (has whitespace)
 [DIAGNOSTICS]      Should be: "VITE_FIREBASE_PROJECT_ID"
-[DIAGNOSTICS] ⚠️  This is a common Cloud Run misconfiguration!
+[DIAGNOSTICS]   This is a common Cloud Run misconfiguration!
 ```
 
 ### How to Fix in Cloud Run Console
@@ -48,7 +48,7 @@ Check your Cloud Run service logs for diagnostic messages:
 
 3. **Check Environment Variables**
 
-   - Scroll to "Container(s)" → "Variables & Secrets" tab
+   - Scroll to "Container(s)"  "Variables & Secrets" tab
    - Look for any variable names with leading/trailing spaces
    - Common culprits:
      - `" VITE_FIREBASE_PROJECT_ID"` (leading space)
@@ -86,8 +86,8 @@ Check your Cloud Run service logs for diagnostic messages:
 Cloud Run logs show:
 
 ```
-[DIAGNOSTICS] ⚠️  WARNING: Dist directory does not exist!
-[DIAGNOSTICS] ⚠️  Possible causes:
+[DIAGNOSTICS]   WARNING: Dist directory does not exist!
+[DIAGNOSTICS]   Possible causes:
 [DIAGNOSTICS]      2. GCSFuse volume mounted at /app/dist
 ```
 
@@ -127,8 +127,8 @@ Check your Cloud Run revision configuration:
 
 If you don't need persistent storage for the built application:
 
-1. Go to Cloud Run Console → Your Service → "EDIT & DEPLOY NEW REVISION"
-2. Scroll to "Container(s)" → "Volumes" tab
+1. Go to Cloud Run Console  Your Service  "EDIT & DEPLOY NEW REVISION"
+2. Scroll to "Container(s)"  "Volumes" tab
 3. Find the volume mounted at `/app/dist`
 4. Click "REMOVE"
 5. Deploy the new revision
@@ -180,8 +180,8 @@ If memory usage is approaching your container's memory limit, that's the issue.
 
 #### Temporary: Increase Memory
 
-1. Go to Cloud Run Console → Your Service → "EDIT & DEPLOY NEW REVISION"
-2. Scroll to "Container(s)" → "Resources" tab
+1. Go to Cloud Run Console  Your Service  "EDIT & DEPLOY NEW REVISION"
+2. Scroll to "Container(s)"  "Resources" tab
 3. Increase "Memory" (try 1 GiB or 2 GiB)
 4. Deploy and monitor
 
@@ -218,10 +218,10 @@ gcloud run services logs read aftermarket-menu --region=us-west1 --limit=50
 
 Look for:
 
-- `[DIAGNOSTICS] ✓ No whitespace in environment variable names`
+- `[DIAGNOSTICS]  No whitespace in environment variable names`
 - `[DIAGNOSTICS] Dist exists: true`
 - `[DIAGNOSTICS] index.html exists: true`
-- `[BOOT] ✓ Server ready to accept connections`
+- `[BOOT]  Server ready to accept connections`
 
 ### 3. Test Health Check
 

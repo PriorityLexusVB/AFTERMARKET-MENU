@@ -7,17 +7,17 @@ TRACKING (must stay true)
 - Surface: no horizontal overflow + CTAs visible
 - Pick2 tab appears when enabled + eligible items exist
 
-## Phase 1 — Pick2 should NOT require “Publish to A La Carte”
+## Phase 1 - Pick2 should NOT require "Publish to A La Carte"
 
 Goal: Admin can set Pick2 Eligible without clicking Publish.
 
 Done when:
 
 - Pick2 items are sourced from `pick2Eligible=true` options even if `isPublished=false`
-- Product Hub Pick2 fields are editable without “Publish to A La Carte”
+- Product Hub Pick2 fields are editable without "Publish to A La Carte"
 - Toggling Pick2 Eligible ON auto-creates/updates `ala_carte_options` doc with `isPublished=false`
 
-## Phase 2 — Add-Ons drawer scroll
+## Phase 2 - Add-Ons drawer scroll
 
 Goal: When open and content overflows, the drawer list scrolls internally.
 
@@ -27,13 +27,13 @@ Done when:
 - No page/window scrolling in iPad paper-mode
 - E2E asserts internal scroll (conditional) + window scrollY stays 0
 
-## Phase 3 — Investment + Select Plan visibility
+## Phase 3 - Investment + Select Plan visibility
 
 Goal: Package cards always show Investment and Select Plan in iPad/kiosk + Surface.
 
 Done when:
 
-- E2E asserts “Investment” and “Select Plan” visible
+- E2E asserts "Investment" and "Select Plan" visible
 - No clipping under the bottom selection bar
 
 ## Admin setup (your desired Pick2 list)

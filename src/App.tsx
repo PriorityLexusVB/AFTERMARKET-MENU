@@ -5,7 +5,6 @@ import { PackageSelector } from "./components/PackageSelector";
 import { AlaCarteSelector } from "./components/AlaCarteSelector";
 import { FeatureModal } from "./components/FeatureModal";
 import { CustomPackageBuilder } from "./components/CustomPackageBuilder";
-import { AddonSelector } from "./components/AddonSelector";
 import { Pick2Selector } from "./components/Pick2Selector";
 import { SettingsModal } from "./components/SettingsModal";
 import { SelectionDrawer } from "./components/SelectionDrawer";
@@ -76,7 +75,7 @@ const App: React.FC = () => {
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isAdminView, setIsAdminView] = useState(false);
   const ipadLandscapeQuery =
-    // iPad “paper mode” should stay enabled on 12.9" iPads even if iPadOS
+    // iPad "paper mode" should stay enabled on 12.9" iPads even if iPadOS
     // changes the effective width (e.g. Display Zoom / More Space / windowed).
     // Prefer a height bound over a tight max-width bound.
     "(min-width: 1024px) and (min-height: 740px) and (max-height: 1100px) and (orientation: landscape)";
@@ -94,7 +93,7 @@ const App: React.FC = () => {
     }
 
     // Prefer layout-based detection over user agent parsing.
-    // This keeps the iPad “paper mode” lock stable across iOS/Safari UA changes.
+    // This keeps the iPad "paper mode" lock stable across iOS/Safari UA changes.
     const matchesLayout = window.matchMedia(ipadLandscapeQuery).matches;
     if (!matchesLayout) return false;
 
@@ -506,7 +505,7 @@ const App: React.FC = () => {
   }, [allAlaCarteOptions]);
 
   const displayPackages = useMemo(() => {
-    // Deterministic customer-facing order: Elite → Platinum → Gold (matches requested layout).
+    // Deterministic customer-facing order: Elite  Platinum  Gold (matches requested layout).
     const sorted = sortPackagesForDisplay(packages);
     return applyOverrides(sorted, priceOverrides);
   }, [packages, priceOverrides]);
@@ -529,6 +528,18 @@ const App: React.FC = () => {
       .map((id) => displayAlaCarteById.get(id))
       .filter((item): item is AlaCarteOption => Boolean(item));
   }, [pick2SelectedIds, displayAlaCarteById]);
+
+  const pick2SummaryText = useMemo(() => {
+    if (!pick2Enabled) return undefined;
+    if (pick2SelectedItems.length === 0) return `0/${pick2MaxSelections}`;
+    if (pick2SelectedItems.length < pick2MaxSelections) {
+      return `${pick2SelectedItems.length}/${pick2MaxSelections}`;
+    }
+    return pick2SelectedItems.map((item) => item.name).join(" + ");
+  }, [pick2Enabled, pick2SelectedItems, pick2MaxSelections]);
+
+  const pick2NeedsAttention =
+    pick2Enabled && pick2SelectedItems.length > 0 && pick2SelectedItems.length < pick2MaxSelections;
 
   const pick2BundleActive = pick2Enabled && pick2SelectedItems.length === pick2MaxSelections;
   const pick2BundleCost = useMemo(() => {
@@ -933,19 +944,13 @@ const App: React.FC = () => {
               onSelectPackage={handleSelectPackage}
               onViewFeature={handleViewDetail}
               basePackagePricesById={basePackagePricesById}
+              addonItems={mainPageAddons}
+              selectedAddons={customPackageItems}
+              onToggleAddon={handleToggleAlaCarteItem}
+              onViewAddon={handleViewDetail}
+              baseAddonPricesById={baseAddonPricesById}
+              pick2Summary={pick2SummaryText}
               textSize={guestTextSize}
-              addonColumn={
-                <AddonSelector
-                  items={mainPageAddons}
-                  selectedItems={customPackageItems}
-                  onToggleItem={handleToggleAlaCarteItem}
-                  onViewItem={handleViewDetail}
-                  basePricesById={baseAddonPricesById}
-                  className="h-full min-h-0"
-                  isCompact={enableNoScrollLayout}
-                  textSize={guestTextSize}
-                />
-              }
               gridClassName={enableNoScrollLayout ? "items-stretch h-full" : "items-stretch"}
               isIpadLandscape={enableNoScrollLayout}
             />
@@ -1184,6 +1189,8 @@ const App: React.FC = () => {
                 }
                 customItems={displayCustomPackageItems}
                 pick2={pick2Selection}
+                pick2Summary={pick2SummaryText}
+                pick2NeedsAttention={pick2NeedsAttention}
                 totalPrice={totalPrice}
                 baseTotalPrice={baseTotalPrice}
                 basePackagePricesById={basePackagePricesById}
@@ -1194,6 +1201,7 @@ const App: React.FC = () => {
                   selectedPackage ? () => handleSelectPackage(selectedPackage) : undefined
                 }
                 onShowAgreement={handleShowAgreement}
+                onShowPick2={showPick2Tab ? () => setCurrentPage("pick2") : undefined}
                 variant="bar"
                 isCompact={enableNoScrollLayout}
                 barRef={selectionBarRef}

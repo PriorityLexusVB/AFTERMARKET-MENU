@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { PackageTier, ProductFeature, AlaCarteOption } from "../types";
 import { PackageCard } from "./PackageCard";
+import { AddonSelector } from "./AddonSelector";
+import { AddonDrawer } from "./AddonDrawer";
 
 interface PackageSelectorProps {
   packages: PackageTier[];
@@ -9,7 +11,12 @@ interface PackageSelectorProps {
   onSelectPackage: (pkg: PackageTier) => void;
   onViewFeature: (feature: ProductFeature | AlaCarteOption) => void;
   basePackagePricesById?: Record<string, number>;
-  addonColumn?: React.ReactNode;
+  addonItems?: AlaCarteOption[];
+  selectedAddons?: AlaCarteOption[];
+  onToggleAddon?: (item: AlaCarteOption) => void;
+  onViewAddon?: (item: ProductFeature | AlaCarteOption) => void;
+  baseAddonPricesById?: Record<string, number>;
+  pick2Summary?: string;
   gridClassName?: string;
   isIpadLandscape?: boolean;
   textSize?: "normal" | "large" | "xl";
@@ -22,7 +29,12 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   onSelectPackage,
   onViewFeature,
   basePackagePricesById,
-  addonColumn,
+  addonItems,
+  selectedAddons,
+  onToggleAddon,
+  onViewAddon,
+  baseAddonPricesById,
+  pick2Summary,
   gridClassName,
   isIpadLandscape = false,
   textSize = "normal",
@@ -47,8 +59,10 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     return !isIpadLandscape;
   });
 
+  const hasAddonColumn = Boolean(addonItems && onToggleAddon && onViewAddon && selectedAddons);
+
   useEffect(() => {
-    if (!addonColumn) return;
+    if (!hasAddonColumn) return;
 
     const wasIpadLandscape = prevIsIpadLandscapeRef.current;
     prevIsIpadLandscapeRef.current = isIpadLandscape;
@@ -80,10 +94,10 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     }
 
     didInitAddonDrawerRef.current = true;
-  }, [addonColumn, isIpadLandscape]);
+  }, [hasAddonColumn, isIpadLandscape]);
 
   useEffect(() => {
-    if (!addonColumn) return;
+    if (!hasAddonColumn) return;
     if (isIpadLandscape) return;
     if (typeof window === "undefined") return;
     try {
@@ -91,7 +105,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
     } catch {
       // Ignore storage failures
     }
-  }, [addonColumn, isAddonDrawerOpen, isIpadLandscape]);
+  }, [hasAddonColumn, isAddonDrawerOpen, isIpadLandscape]);
 
   const magnifiedPackage = useMemo(() => {
     if (!magnifiedPackageId) return null;
@@ -117,23 +131,20 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
   }, [magnifiedPackage]);
 
   const baseGrid = isIpadLandscape
-    ? addonColumn
-      ? "grid grid-cols-4 gap-3 lg:gap-4"
-      : "grid grid-cols-3 gap-3 lg:gap-4"
-    : addonColumn
+    ? "am-packages-grid-compact"
+    : hasAddonColumn
       ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
       : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8";
-  const gridClasses = gridClassName
-    ? `${baseGrid} stagger-children ${gridClassName}`
-    : `${baseGrid} stagger-children`;
+  const gridClasses = `${baseGrid} stagger-children${gridClassName ? ` ${gridClassName}` : ""}`;
 
-  if (isIpadLandscape && addonColumn) {
+  if (isIpadLandscape && hasAddonColumn) {
     const outerClasses = gridClassName ? `stagger-children ${gridClassName}` : "stagger-children";
-    const packageGridClasses = `grid grid-cols-3 gap-2 lg:gap-3 ${outerClasses}`;
+    const packageGridClasses = `am-packages-grid-compact ${outerClasses}`;
+    const addonCount = selectedAddons?.length ?? 0;
 
     return (
       <>
-        <div className={`flex h-full min-h-0 gap-2 lg:gap-3`} data-testid="package-grid">
+        <div className="flex h-full min-h-0" data-testid="package-grid">
           <div className="flex-1 min-w-0 min-h-0 h-full">
             <div className={`${packageGridClasses} min-h-0`}>
               {packages.map((pkg) => (
@@ -148,6 +159,7 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
                   className="animate-card-entrance"
                   isCompact={true}
                   textSize={textSize}
+                  pick2Summary={selectedPackage?.id === pkg.id ? pick2Summary : undefined}
                   onMagnify={
                     enableMagnify
                       ? () => {
@@ -159,46 +171,29 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
               ))}
             </div>
           </div>
-
-          <aside
-            className={`relative h-full min-h-0 flex flex-col transition-[width] duration-300 ease-out ${
-              isAddonDrawerOpen ? "w-[320px]" : "w-[56px]"
-            }`}
-            aria-label="Add-ons"
-          >
-            {/* Drawer contents */}
-            <div
-              className={`h-full min-h-0 flex flex-col ${
-                isAddonDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none"
-              } transition-opacity duration-200`}
-            >
-              {addonColumn}
-            </div>
-
-            {/* Toggle */}
-            {isAddonDrawerOpen ? (
-              <button
-                type="button"
-                onClick={() => setIsAddonDrawerOpen(false)}
-                className="absolute top-2 right-2 z-10 bg-slate-950/60 hover:bg-slate-950/80 text-white/80 hover:text-white rounded-md px-2 py-1 text-xs uppercase tracking-[0.2em]"
-                aria-label="Close add-ons"
-                title="Close add-ons"
-              >
-                Close
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAddonDrawerOpen(true)}
-                className="absolute inset-0 z-10 bg-gray-800/85 hover:bg-gray-800/95 border border-gray-600 rounded-lg text-white flex items-center justify-center"
-                aria-label="Open add-ons"
-                title="Open add-ons"
-              >
-                <span className="text-[11px] uppercase tracking-[0.35em] [writing-mode:vertical-rl]">Add-Ons</span>
-              </button>
-            )}
-          </aside>
         </div>
+
+        <AddonDrawer
+          isOpen={isAddonDrawerOpen}
+          onOpen={() => setIsAddonDrawerOpen(true)}
+          onClose={() => setIsAddonDrawerOpen(false)}
+          selectedCount={addonCount}
+        >
+          {addonItems && selectedAddons && onToggleAddon && onViewAddon ? (
+            <AddonSelector
+              items={addonItems}
+              selectedItems={selectedAddons}
+              onToggleItem={onToggleAddon}
+              onViewItem={onViewAddon}
+              basePricesById={baseAddonPricesById}
+              isCompact={true}
+              textSize={textSize}
+              showHeader={false}
+              variant="drawer"
+              className="h-full min-h-0"
+            />
+          ) : null}
+        </AddonDrawer>
 
         {magnifiedPackage ? (
           <div
@@ -260,9 +255,21 @@ export const PackageSelector: React.FC<PackageSelectorProps> = ({
           className="animate-card-entrance"
           isCompact={isIpadLandscape}
           textSize={textSize}
+          pick2Summary={selectedPackage?.id === pkg.id ? pick2Summary : undefined}
         />
       ))}
-      {addonColumn}
+      {hasAddonColumn && addonItems && selectedAddons && onToggleAddon && onViewAddon ? (
+        <AddonSelector
+          items={addonItems}
+          selectedItems={selectedAddons}
+          onToggleItem={onToggleAddon}
+          onViewItem={onViewAddon}
+          basePricesById={baseAddonPricesById}
+          isCompact={isIpadLandscape}
+          textSize={textSize}
+          className="h-full min-h-0"
+        />
+      ) : null}
     </div>
   );
 };

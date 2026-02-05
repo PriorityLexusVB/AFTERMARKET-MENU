@@ -5,6 +5,8 @@ interface SelectionDrawerProps {
   selectedPackage: PackageTier | null;
   customItems: AlaCarteOption[];
   pick2?: { price: number; items: AlaCarteOption[]; cost: number };
+  pick2Summary?: string;
+  pick2NeedsAttention?: boolean;
   totalPrice: number;
   baseTotalPrice?: number;
   basePackagePricesById?: Record<string, number>;
@@ -13,6 +15,7 @@ interface SelectionDrawerProps {
   onPrint: () => void;
   onDeselectPackage?: () => void;
   onShowAgreement?: () => void;
+  onShowPick2?: () => void;
   variant?: "panel" | "bar";
   isCompact?: boolean;
   barRef?: React.Ref<HTMLDivElement>;
@@ -29,6 +32,8 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   selectedPackage,
   customItems,
   pick2,
+  pick2Summary,
+  pick2NeedsAttention = false,
   totalPrice,
   onRemoveItem,
   onPrint,
@@ -37,6 +42,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   baseAddonPricesById,
   onDeselectPackage,
   onShowAgreement,
+  onShowPick2,
   variant = "panel",
   isCompact = false,
   barRef,
@@ -56,7 +62,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
     return (
       <div
         ref={barRef}
-        className={`am-selection-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden ${
+        className={`am-selection-bar pointer-events-none fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur print:hidden ${
           isCompact ? "am-selection-bar--compact" : ""
         }`}
         data-testid="selection-drawer-bar"
@@ -98,10 +104,15 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                   </span>
                 )}
               </div>
+              {pick2Summary ? (
+                <div className={`text-xs text-lux-textMuted ${isCompact ? "mt-0.5" : ""}`}>
+                  Pick-2: {pick2Summary}
+                </div>
+              ) : null}
             </div>
 
             <div
-              className={`flex justify-end ${
+              className={`flex justify-end pointer-events-auto ${
                 isCompact
                   ? "items-center gap-2 flex-nowrap"
                   : "flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap"
@@ -127,6 +138,16 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 </p>
               </div>
               <div className={`flex items-center gap-2 ${isCompact ? "flex-nowrap" : ""}`}>
+                {pick2NeedsAttention && onShowPick2 ? (
+                  <button
+                    onClick={onShowPick2}
+                    className={`btn-lux-ghost min-h-[44px] ${isCompact ? "px-3" : "px-4"}`}
+                    aria-label="Finish Pick-2 selection"
+                    data-testid="pick2-fix-action"
+                  >
+                    Finish Pick-2
+                  </button>
+                ) : null}
                 <button
                   onClick={onPrint}
                   className={`btn-lux-ghost min-h-[44px] ${isCompact ? "px-3" : "px-4"}`}

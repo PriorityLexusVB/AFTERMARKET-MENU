@@ -1092,7 +1092,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                 </h4>
                 <div className="flex items-center gap-4">
                   <p className="text-sm text-gray-500">
-                    Drag using the ≡ handle to reorder or move between columns • AND/OR controls the
+                    Drag using the  handle to reorder or move between columns  AND/OR controls the
                     connector to the NEXT item below (hidden on the last item)
                   </p>
                 </div>

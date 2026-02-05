@@ -86,7 +86,7 @@ const basePayload = (name: string, column: number, position: number, connector: 
 };
 
 async function run(): Promise<void> {
-  console.log('🚀 Starting package template apply');
+  console.log(' Starting package template apply');
   console.log(DIVIDER);
   console.log(`Mode: ${isDryRun ? 'DRY RUN (set DRY_RUN=0 to write)' : 'LIVE (writes enabled)'}`);
 
@@ -96,7 +96,7 @@ async function run(): Promise<void> {
   const db = admin.firestore();
 
   try {
-    console.log('\n📦 Fetching features...');
+    console.log('\n Fetching features...');
     const snapshot = await db.collection('features').get();
     const features: ProductFeature[] = snapshot.docs.map((doc) => ({ ...(doc.data() as ProductFeature), id: doc.id }));
     console.log(`Found ${features.length} feature(s).\n`);
@@ -169,12 +169,12 @@ async function run(): Promise<void> {
     plannedWrites.forEach((op) => {
       const idLabel = op.create ? '(new doc)' : op.ref.id;
       console.log(
-        `${op.create ? '➕ Create' : '🔄 Update'} ${idLabel} -> column ${op.data.column}, position ${op.data.position}, connector ${op.data.connector}`
+        `${op.create ? ' Create' : ' Update'} ${idLabel} -> column ${op.data.column}, position ${op.data.position}, connector ${op.data.connector}`
       );
     });
 
     if (isDryRun) {
-      console.log('\n🧪 DRY RUN complete. No writes performed.');
+      console.log('\n DRY RUN complete. No writes performed.');
       await admin.app().delete();
       return;
     }
@@ -183,10 +183,10 @@ async function run(): Promise<void> {
     plannedWrites.forEach((op) => batch.set(op.ref, op.data, { merge: true }));
     await batch.commit();
 
-    console.log('\n✅ Template applied successfully.');
+    console.log('\n Template applied successfully.');
     await admin.app().delete();
   } catch (err) {
-    console.error('\n❌ Error applying template:', err);
+    console.error('\n Error applying template:', err);
     try {
       await admin.app().delete();
     } catch {

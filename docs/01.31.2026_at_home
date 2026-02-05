@@ -1,5 +1,5 @@
 PR #152 (Pick2 decoupling + guardrails + runbook) merged to main.
-Post‑merge validation on main completed earlier: npm ci, npm run build, npm run test:run, npm run test:e2e all passed.
+Postmerge validation on main completed earlier: npm ci, npm run build, npm run test:run, npm run test:e2e all passed.
 Current blocker: Firebase MCP not available to this session. npm run firebase:mcp failed due to Firebase CLI auth earlier; after reauth, MCP still not exposed to this session.
 Pick2 Firestore updates (config + ala_carte_options) were not performed yet.
-Last request to enable Pick2 for 9 items with sort order and shortValue/highlights remains pending, as does re‑query + targeted E2E.
+Last request to enable Pick2 for 9 items with sort order and shortValue/highlights remains pending, as does requery + targeted E2E.

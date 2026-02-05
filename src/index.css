@@ -100,6 +100,16 @@ h6,
   /* Viewport */
   --app-vh: 100vh;
   --app-height: var(--app-vh);
+
+  /* Density tokens (luxury calm) */
+  --am-col-min: 280px;
+  --am-col-gap: clamp(0.5rem, 0.9vw, 1rem);
+  --am-card-pad: clamp(0.9rem, 1.1vw, 1.4rem);
+  --am-card-pad-compact: clamp(0.6rem, 0.9vw, 1rem);
+  --am-text-body: clamp(0.9rem, 0.35vw + 0.8rem, 1.05rem);
+  --am-text-label: clamp(0.7rem, 0.25vw + 0.6rem, 0.85rem);
+  --am-text-price: clamp(2.1rem, 1.4vw + 1.8rem, 3rem);
+  --am-radius-card: clamp(14px, 1.2vw, 20px);
 }
 
 @supports (height: 100dvh) {
@@ -268,6 +278,22 @@ h6,
     @apply mb-3 md:mb-4;
   }
 
+  .am-text-body {
+    font-size: var(--am-text-body);
+    line-height: 1.35;
+  }
+
+  .am-text-label {
+    font-size: var(--am-text-label);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .am-text-price {
+    font-size: var(--am-text-price);
+    line-height: 1;
+  }
+
   /* Menu header controls (centralized) */
   .am-menu-tabs-row {
     @apply gap-2;
@@ -357,26 +383,30 @@ h6,
   }
 
   .am-package-header {
-    @apply p-5 lg:p-6 pb-3;
+    padding: var(--am-card-pad);
+    padding-bottom: clamp(0.6rem, 0.8vw, 0.9rem);
   }
 
   .am-package-header-compact {
-    @apply p-4 pb-3;
+    padding: var(--am-card-pad-compact);
+    padding-bottom: clamp(0.45rem, 0.6vw, 0.7rem);
   }
   .am-package-body {
-    @apply p-5 lg:p-6 pt-1;
+    padding: var(--am-card-pad);
+    padding-top: clamp(0.35rem, 0.5vw, 0.6rem);
   }
 
   .am-package-body-compact {
-    @apply p-4 pt-1;
+    padding: var(--am-card-pad-compact);
+    padding-top: clamp(0.3rem, 0.45vw, 0.5rem);
   }
 
   .am-package-footer {
-    @apply p-5 lg:p-6;
+    padding: var(--am-card-pad);
   }
 
   .am-package-footer-compact {
-    @apply p-4;
+    padding: var(--am-card-pad-compact);
   }
 
   .am-package-first-feature {
@@ -402,6 +432,18 @@ h6,
   @media (min-width: 1366px) {
     .packages-grid-ipad {
       gap: 3rem;
+    }
+  }
+
+  .am-packages-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(var(--am-col-min), 1fr));
+    gap: var(--am-col-gap);
+  }
+
+  @media (max-width: 1180px) {
+    .am-packages-grid-compact {
+      grid-template-columns: repeat(2, minmax(var(--am-col-min), 1fr));
     }
   }
 
@@ -487,6 +529,7 @@ h6,
 
   .lux-surface {
     @apply bg-lux-bg1/80 border border-lux-border/60 rounded-2xl shadow-luxury backdrop-blur-xl text-lux-text;
+    border-radius: var(--am-radius-card);
   }
 
   .lux-card {

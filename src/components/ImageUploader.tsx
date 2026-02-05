@@ -349,7 +349,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   : "Drag & drop an image, or click to browse"}
               </p>
               <p className="text-sm text-gray-500">
-                Max {maxSizeMB}MB •{" "}
+                Max {maxSizeMB}MB
+                <span className="mx-2 text-gray-600" aria-hidden="true">
+                  &bull;
+                </span>
                 {acceptedFormats
                   .map((f) => f.split("/")[1])
                   .join(", ")

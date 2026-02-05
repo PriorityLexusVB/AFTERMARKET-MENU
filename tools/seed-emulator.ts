@@ -45,7 +45,7 @@ async function seedEmulator(): Promise<void> {
   const emulatorHost = process.env["FIRESTORE_EMULATOR_HOST"];
 
   if (!emulatorHost) {
-    console.error("❌ Error: FIRESTORE_EMULATOR_HOST environment variable is not set.");
+    console.error(" Error: FIRESTORE_EMULATOR_HOST environment variable is not set.");
     console.error(
       "   Make sure the Firebase emulator is running and set the environment variable."
     );
@@ -55,7 +55,7 @@ async function seedEmulator(): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`🔥 Connecting to Firebase emulator at ${emulatorHost}...`);
+  console.log(` Connecting to Firebase emulator at ${emulatorHost}...`);
 
   // Initialize Firebase with a demo project (emulator doesn't need real credentials)
   const app = initializeApp({
@@ -69,7 +69,7 @@ async function seedEmulator(): Promise<void> {
   const port = parseInt(portStr || "8081", 10);
 
   if (!host) {
-    console.error("❌ Error: Invalid FIRESTORE_EMULATOR_HOST format. Expected format: host:port");
+    console.error(" Error: Invalid FIRESTORE_EMULATOR_HOST format. Expected format: host:port");
     process.exit(1);
   }
 
@@ -77,23 +77,23 @@ async function seedEmulator(): Promise<void> {
 
   // Read seed data
   const seedPath = join(__dirname, "firestore-seed.json");
-  console.log(`📄 Reading seed data from ${seedPath}...`);
+  console.log(` Reading seed data from ${seedPath}...`);
 
   const seedDataRaw = readFileSync(seedPath, "utf-8");
   const seedData: SeedData = JSON.parse(seedDataRaw);
 
   if (!seedData.__collections__) {
-    console.error("❌ Error: Invalid seed data format. Expected __collections__ key.");
+    console.error(" Error: Invalid seed data format. Expected __collections__ key.");
     process.exit(1);
   }
 
-  console.log("\n📊 Starting data import...\n");
+  console.log("\n Starting data import...\n");
 
   let totalDocuments = 0;
 
   // Iterate through collections
   for (const [collectionName, documents] of Object.entries(seedData.__collections__)) {
-    console.log(`📦 Importing collection: ${collectionName}`);
+    console.log(` Importing collection: ${collectionName}`);
 
     const documentIds = Object.keys(documents);
 
@@ -103,21 +103,21 @@ async function seedEmulator(): Promise<void> {
 
       const docRef = doc(collection(db, collectionName), documentId);
       await setDoc(docRef, documentData);
-      console.log(`  ✓ Added document: ${documentId}`);
+      console.log(`   Added document: ${documentId}`);
       totalDocuments++;
     }
 
-    console.log(`  → Imported ${documentIds.length} documents to ${collectionName}\n`);
+    console.log(`   Imported ${documentIds.length} documents to ${collectionName}\n`);
   }
 
-  console.log(`✅ Import complete! Added ${totalDocuments} documents total.\n`);
-  console.log("🌐 You can now start the app with:");
+  console.log(` Import complete! Added ${totalDocuments} documents total.\n`);
+  console.log(" You can now start the app with:");
   console.log("   npm run dev:emulator\n");
 }
 
 seedEmulator()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("❌ Error during import:", error);
+    console.error(" Error during import:", error);
     process.exit(1);
   });

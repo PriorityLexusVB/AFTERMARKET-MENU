@@ -99,7 +99,7 @@ function initializeFirebase(): admin.app.App {
 
 // Main migration function
 async function runMigration(): Promise<void> {
-  console.log('🚀 Starting A La Carte to Features Backfill Migration\n');
+  console.log(' Starting A La Carte to Features Backfill Migration\n');
   console.log(DIVIDER);
 
   const stats: MigrationStats = {
@@ -114,10 +114,10 @@ async function runMigration(): Promise<void> {
     // Initialize Firebase
     const app = initializeFirebase();
     const db = admin.firestore(app);
-    console.log('✅ Firebase Admin SDK initialized\n');
+    console.log(' Firebase Admin SDK initialized\n');
 
     // Step 1: Read all A La Carte options
-    console.log('📦 Reading A La Carte options...');
+    console.log(' Reading A La Carte options...');
     const optionsSnapshot = await db.collection('ala_carte_options').get();
     const options: AlaCarteOptionDoc[] = optionsSnapshot.docs.map(doc => ({
       id: doc.id,
@@ -128,13 +128,13 @@ async function runMigration(): Promise<void> {
     console.log(`   Found ${options.length} A La Carte options\n`);
 
     if (options.length === 0) {
-      console.log('⚠️  No A La Carte options found. Nothing to migrate.');
+      console.log('  No A La Carte options found. Nothing to migrate.');
       await app.delete();
       process.exit(0);
     }
 
     // Step 2: Process each option
-    console.log('🔄 Processing options...\n');
+    console.log(' Processing options...\n');
 
     for (const option of options) {
       try {
@@ -144,7 +144,7 @@ async function runMigration(): Promise<void> {
 
         if (!featureDoc.exists) {
           // Create new feature
-          console.log(`  ➕ Creating feature ${featureId} from option "${option.name}"`);
+          console.log(`   Creating feature ${featureId} from option "${option.name}"`);
           
           const newFeature: Omit<FeatureDoc, 'id'> = {
             name: option.name,
@@ -169,7 +169,7 @@ async function runMigration(): Promise<void> {
           stats.featuresCreated++;
         } else {
           // Update existing feature
-          console.log(`  🔄 Updating feature ${featureId} for A La Carte publishing`);
+          console.log(`   Updating feature ${featureId} for A La Carte publishing`);
           
           const existingFeature = featureDoc.data() as FeatureDoc;
           
@@ -205,14 +205,14 @@ async function runMigration(): Promise<void> {
         stats.optionsUpdated++;
 
       } catch (error) {
-        console.error(`  ❌ Error processing option ${option.id}:`, error);
+        console.error(`   Error processing option ${option.id}:`, error);
         stats.errors++;
       }
     }
 
     // Summary
     console.log('\n' + DIVIDER);
-    console.log('📈 Migration Summary');
+    console.log(' Migration Summary');
     console.log(DIVIDER);
     console.log(`   Options found:       ${stats.optionsFound}`);
     console.log(`   Features created:    ${stats.featuresCreated}`);
@@ -221,18 +221,18 @@ async function runMigration(): Promise<void> {
     console.log(`   Errors:              ${stats.errors}`);
 
     if (stats.errors > 0) {
-      console.log('\n⚠️  Some operations failed. Please review the errors above.');
+      console.log('\n  Some operations failed. Please review the errors above.');
       await app.delete();
       process.exit(1);
     }
 
-    console.log('\n✅ Migration complete!');
+    console.log('\n Migration complete!');
 
     // Clean up
     await app.delete();
 
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    console.error('\n Migration failed:', error);
     process.exit(1);
   }
 }

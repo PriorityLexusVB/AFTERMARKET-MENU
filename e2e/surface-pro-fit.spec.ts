@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { assertScrollLocked } from "./utils/scroll-lock";
 
 test.describe("Surface Pro fit guardrails", () => {
-  test("no horizontal overflow + key CTAs visible (1368×912)", async ({ page }, testInfo) => {
+  test("no horizontal overflow + key CTAs visible (1368x912)", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1368, height: 912 });
 
     await page.goto("/?demo=1");
@@ -57,9 +58,8 @@ test.describe("Surface Pro fit guardrails", () => {
 
     // Open/close add-ons and ensure selection bar remains visible.
     await page.getByRole("button", { name: /open add-ons/i }).click();
-    await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
-      timeout: 10000,
-    });
+    const closeAddonsButton = page.locator('button[aria-label="Close add-ons"]');
+    await expect(closeAddonsButton).toBeVisible({ timeout: 10000 });
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     const list = page.getByTestId("addons-drawer-list");
@@ -79,32 +79,19 @@ test.describe("Surface Pro fit guardrails", () => {
         .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
         .toBeGreaterThan(0);
 
-      const windowStillLocked = await page.evaluate(async () => {
-        const before = window.scrollY;
-        await new Promise((r) => setTimeout(r, 50));
-        const after = window.scrollY;
-        return before === 0 && after === 0;
-      });
-      expect(windowStillLocked).toBe(true);
+      await assertScrollLocked(page);
     } else {
       await testInfo.attach("addons-list-note", {
-        body: "Add-Ons list did not overflow; scroll assertion skipped",
+        body: "Add-ons list did not overflow; scroll assertion skipped",
         contentType: "text/plain",
       });
     }
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
-    await page.getByRole("button", { name: /close add-ons/i }).click();
+    await closeAddonsButton.click();
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     // Desktop kiosk is intended to use a no-scroll layout at this viewport.
-    const scrollLocked = await page.evaluate(async () => {
-      const before = window.scrollY;
-      window.scrollTo(0, 1000);
-      await new Promise((r) => setTimeout(r, 50));
-      const after = window.scrollY;
-      return before === 0 && after === 0;
-    });
-    expect(scrollLocked).toBe(true);
+    await assertScrollLocked(page);
 
     await page.screenshot({
       path: testInfo.outputPath("surface-pro-fit.png"),

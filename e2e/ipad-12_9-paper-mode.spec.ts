@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("iPad Pro 12.9 paper mode", () => {
-  test("menu enforces no-scroll + selection bar fits (1366×1024)", async ({ page }, testInfo) => {
+  test("menu enforces no-scroll + selection bar fits (13661024)", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1366, height: 1024 });
 
     await page.goto("/?forceIpad=1&demo=1");

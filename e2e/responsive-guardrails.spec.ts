@@ -15,14 +15,14 @@ type ViewportCase = {
 const VIEWPORTS: ViewportCase[] = [
   // iPad Pro 12.9
   {
-    name: "iPad Pro 12.9 landscape (1366×1024)",
+    name: "iPad Pro 12.9 landscape (13661024)",
     width: 1366,
     height: 1024,
     // Reuse existing e2e navigation params.
     url: "/?forceIpad=1&demo=1",
   },
   {
-    name: "iPad Pro 12.9 portrait (1024×1366)",
+    name: "iPad Pro 12.9 portrait (10241366)",
     width: 1024,
     height: 1366,
     url: "/?forceIpad=1&demo=1",
@@ -30,7 +30,7 @@ const VIEWPORTS: ViewportCase[] = [
 
   // iPad Pro 11
   {
-    name: "iPad Pro 11 landscape (1194×834)",
+    name: "iPad Pro 11 landscape (1194834)",
     width: 1194,
     height: 834,
     url: "/?forceIpad=1&demo=1",
@@ -38,7 +38,7 @@ const VIEWPORTS: ViewportCase[] = [
     expectNoVerticalOverflow: true,
   },
   {
-    name: "iPad Pro 11 portrait (834×1194)",
+    name: "iPad Pro 11 portrait (8341194)",
     width: 834,
     height: 1194,
     url: "/?forceIpad=1&demo=1",
@@ -46,7 +46,7 @@ const VIEWPORTS: ViewportCase[] = [
 
   // Surface-ish (match existing surface-fit.spec.ts)
   {
-    name: "Surface-ish landscape (1368×912)",
+    name: "Surface-ish landscape (1368912)",
     width: 1368,
     height: 912,
     url: "/?demo=1",
@@ -54,13 +54,13 @@ const VIEWPORTS: ViewportCase[] = [
 
   // Desktop
   {
-    name: "Desktop (1440×900)",
+    name: "Desktop (1440900)",
     width: 1440,
     height: 900,
     url: "/?demo=1",
   },
   {
-    name: "Desktop (1920×1080)",
+    name: "Desktop (19201080)",
     width: 1920,
     height: 1080,
     url: "/?demo=1",

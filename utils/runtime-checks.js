@@ -141,15 +141,15 @@ export function logStartupDiagnostics(options = {}) {
   // Check for whitespace in env var names
   const whitespaceVars = detectWhitespaceEnvVars();
   if (whitespaceVars.length > 0) {
-    console.log('[DIAGNOSTICS] ⚠️  WARNING: Environment variables with whitespace detected!');
+    console.log('[DIAGNOSTICS]   WARNING: Environment variables with whitespace detected!');
     whitespaceVars.forEach(({ original, trimmed }) => {
-      console.log(`[DIAGNOSTICS]   ❌ "${original}" (has whitespace)`);
+      console.log(`[DIAGNOSTICS]    "${original}" (has whitespace)`);
       console.log(`[DIAGNOSTICS]      Should be: "${trimmed}"`);
     });
-    console.log('[DIAGNOSTICS] ⚠️  This is a common Cloud Run misconfiguration!');
-    console.log('[DIAGNOSTICS] ⚠️  Remove these variables from Cloud Run console.');
+    console.log('[DIAGNOSTICS]   This is a common Cloud Run misconfiguration!');
+    console.log('[DIAGNOSTICS]   Remove these variables from Cloud Run console.');
   } else {
-    console.log('[DIAGNOSTICS] ✓ No whitespace in environment variable names');
+    console.log('[DIAGNOSTICS]  No whitespace in environment variable names');
   }
   
   // Check dist directory
@@ -163,12 +163,12 @@ export function logStartupDiagnostics(options = {}) {
     console.log('[DIAGNOSTICS] File count:', distCheck.files.length);
     console.log('[DIAGNOSTICS] Sample files:', distCheck.sample.join(', '));
   } else if (distCheck.exists && !distCheck.readable) {
-    console.log('[DIAGNOSTICS] ⚠️  WARNING: Dist directory exists but is not readable!');
-    console.log('[DIAGNOSTICS] ⚠️  Error:', distCheck.error);
-    console.log('[DIAGNOSTICS] ⚠️  This may indicate a GCSFuse mount issue.');
+    console.log('[DIAGNOSTICS]   WARNING: Dist directory exists but is not readable!');
+    console.log('[DIAGNOSTICS]   Error:', distCheck.error);
+    console.log('[DIAGNOSTICS]   This may indicate a GCSFuse mount issue.');
   } else {
-    console.log('[DIAGNOSTICS] ⚠️  WARNING: Dist directory does not exist!');
-    console.log('[DIAGNOSTICS] ⚠️  Possible causes:');
+    console.log('[DIAGNOSTICS]   WARNING: Dist directory does not exist!');
+    console.log('[DIAGNOSTICS]   Possible causes:');
     console.log('[DIAGNOSTICS]      1. Build step failed or was skipped');
     console.log('[DIAGNOSTICS]      2. GCSFuse volume mounted at /app/dist');
     console.log('[DIAGNOSTICS]      3. Wrong working directory');

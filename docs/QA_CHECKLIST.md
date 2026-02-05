@@ -7,5 +7,5 @@
 - [ ] A La Carte page (iPad Safari landscape): no scroll; shows **Page X / Y** indicator and **Prev/Next** controls.
 - [ ] Popular Add-ons ordering: reordering A La Carte Featured (Column 4) updates Popular Add-ons order in customer view.
 - [ ] Rotate or resize the viewport and confirm CSS vars `--app-vh` and `--app-height` update together.
-- [ ] Desktop preview tip: if DevTools emulation doesn’t trigger iPad layout, append `?forceIpad=1` to the URL.
+- [ ] Desktop preview tip: if DevTools emulation doesn't trigger iPad layout, append `?forceIpad=1` to the URL.
 - [ ] Run the repo's test script (npm/pnpm/yarn as configured) and ensure tests pass.

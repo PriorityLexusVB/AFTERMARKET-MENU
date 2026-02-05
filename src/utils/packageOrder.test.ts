@@ -12,7 +12,7 @@ describe('sortPackagesForDisplay', () => {
     tier_color: 'gray-500',
   });
 
-  it('orders packages as Elite → Platinum → Gold regardless of input order', () => {
+  it('orders packages as Elite  Platinum  Gold regardless of input order', () => {
     const input = [pkg('Gold'), pkg('Platinum'), pkg('Elite')];
     const sorted = sortPackagesForDisplay(input);
     expect(sorted.map(p => p.name)).toEqual(['Elite', 'Platinum', 'Gold']);

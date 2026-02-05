@@ -97,7 +97,7 @@ async function createBackup(
   db: admin.firestore.Firestore,
   backupDir: string
 ): Promise<FeatureDocument[]> {
-  console.log('📦 Creating backup of features collection...');
+  console.log(' Creating backup of features collection...');
   
   const featuresRef = db.collection('features');
   const snapshot = await featuresRef.get();
@@ -116,7 +116,7 @@ async function createBackup(
   const backupPath = path.join(backupDir, `features-backup-${timestamp}.json`);
   
   fs.writeFileSync(backupPath, JSON.stringify(features, null, 2));
-  console.log(`✅ Backup created: ${backupPath}`);
+  console.log(` Backup created: ${backupPath}`);
   console.log(`   Total features backed up: ${features.length}`);
   
   return features;
@@ -190,7 +190,7 @@ async function executeBatchUpdates(
   };
   
   if (dryRun) {
-    console.log('\n🔍 DRY RUN - No changes will be made');
+    console.log('\n DRY RUN - No changes will be made');
     for (const [id, update] of updates) {
       console.log(`  Would update ${id}: position=${update.position}, connector=${update.connector}`);
     }
@@ -206,7 +206,7 @@ async function executeBatchUpdates(
     chunks.push(updateEntries.slice(i, i + BATCH_SIZE));
   }
   
-  console.log(`\n📝 Processing ${chunks.length} batch(es)...`);
+  console.log(`\n Processing ${chunks.length} batch(es)...`);
   
   for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
     const chunk = chunks[chunkIndex];
@@ -228,12 +228,12 @@ async function executeBatchUpdates(
         
         await batch.commit();
         stats.updated += chunk.length;
-        console.log(`  ✅ Batch ${chunkIndex + 1}/${chunks.length}: ${chunk.length} documents updated`);
+        console.log(`   Batch ${chunkIndex + 1}/${chunks.length}: ${chunk.length} documents updated`);
         lastError = null;
         break;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.error(`  ⚠️ Batch ${chunkIndex + 1} attempt ${attempt + 1} failed:`, lastError.message);
+        console.error(`   Batch ${chunkIndex + 1} attempt ${attempt + 1} failed:`, lastError.message);
         
         if (attempt < MAX_RETRIES - 1) {
           await sleep(RETRY_DELAY_MS * Math.pow(2, attempt)); // Exponential backoff
@@ -243,7 +243,7 @@ async function executeBatchUpdates(
     
     if (lastError) {
       stats.errors += chunk.length;
-      console.error(`  ❌ Batch ${chunkIndex + 1} failed after ${MAX_RETRIES} attempts`);
+      console.error(`   Batch ${chunkIndex + 1} failed after ${MAX_RETRIES} attempts`);
     }
   }
   
@@ -252,35 +252,35 @@ async function executeBatchUpdates(
 
 // Main migration function
 async function runMigration(): Promise<void> {
-  console.log('🚀 Starting Feature Position & Connector Migration\n');
+  console.log(' Starting Feature Position & Connector Migration\n');
   console.log(DIVIDER);
   
   const { dryRun, backupDir } = parseArgs();
   
   if (dryRun) {
-    console.log('ℹ️  Running in DRY RUN mode - no changes will be made\n');
+    console.log('  Running in DRY RUN mode - no changes will be made\n');
   }
   
   try {
     // Initialize Firebase
     const app = initializeFirebase();
     const db = admin.firestore(app);
-    console.log('✅ Firebase Admin SDK initialized\n');
+    console.log(' Firebase Admin SDK initialized\n');
     
     // Create backup
     const features = await createBackup(db, backupDir);
     
     if (features.length === 0) {
-      console.log('\n⚠️ No features found in the collection. Nothing to migrate.');
+      console.log('\n No features found in the collection. Nothing to migrate.');
       process.exit(0);
     }
     
     // Compute updates
-    console.log('\n📊 Computing updates...');
+    console.log('\n Computing updates...');
     const updates = computeUpdates(features);
     
     if (updates.size === 0) {
-      console.log('\n✅ All features already have position and connector set. Nothing to update.');
+      console.log('\n All features already have position and connector set. Nothing to update.');
       process.exit(0);
     }
     
@@ -291,7 +291,7 @@ async function runMigration(): Promise<void> {
     
     // Summary
     console.log('\n' + DIVIDER);
-    console.log('📈 Migration Summary');
+    console.log(' Migration Summary');
     console.log(DIVIDER);
     console.log(`   Total features:   ${features.length}`);
     console.log(`   Updates needed:   ${stats.total}`);
@@ -300,21 +300,21 @@ async function runMigration(): Promise<void> {
     console.log(`   Errors:           ${stats.errors}`);
     
     if (stats.errors > 0) {
-      console.log('\n⚠️ Some updates failed. Please review the errors above and re-run the migration.');
+      console.log('\n Some updates failed. Please review the errors above and re-run the migration.');
       process.exit(1);
     }
     
     if (dryRun) {
-      console.log('\n✅ Dry run complete. Run without --dry-run to apply changes.');
+      console.log('\n Dry run complete. Run without --dry-run to apply changes.');
     } else {
-      console.log('\n✅ Migration complete!');
+      console.log('\n Migration complete!');
     }
     
     // Clean up
     await app.delete();
     
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    console.error('\n Migration failed:', error);
     process.exit(1);
   }
 }

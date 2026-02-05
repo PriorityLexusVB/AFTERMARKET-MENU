@@ -1,8 +1,8 @@
-# AFTERMARKET-MENU — Playbook (Priority Lexus VB)
+# AFTERMARKET-MENU - Playbook (Priority Lexus VB)
 
 **Repo:** `PriorityLexusVB/AFTERMARKET-MENU`  
 **Primary deployment:** Cloud Run (Cloud Build trigger)  
-**Primary device target:** iPad **landscape** (Safari “Add to Home Screen” / PWA standalone)  
+**Primary device target:** iPad **landscape** (Safari "Add to Home Screen" / PWA standalone)  
 **Purpose:** Customer-facing protection menu + admin console to curate packages & add-ons.
 
 ---
@@ -10,7 +10,7 @@
 ## 0) One sentence truth
 
 **Admin drag/drop defines what customers see.**  
-Packages come from `features` columns 1–3, Popular Add-Ons come from `ala_carte_options` column 4.
+Packages come from `features` columns 1-3, Popular Add-Ons come from `ala_carte_options` column 4.
 
 ---
 
@@ -28,7 +28,7 @@ Packages come from `features` columns 1–3, Popular Add-Ons come from `ala_cart
 **Ordering:** `position` ascending (0-based)  
 **Connector:** `connector` is the connector to the **NEXT** item below.
 
-- The last item’s connector is irrelevant (hide it).
+- The last item's connector is irrelevant (hide it).
 
 ### 1.2 Popular Add-Ons (right-most customer column)
 
@@ -61,19 +61,19 @@ Everything that edits a product should deep-link to Product Hub.
 **Job:** ordering for A La Carte visibility.
 
 - Featured lane (Column 4) for Popular Add-Ons
-- Optional “Published (not featured)” lane
-- “Hidden items” panel to explain why totals don’t match:
+- Optional "Published (not featured)" lane
+- "Hidden items" panel to explain why totals don't match:
   - Unpublished
   - Missing required fields (name/price)
   - Invalid price (<= 0)
 
 **Rule:** If header shows `Visible X / Total Y`, and X != Y, the UI must show:
 
-- A “Hidden items” section listing each hidden doc + reasons.
+- A "Hidden items" section listing each hidden doc + reasons.
 
 ### 2.3 Product Hub tab (THE ONLY EDITOR)
 
-**Job:** edit everything in one place. This is the “single hub promise.”
+**Job:** edit everything in one place. This is the "single hub promise."
 Per product (feature) you can:
 
 - Choose package lane (2/3/1 or Not in Packages)
@@ -82,7 +82,7 @@ Per product (feature) you can:
 - Set A La Carte price (required to publish)
 - Set NEW flag
 - Set Featured (Popular Add-Ons) (Column 4)
-- Set category (columns 1–3 if used)
+- Set category (columns 1-3 if used)
 - Set A La Carte position
 - Duplicate to other package lanes (creates a new `features` doc)
 
@@ -131,7 +131,7 @@ Any payload must sanitize optional fields:
 
 ## 4) Publish/unpublish: correctness rules
 
-### 4.1 Publish (feature → ala_carte_options)
+### 4.1 Publish (feature  ala_carte_options)
 
 Publishing requires:
 
@@ -145,14 +145,14 @@ Publishing requires:
 Unpublish must:
 
 - set `isPublished: false`
-- clear placement so UI doesn’t show “Featured while unpublished”:
+- clear placement so UI doesn't show "Featured while unpublished":
   - `column: deleteField()`
   - `position: deleteField()`
   - `connector: deleteField()` (if used)
 
 ---
 
-## 5) Troubleshooting: “Popular Add-Ons full customer side, blank admin side”
+## 5) Troubleshooting: "Popular Add-Ons full customer side, blank admin side"
 
 This is almost always a **source mismatch**:
 
@@ -199,8 +199,8 @@ Clamp text to prevent internal scroll.
 
 ### 6.3 A La Carte iPad UX
 
-Prefer big “+ ADD” buttons.
-In “paper mode”, prefer **pagination** (Prev/Next + “Page X / Y”) over scrolling.
+Prefer big "+ ADD" buttons.
+In "paper mode", prefer **pagination** (Prev/Next + "Page X / Y") over scrolling.
 
 If the A La Carte list grows:
 
@@ -210,12 +210,12 @@ If the A La Carte list grows:
 
 ---
 
-## 7) PWA / “no search bar” install
+## 7) PWA / "no search bar" install
 
 To remove browser chrome on iPad:
 
 1. Open in Safari
-2. Share → Add to Home Screen
+2. Share  Add to Home Screen
 3. Launch from icon
 
 Required:

@@ -2,7 +2,7 @@
 
 This directory contains one-time migration scripts for updating Firestore data.
 
-## ONE HUB Backfill — Publish legacy A La Carte items to Features
+## ONE HUB Backfill - Publish legacy A La Carte items to Features
 
 **Script:** `backfill-onehub-alacarte.ts`
 

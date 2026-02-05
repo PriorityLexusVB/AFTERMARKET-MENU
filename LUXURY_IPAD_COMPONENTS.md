@@ -371,7 +371,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           `}
           aria-label={isSelected ? "Package selected" : "Select package"}
         >
-          {isSelected ? "✓ Selected" : "Select Plan"}
+          {isSelected ? " Selected" : "Select Plan"}
         </button>
       </div>
     </div>
@@ -1083,15 +1083,15 @@ Create these files in your project:
 
 ```
 src/
-├── components/
-│   ├── Header.luxury-ipad.tsx (copy from above)
-│   ├── PackageCard.luxury-ipad.tsx (copy from above)
-│   ├── Summary.luxury-ipad.tsx (copy from above)
-│   ├── FeatureModal.luxury-ipad.tsx (copy from above)
-│   ├── LoadingSpinner.luxury-ipad.tsx (copy from above)
-│   └── Buttons.luxury-ipad.tsx (copy from above)
-├── index.luxury-ipad.css (created earlier)
-└── ...
+ components/
+    Header.luxury-ipad.tsx (copy from above)
+    PackageCard.luxury-ipad.tsx (copy from above)
+    Summary.luxury-ipad.tsx (copy from above)
+    FeatureModal.luxury-ipad.tsx (copy from above)
+    LoadingSpinner.luxury-ipad.tsx (copy from above)
+    Buttons.luxury-ipad.tsx (copy from above)
+ index.luxury-ipad.css (created earlier)
+ ...
 ```
 
 ### 2. Gradual Migration Strategy

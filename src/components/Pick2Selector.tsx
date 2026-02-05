@@ -53,6 +53,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     () => items.filter((item) => selectedIdSet.has(item.id)),
     [items, selectedIdSet]
   );
+  const slotItems = [selectedItems[0] ?? null, selectedItems[1] ?? null];
   const selectedValue = useMemo(
     () => selectedItems.reduce((sum, item) => sum + item.price, 0),
     [selectedItems]
@@ -80,7 +81,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     }
 
     if (selectedCount >= maxSelections) {
-      setBlockedMessage("You’ve selected 2 — remove one to swap.");
+      setBlockedMessage("You've selected 2 - remove one to swap.");
       return;
     }
 
@@ -90,7 +91,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
 
   const progressText = `${selectedCount}/${maxSelections} selected`;
   const blockedText =
-    blockedMessage ?? (isComplete ? "You’ve selected 2 — remove one to swap." : null);
+    blockedMessage ?? (isComplete ? "You've selected 2 - remove one to swap." : null);
 
   const headerWrapperClass = isCompact
     ? "sticky top-0 z-20 -mx-2 px-2 pt-2 pb-2 bg-gray-900/90 backdrop-blur-sm"
@@ -160,6 +161,36 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           </div>
         ) : null}
 
+        <div
+          className={`${isCompact ? "mt-2" : "mt-3"} grid grid-cols-1 gap-2`}
+          aria-label="Pick 2 slots"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
+            Choose exactly {maxSelections}
+          </p>
+          {slotItems.map((slotItem, index) => (
+            <div
+              key={`pick2-slot-${index}`}
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-3 py-2"
+            >
+              <div className="text-sm text-gray-200">
+                <span className="text-gray-400">Slot {index + 1}: </span>
+                {slotItem ? slotItem.name : "Tap an upgrade to fill"}
+              </div>
+              {slotItem ? (
+                <button
+                  type="button"
+                  onClick={() => onToggle(slotItem)}
+                  className="min-h-[36px] min-w-[36px] rounded-lg border border-white/10 text-gray-200 hover:text-white"
+                  aria-label={`Clear ${slotItem.name} from slot ${index + 1}`}
+                >
+                  
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+
         <div className={`${isCompact ? "mt-2" : "mt-3"} flex flex-wrap gap-2`}>
           {selectedItems.length === 0 ? (
             <span className="text-xs text-gray-400">Select two to build your bundle.</span>
@@ -174,7 +205,9 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                 data-testid="pick2-selected-chip"
               >
                 <span className="max-w-[160px] truncate">{item.name}</span>
-                <span className="text-[11px] text-gray-300">✕</span>
+                <span className="text-[11px] text-gray-300" aria-hidden="true">
+                  &times;
+                </span>
               </button>
             ))
           )}
@@ -216,7 +249,6 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   isCompact={isCompact}
                   textSize={textSize}
                   ctaAddLabel="Select"
-                  ctaSelectedLabel="Added ✓"
                   ariaAddLabel={`Select ${item.name} for Pick 2`}
                   ariaSelectedLabel={`Remove ${item.name} from Pick 2`}
                   variant="pick2"

@@ -1,6 +1,6 @@
-# Incoming Changes Report (Pre-sync → Upstream) — 2026-01-27
+# Incoming Changes Report (Pre-sync  Upstream) - 2026-01-27
 
-This report lists **all incoming upstream changes** that landed when syncing from the pre-sync snapshot to the updated upstream state, **separately** from the small “restore iPad layout” commit.
+This report lists **all incoming upstream changes** that landed when syncing from the pre-sync snapshot to the updated upstream state, **separately** from the small "restore iPad layout" commit.
 
 ## References (exact SHAs)
 
@@ -10,7 +10,7 @@ This report lists **all incoming upstream changes** that landed when syncing fro
 
 ## What changed (incoming upstream only)
 
-These are **all files changed** between `backup/pre-sync-2026-01-27` → `7feebaf`.
+These are **all files changed** between `backup/pre-sync-2026-01-27`  `7feebaf`.
 
 ### File list (with line-change counts)
 
@@ -47,7 +47,7 @@ These are **all files changed** between `backup/pre-sync-2026-01-27` → `7feeba
 - `+6   -0` `src/vite-env.d.ts` (new)
 - `+40  -7` `vite.config.ts`
 
-### “Line-by-line” review commands (exact)
+### "Line-by-line" review commands (exact)
 
 Run any of these to see the full line-by-line diff for a file:
 
@@ -58,7 +58,7 @@ Run any of these to see the full line-by-line diff for a file:
   - `git diff backup/pre-sync-2026-01-27..7feebaf -- src/components/PackageCard.tsx`
   - `git diff backup/pre-sync-2026-01-27..7feebaf -- src/components/PackageSelector.tsx`
 
-If you want it in VS Code’s diff UI, open any file, then use Source Control → “Open Changes”.
+If you want it in VS Code's diff UI, open any file, then use Source Control  "Open Changes".
 
 ## Incoming upstream commits (each update)
 
@@ -107,10 +107,10 @@ These are **only** the files modified in `7feebaf..3f23ab3`:
 - `+21  -191` `src/components/PackageSelector.tsx`
 - `+2   -0` `src/index.css`
 
-## Notes tied to your report (“Recommended” and selection)
+## Notes tied to your report ("Recommended" and selection)
 
 - The upstream changes introduced support for a `isRecommended`/`is_recommended` field and UI styling in `src/components/PackageCard.tsx`.
-- In demo/mock data, `src/mock.ts` currently marks `Platinum` as `isRecommended: true`, which is why you can see “Recommended” **in demo mode**.
+- In demo/mock data, `src/mock.ts` currently marks `Platinum` as `isRecommended: true`, which is why you can see "Recommended" **in demo mode**.
 
 ## Pending local changes (NOT committed yet)
 
@@ -119,8 +119,8 @@ These are currently in your working tree but are **not** committed or pushed:
 - `src/components/PackageCard.tsx`
 - `src/components/PackageCard.test.tsx`
 
-Intent: restore the “tap anywhere selects/highlights” behavior and hide the “Recommended” badge/styling by default so the customer menu looks like it did before.
+Intent: restore the "tap anywhere selects/highlights" behavior and hide the "Recommended" badge/styling by default so the customer menu looks like it did before.
 
 ---
 
-If you want, I can generate a second report that summarizes behavioral changes per file (auth/demo flow, presentation mode, layout changes, etc.) after we confirm which exact URL/mode you’re testing (demo vs logged-in vs admin).
+If you want, I can generate a second report that summarizes behavioral changes per file (auth/demo flow, presentation mode, layout changes, etc.) after we confirm which exact URL/mode you're testing (demo vs logged-in vs admin).

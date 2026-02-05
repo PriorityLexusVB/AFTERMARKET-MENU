@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertScrollLocked } from "./utils/scroll-lock";
 
 const parseUsd = (raw: string): number => {
   const cleaned = raw.replace(/[^0-9.]/g, "");
@@ -62,6 +63,11 @@ test.describe("Pick2 flow", () => {
     await selectButtons.nth(1).click();
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("2/2 selected");
 
+    const selectedChips = page.getByTestId("pick2-selected-chip");
+    await expect(selectedChips).toHaveCount(2);
+    const chipTexts = (await selectedChips.allTextContents()).map((text) => text.trim());
+    expect(new Set(chipTexts).size).toBe(chipTexts.length);
+
     const totalAfter2 = await getSelectionTotal(page);
     expect(totalAfter2 - totalBefore).toBe(bundlePrice);
 
@@ -71,7 +77,7 @@ test.describe("Pick2 flow", () => {
     await extraSelect.scrollIntoViewIfNeeded();
     await expect(extraSelect).toBeDisabled();
     await expect(page.getByRole("status")).toContainText(
-      "You’ve selected 2 — remove one to swap.",
+      /You.ve selected 2 .*remove one to swap\./,
       { timeout: 2000 }
     );
     const totalAfterBlocked = await getSelectionTotal(page);
@@ -97,6 +103,46 @@ test.describe("Pick2 flow", () => {
     expect(totalAfterSwap).toBe(totalAfter2);
   });
 
+  test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {
+    await page.setViewportSize({ width: 1368, height: 912 });
+
+    await page.goto("/?demo=1");
+    await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+
+    const selectButton = page.locator('button:has-text("Select Plan")').first();
+    await selectButton.click();
+    await expect(page.locator('button:has-text("Selected")')).toBeVisible();
+
+    await page.getByRole("button", { name: /you pick 2/i }).click();
+    await page.waitForSelector("text=Any 2 for", { timeout: 10000 });
+
+    const list = page.getByTestId("pick2-list");
+    await expect(list).toBeVisible({ timeout: 10000 });
+    await list
+      .getByRole("button", { name: /Select .* for Pick 2/i })
+      .first()
+      .click();
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("1/2 selected");
+
+    await page.getByRole("button", { name: /protection packages/i }).click();
+    await expect(page.locator('[data-testid="package-card"]').first()).toBeVisible({
+      timeout: 10000,
+    });
+
+    const selectedCard = page
+      .locator('[data-testid="package-card"]')
+      .filter({ hasText: /selected/i })
+      .first();
+    await expect(selectedCard).toContainText(/Pick-2:/i);
+
+    const selectionBar = page.getByTestId("selection-drawer-bar");
+    await expect(selectionBar).toContainText(/Pick-2: 1\/2/i);
+    const fixAction = page.getByTestId("pick2-fix-action");
+    await expect(fixAction).toBeVisible();
+    await fixAction.click();
+    await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
+  });
+
   test("iPad paper mode: window scroll locked; Pick2 list can scroll internally", async ({
     page,
   }, testInfo) => {
@@ -113,14 +159,7 @@ test.describe("Pick2 flow", () => {
       timeout: 10000,
     });
 
-    const scrollLocked = await page.evaluate(async () => {
-      const before = window.scrollY;
-      window.scrollTo(0, 1000);
-      await new Promise((r) => setTimeout(r, 50));
-      const after = window.scrollY;
-      return before === 0 && after === 0;
-    });
-    expect(scrollLocked).toBe(true);
+    await assertScrollLocked(page);
 
     const list = page.getByTestId("pick2-list");
     await expect(list).toBeVisible({ timeout: 10000 });
@@ -139,13 +178,7 @@ test.describe("Pick2 flow", () => {
         .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
         .toBeGreaterThan(0);
 
-      const windowStillLocked = await page.evaluate(async () => {
-        const before = window.scrollY;
-        await new Promise((r) => setTimeout(r, 50));
-        const after = window.scrollY;
-        return before === 0 && after === 0;
-      });
-      expect(windowStillLocked).toBe(true);
+      await assertScrollLocked(page);
     } else {
       await testInfo.attach("pick2-list-note", {
         body: "Pick2 list did not overflow; scroll assertion skipped",

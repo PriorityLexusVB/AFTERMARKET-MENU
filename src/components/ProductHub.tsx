@@ -1113,7 +1113,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     const categoryLabel = getCategoryLabel(option);
     // Display position as 1-based (position + 1) for user clarity, consistent with position badge
     const positionLabel =
-      feature.position !== undefined ? `Position ${feature.position + 1}` : "Position —";
+      feature.position !== undefined ? `Position ${feature.position + 1}` : "Position -";
 
     const [showDuplicateMenu, setShowDuplicateMenu] = useState(false);
     const isExpanded = expandedIds.has(feature.id);
@@ -1135,19 +1135,21 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       option?.highlights?.[1] ?? ""
     );
 
+    const pick2Highlight1 = option?.highlights?.[0];
+    const pick2Highlight2 = option?.highlights?.[1];
+
     useEffect(() => {
       setPick2EligibleDraft(Boolean(option?.pick2Eligible));
       setPick2SortDraft(option?.pick2Sort !== undefined ? String(option.pick2Sort) : "");
       setPick2ShortValueDraft(option?.shortValue ?? "");
-      setPick2Highlight1Draft(option?.highlights?.[0] ?? "");
-      setPick2Highlight2Draft(option?.highlights?.[1] ?? "");
+      setPick2Highlight1Draft(pick2Highlight1 ?? "");
+      setPick2Highlight2Draft(pick2Highlight2 ?? "");
     }, [
       option?.pick2Eligible,
       option?.pick2Sort,
       option?.shortValue,
-      option?.highlights,
-      option?.highlights?.[0],
-      option?.highlights?.[1],
+      pick2Highlight1,
+      pick2Highlight2,
     ]);
 
     const canEditPick2Fields = Boolean(option) || pick2EligibleDraft;
@@ -1480,7 +1482,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     disabled={feature.column === 1}
                     className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    → Gold
+                     Gold
                   </button>
                   <button
                     onClick={() => {
@@ -1490,7 +1492,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     disabled={feature.column === 2}
                     className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    → Elite
+                     Elite
                   </button>
                   <button
                     onClick={() => {
@@ -1500,7 +1502,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                     disabled={feature.column === 3}
                     className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    → Platinum
+                     Platinum
                   </button>
                 </div>
               )}

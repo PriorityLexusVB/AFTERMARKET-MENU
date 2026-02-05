@@ -314,7 +314,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       price: 1695,
       cost: 350,
       description:
-        "10 Year Warranty — essential protection for the most vulnerable front-facing areas.",
+        "10 Year Warranty - essential protection for the most vulnerable front-facing areas.",
       pick2Eligible: true,
       pick2Sort: 20,
       shortValue: "Protects high-impact front areas from daily highway damage.",
@@ -363,7 +363,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       price: 1899,
       cost: 400,
       description:
-        "Mobile cosmetic repair service for minor damages — we come to you.",
+        "Mobile cosmetic repair service for minor damages - we come to you.",
       points: [
         "Scratch, Chip, & Dent Repair",
         "Eliminate Insurance Claims",

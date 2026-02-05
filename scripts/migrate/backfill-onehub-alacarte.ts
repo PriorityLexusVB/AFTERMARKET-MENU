@@ -37,7 +37,7 @@ function normalizeStringArray(value: unknown): string[] {
 }
 
 async function runMigration(): Promise<void> {
-  console.log('🚀 Starting ONE HUB A La Carte → Feature backfill\n');
+  console.log(' Starting ONE HUB A La Carte  Feature backfill\n');
   console.log(DIVIDER);
 
   const stats: MigrationStats = {
@@ -51,15 +51,15 @@ async function runMigration(): Promise<void> {
   try {
     admin.initializeApp();
     const db = admin.firestore();
-    console.log('✅ Firebase Admin SDK initialized\n');
+    console.log(' Firebase Admin SDK initialized\n');
 
-    console.log('📦 Reading A La Carte options...');
+    console.log(' Reading A La Carte options...');
     const optionsSnapshot = await db.collection('ala_carte_options').get();
     stats.scanned = optionsSnapshot.size;
     console.log(`   Found ${stats.scanned} A La Carte options\n`);
 
     if (stats.scanned === 0) {
-      console.log('⚠️  No A La Carte options found. Nothing to migrate.');
+      console.log('  No A La Carte options found. Nothing to migrate.');
       await admin.app().delete();
       return;
     }
@@ -70,7 +70,7 @@ async function runMigration(): Promise<void> {
     const commitBatch = async () => {
       if (batchCount === 0) return;
       await batch.commit();
-      console.log(`  💾 Committed batch of ${batchCount} writes`);
+      console.log(`   Committed batch of ${batchCount} writes`);
       batch = db.batch();
       batchCount = 0;
     };
@@ -171,7 +171,7 @@ async function runMigration(): Promise<void> {
     await commitBatch();
 
     console.log('\n' + DIVIDER);
-    console.log('📈 Migration Summary');
+    console.log(' Migration Summary');
     console.log(DIVIDER);
     console.log(`   Scanned options:     ${stats.scanned}`);
     console.log(`   Options updated:     ${stats.updatedOptions}`);
@@ -179,10 +179,10 @@ async function runMigration(): Promise<void> {
     console.log(`   Features updated:    ${stats.updatedFeatures}`);
     console.log(`   Skipped (no change): ${stats.skipped}`);
 
-    console.log('\n✅ Migration complete!');
+    console.log('\n Migration complete!');
     await admin.app().delete();
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    console.error('\n Migration failed:', error);
     process.exit(1);
   }
 }

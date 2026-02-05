@@ -34,19 +34,19 @@ function log(message, color = "reset") {
 }
 
 function logSuccess(message) {
-  log(`✓ ${message}`, "green");
+  log(` ${message}`, "green");
 }
 
 function logError(message) {
-  log(`✗ ${message}`, "red");
+  log(` ${message}`, "red");
 }
 
 function logWarning(message) {
-  log(`⚠ ${message}`, "yellow");
+  log(` ${message}`, "yellow");
 }
 
 function logInfo(message) {
-  log(`ℹ ${message}`, "blue");
+  log(` ${message}`, "blue");
 }
 
 /**

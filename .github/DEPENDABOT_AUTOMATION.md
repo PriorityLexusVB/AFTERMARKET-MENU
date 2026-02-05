@@ -90,12 +90,12 @@ The default `GITHUB_TOKEN` may have limitations:
 If the workflow reports merge failures due to permissions:
 
 1. **Create a Personal Access Token (PAT)**
-   - Go to GitHub Settings → Developer settings → Personal access tokens
+   - Go to GitHub Settings  Developer settings  Personal access tokens
    - Create a new token with `repo` scope (or `public_repo` for public repositories)
    - Set an appropriate expiration
 
 2. **Add the secret to your repository**
-   - Go to Repository Settings → Secrets and variables → Actions
+   - Go to Repository Settings  Secrets and variables  Actions
    - Click "New repository secret"
    - Name: `AUTOMERGE_PAT`
    - Value: Your PAT

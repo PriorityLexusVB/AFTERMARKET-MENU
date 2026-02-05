@@ -57,9 +57,8 @@ test.describe("Surface Pro fit guardrails", () => {
 
     // Open/close add-ons and ensure selection bar remains visible.
     await page.getByRole("button", { name: /open add-ons/i }).click();
-    await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
-      timeout: 10000,
-    });
+    const closeAddonsButton = page.locator('button[aria-label="Close add-ons"]');
+    await expect(closeAddonsButton).toBeVisible({ timeout: 10000 });
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     const list = page.getByTestId("addons-drawer-list");
@@ -80,10 +79,12 @@ test.describe("Surface Pro fit guardrails", () => {
         .toBeGreaterThan(0);
 
       const windowStillLocked = await page.evaluate(async () => {
-        const before = window.scrollY;
+        const beforeWindow = window.scrollY;
+        const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
         await new Promise((r) => setTimeout(r, 50));
-        const after = window.scrollY;
-        return before === 0 && after === 0;
+        const afterWindow = window.scrollY;
+        const afterDoc = document.scrollingElement?.scrollTop ?? 0;
+        return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
       });
       expect(windowStillLocked).toBe(true);
     } else {
@@ -93,16 +94,18 @@ test.describe("Surface Pro fit guardrails", () => {
       });
     }
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
-    await page.getByRole("button", { name: /close add-ons/i }).click();
+    await closeAddonsButton.click();
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
     // Desktop kiosk is intended to use a no-scroll layout at this viewport.
     const scrollLocked = await page.evaluate(async () => {
-      const before = window.scrollY;
+      const beforeWindow = window.scrollY;
+      const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
       window.scrollTo(0, 1000);
       await new Promise((r) => setTimeout(r, 50));
-      const after = window.scrollY;
-      return before === 0 && after === 0;
+      const afterWindow = window.scrollY;
+      const afterDoc = document.scrollingElement?.scrollTop ?? 0;
+      return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
     });
     expect(scrollLocked).toBe(true);
 

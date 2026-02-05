@@ -17,10 +17,20 @@ test.describe("iPad / kiosk fit", () => {
     const selectionBar = page.locator(".am-selection-bar").first();
     await expect(selectionBar).toBeVisible({ timeout: 10000 });
 
+    const overflow = await page.evaluate(() => {
+      const el = document.documentElement;
+      return { scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+    });
+    expect(
+      overflow.scrollWidth,
+      `No horizontal overflow expected (scrollWidth=${overflow.scrollWidth}, clientWidth=${overflow.clientWidth})`
+    ).toBeLessThanOrEqual(overflow.clientWidth + 1);
+
     const openAddonsButton = page.getByRole("button", { name: /open add-ons/i });
     await expect(openAddonsButton).toBeVisible({ timeout: 10000 });
     await expect(openAddonsButton).toContainText(/add-ons/i);
-    await expect(page.getByRole("button", { name: /close add-ons/i })).toHaveCount(0);
+    const closeAddonsButton = page.locator('button[aria-label="Close add-ons"]');
+    await expect(closeAddonsButton).toHaveCount(0);
 
     // Ensure primary CTAs remain visible in locked no-scroll mode.
     const packageCards = page.getByTestId("package-card");
@@ -35,6 +45,12 @@ test.describe("iPad / kiosk fit", () => {
     await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
       timeout: 10000,
     });
+
+    const packageGrid = page.getByTestId("package-grid");
+    await expect(packageGrid).toBeVisible({ timeout: 10000 });
+    const gridWidthBefore = await packageGrid.evaluate((el) =>
+      Math.round(el.getBoundingClientRect().width)
+    );
 
     const fits = await page.evaluate(() => {
       const bar = document.querySelector(".am-selection-bar") as HTMLElement | null;
@@ -54,9 +70,11 @@ test.describe("iPad / kiosk fit", () => {
 
     // Confirm add-ons can be opened without hiding package CTAs.
     await openAddonsButton.click();
-    await expect(page.getByRole("button", { name: /close add-ons/i })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(closeAddonsButton).toBeVisible({ timeout: 10000 });
+    const gridWidthAfter = await packageGrid.evaluate((el) =>
+      Math.round(el.getBoundingClientRect().width)
+    );
+    expect(Math.abs(gridWidthAfter - gridWidthBefore)).toBeLessThanOrEqual(1);
     await expect(packageCards).toHaveCount(3);
     for (let i = 0; i < (await packageCards.count()); i += 1) {
       const card = packageCards.nth(i);
@@ -69,11 +87,13 @@ test.describe("iPad / kiosk fit", () => {
 
     // Ensure scrolling is effectively disabled in paper-mode.
     const scrollLocked = await page.evaluate(async () => {
-      const before = window.scrollY;
+      const beforeWindow = window.scrollY;
+      const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
       window.scrollTo(0, 1000);
       await new Promise((r) => setTimeout(r, 50));
-      const after = window.scrollY;
-      return before === 0 && after === 0;
+      const afterWindow = window.scrollY;
+      const afterDoc = document.scrollingElement?.scrollTop ?? 0;
+      return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
     });
     expect(scrollLocked).toBe(true);
 
@@ -97,9 +117,11 @@ test.describe("iPad / kiosk fit", () => {
 
       const windowStillLocked = await page.evaluate(async () => {
         const before = window.scrollY;
+        const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
         await new Promise((r) => setTimeout(r, 50));
         const after = window.scrollY;
-        return before === 0 && after === 0;
+        const afterDoc = document.scrollingElement?.scrollTop ?? 0;
+        return before === 0 && after === 0 && beforeDoc === 0 && afterDoc === 0;
       });
       expect(windowStillLocked).toBe(true);
     } else {
@@ -108,6 +130,14 @@ test.describe("iPad / kiosk fit", () => {
         contentType: "text/plain",
       });
     }
+
+    await closeAddonsButton.click();
+    await expect(closeAddonsButton).toHaveCount(0);
+
+    const selectButton = page.locator('button:has-text("Select Plan")').first();
+    await selectButton.scrollIntoViewIfNeeded();
+    await selectButton.click();
+    await expect(page.locator('button:has-text("Selected")')).toBeVisible();
 
     // Artifact screenshots for quick visual verification.
     await page.screenshot({ path: testInfo.outputPath("ipad-menu.png"), fullPage: false });

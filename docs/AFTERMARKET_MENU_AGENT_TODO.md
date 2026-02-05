@@ -2,51 +2,35 @@
 
 ## ✅ Done
 
-- Created agent tracking docs (this file), viewport contracts, and decisions docs.
-- Added npm healthcheck script.
-- Baseline verification run (see Verification Log).
-- Phase 1 (partial): Added density tokens, compact grid min-width, and capped package feature lists.
-- Phase 2 (partial): Implemented overlay add-ons drawer side sheet for iPad layout.
-- Phase 3 (partial): Added Pick-2 two-slot UI and summary surfaces.
+- 7406c9f docs: update decisions and verification log
+- aae9e86 feat(ui): refine package grid density and pick2 layout
+- 24c0581 fix(ui): improve add-ons drawer and selection bar interaction
+- Fixed ProductHub hook dependencies to satisfy react-hooks/exhaustive-deps (pending lint verification).
+- Added Pick-2 fix action on selection bar for incomplete bundles.
+- Hardened add-ons drawer UX (ESC close + overscroll containment).
+- Added Playwright guardrails (iPad overflow + grid width stability + scroll lock + Pick-2 summaries).
+- Updated add-ons close button selectors in iPad/Surface guardrails.
 
 ## 🟡 In Progress
 
-- Phase 1: 3-column legibility + card scan rules (verify and adjust if needed).
-- Phase 2: Drawer V2 overlay side sheet (verify header/footer + internal scroll).
-- Phase 3: Pick-2 V2 (swap/block behavior + summary in bottom bar/card).
+- None.
 
-## ⏭️ Next Up (prioritized)
+## ⏭️ Next Up
 
-- Proceed with requested small commits after healthcheck.
-- Confirm package selection click works with bottom bar overlay.
-- Phase 3: Pick-2 V2 two-slot selector + summaries.
-- Phase 4: Bottom selection bar updates.
-- Phase 5: Finalize viewport contracts.
-- Phase 6: Tests/guardrails + healthcheck validation.
+- If any lint suppression is required, document in decisions.
 
-## 🧱 Blockers / Risks
+## 🧱 Blockers
 
-- Lint emits warnings in ProductHub (react-hooks/exhaustive-deps).
+- None.
 
 ## 🔁 Verification Log
 
-- 2026-02-04: npm run lint → warnings in ProductHub useEffect deps.
-- 2026-02-04: npm run typecheck → pass.
-- 2026-02-04: npm run test:run → pass (stderr warnings about fetchPick2Config mock in ProductHub tests).
-- 2026-02-04: npm run test:e2e → pass (25 tests).
-- 2026-02-04: npm run healthcheck → pass (lint warnings only).
-
-## 🧭 Repo Map (Phase 0)
-
-- Paper-mode / no-scroll lock: [src/App.tsx](src/App.tsx), [src/index.css](src/index.css)
-- 3-column package grid: [src/components/PackageSelector.tsx](src/components/PackageSelector.tsx), [src/index.css](src/index.css)
-- Bottom selection bar: [src/components/SelectionDrawer.tsx](src/components/SelectionDrawer.tsx) (variant="bar")
-- Drawer (add-ons side panel in package view): [src/components/PackageSelector.tsx](src/components/PackageSelector.tsx)
-- Pick-2 UI + state: [src/components/Pick2Selector.tsx](src/components/Pick2Selector.tsx), [src/App.tsx](src/App.tsx)
-- Pick-2 config/data: [src/data.ts](src/data.ts)
-- E2E guardrails: [e2e/](e2e/) (notably ipad-fit, pick2-flow, responsive-guardrails)
+- 2026-02-04: npm run lint → clean (0 warnings).
+- 2026-02-04: npx playwright test e2e/ipad-fit.spec.ts → pass.
+- 2026-02-04: npx playwright test e2e/ipad-fit.spec.ts e2e/surface-pro-fit.spec.ts e2e/pick2-flow.spec.ts e2e/packages.spec.ts → 14 passed, 1 failed (ipad-fit). Fixed and re-ran ipad-fit.
+- 2026-02-04: npm run healthcheck → lint/typecheck/vitest/playwright all pass.
 
 ## 🧭 Resume Point
 
 - Next command: git status -sb
-- Next file: src/components/AddonDrawer.tsx
+- Next file: docs/AFTERMARKET_MENU_AGENT_TODO.md (keep verification log current)

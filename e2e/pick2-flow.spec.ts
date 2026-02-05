@@ -62,6 +62,11 @@ test.describe("Pick2 flow", () => {
     await selectButtons.nth(1).click();
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("2/2 selected");
 
+    const selectedChips = page.getByTestId("pick2-selected-chip");
+    await expect(selectedChips).toHaveCount(2);
+    const chipTexts = (await selectedChips.allTextContents()).map((text) => text.trim());
+    expect(new Set(chipTexts).size).toBe(chipTexts.length);
+
     const totalAfter2 = await getSelectionTotal(page);
     expect(totalAfter2 - totalBefore).toBe(bundlePrice);
 
@@ -97,6 +102,46 @@ test.describe("Pick2 flow", () => {
     expect(totalAfterSwap).toBe(totalAfter2);
   });
 
+  test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {
+    await page.setViewportSize({ width: 1368, height: 912 });
+
+    await page.goto("/?demo=1");
+    await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+
+    const selectButton = page.locator('button:has-text("Select Plan")').first();
+    await selectButton.click();
+    await expect(page.locator('button:has-text("Selected")')).toBeVisible();
+
+    await page.getByRole("button", { name: /you pick 2/i }).click();
+    await page.waitForSelector("text=Any 2 for", { timeout: 10000 });
+
+    const list = page.getByTestId("pick2-list");
+    await expect(list).toBeVisible({ timeout: 10000 });
+    await list
+      .getByRole("button", { name: /Select .* for Pick 2/i })
+      .first()
+      .click();
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("1/2 selected");
+
+    await page.getByRole("button", { name: /protection packages/i }).click();
+    await expect(page.locator('[data-testid="package-card"]').first()).toBeVisible({
+      timeout: 10000,
+    });
+
+    const selectedCard = page
+      .locator('[data-testid="package-card"]')
+      .filter({ hasText: /selected/i })
+      .first();
+    await expect(selectedCard).toContainText(/Pick-2:/i);
+
+    const selectionBar = page.getByTestId("selection-drawer-bar");
+    await expect(selectionBar).toContainText(/Pick-2: 1\/2/i);
+    const fixAction = page.getByTestId("pick2-fix-action");
+    await expect(fixAction).toBeVisible();
+    await fixAction.click();
+    await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
+  });
+
   test("iPad paper mode: window scroll locked; Pick2 list can scroll internally", async ({
     page,
   }, testInfo) => {
@@ -114,11 +159,13 @@ test.describe("Pick2 flow", () => {
     });
 
     const scrollLocked = await page.evaluate(async () => {
-      const before = window.scrollY;
+      const beforeWindow = window.scrollY;
+      const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
       window.scrollTo(0, 1000);
       await new Promise((r) => setTimeout(r, 50));
-      const after = window.scrollY;
-      return before === 0 && after === 0;
+      const afterWindow = window.scrollY;
+      const afterDoc = document.scrollingElement?.scrollTop ?? 0;
+      return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
     });
     expect(scrollLocked).toBe(true);
 
@@ -140,10 +187,12 @@ test.describe("Pick2 flow", () => {
         .toBeGreaterThan(0);
 
       const windowStillLocked = await page.evaluate(async () => {
-        const before = window.scrollY;
+        const beforeWindow = window.scrollY;
+        const beforeDoc = document.scrollingElement?.scrollTop ?? 0;
         await new Promise((r) => setTimeout(r, 50));
-        const after = window.scrollY;
-        return before === 0 && after === 0;
+        const afterWindow = window.scrollY;
+        const afterDoc = document.scrollingElement?.scrollTop ?? 0;
+        return beforeWindow === 0 && afterWindow === 0 && beforeDoc === 0 && afterDoc === 0;
       });
       expect(windowStillLocked).toBe(true);
     } else {

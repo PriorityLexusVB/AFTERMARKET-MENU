@@ -37,6 +37,7 @@ test.describe("Package Selection", () => {
   test("should be able to select a package", async ({ page }) => {
     // Click on a Select Plan button
     const selectButton = page.locator('button:has-text("Select Plan")').first();
+    await selectButton.scrollIntoViewIfNeeded();
     await selectButton.click();
 
     // Verify the button changes to "Selected" (may have checkmark prefix)

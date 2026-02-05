@@ -29,3 +29,9 @@
 - Decision: Introduce two visible Pick-2 slots with clear actions, keeping the existing block-on-third-selection behavior.
 - Rationale: Makes the “choose exactly two” requirement explicit and guest-friendly.
 - Consequences: Pick-2 selector now shows slot cards and a summary line in package card and bottom bar; e2e needs verification.
+
+## 2026-02-04 — Pick-2 incomplete state fix action
+
+- Decision: Surface a "Finish Pick-2" action in the bottom selection bar whenever a guest has started but not completed a Pick-2 bundle.
+- Rationale: Prevents ambiguous 1/2 states and provides a clear recovery path to the Pick-2 tab.
+- Consequences: Selection bar now exposes a quick action and e2e guardrails validate it.

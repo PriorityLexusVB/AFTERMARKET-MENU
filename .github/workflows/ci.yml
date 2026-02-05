@@ -165,7 +165,7 @@ jobs:
         run: npm run build
 
       - name: WebKit iPad smoke
-        run: npx playwright test --project=webkit e2e/ipad-fit.spec.ts e2e/pick2-flow.spec.ts
+        run: PW_WEBKIT=1 npx playwright test --project=webkit-ipad e2e/ipad-fit.spec.ts e2e/pick2-flow.spec.ts
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

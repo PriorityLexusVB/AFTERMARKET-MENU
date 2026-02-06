@@ -178,12 +178,14 @@ test.describe("Pick2 flow", () => {
         .poll(() => list.evaluate((el) => el.scrollTop), { timeout: 2000 })
         .toBeGreaterThan(0);
 
+      await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 2000 }).toBe(0);
       await assertScrollLocked(page);
     } else {
       await testInfo.attach("pick2-list-note", {
         body: "Pick2 list did not overflow; scroll assertion skipped",
         contentType: "text/plain",
       });
+      await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 2000 }).toBe(0);
     }
   });
 

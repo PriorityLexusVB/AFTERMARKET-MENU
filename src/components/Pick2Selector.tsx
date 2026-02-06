@@ -53,7 +53,6 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     () => items.filter((item) => selectedIdSet.has(item.id)),
     [items, selectedIdSet]
   );
-  const slotItems = [selectedItems[0] ?? null, selectedItems[1] ?? null];
   const selectedValue = useMemo(
     () => selectedItems.reduce((sum, item) => sum + item.price, 0),
     [selectedItems]
@@ -107,7 +106,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
       } h-full min-h-0 flex flex-col ${className ?? ""}`}
     >
       <header className={headerWrapperClass} data-testid="pick2-header">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h3
               className={`${headerClass} font-teko font-bold tracking-wider ${
@@ -161,56 +160,29 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           </div>
         ) : null}
 
-        <div
-          className={`${isCompact ? "mt-2" : "mt-3"} grid grid-cols-1 gap-2`}
-          aria-label="Pick 2 slots"
-        >
-          <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-            Choose exactly {maxSelections}
-          </p>
-          {slotItems.map((slotItem, index) => (
-            <div
-              key={`pick2-slot-${index}`}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-3 py-2"
-            >
-              <div className="text-sm text-gray-200">
-                <span className="text-gray-400">Slot {index + 1}: </span>
-                {slotItem ? slotItem.name : "Tap an upgrade to fill"}
-              </div>
-              {slotItem ? (
+        <div className={`${isCompact ? "mt-2" : "mt-3"} flex flex-col gap-2`}>
+          <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Selected</p>
+          <div className="flex flex-wrap gap-2">
+            {selectedItems.length === 0 ? (
+              <span className="text-xs text-gray-400">Select two to build your bundle.</span>
+            ) : (
+              selectedItems.map((item) => (
                 <button
+                  key={`pick2-chip-${item.id}`}
                   type="button"
-                  onClick={() => onToggle(slotItem)}
-                  className="min-h-[36px] min-w-[36px] rounded-lg border border-white/10 text-gray-200 hover:text-white"
-                  aria-label={`Clear ${slotItem.name} from slot ${index + 1}`}
+                  onClick={() => onToggle(item)}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch"
+                  aria-label={`Remove ${item.name} from Pick 2`}
+                  data-testid="pick2-selected-chip"
                 >
-                  
+                  <span className="max-w-[160px] truncate">{item.name}</span>
+                  <span className="text-[11px] text-gray-300" aria-hidden="true">
+                    &times;
+                  </span>
                 </button>
-              ) : null}
-            </div>
-          ))}
-        </div>
-
-        <div className={`${isCompact ? "mt-2" : "mt-3"} flex flex-wrap gap-2`}>
-          {selectedItems.length === 0 ? (
-            <span className="text-xs text-gray-400">Select two to build your bundle.</span>
-          ) : (
-            selectedItems.map((item) => (
-              <button
-                key={`pick2-chip-${item.id}`}
-                type="button"
-                onClick={() => onToggle(item)}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch"
-                aria-label={`Remove ${item.name} from Pick 2`}
-                data-testid="pick2-selected-chip"
-              >
-                <span className="max-w-[160px] truncate">{item.name}</span>
-                <span className="text-[11px] text-gray-300" aria-hidden="true">
-                  &times;
-                </span>
-              </button>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
 
         {blockedText ? (

@@ -30,3 +30,9 @@ For Surface/desktop:
 
 - Open /?demo=1 and navigate to the Pick2 tab.
 - Ensure no horizontal overflow and CTAs remain visible.
+
+## Product Hub refresh
+
+Pick2 config and Pick2 per-item field updates in Product Hub automatically refresh the Menu state
+within ~250ms (debounced). No manual reload is required. If changes do not reflect, confirm you are
+not in demo mode and that Firestore is connected.

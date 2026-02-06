@@ -4,8 +4,8 @@
 
 - Upgraded the Pick2 selector to a premium, AddOnsaligned card layout that surfaces more items at once and reduces scanning time.
 - Added a sticky Pick2 header with value anchor, progress, and selected chips to keep intent and status visible at all times.
-- Improved selection flow clarity with explicit progress text, a "Bundle ready" state, and a clear swap message when two items are selected.
-- Added large tap targets on selected chips to support quick removal on iPad/kiosk without hunting for the original card.
+- Improved selection flow clarity with explicit progress text ("0 of 2 selected" → "All set - 2 selected") and a calm swap message after a third tap.
+- Added two-slot selected row so guests see exactly what is picked and what remains.
 
 ## Screens/areas tested
 
@@ -17,9 +17,9 @@
 
 1. Open /?forceIpad=1&demo=1
 2. Navigate to the "You Pick 2" tab.
-3. Confirm the header and selected chips remain visible while the Pick2 list scrolls.
-4. Select two items; verify progress shows 2/2 selected and "Bundle ready" appears.
-5. Attempt a third selection; confirm the message "You've selected 2 - remove one to swap." appears and selection count stays at 2.
+3. Confirm the header, selected slots, and swap reassurance remain visible while the Pick2 list scrolls.
+4. Select two items; verify progress shows "All set - 2 selected".
+5. Attempt a third selection; confirm the message "You're at 2. Remove one to swap." appears and selection count stays at 2.
 
 Also verify on /?forceIpad=1&demo=1 that:
 

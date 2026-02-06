@@ -2,10 +2,14 @@
 
 ## What changed (UX rationale)
 
-- Upgraded the Pick2 selector to a premium, AddOnsaligned card layout that surfaces more items at once and reduces scanning time.
+- Upgraded the Pick2 selector to a premium, add-on aligned card layout that surfaces more items at once and reduces scanning time.
 - Added a sticky Pick2 header with value anchor, progress, and selected chips to keep intent and status visible at all times.
 - Improved selection flow clarity with explicit progress text ("0 of 2 selected" → "All set — 2 selected") and a calm swap message after a third tap.
 - Added two-slot selected row so guests see exactly what is picked and what remains.
+- Added a savings summary after two selections (Individually, Bundle, Savings) to reinforce value.
+- Added sticky Pick2 footer with Done + Clear to reduce backtracking.
+- Added recommended pairs presets (up to 4), with a safe fallback when config is missing.
+- Added trust chips on Pick2 cards when warranty or mobile service cues exist in data.
 
 ## Screens/areas tested
 
@@ -20,6 +24,8 @@
 3. Confirm the header, selected slots, and swap reassurance remain visible while the Pick2 list scrolls.
 4. Select two items; verify progress shows "All set — 2 selected".
 5. Attempt a third selection; confirm the message "You’re at 2. Remove one to swap." appears and selection count stays at 2.
+6. Verify the savings block appears only when two items are selected.
+7. Use Done to return to Packages and Clear picks to reset selections.
 
 Also verify on /?forceIpad=1&demo=1 that:
 

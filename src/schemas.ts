@@ -93,6 +93,10 @@ export const Pick2ConfigSchema = z.object({
       })
     )
     .optional(),
+  featuredPresetLabel: z.string().optional(),
+  presetOrder: z.array(z.string().min(1)).optional(),
+  telemetryEnabled: z.boolean().optional(),
+  telemetrySampleRate: z.number().min(0).max(1).optional(),
 });
 
 export type Pick2Config = z.infer<typeof Pick2ConfigSchema>;

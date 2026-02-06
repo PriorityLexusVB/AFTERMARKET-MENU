@@ -26,6 +26,7 @@ import type {
 } from "./types";
 import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
 import { sortPackagesForDisplay } from "./utils/packageOrder";
+import { logPick2Event, setPick2TelemetryConfig } from "./utils/telemetry";
 import {
   initializeAnalytics,
   trackPackageSelect,
@@ -72,6 +73,7 @@ const App: React.FC = () => {
     ProductFeature | AlaCarteOption | null
   >(null);
   const [currentPage, setCurrentPage] = useState<Page>("packages");
+  const previousPageRef = useRef<Page>("packages");
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isAdminView, setIsAdminView] = useState(false);
   const ipadLandscapeQuery =
@@ -652,6 +654,9 @@ const App: React.FC = () => {
     [pick2EligibleItems]
   );
 
+  const pick2HadCompleteRef = useRef(false);
+
+
   const normalizePick2Name = useCallback((value: string) => {
     return value
       .toLowerCase()
@@ -738,6 +743,31 @@ const App: React.FC = () => {
   }, [pick2Config?.recommendedPairs, pick2EligibleIdSet, fallbackPick2RecommendedPairs]);
 
   const showPick2Tab = pick2Enabled && pick2EligibleItems.length > 0;
+
+  useEffect(() => {
+    setPick2TelemetryConfig({
+      telemetryEnabled: pick2Config?.telemetryEnabled,
+      telemetrySampleRate: pick2Config?.telemetrySampleRate,
+    });
+  }, [pick2Config?.telemetryEnabled, pick2Config?.telemetrySampleRate]);
+
+  useEffect(() => {
+    if (pick2SelectedIds.length === pick2MaxSelections) {
+      pick2HadCompleteRef.current = true;
+    }
+  }, [pick2SelectedIds.length, pick2MaxSelections]);
+
+  useEffect(() => {
+    const previousPage = previousPageRef.current;
+    if (currentPage === "pick2" && previousPage !== "pick2" && showPick2Tab) {
+      void logPick2Event("pick2_opened", {
+        countSelected: pick2SelectedIds.length,
+        page: "pick2",
+      });
+    }
+    previousPageRef.current = currentPage;
+  }, [currentPage, pick2SelectedIds.length, showPick2Tab]);
+
 
   useEffect(() => {
     if (currentPage === "pick2" && !showPick2Tab) {
@@ -835,17 +865,35 @@ const App: React.FC = () => {
 
         // Conflict rule: selecting via Pick2 removes the item from individually-priced add-ons.
         setCustomPackageItems((prevCustom) => prevCustom.filter((i) => i.id !== item.id));
-        return [...prev, item.id];
+        const nextIds = [...prev, item.id];
+        void logPick2Event("pick2_selected", {
+          itemId: item.id,
+          countSelected: nextIds.length,
+          page: "pick2",
+        });
+        if (pick2HadCompleteRef.current && prev.length === pick2MaxSelections - 1) {
+          void logPick2Event("pick2_swap", {
+            itemId: item.id,
+            countSelected: nextIds.length,
+            page: "pick2",
+          });
+        }
+        return nextIds;
       });
     },
     [pick2MaxSelections]
   );
 
   const handlePick2PresetSelect = useCallback(
-    (optionIds: string[]) => {
+    (optionIds: string[], label?: string) => {
       const uniqueIds = Array.from(new Set(optionIds)).filter((id) => pick2EligibleIdSet.has(id));
       if (uniqueIds.length < pick2MaxSelections) return;
       const nextIds = uniqueIds.slice(0, pick2MaxSelections);
+      void logPick2Event("pick2_preset_clicked", {
+        presetLabel: label,
+        countSelected: nextIds.length,
+        page: "pick2",
+      });
       setCustomPackageItems((prevCustom) =>
         prevCustom.filter((item) => !nextIds.includes(item.id))
       );
@@ -855,12 +903,27 @@ const App: React.FC = () => {
   );
 
   const handlePick2Clear = useCallback(() => {
+    void logPick2Event("pick2_clear", {
+      countSelected: pick2SelectedIds.length,
+      page: "pick2",
+    });
     setPick2SelectedIds([]);
-  }, []);
+  }, [pick2SelectedIds.length]);
 
   const handlePick2Done = useCallback(() => {
+    void logPick2Event("pick2_done", {
+      countSelected: pick2SelectedIds.length,
+      page: "pick2",
+    });
     setCurrentPage("packages");
-  }, []);
+  }, [pick2SelectedIds.length]);
+
+  const handlePick2BlockedThird = useCallback(() => {
+    void logPick2Event("pick2_blocked_third", {
+      countSelected: pick2SelectedIds.length,
+      page: "pick2",
+    });
+  }, [pick2SelectedIds.length]);
 
   const handleRemoveAlaCarte = useCallback((itemId: string) => {
     setCustomPackageItems((prev) => {
@@ -1144,7 +1207,10 @@ const App: React.FC = () => {
                 onView={handleViewDetail}
                 bundlePrice={pick2BundlePrice}
                 recommendedPairs={pick2RecommendedPairs}
+                featuredPresetLabel={pick2Config?.featuredPresetLabel}
+                presetOrder={pick2Config?.presetOrder}
                 onPresetSelect={handlePick2PresetSelect}
+                onBlockedThird={handlePick2BlockedThird}
                 onDone={handlePick2Done}
                 onClear={handlePick2Clear}
                 title={pick2Config?.title}

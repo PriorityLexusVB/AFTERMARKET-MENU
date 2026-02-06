@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { AlaCarteOption } from "../types";
 
 interface AddonItemProps {
@@ -57,6 +57,12 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   const isDiscounted = typeof basePrice === "number" && basePrice > item.price;
 
+  const [showThumbnail, setShowThumbnail] = useState(Boolean(item.thumbnailUrl));
+
+  useEffect(() => {
+    setShowThumbnail(Boolean(item.thumbnailUrl));
+  }, [item.thumbnailUrl]);
+
   const highlightsSource =
     item.highlights && item.highlights.length > 0 ? item.highlights : (item.points ?? []);
   const highlights = highlightsSource.filter(Boolean).slice(0, 2);
@@ -111,6 +117,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         ].filter(Boolean)
       : [];
 
+  const thumbnailSizeClass = isCompact ? "h-12 w-12" : "h-14 w-14";
+  const shouldShowThumbnail = variant === "pick2" && Boolean(item.thumbnailUrl) && showThumbnail;
+
   return (
     <div
       className={`bg-gray-800 border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
@@ -120,14 +129,29 @@ export const AddonItem: React.FC<AddonItemProps> = ({
     >
       <div className="flex-grow">
         <div className="flex items-start justify-between gap-3">
-          <button
-            type="button"
-            onClick={onView}
-            className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-lux-blue transition-colors w-full leading-snug clamp-2 break-words`}
-            aria-label={`Learn more about ${item.name}`}
-          >
-            {item.name}
-          </button>
+          <div className="flex items-start gap-3 min-w-0">
+            {shouldShowThumbnail ? (
+              <div className={`${thumbnailSizeClass} shrink-0 overflow-hidden rounded-lg bg-black/30`}>
+                <img
+                  src={item.thumbnailUrl}
+                  alt={`${item.name} thumbnail`}
+                  loading="lazy"
+                  decoding="async"
+                  onError={() => setShowThumbnail(false)}
+                  className="h-full w-full object-cover"
+                  data-testid={`pick2-thumbnail-${item.id}`}
+                />
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={onView}
+              className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-lux-blue transition-colors w-full min-w-0 leading-snug clamp-2 break-words`}
+              aria-label={`Learn more about ${item.name}`}
+            >
+              {item.name}
+            </button>
+          </div>
 
           <div className="shrink-0 text-right">
             {variant === "pick2" ? (

@@ -27,6 +27,24 @@ const getPick2BundlePrice = async (page: import("@playwright/test").Page) => {
 };
 
 test.describe("Pick2 flow", () => {
+  let consoleErrors: string[] = [];
+
+  test.beforeEach(({ page }) => {
+    consoleErrors = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+    page.on("pageerror", (error) => {
+      consoleErrors.push(error.message);
+    });
+  });
+
+  test.afterEach(() => {
+    expect(consoleErrors, `Console errors:\n${consoleErrors.join("\n")}`).toEqual([]);
+  });
+
   test("demo: Pick2 tab visible, select 2, third blocked, swap works, bundle priced once", async ({
     page,
   }) => {
@@ -130,9 +148,23 @@ test.describe("Pick2 flow", () => {
     const presets = page.getByTestId("pick2-presets");
     await expect(presets).toBeVisible({ timeout: 10000 });
     const presetButtons = presets.getByTestId("pick2-preset-button");
-    expect(await presetButtons.count()).toBeGreaterThan(0);
+    expect(await presetButtons.count()).toBeGreaterThanOrEqual(4);
+    const presetLabels = (await presetButtons.allInnerTexts()).map((label) =>
+      label.replace(/recommended/i, "").trim()
+    );
+    expect(presetLabels.slice(0, 4)).toEqual([
+      "Best Protection",
+      "Resale Focus",
+      "Visibility + Daily Wear",
+      "Coastal Defense",
+    ]);
+    await expect(presetButtons.first().getByTestId("pick2-featured-badge")).toBeVisible();
+    await expect(page.getByTestId("pick2-featured-badge")).toHaveCount(1);
+
     await presetButtons.first().click();
     await expect(page.getByTestId("pick2-selected-chip")).toHaveCount(2);
+
+    await expect(page.getByTestId("pick2-thumbnail-suntek-complete")).toBeVisible();
 
     const list = page.getByTestId("pick2-list");
     await list
@@ -152,6 +184,27 @@ test.describe("Pick2 flow", () => {
 
     await page.getByTestId("pick2-done").click();
     await expect(page.getByTestId("package-card").first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test("info panel toggles without window scroll", async ({ page }) => {
+    await page.setViewportSize({ width: 1368, height: 912 });
+
+    await page.goto("/?demo=1");
+    await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+
+    await page.getByRole("button", { name: /you pick 2/i }).click();
+    await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
+
+    const toggle = page.getByTestId("pick2-info-toggle");
+    await toggle.click();
+    await expect(page.getByTestId("pick2-info-panel")).toBeVisible({ timeout: 2000 });
+    await expect(page.getByTestId("pick2-info-panel")).toContainText(
+      /Pick any two upgrades for one price\./i
+    );
+    await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 2000 }).toBe(0);
+
+    await toggle.click();
+    await expect(page.getByTestId("pick2-info-panel")).toHaveCount(0);
   });
 
   test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {

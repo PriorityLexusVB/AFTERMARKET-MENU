@@ -13,7 +13,10 @@ interface Pick2SelectorProps {
     label: string;
     optionIds: [string, string];
   }>;
-  onPresetSelect?: (ids: string[]) => void;
+  featuredPresetLabel?: string;
+  presetOrder?: string[];
+  onPresetSelect?: (ids: string[], label?: string) => void;
+  onBlockedThird?: () => void;
   onDone?: () => void;
   onClear?: () => void;
   title?: string;
@@ -38,7 +41,10 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
   onView,
   bundlePrice,
   recommendedPairs,
+  featuredPresetLabel,
+  presetOrder,
   onPresetSelect,
+  onBlockedThird,
   onDone,
   onClear,
   title,
@@ -48,6 +54,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
   textSize = "normal",
 }) => {
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const selectedCount = selectedIds.length;
   const isComplete = selectedCount === maxSelections;
@@ -87,6 +94,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
 
     if (selectedCount >= maxSelections) {
       setBlockedMessage("You’re at 2. Remove one to swap.");
+      onBlockedThird?.();
       return;
     }
 
@@ -126,9 +134,39 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     });
   }, [recommendedPairs, itemById]);
 
-  const handlePresetSelect = (optionIds: [string, string]) => {
+  const presetOrderIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!presetOrder) return map;
+    presetOrder.forEach((label, index) => {
+      const normalized = label.trim().toLowerCase();
+      if (normalized && !map.has(normalized)) {
+        map.set(normalized, index);
+      }
+    });
+    return map;
+  }, [presetOrder]);
+
+  const orderedPresets = useMemo(() => {
+    return availablePresets
+      .map((pair, index) => ({
+        pair,
+        index,
+        order: presetOrderIndex.get(pair.label.trim().toLowerCase()),
+      }))
+      .sort((a, b) => {
+        const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.index - b.index;
+      })
+      .map(({ pair }) => pair);
+  }, [availablePresets, presetOrderIndex]);
+
+  const featuredPresetLabelNormalized = featuredPresetLabel?.trim().toLowerCase();
+
+  const handlePresetSelect = (optionIds: [string, string], label?: string) => {
     setBlockedMessage(null);
-    onPresetSelect?.(optionIds);
+    onPresetSelect?.(optionIds, label);
   };
 
   const handleClear = () => {
@@ -183,18 +221,41 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                 </div>
               ) : null}
             </div>
-            <span
-              className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${
-                isComplete
-                  ? "bg-luxury-green-600/20 border-luxury-green-600/30 text-luxury-green-200"
-                  : "bg-black/30 border-white/10 text-gray-300"
-              }`}
-              aria-label={`Pick 2 progress ${progressText}`}
-            >
-              {progressText}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${
+                  isComplete
+                    ? "bg-luxury-green-600/20 border-luxury-green-600/30 text-luxury-green-200"
+                    : "bg-black/30 border-white/10 text-gray-300"
+                }`}
+                aria-label={`Pick 2 progress ${progressText}`}
+              >
+                {progressText}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsInfoOpen((prev) => !prev)}
+                className="h-7 w-7 rounded-full border border-white/10 bg-black/40 text-xs text-gray-200 hover:border-lux-gold/60 transition-colors"
+                aria-label="Why this matters"
+                aria-expanded={isInfoOpen}
+                data-testid="pick2-info-toggle"
+              >
+                i
+              </button>
+            </div>
           </div>
         </div>
+
+        {isInfoOpen ? (
+          <div
+            className={`${isCompact ? "mt-2" : "mt-3"} rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-[11px] text-gray-200`}
+            data-testid="pick2-info-panel"
+          >
+            <p>Pick any two upgrades for one price.</p>
+            <p>Swap anytime before finalizing.</p>
+            <p>Bundle price applies once.</p>
+          </div>
+        ) : null}
 
         <div className={`${isCompact ? "mt-2" : "mt-3"} flex flex-col gap-2`}>
           <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Selected</p>
@@ -237,23 +298,40 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           <p className="text-xs text-gray-400">Swap anytime before finalizing.</p>
         </div>
 
-        {availablePresets.length > 0 ? (
+        {orderedPresets.length > 0 ? (
           <div className={`${isCompact ? "mt-2" : "mt-3"} flex flex-wrap gap-2`}>
             <p className="w-full text-xs uppercase tracking-[0.2em] text-gray-400">
               Recommended pairs
             </p>
             <div className="flex flex-wrap gap-2" data-testid="pick2-presets">
-              {availablePresets.map((pair, index) => (
+              {orderedPresets.map((pair, index) => {
+                const isFeatured =
+                  featuredPresetLabelNormalized &&
+                  pair.label.trim().toLowerCase() === featuredPresetLabelNormalized;
+                return (
                 <button
                   key={`pick2-preset-${index}`}
                   type="button"
-                  onClick={() => handlePresetSelect(pair.optionIds)}
-                  className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch transition-all duration-200"
+                  onClick={() => handlePresetSelect(pair.optionIds, pair.label)}
+                  className={`rounded-full border px-3 py-2 text-xs text-gray-100 min-h-touch transition-all duration-200 ${
+                    isFeatured
+                      ? "border-lux-gold/60 bg-black/50 shadow-sm"
+                      : "border-white/10 bg-black/30 hover:border-lux-gold/60 hover:text-white"
+                  }`}
                   data-testid="pick2-preset-button"
                 >
-                  {pair.label}
+                  <span>{pair.label}</span>
+                  {isFeatured ? (
+                    <span
+                      className="ml-2 rounded-full border border-lux-gold/40 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-lux-gold/90"
+                      data-testid="pick2-featured-badge"
+                    >
+                      Recommended
+                    </span>
+                  ) : null}
                 </button>
-              ))}
+              );
+              })}
             </div>
           </div>
         ) : null}

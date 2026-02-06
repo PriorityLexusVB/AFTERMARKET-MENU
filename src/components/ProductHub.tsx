@@ -104,6 +104,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const [pick2PriceInput, setPick2PriceInput] = useState("");
   const [pick2TitleInput, setPick2TitleInput] = useState("");
   const [pick2SubtitleInput, setPick2SubtitleInput] = useState("");
+  const [pick2FeaturedPresetLabel, setPick2FeaturedPresetLabel] = useState("");
   const [pick2ConfigError, setPick2ConfigError] = useState<string | null>(null);
   const [isSavingPick2Config, setIsSavingPick2Config] = useState(false);
   const maxRecommendedPairs = 4;
@@ -286,6 +287,10 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   }, [pick2Config?.recommendedPairs]);
 
   useEffect(() => {
+    setPick2FeaturedPresetLabel(pick2Config?.featuredPresetLabel ?? "");
+  }, [pick2Config?.featuredPresetLabel]);
+
+  useEffect(() => {
     setSelectedIds((prev) => {
       const validIds = new Set(features.map((f) => f.id));
       return new Set([...prev].filter((id) => validIds.has(id)));
@@ -338,26 +343,82 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     []
   );
 
+  const buildPresetOrder = useCallback(
+    (draft: Array<{ label: string; optionIds: [string, string] }>) => {
+      const labels = draft.map((pair) => pair.label.trim()).filter(Boolean);
+      const seen = new Set<string>();
+      return labels.filter((label) => {
+        const normalized = label.toLowerCase();
+        if (seen.has(normalized)) return false;
+        seen.add(normalized);
+        return true;
+      });
+    },
+    []
+  );
+
   const saveRecommendedPairs = useCallback(
     async (draft: Array<{ label: string; optionIds: [string, string] }>) => {
       const nextPairs = buildRecommendedPairsPayload(draft);
+      const nextOrder = buildPresetOrder(draft);
+      const featuredTrimmed = pick2FeaturedPresetLabel.trim();
+      const featuredNormalized = featuredTrimmed.toLowerCase();
+      const nextFeatured = nextOrder.some((label) => label.toLowerCase() === featuredNormalized)
+        ? featuredTrimmed
+        : undefined;
       const prev = pick2Config?.recommendedPairs;
+      const prevOrder = pick2Config?.presetOrder;
+      const prevFeatured = pick2Config?.featuredPresetLabel;
       setPick2ConfigError(null);
       setIsSavingPick2Config(true);
-      setPick2Config((cfg) => (cfg ? { ...cfg, recommendedPairs: nextPairs } : cfg));
+      setPick2Config((cfg) =>
+        cfg
+          ? {
+              ...cfg,
+              recommendedPairs: nextPairs,
+              presetOrder: nextOrder,
+              featuredPresetLabel: nextFeatured,
+            }
+          : cfg
+      );
       try {
-        await updatePick2Config({ recommendedPairs: nextPairs });
+        await updatePick2Config({
+          recommendedPairs: nextPairs,
+          presetOrder: nextOrder,
+          featuredPresetLabel: nextFeatured,
+        });
+        if (nextFeatured !== pick2FeaturedPresetLabel) {
+          setPick2FeaturedPresetLabel(nextFeatured ?? "");
+        }
         requestMenuRefresh();
       } catch (err) {
         console.error("Failed to save Pick2 recommended pairs", err);
-        setPick2Config((cfg) => (cfg ? { ...cfg, recommendedPairs: prev } : cfg));
+        setPick2Config((cfg) =>
+          cfg
+            ? {
+                ...cfg,
+                recommendedPairs: prev,
+                presetOrder: prevOrder,
+                featuredPresetLabel: prevFeatured,
+              }
+            : cfg
+        );
         setPick2RecommendedPairsDraft(normalizeRecommendedPairs(prev));
+        setPick2FeaturedPresetLabel(prevFeatured ?? "");
         setPick2ConfigError("Failed to save recommended pairs.");
       } finally {
         setIsSavingPick2Config(false);
       }
     },
-    [buildRecommendedPairsPayload, pick2Config?.recommendedPairs, requestMenuRefresh]
+    [
+      buildRecommendedPairsPayload,
+      buildPresetOrder,
+      pick2Config?.featuredPresetLabel,
+      pick2Config?.presetOrder,
+      pick2Config?.recommendedPairs,
+      pick2FeaturedPresetLabel,
+      requestMenuRefresh,
+    ]
   );
 
   useEffect(() => {
@@ -571,6 +632,31 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     },
     []
   );
+
+  const moveRecommendedPair = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setPick2RecommendedPairsDraft((prev) => {
+        if (toIndex < 0 || toIndex >= prev.length) return prev;
+        const next = [...prev];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        void saveRecommendedPairs(next);
+        return next;
+      });
+    },
+    [saveRecommendedPairs]
+  );
+
+  const pick2PresetLabels = useMemo(() => {
+    const labels = pick2RecommendedPairsDraft.map((pair) => pair.label.trim()).filter(Boolean);
+    const seen = new Set<string>();
+    return labels.filter((label) => {
+      const normalized = label.toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  }, [pick2RecommendedPairsDraft]);
 
   const handlePlacementUpdate = async (
     feature: ProductFeature,
@@ -2116,57 +2202,116 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               Pick2 eligible items are required to configure presets.
             </p>
           ) : (
-            <div className="mt-2 space-y-3">
-              {pick2RecommendedPairsDraft.map((pair, index) => (
-                <div
-                  key={`pick2-pair-${index}`}
-                  className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr] gap-2"
+            <>
+              <div className="mt-2">
+                <label className="text-xs text-gray-400 block mb-1">Featured preset</label>
+                <select
+                  value={pick2FeaturedPresetLabel}
+                  onChange={async (e) => {
+                    const nextRaw = e.target.value;
+                    const nextTrimmed = nextRaw.trim();
+                    const nextValue = nextTrimmed.length > 0 ? nextTrimmed : undefined;
+                    const prev = pick2Config?.featuredPresetLabel;
+
+                    setPick2FeaturedPresetLabel(nextTrimmed);
+                    setPick2ConfigError(null);
+                    setIsSavingPick2Config(true);
+                    setPick2Config((cfg) => (cfg ? { ...cfg, featuredPresetLabel: nextValue } : cfg));
+                    try {
+                      await updatePick2Config({ featuredPresetLabel: nextValue });
+                      requestMenuRefresh();
+                    } catch (err) {
+                      console.error("Failed to save featured preset", err);
+                      setPick2Config((cfg) =>
+                        cfg ? { ...cfg, featuredPresetLabel: prev } : cfg
+                      );
+                      setPick2FeaturedPresetLabel(prev ?? "");
+                      setPick2ConfigError("Failed to save featured preset.");
+                    } finally {
+                      setIsSavingPick2Config(false);
+                    }
+                  }}
+                  disabled={pick2PresetLabels.length === 0}
+                  className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
                 >
-                  <input
-                    type="text"
-                    value={pair.label}
-                    onChange={(e) => updateRecommendedPairDraft(index, { label: e.target.value })}
-                    onBlur={() => saveRecommendedPairs(pick2RecommendedPairsDraft)}
-                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                    placeholder={`Preset label ${index + 1}`}
-                  />
-                  <select
-                    value={pair.optionIds[0]}
-                    onChange={(e) =>
-                      updateRecommendedPairDraft(index, {
-                        optionIds: [e.target.value, pair.optionIds[1]],
-                      })
-                    }
-                    onBlur={() => saveRecommendedPairs(pick2RecommendedPairsDraft)}
-                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                  <option value="">None</option>
+                  {pick2PresetLabels.map((label) => (
+                    <option key={`pick2-featured-${label}`} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-3 space-y-3">
+                {pick2RecommendedPairsDraft.map((pair, index) => (
+                  <div
+                    key={`pick2-pair-${index}`}
+                    className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr_auto] gap-2"
                   >
-                    <option value="">Pick 1</option>
-                    {pick2EligibleOptions.map((opt) => (
-                      <option key={`pick2-pair-${index}-1-${opt.id}`} value={opt.id}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={pair.optionIds[1]}
-                    onChange={(e) =>
-                      updateRecommendedPairDraft(index, {
-                        optionIds: [pair.optionIds[0], e.target.value],
-                      })
-                    }
-                    onBlur={() => saveRecommendedPairs(pick2RecommendedPairsDraft)}
-                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                  >
-                    <option value="">Pick 2</option>
-                    {pick2EligibleOptions.map((opt) => (
-                      <option key={`pick2-pair-${index}-2-${opt.id}`} value={opt.id}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
+                    <input
+                      type="text"
+                      value={pair.label}
+                      onChange={(e) => updateRecommendedPairDraft(index, { label: e.target.value })}
+                      onBlur={() => saveRecommendedPairs(pick2RecommendedPairsDraft)}
+                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                      placeholder={`Preset label ${index + 1}`}
+                    />
+                    <select
+                      value={pair.optionIds[0]}
+                      onChange={(e) =>
+                        updateRecommendedPairDraft(index, {
+                          optionIds: [e.target.value, pair.optionIds[1]],
+                        })
+                      }
+                      onBlur={() => saveRecommendedPairs(pick2RecommendedPairsDraft)}
+                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                    >
+                      <option value="">Pick 1</option>
+                      {pick2EligibleOptions.map((opt) => (
+                        <option key={`pick2-pair-${index}-1-${opt.id}`} value={opt.id}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={pair.optionIds[1]}
+                      onChange={(e) =>
+                        updateRecommendedPairDraft(index, {
+                          optionIds: [pair.optionIds[0], e.target.value],
+                        })
+                      }
+                      onBlur={() => saveRecommendedPairs(pick2RecommendedPairsDraft)}
+                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                    >
+                      <option value="">Pick 2</option>
+                      {pick2EligibleOptions.map((opt) => (
+                        <option key={`pick2-pair-${index}-2-${opt.id}`} value={opt.id}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-2 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => moveRecommendedPair(index, index - 1)}
+                        disabled={index === 0}
+                        className="px-2 py-1 text-xs border border-gray-700 rounded text-gray-200 hover:border-lux-gold/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Up
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveRecommendedPair(index, index + 1)}
+                        disabled={index === pick2RecommendedPairsDraft.length - 1}
+                        className="px-2 py-1 text-xs border border-gray-700 rounded text-gray-200 hover:border-lux-gold/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Down
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -53,12 +53,6 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     () => items.filter((item) => selectedIdSet.has(item.id)),
     [items, selectedIdSet]
   );
-  const selectedValue = useMemo(
-    () => selectedItems.reduce((sum, item) => sum + item.price, 0),
-    [selectedItems]
-  );
-  const savings = selectedValue > bundlePrice ? selectedValue - bundlePrice : 0;
-
   const headerClass = isCompact
     ? textSize === "xl"
       ? "text-2xl"
@@ -80,7 +74,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     }
 
     if (selectedCount >= maxSelections) {
-      setBlockedMessage("You've selected 2 - remove one to swap.");
+      setBlockedMessage("You're at 2. Remove one to swap.");
       return;
     }
 
@@ -88,16 +82,21 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     onToggle(item);
   };
 
-  const progressText = `${selectedCount}/${maxSelections} selected`;
-  const blockedText =
-    blockedMessage ?? (isComplete ? "You've selected 2 - remove one to swap." : null);
+  const progressText = isComplete
+    ? `All set - ${selectedCount} selected`
+    : `${selectedCount} of ${maxSelections} selected`;
+  const blockedText = blockedMessage;
 
   const headerWrapperClass = isCompact
     ? "sticky top-0 z-20 -mx-2 px-2 pt-2 pb-2 bg-gray-900/90 backdrop-blur-sm"
     : "sticky top-0 z-20 -mx-4 px-4 pt-4 pb-3 bg-gray-900/90 backdrop-blur-sm";
 
   const titleText = title?.trim() || "You Pick 2";
-  const subtitleText = subtitle?.trim() || "Choose any 2 featured add-ons for one price";
+  const subtitleText = subtitle?.trim() || "Choose any two featured add-ons for one price.";
+
+  const selectedSlots = Array.from({ length: maxSelections }, (_, index) =>
+    selectedItems[index] ? selectedItems[index] : null
+  );
 
   return (
     <div
@@ -123,15 +122,13 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           <div className="shrink-0 flex flex-col items-end gap-2">
             <div className="text-right">
               <p
-                className={`${isCompact ? "text-[11px]" : "text-xs"} text-gray-400 uppercase tracking-[0.2em]`}
-              >
-                Any 2 for
-              </p>
-              <p
                 className={`${isCompact ? "text-lg" : "text-xl"} font-semibold text-gray-100`}
                 data-testid="pick2-price"
               >
-                {formatPrice(bundlePrice)}
+                {formatPrice(bundlePrice)} total
+              </p>
+              <p className={`${isCompact ? "text-[11px]" : "text-xs"} text-gray-400`}>
+                Installed today
               </p>
             </div>
             <span
@@ -147,42 +144,45 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           </div>
         </div>
 
-        {isComplete ? (
-          <div
-            className={`${isCompact ? "mt-2" : "mt-3"} flex flex-wrap items-center gap-2 text-sm text-gray-200`}
-          >
-            <span className="inline-flex items-center rounded-full border border-luxury-green-600/30 bg-luxury-green-600/20 px-3 py-1 text-xs uppercase tracking-[0.2em] text-luxury-green-200">
-              Bundle ready
-            </span>
-            {savings > 0 ? (
-              <span className="text-xs text-lux-gold/90">Save {formatPrice(savings)}</span>
-            ) : null}
-          </div>
-        ) : null}
-
         <div className={`${isCompact ? "mt-2" : "mt-3"} flex flex-col gap-2`}>
           <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Selected</p>
           <div className="flex flex-wrap gap-2">
-            {selectedItems.length === 0 ? (
-              <span className="text-xs text-gray-400">Select two to build your bundle.</span>
-            ) : (
-              selectedItems.map((item) => (
-                <button
-                  key={`pick2-chip-${item.id}`}
-                  type="button"
-                  onClick={() => onToggle(item)}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch"
-                  aria-label={`Remove ${item.name} from Pick 2`}
-                  data-testid="pick2-selected-chip"
+            {selectedSlots.map((item, index) => {
+              if (item) {
+                return (
+                  <button
+                    key={`pick2-chip-${item.id}`}
+                    type="button"
+                    onClick={() => onToggle(item)}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch"
+                    aria-label={`Remove ${item.name} from Pick 2`}
+                    data-testid="pick2-selected-chip"
+                  >
+                    <span className="max-w-[160px] truncate">{item.name}</span>
+                    <span className="text-[11px] text-gray-300" aria-hidden="true">
+                      &times;
+                    </span>
+                  </button>
+                );
+              }
+
+              const emptyText =
+                index === 0
+                  ? "Select your first add-on"
+                  : index === 1
+                    ? "Select one more"
+                    : "Select another add-on";
+              return (
+                <span
+                  key={`pick2-slot-${index}`}
+                  className="inline-flex items-center rounded-full border border-dashed border-white/15 bg-black/20 px-3 py-2 text-xs text-gray-400 min-h-touch"
                 >
-                  <span className="max-w-[160px] truncate">{item.name}</span>
-                  <span className="text-[11px] text-gray-300" aria-hidden="true">
-                    &times;
-                  </span>
-                </button>
-              ))
-            )}
+                  {emptyText}
+                </span>
+              );
+            })}
           </div>
+          <p className="text-xs text-gray-400">Swap anytime before finalizing.</p>
         </div>
 
         {blockedText ? (
@@ -221,13 +221,12 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   isCompact={isCompact}
                   textSize={textSize}
                   ctaAddLabel="Select"
+                  ctaSelectedLabel="Selected"
                   ariaAddLabel={`Select ${item.name} for Pick 2`}
                   ariaSelectedLabel={`Remove ${item.name} from Pick 2`}
                   variant="pick2"
-                  priceLabel="Value"
                   cardTestId={`pick2-card-${item.id}`}
                   ctaTestId={`pick2-cta-${item.id}`}
-                  isCtaDisabled={isComplete && !isSelected}
                 />
               );
             })}

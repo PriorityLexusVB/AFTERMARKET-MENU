@@ -41,7 +41,7 @@ test.describe("Pick2 flow", () => {
 
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId("pick2-header")).toContainText(
-      /Choose any (two|2) featured add-ons for one price\.?/i
+      /Choose any (two|2) featured protections for one price\.?/i
     );
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("0 of 2 selected");
 
@@ -64,7 +64,7 @@ test.describe("Pick2 flow", () => {
 
     // Select second item: bundle completes -> total increases by bundle price once.
     await selectButtons.nth(1).click();
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("All set - 2 selected");
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
 
     const selectedChips = page.getByTestId("pick2-selected-chip");
     await expect(selectedChips).toHaveCount(2);
@@ -79,7 +79,7 @@ test.describe("Pick2 flow", () => {
     const extraSelectLabel = await extraSelect.getAttribute("aria-label");
     await extraSelect.scrollIntoViewIfNeeded();
     await extraSelect.click();
-    await expect(page.getByRole("status")).toContainText(/You.re at 2.*Remove one to swap\./, {
+    await expect(page.getByRole("status")).toContainText(/You.?re at 2.*Remove one to swap\./, {
       timeout: 2000,
     });
     const totalAfterBlocked = await getSelectionTotal(page);
@@ -99,7 +99,7 @@ test.describe("Pick2 flow", () => {
         .first()
         .click();
     }
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("All set - 2 selected");
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
 
     const totalAfterSwap = await getSelectionTotal(page);
     expect(totalAfterSwap).toBe(totalAfter2);
@@ -118,7 +118,7 @@ test.describe("Pick2 flow", () => {
     await page.getByRole("button", { name: /you pick 2/i }).click();
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId("pick2-header")).toContainText(
-      /Choose any (two|2) featured add-ons for one price\.?/i
+      /Choose any (two|2) featured protections for one price\.?/i
     );
 
     const list = page.getByTestId("pick2-list");
@@ -159,7 +159,7 @@ test.describe("Pick2 flow", () => {
     await page.getByRole("button", { name: /you pick 2/i }).click();
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId("pick2-header")).toContainText(
-      /Choose any (two|2) featured add-ons for one price\.?/i
+      /Choose any (two|2) featured protections for one price\.?/i
     );
 
     await expect(page.getByTestId("selection-drawer-bar")).toBeVisible({ timeout: 10000 });
@@ -206,7 +206,7 @@ test.describe("Pick2 flow", () => {
     await page.getByRole("button", { name: /you pick 2/i }).click();
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId("pick2-header")).toContainText(
-      /Choose any (two|2) featured add-ons for one price\.?/i
+      /Choose any (two|2) featured protections for one price\.?/i
     );
 
     const metrics = await page.evaluate(() => {

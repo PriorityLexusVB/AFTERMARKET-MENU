@@ -17,7 +17,6 @@ interface AddonItemProps {
   cardTestId?: string;
   ctaTestId?: string;
   isCtaDisabled?: boolean;
-  priceLabel?: string;
 }
 
 const PlusIcon: React.FC = () => (
@@ -47,7 +46,6 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   cardTestId,
   ctaTestId,
   isCtaDisabled = false,
-  priceLabel,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -94,6 +92,8 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         ? "text-base"
         : "text-xs";
 
+    const showIndividualPrice = variant === "pick2" && Number.isFinite(item.price);
+
   return (
     <div
       className={`bg-gray-800 border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
@@ -113,21 +113,26 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           </button>
 
           <div className="shrink-0 text-right">
-            {isDiscounted ? (
-              <p
-                className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-400 line-through decoration-2 decoration-gray-500/60`}
-              >
-                {formatPrice(basePrice)}
-              </p>
-            ) : null}
             {variant === "pick2" ? (
-              <p
-                className={`${isCompact ? "text-[10px]" : "text-[11px]"} text-gray-400 uppercase tracking-[0.2em]`}
-              >
-                {priceLabel ?? "Value"}
-              </p>
-            ) : null}
-            <p className={`${priceClass} text-gray-200 font-semibold`}>{formatPrice(item.price)}</p>
+              showIndividualPrice ? (
+                <p className={`${isCompact ? "text-[11px]" : "text-xs"} text-gray-400`}>
+                  Individually {formatPrice(item.price)}
+                </p>
+              ) : null
+            ) : (
+              <>
+                {isDiscounted ? (
+                  <p
+                    className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-400 line-through decoration-2 decoration-gray-500/60`}
+                  >
+                    {formatPrice(basePrice)}
+                  </p>
+                ) : null}
+                <p className={`${priceClass} text-gray-200 font-semibold`}>
+                  {formatPrice(item.price)}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -186,6 +191,8 @@ export const AddonItem: React.FC<AddonItemProps> = ({
               <span>{ctaSelectedLabel ?? "Added"}</span>
               <span aria-hidden="true">&#10003;</span>
             </span>
+          ) : variant === "pick2" ? (
+            <span>{ctaAddLabel ?? "Select"}</span>
           ) : (
             <>
               <span className="inline-block animate-icon-pop-in">

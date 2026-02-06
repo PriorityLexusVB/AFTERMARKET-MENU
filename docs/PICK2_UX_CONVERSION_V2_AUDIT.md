@@ -5,7 +5,7 @@
 - BASELINE_SHA: e6da7795d57c1bcb5d544df6cd87c207b816a908
 
 ## What changed
-- Refined Pick2 header and progress copy to match premium, compact guidance.
+- Standardized Pick2 copy pack (subtitle, progress, swap message) for the Apple-clean/Lexus-premium tone.
 - Added two-slot selected row with explicit empty prompts and swap reassurance.
 - Adjusted Pick2 card CTAs and price subline to keep selection intent clear.
 - Updated Pick2 e2e assertions to match new copy and third-tap swap message.

@@ -27,8 +27,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "rustguard-pro",
     name: "RustGuard Pro",
-    description:
-      "Underbody protection to prevent corrosion and structural damage.",
+    description: "Underbody protection to prevent corrosion and structural damage.",
     points: [
       "Prolongs the life of vehicle",
       "Reduce repair/replacement costs",
@@ -48,8 +47,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "toughguard-premium",
     name: "ToughGuard Premium",
-    description:
-      "A premium paint sealant that protects against environmental damage.",
+    description: "A premium paint sealant that protects against environmental damage.",
     points: [
       "One Time Application",
       "Eliminates waxing",
@@ -68,8 +66,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "interior-protection",
     name: "Interior Leather & Fabric Protection",
-    description:
-      "A complete interior treatment to protect against stains and damage.",
+    description: "A complete interior treatment to protect against stains and damage.",
     points: [
       "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
       "Prevents cracking, covers rips, tears & burns",
@@ -88,8 +85,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "platinum-rustguard",
     name: "RustGuard Pro",
-    description:
-      "Underbody protection to prevent corrosion and structural damage.",
+    description: "Underbody protection to prevent corrosion and structural damage.",
     points: [
       "Prolongs the life of vehicle",
       "Reduce repair/replacement costs",
@@ -109,8 +105,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "platinum-toughguard",
     name: "ToughGuard Premium",
-    description:
-      "A premium paint sealant that protects against environmental damage.",
+    description: "A premium paint sealant that protects against environmental damage.",
     points: [
       "One Time Application",
       "Eliminates waxing",
@@ -129,8 +124,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "platinum-diamond-shield",
     name: "Diamond Shield Windshield Protection",
-    description:
-      "A treatment that improves visibility and protects your windshield.",
+    description: "A treatment that improves visibility and protects your windshield.",
     points: [
       "Increase visibility in rain",
       "Protects against night glare",
@@ -150,8 +144,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "gold-rustguard",
     name: "RustGuard Pro",
-    description:
-      "Underbody protection to prevent corrosion and structural damage.",
+    description: "Underbody protection to prevent corrosion and structural damage.",
     points: [
       "Prolongs the life of vehicle",
       "Reduce repair/replacement costs",
@@ -171,8 +164,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "gold-toughguard",
     name: "ToughGuard Premium",
-    description:
-      "A premium paint sealant that protects against environmental damage.",
+    description: "A premium paint sealant that protects against environmental damage.",
     points: [
       "One Time Application",
       "Eliminates waxing",
@@ -191,8 +183,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "gold-interior",
     name: "Interior Leather & Fabric Protection",
-    description:
-      "A complete interior treatment to protect against stains and damage.",
+    description: "A complete interior treatment to protect against stains and damage.",
     points: [
       "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
       "Prevents cracking, covers rips, tears & burns",
@@ -211,8 +202,7 @@ export const MOCK_FEATURES: ProductFeature[] = [
   {
     id: "diamond-shield",
     name: "Diamond Shield Windshield Protection",
-    description:
-      "A treatment that improves visibility and protects your windshield.",
+    description: "A treatment that improves visibility and protects your windshield.",
     points: [
       "Increase visibility in rain",
       "Protects against night glare",
@@ -278,6 +268,7 @@ export const MOCK_PICK2_CONFIG = {
   price: 995,
   title: "You Pick 2",
   subtitle: "Choose any 2 featured add-ons for one price",
+  recommendedPairs: [],
 } as const;
 
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)
@@ -330,8 +321,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "Headlights Protection",
       price: 295,
       cost: 125,
-      description:
-        "A durable film to prevent hazing, yellowing, and cracking of headlight lenses.",
+      description: "A durable film to prevent hazing, yellowing, and cracking of headlight lenses.",
       pick2Eligible: true,
       pick2Sort: 30,
       shortValue: "Prevents hazing and keeps night visibility sharp.",
@@ -362,8 +352,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "EverNew Appearance Package",
       price: 1899,
       cost: 400,
-      description:
-        "Mobile cosmetic repair service for minor damages - we come to you.",
+      description: "Mobile cosmetic repair service for minor damages - we come to you.",
       points: [
         "Scratch, Chip, & Dent Repair",
         "Eliminate Insurance Claims",
@@ -381,11 +370,8 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "Screen Defender",
       price: 799,
       cost: 50,
-      description:
-        "Warrantied protections against chipping, cracking, breaking and scratching.",
-      points: [
-        "Warrantied protections against chipping, cracking, breaking and scratching",
-      ],
+      description: "Warrantied protections against chipping, cracking, breaking and scratching.",
+      points: ["Warrantied protections against chipping, cracking, breaking and scratching"],
       column: 4, // Popular add-on
       position: 5,
       connector: "AND",
@@ -395,8 +381,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "Diamond Shield Windshield Protection",
       price: 150,
       cost: 150,
-      description:
-        "A treatment that improves visibility and protects your windshield.",
+      description: "A treatment that improves visibility and protects your windshield.",
       points: [
         "Increase visibility in rain",
         "Protects against night glare",
@@ -416,8 +401,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "RustGuard Pro",
       price: 300,
       cost: 300,
-      description:
-        "Underbody protection to prevent corrosion and structural damage.",
+      description: "Underbody protection to prevent corrosion and structural damage.",
       points: [
         "Prolongs the life of vehicle",
         "Reduce repair/replacement costs",
@@ -437,8 +421,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "ToughGuard Premium",
       price: 250,
       cost: 250,
-      description:
-        "A premium paint sealant that protects against environmental damage.",
+      description: "A premium paint sealant that protects against environmental damage.",
       points: [
         "One Time Application",
         "Eliminates waxing",
@@ -457,8 +440,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "Interior Leather & Fabric Protection",
       price: 200,
       cost: 200,
-      description:
-        "A complete interior treatment to protect against stains and damage.",
+      description: "A complete interior treatment to protect against stains and damage.",
       points: [
         "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
         "Prevents cracking, covers rips, tears & burns",
@@ -476,8 +458,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "Elite Ceramic Coating",
       price: 500,
       cost: 500,
-      description:
-        "Advanced ceramic protection with superior durability and shine.",
+      description: "Advanced ceramic protection with superior durability and shine.",
       points: [
         "9H hardness rating",
         "Hydrophobic water repellency",
@@ -535,8 +516,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       name: "Platinum Full PPF Coverage",
       price: 800,
       cost: 800,
-      description:
-        "Complete paint protection film coverage for maximum protection.",
+      description: "Complete paint protection film coverage for maximum protection.",
       points: [
         "Full body PPF installation",
         "Self-healing technology",
@@ -582,10 +562,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
         "Repels brake dust and contaminants",
         "Easy cleaning and maintenance",
       ],
-      useCases: [
-        "Keeps wheels looking clean longer.",
-        "Protects against corrosion and oxidation.",
-      ],
+      useCases: ["Keeps wheels looking clean longer.", "Protects against corrosion and oxidation."],
       column: 4,
       position: 15,
       connector: "AND",

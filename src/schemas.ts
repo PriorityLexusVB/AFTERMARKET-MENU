@@ -20,30 +20,15 @@ export const ProductFeatureSchema = z
     price: z.number().nonnegative("Price must be non-negative"), // Allow 0 for features included in packages
     cost: z.number().nonnegative("Cost must be non-negative"),
     warranty: z.string().optional(),
-    imageUrl: z
-      .string()
-      .url("Image URL must be valid")
-      .optional()
-      .or(z.literal("")),
-    thumbnailUrl: z
-      .string()
-      .url("Thumbnail URL must be valid")
-      .optional()
-      .or(z.literal("")),
-    videoUrl: z
-      .string()
-      .url("Video URL must be valid")
-      .optional()
-      .or(z.literal("")),
+    imageUrl: z.string().url("Image URL must be valid").optional().or(z.literal("")),
+    thumbnailUrl: z.string().url("Thumbnail URL must be valid").optional().or(z.literal("")),
+    videoUrl: z.string().url("Video URL must be valid").optional().or(z.literal("")),
     column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
     position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
     connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
     // A La Carte publishing fields
     publishToAlaCarte: z.boolean().optional().default(false),
-    alaCartePrice: z
-      .number()
-      .nonnegative("A La Carte price must be non-negative")
-      .optional(),
+    alaCartePrice: z.number().nonnegative("A La Carte price must be non-negative").optional(),
     alaCarteWarranty: z.string().optional(),
     alaCarteIsNew: z.boolean().optional(),
   })
@@ -74,21 +59,9 @@ export const AlaCarteOptionSchema = z.object({
   isNew: z.boolean().optional(),
   warranty: z.string().optional(),
   useCases: z.array(z.string()).optional(),
-  imageUrl: z
-    .string()
-    .url("Image URL must be valid")
-    .optional()
-    .or(z.literal("")),
-  thumbnailUrl: z
-    .string()
-    .url("Thumbnail URL must be valid")
-    .optional()
-    .or(z.literal("")),
-  videoUrl: z
-    .string()
-    .url("Video URL must be valid")
-    .optional()
-    .or(z.literal("")),
+  imageUrl: z.string().url("Image URL must be valid").optional().or(z.literal("")),
+  thumbnailUrl: z.string().url("Thumbnail URL must be valid").optional().or(z.literal("")),
+  videoUrl: z.string().url("Video URL must be valid").optional().or(z.literal("")),
   column: z.number().int().min(1).max(4).optional(), // Column assignment (1-4) for admin organization
   position: z.number().int().min(0).optional(), // Position within column for ordering (0-indexed)
   connector: FeatureConnectorSchema.optional(), // Connector type ('AND' or 'OR') for display between features
@@ -112,6 +85,14 @@ export const Pick2ConfigSchema = z.object({
   subtitle: z.string().optional(),
   // Optional in DB, defaulted to 2 at read-time.
   maxSelections: z.number().int().min(1).optional(),
+  recommendedPairs: z
+    .array(
+      z.object({
+        label: z.string().min(1, "Label is required"),
+        optionIds: z.tuple([z.string().min(1), z.string().min(1)]),
+      })
+    )
+    .optional(),
 });
 
 export type Pick2Config = z.infer<typeof Pick2ConfigSchema>;
@@ -172,10 +153,7 @@ export function safeParseData<T>(
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    console.error(
-      `Validation error${context ? ` in ${context}` : ""}:`,
-      result.error.format()
-    );
+    console.error(`Validation error${context ? ` in ${context}` : ""}:`, result.error.format());
     return null;
   }
 

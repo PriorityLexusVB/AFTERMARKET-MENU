@@ -647,6 +647,96 @@ const App: React.FC = () => {
       });
   }, [displayAllAlaCarteOptions]);
 
+  const pick2EligibleIdSet = useMemo(
+    () => new Set(pick2EligibleItems.map((item) => item.id)),
+    [pick2EligibleItems]
+  );
+
+  const normalizePick2Name = useCallback((value: string) => {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\bpackage\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }, []);
+
+  const pick2NameToId = useMemo(() => {
+    const map = new Map<string, string>();
+    pick2EligibleItems.forEach((item) => {
+      const normalized = normalizePick2Name(item.name);
+      if (normalized) {
+        map.set(normalized, item.id);
+      }
+    });
+    return map;
+  }, [pick2EligibleItems, normalizePick2Name]);
+
+  const findPick2IdByName = useCallback(
+    (candidates: string[]) => {
+      for (const candidate of candidates) {
+        const normalized = normalizePick2Name(candidate);
+        const match = pick2NameToId.get(normalized);
+        if (match) return match;
+      }
+      return undefined;
+    },
+    [normalizePick2Name, pick2NameToId]
+  );
+
+  const fallbackPick2RecommendedPairs = useMemo(() => {
+    const presets = [
+      {
+        label: "Best Protection",
+        optionCandidates: [
+          [
+            "Suntek Pro Standard Package",
+            "Suntek Protective Film (Standard Package)",
+            "Suntek Pro Standard",
+          ],
+          ["Diamond Shield Windshield Protection"],
+        ],
+      },
+      {
+        label: "Resale Focus",
+        optionCandidates: [
+          ["EverNew Appearance Protection"],
+          ["Interior Leather & Fabric Protection"],
+        ],
+      },
+      {
+        label: "Visibility + Daily Wear",
+        optionCandidates: [["Headlights Protection"], ["Door Cups Only"]],
+      },
+      {
+        label: "Coastal Defense",
+        optionCandidates: [["RustGuard Pro"], ["ToughGuard Premium"]],
+      },
+    ];
+
+    return presets
+      .map((preset) => {
+        const firstId = findPick2IdByName(preset.optionCandidates[0]);
+        const secondId = findPick2IdByName(preset.optionCandidates[1]);
+        if (!firstId || !secondId) return null;
+        if (firstId === secondId) return null;
+        return { label: preset.label, optionIds: [firstId, secondId] as [string, string] };
+      })
+      .filter((pair): pair is { label: string; optionIds: [string, string] } => Boolean(pair));
+  }, [findPick2IdByName]);
+
+  const pick2RecommendedPairs = useMemo(() => {
+    const configured = pick2Config?.recommendedPairs ?? [];
+    const validConfigured = configured.filter((pair) => {
+      const [first, second] = pair.optionIds;
+      return pick2EligibleIdSet.has(first) && pick2EligibleIdSet.has(second);
+    });
+    if (validConfigured.length > 0) {
+      return validConfigured;
+    }
+    return fallbackPick2RecommendedPairs;
+  }, [pick2Config?.recommendedPairs, pick2EligibleIdSet, fallbackPick2RecommendedPairs]);
+
   const showPick2Tab = pick2Enabled && pick2EligibleItems.length > 0;
 
   useEffect(() => {
@@ -750,6 +840,27 @@ const App: React.FC = () => {
     },
     [pick2MaxSelections]
   );
+
+  const handlePick2PresetSelect = useCallback(
+    (optionIds: string[]) => {
+      const uniqueIds = Array.from(new Set(optionIds)).filter((id) => pick2EligibleIdSet.has(id));
+      if (uniqueIds.length < pick2MaxSelections) return;
+      const nextIds = uniqueIds.slice(0, pick2MaxSelections);
+      setCustomPackageItems((prevCustom) =>
+        prevCustom.filter((item) => !nextIds.includes(item.id))
+      );
+      setPick2SelectedIds(nextIds);
+    },
+    [pick2EligibleIdSet, pick2MaxSelections]
+  );
+
+  const handlePick2Clear = useCallback(() => {
+    setPick2SelectedIds([]);
+  }, []);
+
+  const handlePick2Done = useCallback(() => {
+    setCurrentPage("packages");
+  }, []);
 
   const handleRemoveAlaCarte = useCallback((itemId: string) => {
     setCustomPackageItems((prev) => {
@@ -1032,6 +1143,10 @@ const App: React.FC = () => {
                 onToggle={handleTogglePick2Item}
                 onView={handleViewDetail}
                 bundlePrice={pick2BundlePrice}
+                recommendedPairs={pick2RecommendedPairs}
+                onPresetSelect={handlePick2PresetSelect}
+                onDone={handlePick2Done}
+                onClear={handlePick2Clear}
                 title={pick2Config?.title}
                 subtitle={pick2Config?.subtitle}
                 isCompact={enableCompactPick2Layout}

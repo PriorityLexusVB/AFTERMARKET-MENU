@@ -92,7 +92,24 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         ? "text-base"
         : "text-xs";
 
-    const showIndividualPrice = variant === "pick2" && Number.isFinite(item.price);
+  const showIndividualPrice = variant === "pick2" && Number.isFinite(item.price);
+
+  const pick2SignalText = [item.shortValue, ...(item.highlights ?? []), ...(item.points ?? [])]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  const hasWarrantySignal = Boolean(item.warranty) || pick2SignalText.includes("warranty");
+  const hasMobileSignal = /(mobile|on[- ]?site|at your home|at your location)/.test(
+    pick2SignalText
+  );
+
+  const pick2Chips =
+    variant === "pick2"
+      ? [
+          hasWarrantySignal ? (item.warranty ?? "Warranty") : null,
+          hasMobileSignal ? "Mobile service" : null,
+        ].filter(Boolean)
+      : [];
 
   return (
     <div
@@ -158,9 +175,20 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           </ul>
         ) : null}
 
-        {item.warranty ? (
+        {pick2Chips.length > 0 ? (
+          <div className={`${isCompact ? "mt-2" : "mt-2.5"} flex flex-wrap gap-2`}>
+            {pick2Chips.map((chip) => (
+              <span
+                key={`${item.id}-${chip}`}
+                className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200 transition-all duration-200"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        ) : item.warranty ? (
           <div className={`${isCompact ? "mt-2" : "mt-2.5"}`}>
-            <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200">
+            <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200 transition-all duration-200">
               {item.warranty}
             </span>
           </div>

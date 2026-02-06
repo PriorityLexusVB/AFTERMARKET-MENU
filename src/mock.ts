@@ -269,6 +269,13 @@ export const MOCK_PICK2_CONFIG = {
   title: "You Pick 2",
   subtitle: "Choose any 2 featured add-ons for one price",
   recommendedPairs: [],
+  featuredPresetLabel: "Best Protection",
+  presetOrder: [
+    "Best Protection",
+    "Resale Focus",
+    "Visibility + Daily Wear",
+    "Coastal Defense",
+  ],
 } as const;
 
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)
@@ -282,8 +289,9 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       cost: 550,
       description:
         "Protects the most vulnerable parts of your vehicle from rock chips and scratches.",
+      thumbnailUrl: "/MENU1.png",
       pick2Eligible: true,
-      pick2Sort: 10,
+      pick2Sort: 20,
       shortValue: "Stops rock chips before they become repainting.",
       highlights: ["Self-healing film", "10-year warranty"],
       points: [
@@ -307,7 +315,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       description:
         "10 Year Warranty - essential protection for the most vulnerable front-facing areas.",
       pick2Eligible: true,
-      pick2Sort: 20,
+      pick2Sort: 10,
       shortValue: "Protects high-impact front areas from daily highway damage.",
       highlights: ["Invisible protection", "10-year warranty"],
       points: ['Protects 18"-24" Hood', "Fenders", "Mirrors"],
@@ -323,7 +331,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       cost: 125,
       description: "A durable film to prevent hazing, yellowing, and cracking of headlight lenses.",
       pick2Eligible: true,
-      pick2Sort: 30,
+      pick2Sort: 50,
       shortValue: "Prevents hazing and keeps night visibility sharp.",
       highlights: ["Clear film barrier", "Maintains resale appeal"],
       points: ["Maintains clarity for optimal night visibility."],
@@ -339,7 +347,7 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       description:
         "Invisible film applied behind door handles to prevent scratches from keys and fingernails.",
       pick2Eligible: true,
-      pick2Sort: 40,
+      pick2Sort: 60,
       shortValue: "Prevents scratches where hands hit every day.",
       highlights: ["Invisible film", "High-wear zone protection"],
       points: ["Protects a high-wear area from daily use."],
@@ -349,10 +357,13 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
     },
     {
       id: "evernew",
-      name: "EverNew Appearance Package",
+      name: "EverNew Appearance Protection",
       price: 1899,
       cost: 400,
       description: "Mobile cosmetic repair service for minor damages - we come to you.",
+      pick2Eligible: true,
+      pick2Sort: 30,
+      shortValue: "Restore exterior gloss and protect long-term value.",
       points: [
         "Scratch, Chip, & Dent Repair",
         "Eliminate Insurance Claims",
@@ -382,6 +393,9 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       price: 150,
       cost: 150,
       description: "A treatment that improves visibility and protects your windshield.",
+      pick2Eligible: true,
+      pick2Sort: 40,
+      shortValue: "Improves clarity and protects against chips.",
       points: [
         "Increase visibility in rain",
         "Protects against night glare",
@@ -402,6 +416,9 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       price: 300,
       cost: 300,
       description: "Underbody protection to prevent corrosion and structural damage.",
+      pick2Eligible: true,
+      pick2Sort: 80,
+      shortValue: "Defends the underbody from salt and corrosion.",
       points: [
         "Prolongs the life of vehicle",
         "Reduce repair/replacement costs",
@@ -422,6 +439,9 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       price: 250,
       cost: 250,
       description: "A premium paint sealant that protects against environmental damage.",
+      pick2Eligible: true,
+      pick2Sort: 90,
+      shortValue: "Seals paint for deep gloss and durable protection.",
       points: [
         "One Time Application",
         "Eliminates waxing",
@@ -441,6 +461,9 @@ export const MOCK_ALA_CARTE_OPTIONS: AlaCarteOption[] = (
       price: 200,
       cost: 200,
       description: "A complete interior treatment to protect against stains and damage.",
+      pick2Eligible: true,
+      pick2Sort: 70,
+      shortValue: "Protects seats from everyday spills and wear.",
       points: [
         "Protects against stains such as: coffee, juices, crayons, chocolate, gum",
         "Prevents cracking, covers rips, tears & burns",

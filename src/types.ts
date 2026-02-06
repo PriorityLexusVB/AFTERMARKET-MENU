@@ -81,4 +81,6 @@ export interface Pick2Config {
     label: string;
     optionIds: [string, string];
   }>;
+  featuredPresetLabel?: string;
+  presetOrder?: string[];
 }

@@ -652,6 +652,7 @@ const App: React.FC = () => {
     [pick2EligibleItems]
   );
 
+
   const normalizePick2Name = useCallback((value: string) => {
     return value
       .toLowerCase()
@@ -738,6 +739,7 @@ const App: React.FC = () => {
   }, [pick2Config?.recommendedPairs, pick2EligibleIdSet, fallbackPick2RecommendedPairs]);
 
   const showPick2Tab = pick2Enabled && pick2EligibleItems.length > 0;
+
 
   useEffect(() => {
     if (currentPage === "pick2" && !showPick2Tab) {
@@ -842,7 +844,7 @@ const App: React.FC = () => {
   );
 
   const handlePick2PresetSelect = useCallback(
-    (optionIds: string[]) => {
+    (optionIds: string[], label?: string) => {
       const uniqueIds = Array.from(new Set(optionIds)).filter((id) => pick2EligibleIdSet.has(id));
       if (uniqueIds.length < pick2MaxSelections) return;
       const nextIds = uniqueIds.slice(0, pick2MaxSelections);
@@ -1144,6 +1146,8 @@ const App: React.FC = () => {
                 onView={handleViewDetail}
                 bundlePrice={pick2BundlePrice}
                 recommendedPairs={pick2RecommendedPairs}
+                featuredPresetLabel={pick2Config?.featuredPresetLabel}
+                presetOrder={pick2Config?.presetOrder}
                 onPresetSelect={handlePick2PresetSelect}
                 onDone={handlePick2Done}
                 onClear={handlePick2Clear}

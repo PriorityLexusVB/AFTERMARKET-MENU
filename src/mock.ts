@@ -276,6 +276,8 @@ export const MOCK_PICK2_CONFIG = {
     "Visibility + Daily Wear",
     "Coastal Defense",
   ],
+  telemetryEnabled: false,
+  telemetrySampleRate: 1,
 } as const;
 
 // MOCK A LA CARTE (these would be in the 'ala_carte_options' table)

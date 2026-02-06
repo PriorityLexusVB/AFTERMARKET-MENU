@@ -83,4 +83,6 @@ export interface Pick2Config {
   }>;
   featuredPresetLabel?: string;
   presetOrder?: string[];
+  telemetryEnabled?: boolean;
+  telemetrySampleRate?: number;
 }

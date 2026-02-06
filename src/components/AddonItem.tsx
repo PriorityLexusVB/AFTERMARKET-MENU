@@ -189,7 +189,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           {isSelected ? (
             <span className="inline-flex items-center gap-1">
               <span>{ctaSelectedLabel ?? "Added"}</span>
-              {variant === "pick2" ? null : <span aria-hidden="true">&#10003;</span>}
+              <span aria-hidden="true">&#10003;</span>
             </span>
           ) : variant === "pick2" ? (
             <span>{ctaAddLabel ?? "Select"}</span>

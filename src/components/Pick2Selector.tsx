@@ -74,7 +74,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     }
 
     if (selectedCount >= maxSelections) {
-      setBlockedMessage("You're at 2. Remove one to swap.");
+      setBlockedMessage("You’re at 2. Remove one to swap.");
       return;
     }
 
@@ -83,7 +83,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
   };
 
   const progressText = isComplete
-    ? `All set - ${selectedCount} selected`
+    ? `All set — ${selectedCount} selected`
     : `${selectedCount} of ${maxSelections} selected`;
   const blockedText = blockedMessage;
 
@@ -92,7 +92,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     : "sticky top-0 z-20 -mx-4 px-4 pt-4 pb-3 bg-gray-900/90 backdrop-blur-sm";
 
   const titleText = title?.trim() || "You Pick 2";
-  const subtitleText = subtitle?.trim() || "Choose any two featured add-ons for one price.";
+  const subtitleText = "Choose any two featured protections for one price.";
 
   const selectedSlots = Array.from({ length: maxSelections }, (_, index) =>
     selectedItems[index] ? selectedItems[index] : null

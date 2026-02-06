@@ -117,6 +117,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
   const isMounted = useRef(true);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Drag-and-drop sensors
   const sensors = useSensors(
@@ -277,6 +278,26 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     () => () => {
       isMounted.current = false;
       Object.values(saveTimers.current).forEach((timer) => clearTimeout(timer));
+    },
+    []
+  );
+
+  const requestMenuRefresh = useCallback(() => {
+    onAlaCarteChange?.();
+    if (!onDataUpdate) return;
+    if (refreshTimer.current) {
+      clearTimeout(refreshTimer.current);
+    }
+    refreshTimer.current = setTimeout(() => {
+      onDataUpdate();
+    }, 250);
+  }, [onAlaCarteChange, onDataUpdate]);
+
+  useEffect(
+    () => () => {
+      if (refreshTimer.current) {
+        clearTimeout(refreshTimer.current);
+      }
     },
     []
   );
@@ -458,6 +479,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         await updateAlaCarteOption(feature.id, { price: parsed });
         upsertOptionState(feature, { price: parsed });
       }
+      requestMenuRefresh();
       markSaved(feature.id);
     } catch (err) {
       console.error("Failed to update A La Carte price", err);
@@ -1199,10 +1221,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               highlights: getPick2DraftHighlights(),
             });
           }
+          requestMenuRefresh();
           markSaved(feature.id);
           return;
         }
         await updateAlaCarteOption(feature.id, { pick2Eligible: next });
+        requestMenuRefresh();
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save pick2Eligible", err);
@@ -1232,10 +1256,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               shortValue: pick2ShortValueDraft.trim() || undefined,
               highlights: getPick2DraftHighlights(),
             });
+            requestMenuRefresh();
             markSaved(feature.id);
             return;
           }
           await updateAlaCarteOption(feature.id, { pick2Sort: undefined });
+          requestMenuRefresh();
           markSaved(feature.id);
         } catch (err) {
           console.error("Failed to clear pick2Sort", err);
@@ -1267,10 +1293,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             shortValue: pick2ShortValueDraft.trim() || undefined,
             highlights: getPick2DraftHighlights(),
           });
+          requestMenuRefresh();
           markSaved(feature.id);
           return;
         }
         await updateAlaCarteOption(feature.id, { pick2Sort: parsed });
+        requestMenuRefresh();
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save pick2Sort", err);
@@ -1300,10 +1328,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             shortValue: next,
             highlights: getPick2DraftHighlights(),
           });
+          requestMenuRefresh();
           markSaved(feature.id);
           return;
         }
         await updateAlaCarteOption(feature.id, { shortValue: next });
+        requestMenuRefresh();
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save shortValue", err);
@@ -1334,10 +1364,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             shortValue: pick2ShortValueDraft.trim() || undefined,
             highlights: nextHighlights,
           });
+          requestMenuRefresh();
           markSaved(feature.id);
           return;
         }
         await updateAlaCarteOption(feature.id, { highlights: next });
+        requestMenuRefresh();
         markSaved(feature.id);
       } catch (err) {
         console.error("Failed to save highlights", err);
@@ -1857,6 +1889,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   setIsSavingPick2Config(true);
                   try {
                     await updatePick2Config({ enabled: next });
+                    requestMenuRefresh();
                   } catch (err) {
                     console.error("Failed to save Pick2 enabled", err);
                     setPick2Enabled(prev);
@@ -1904,6 +1937,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 setPick2Config((cfg) => (cfg ? { ...cfg, price: parsed } : cfg));
                 try {
                   await updatePick2Config({ price: parsed });
+                  requestMenuRefresh();
                 } catch (err) {
                   console.error("Failed to save Pick2 price", err);
                   if (prev !== undefined) {
@@ -1938,6 +1972,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 setPick2Config((cfg) => (cfg ? { ...cfg, title: next } : cfg));
                 try {
                   await updatePick2Config({ title: next });
+                  requestMenuRefresh();
                 } catch (err) {
                   console.error("Failed to save Pick2 title", err);
                   setPick2Config((cfg) => (cfg ? { ...cfg, title: prev } : cfg));
@@ -1971,6 +2006,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 setPick2Config((cfg) => (cfg ? { ...cfg, subtitle: next } : cfg));
                 try {
                   await updatePick2Config({ subtitle: next });
+                  requestMenuRefresh();
                 } catch (err) {
                   console.error("Failed to save Pick2 subtitle", err);
                   setPick2Config((cfg) => (cfg ? { ...cfg, subtitle: prev } : cfg));

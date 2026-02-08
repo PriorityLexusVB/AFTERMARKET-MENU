@@ -242,6 +242,10 @@ test.describe("Pick2 flow", () => {
     await page.getByRole("button", { name: /you pick 2/i }).click();
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
 
+    const list = page.getByTestId("pick2-list");
+    await expect(list).toBeVisible({ timeout: 10000 });
+    await list.getByRole("button", { name: /Select .* for Pick 2/i }).first().click();
+
     expect(await focusViaKeyboard(page, "pick2-done")).toBe(true);
     expect(await focusViaKeyboard(page, "pick2-clear")).toBe(true);
   });

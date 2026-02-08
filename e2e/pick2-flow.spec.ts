@@ -8,6 +8,20 @@ const parseUsd = (raw: string): number => {
   return parsed;
 };
 
+const focusViaKeyboard = async (
+  page: import("@playwright/test").Page,
+  target: ReturnType<import("@playwright/test").Page["locator"]>,
+  maxTabs = 60
+) => {
+  for (let i = 0; i < maxTabs; i += 1) {
+    await page.keyboard.press("Tab");
+    if (await target.evaluate((el) => el.matches(":focus-visible"))) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const getSelectionTotal = async (page: import("@playwright/test").Page) => {
   const bar = page.getByTestId("selection-drawer-bar");
   await expect(bar).toBeVisible({ timeout: 10000 });
@@ -178,6 +192,7 @@ test.describe("Pick2 flow", () => {
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
 
     const clearButton = page.getByTestId("pick2-clear");
+    await clearButton.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await clearButton.click();
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("0 of 2 selected");
     await expect(page.getByTestId("pick2-selected-chip")).toHaveCount(0);
@@ -217,14 +232,10 @@ test.describe("Pick2 flow", () => {
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
 
     const doneButton = page.getByTestId("pick2-done");
-    await doneButton.focus();
-    const doneFocusVisible = await doneButton.evaluate((el) => el.matches(":focus-visible"));
-    expect(doneFocusVisible).toBe(true);
+    expect(await focusViaKeyboard(page, doneButton)).toBe(true);
 
     const clearButton = page.getByTestId("pick2-clear");
-    await clearButton.focus();
-    const clearFocusVisible = await clearButton.evaluate((el) => el.matches(":focus-visible"));
-    expect(clearFocusVisible).toBe(true);
+    expect(await focusViaKeyboard(page, clearButton)).toBe(true);
   });
 
   test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {

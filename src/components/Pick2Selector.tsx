@@ -177,7 +177,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
   return (
     <div
       className={`bg-gray-800/50 border border-gray-700 rounded-xl shadow-lg ${
-        isCompact ? "p-2" : "p-4"
+        isCompact ? "p-2 pb-[72px]" : "p-4"
       } h-full min-h-0 flex flex-col ${className ?? ""}`}
     >
       <header className={headerWrapperClass} data-testid="pick2-header">

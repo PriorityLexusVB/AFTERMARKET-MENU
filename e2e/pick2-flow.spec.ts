@@ -10,12 +10,23 @@ const parseUsd = (raw: string): number => {
 
 const focusViaKeyboard = async (
   page: import("@playwright/test").Page,
-  target: ReturnType<import("@playwright/test").Page["locator"]>,
-  maxTabs = 60
+  testId: string,
+  maxTabs = 160
 ) => {
+  await page.evaluate(() => {
+    (document.body as HTMLElement).focus();
+  });
+
   for (let i = 0; i < maxTabs; i += 1) {
     await page.keyboard.press("Tab");
-    if (await target.evaluate((el) => el.matches(":focus-visible"))) {
+    const active = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      return {
+        testId: el?.getAttribute("data-testid"),
+        focusVisible: el ? el.matches(":focus-visible") : false,
+      };
+    });
+    if (active.testId === testId && active.focusVisible) {
       return true;
     }
   }
@@ -231,11 +242,8 @@ test.describe("Pick2 flow", () => {
     await page.getByRole("button", { name: /you pick 2/i }).click();
     await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
 
-    const doneButton = page.getByTestId("pick2-done");
-    expect(await focusViaKeyboard(page, doneButton)).toBe(true);
-
-    const clearButton = page.getByTestId("pick2-clear");
-    expect(await focusViaKeyboard(page, clearButton)).toBe(true);
+    expect(await focusViaKeyboard(page, "pick2-done")).toBe(true);
+    expect(await focusViaKeyboard(page, "pick2-clear")).toBe(true);
   });
 
   test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {

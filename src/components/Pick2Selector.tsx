@@ -235,7 +235,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
               <button
                 type="button"
                 onClick={() => setIsInfoOpen((prev) => !prev)}
-                className="h-7 w-7 rounded-full border border-white/10 bg-black/40 text-xs text-gray-200 hover:border-lux-gold/60 transition-colors"
+                className="h-7 w-7 rounded-full border border-white/10 bg-black/40 text-xs text-gray-200 hover:border-lux-gold/60 transition-colors btn-lux-focus"
                 aria-label="Why this matters"
                 aria-expanded={isInfoOpen}
                 data-testid="pick2-info-toggle"
@@ -267,7 +267,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                     key={`pick2-chip-${item.id}`}
                     type="button"
                     onClick={() => onToggle(item)}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch transition-all duration-200"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch transition-all duration-200 btn-lux-focus"
                     aria-label={`Remove ${item.name} from Pick 2`}
                     data-testid="pick2-selected-chip"
                   >
@@ -313,7 +313,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   key={`pick2-preset-${index}`}
                   type="button"
                   onClick={() => handlePresetSelect(pair.optionIds, pair.label)}
-                  className={`rounded-full border px-3 py-2 text-xs text-gray-100 min-h-touch transition-all duration-200 ${
+                  className={`rounded-full border px-3 py-2 text-xs text-gray-100 min-h-touch transition-all duration-200 btn-lux-focus ${
                     isFeatured
                       ? "border-lux-gold/60 bg-black/50 shadow-sm"
                       : "border-white/10 bg-black/30 hover:border-lux-gold/60 hover:text-white"
@@ -393,7 +393,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
             type="button"
             onClick={onDone}
             disabled={!onDone}
-            className="flex-1 rounded-md bg-lux-blue text-lux-textStrong border border-lux-blue/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] hover:brightness-110 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 rounded-md bg-lux-blue text-lux-textStrong border border-lux-blue/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] hover:brightness-110 transition-colors disabled:opacity-60 disabled:cursor-not-allowed btn-lux-focus"
             data-testid="pick2-done"
           >
             Done
@@ -402,7 +402,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
             type="button"
             onClick={handleClear}
             disabled={!onClear || selectedCount === 0}
-            className="flex-1 rounded-md bg-transparent text-gray-200 border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] hover:border-lux-gold/60 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 rounded-md bg-transparent text-gray-200 border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] hover:border-lux-gold/60 transition-colors disabled:opacity-60 disabled:cursor-not-allowed btn-lux-focus"
             data-testid="pick2-clear"
           >
             Clear picks

@@ -199,12 +199,32 @@ test.describe("Pick2 flow", () => {
     await toggle.click();
     await expect(page.getByTestId("pick2-info-panel")).toBeVisible({ timeout: 2000 });
     await expect(page.getByTestId("pick2-info-panel")).toContainText(
-      /Pick any two upgrades for one price\./i
+      /Bundle advantage: two protections for one price\./i
     );
     await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 2000 }).toBe(0);
 
     await toggle.click();
     await expect(page.getByTestId("pick2-info-panel")).toHaveCount(0);
+  });
+
+  test("pick2 buttons show focus-visible on keyboard focus", async ({ page }) => {
+    await page.setViewportSize({ width: 1368, height: 912 });
+
+    await page.goto("/?demo=1");
+    await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+
+    await page.getByRole("button", { name: /you pick 2/i }).click();
+    await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
+
+    const doneButton = page.getByTestId("pick2-done");
+    await doneButton.focus();
+    const doneFocusVisible = await doneButton.evaluate((el) => el.matches(":focus-visible"));
+    expect(doneFocusVisible).toBe(true);
+
+    const clearButton = page.getByTestId("pick2-clear");
+    await clearButton.focus();
+    const clearFocusVisible = await clearButton.evaluate((el) => el.matches(":focus-visible"));
+    expect(clearFocusVisible).toBe(true);
   });
 
   test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {

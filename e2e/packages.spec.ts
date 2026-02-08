@@ -98,6 +98,32 @@ test.describe("Package Selection", () => {
       maxDiffPixelRatio: 0.15,
     });
   });
+
+  test("cta buttons show focus-visible on keyboard focus", async ({ page }) => {
+    const openAddonsButton = page.getByRole("button", { name: /open add-ons/i });
+    await expect(openAddonsButton).toBeVisible({ timeout: 10000 });
+    await openAddonsButton.focus();
+    const addonsFocusVisible = await openAddonsButton.evaluate((el) =>
+      el.matches(":focus-visible")
+    );
+    expect(addonsFocusVisible).toBe(true);
+
+    const selectPlanButton = page.getByRole("button", { name: /select plan/i }).first();
+    await expect(selectPlanButton).toBeVisible({ timeout: 10000 });
+    await selectPlanButton.focus();
+    const selectFocusVisible = await selectPlanButton.evaluate((el) =>
+      el.matches(":focus-visible")
+    );
+    expect(selectFocusVisible).toBe(true);
+
+    const finalizeButton = page.getByRole("button", { name: /finalize/i }).first();
+    await expect(finalizeButton).toBeVisible({ timeout: 10000 });
+    await finalizeButton.focus();
+    const finalizeFocusVisible = await finalizeButton.evaluate((el) =>
+      el.matches(":focus-visible")
+    );
+    expect(finalizeFocusVisible).toBe(true);
+  });
 });
 
 test.describe("Feature Rendering Order", () => {

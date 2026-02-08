@@ -27,6 +27,15 @@ test.describe("iPad / kiosk fit", () => {
       `No horizontal overflow expected (scrollWidth=${overflow.scrollWidth}, clientWidth=${overflow.clientWidth})`
     ).toBeLessThanOrEqual(overflow.clientWidth + 1);
 
+    const verticalOverflow = await page.evaluate(() => {
+      const el = document.documentElement;
+      return { scrollHeight: el.scrollHeight, clientHeight: el.clientHeight };
+    });
+    expect(
+      verticalOverflow.scrollHeight,
+      `No vertical overflow expected (scrollHeight=${verticalOverflow.scrollHeight}, clientHeight=${verticalOverflow.clientHeight})`
+    ).toBeLessThanOrEqual(verticalOverflow.clientHeight + 1);
+
     const openAddonsButton = page.getByRole("button", { name: /open add-ons/i });
     await expect(openAddonsButton).toBeVisible({ timeout: 10000 });
     await expect(openAddonsButton).toContainText(/add-ons/i);

@@ -48,6 +48,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   barRef,
 }) => {
   const showDiscountTotal = typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
+  const trustRowText = "Dealer-backed coverage | No obligation until finalized | Installed today";
 
   const basePackagePrice = selectedPackage
     ? basePackagePricesById?.[selectedPackage.id]
@@ -112,7 +113,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
             </div>
 
             <div
-              className={`flex justify-end pointer-events-auto ${
+              className={`flex justify-end pointer-events-auto min-w-0 ${
                 isCompact
                   ? "items-center gap-2 flex-nowrap"
                   : "flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-wrap"
@@ -137,6 +138,15 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                   {formatPrice(totalPrice)}
                 </p>
               </div>
+              <p
+                className={`text-[10px] leading-tight text-lux-textMuted line-clamp-1 ${
+                  isCompact
+                    ? "max-w-[32vw] text-right"
+                    : "max-w-[40vw] text-right sm:text-left"
+                }`}
+              >
+                {trustRowText}
+              </p>
               <div className={`flex items-center gap-2 ${isCompact ? "flex-nowrap" : ""}`}>
                 {pick2NeedsAttention && onShowPick2 ? (
                   <button

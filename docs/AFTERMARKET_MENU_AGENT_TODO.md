@@ -32,6 +32,24 @@
 - 2026-02-04: npx playwright test -> 26 passed.
 - 2026-02-04: npm run build -> build succeeded; missing VITE_FIREBASE_* warns and uses mock fallback.
 - 2026-02-04: Recommended prod gating: allow mocks only in dev or when VITE_ALLOW_MOCK=1; fail or show hard error in production when Firebase env vars are missing.
+- 2026-02-08: npm run lint -> 2 warnings (AddonItem.tsx jsx-a11y/no-noninteractive-element-interactions; ProductHub.tsx jsx-a11y/label-has-associated-control).
+- 2026-02-08: npm run healthcheck -> failed (same lint warnings + typecheck errors in App.tsx, ProductHub.tsx, data.ts).
+- 2026-02-08: npx playwright test -> failed in Windows UNC cwd; playwright not found.
+- 2026-02-08: npm run build -> succeeded; mock fallback for missing VITE_FIREBASE_*.
+- 2026-02-08 (Phase 1): npm run healthcheck -> failed (lint warnings in AddonItem.tsx and ProductHub.tsx; typecheck errors in App.tsx, ProductHub.tsx, data.ts).
+
+## DIFF REPORT
+
+- A) SelectionDrawer trust microcopy present? ❌
+	- Evidence: Selection bar has totals + CTAs only; no trust row copy in src/components/SelectionDrawer.tsx (variant="bar").
+- B) PackageCard "Why this tier" present? ❌
+	- Evidence: Header shows plan name + optional "Recommended" chip only; no compact reason line in src/components/PackageCard.tsx.
+- C) Pick2 info panel copy upgraded? ❌
+	- Evidence: Pick2 info content uses current generic messaging in src/components/Pick2Selector.tsx.
+- D) Button families consolidated/aliased? ❌
+	- Evidence: btn-lux-* styles defined, but no explicit aliasing for legacy btn-luxury-* in src/index.css.
+- E) ProductHub duplicate lineage / drift detection? ❌
+	- Evidence: ProductFeature type lacks sourceFeatureId and ProductHub has no duplicate detection panel (src/types.ts, src/components/ProductHub.tsx).
 
 ## Resume Point
 

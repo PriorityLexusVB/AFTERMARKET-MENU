@@ -93,7 +93,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     }
 
     if (selectedCount >= maxSelections) {
-      setBlockedMessage("You’re at 2. Remove one to swap.");
+      setBlockedMessage("You're at 2. Remove one to swap.");
       onBlockedThird?.();
       return;
     }
@@ -103,7 +103,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
   };
 
   const progressText = isComplete
-    ? `All set — ${selectedCount} selected`
+    ? `All set - ${selectedCount} selected`
     : `${selectedCount} of ${maxSelections} selected`;
   const blockedText = blockedMessage;
 

@@ -108,7 +108,7 @@ test.describe("Pick2 flow", () => {
 
     // Select second item: bundle completes -> total increases by bundle price once.
     await selectButtons.nth(1).click();
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set - 2 selected/);
     const savingsBlock = page.getByTestId("pick2-savings");
     await expect(savingsBlock).toBeVisible({ timeout: 2000 });
     await expect(savingsBlock).toContainText(/Individually/i);
@@ -155,7 +155,7 @@ test.describe("Pick2 flow", () => {
         .first()
         .click();
     }
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set - 2 selected/);
 
     const totalAfterSwap = await getSelectionTotal(page);
     expect(totalAfterSwap).toBe(totalAfter2);
@@ -200,7 +200,7 @@ test.describe("Pick2 flow", () => {
       .getByRole("button", { name: /Select .* for Pick 2/i })
       .nth(1)
       .click();
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set - 2 selected/);
 
     const clearButton = page.getByTestId("pick2-clear");
     await clearButton.evaluate((el) => el.scrollIntoView({ block: "center" }));

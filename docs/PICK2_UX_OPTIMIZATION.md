@@ -4,7 +4,7 @@
 
 - Upgraded the Pick2 selector to a premium, add-on aligned card layout that surfaces more items at once and reduces scanning time.
 - Added a sticky Pick2 header with value anchor, progress, and selected chips to keep intent and status visible at all times.
-- Improved selection flow clarity with explicit progress text ("0 of 2 selected" → "All set — 2 selected") and a calm swap message after a third tap.
+- Improved selection flow clarity with explicit progress text ("0 of 2 selected" -> "All set - 2 selected") and a calm swap message after a third tap.
 - Added two-slot selected row so guests see exactly what is picked and what remains.
 - Added a savings summary after two selections (Individually, Bundle, Savings) to reinforce value.
 - Added sticky Pick2 footer with Done + Clear to reduce backtracking.
@@ -12,7 +12,7 @@
 - Added trust chips on Pick2 cards when warranty or mobile service cues exist in data.
 - Highlighted a featured preset and respected preset ordering when configured.
 - Added Pick2 thumbnails (fixed-size) when data provides a thumbnail URL.
-- Added a compact “Why this matters” info panel in the Pick2 header.
+- Added a compact "Why this matters" info panel in the Pick2 header.
 - Added optional Pick2 telemetry (flagged; off by default).
 
 ## Screens/areas tested
@@ -26,12 +26,12 @@
 1. Open /?forceIpad=1&demo=1
 2. Navigate to the "You Pick 2" tab.
 3. Confirm the header, selected slots, and swap reassurance remain visible while the Pick2 list scrolls.
-4. Select two items; verify progress shows "All set — 2 selected".
-5. Attempt a third selection; confirm the message "You’re at 2. Remove one to swap." appears and selection count stays at 2.
+4. Select two items; verify progress shows "All set - 2 selected".
+5. Attempt a third selection; confirm the message "You're at 2. Remove one to swap." appears and selection count stays at 2.
 6. Verify the savings block appears only when two items are selected.
 7. Verify the featured preset badge and preset order (when configured).
 8. Verify a Pick2 thumbnail renders when data provides a thumbnail URL.
-9. Toggle the “Why this matters” info panel and confirm no window scroll.
+9. Toggle the "Why this matters" info panel and confirm no window scroll.
 10. Use Done to return to Packages and Clear picks to reset selections.
 
 Also verify on /?forceIpad=1&demo=1 that:

@@ -251,9 +251,9 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
             className={`${isCompact ? "mt-2" : "mt-3"} rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-[11px] text-gray-200`}
             data-testid="pick2-info-panel"
           >
-            <p>Pick any two upgrades for one price.</p>
+            <p>Bundle advantage: two protections for one price.</p>
+            <p>No double-pay: bundle applies once.</p>
             <p>Swap anytime before finalizing.</p>
-            <p>Bundle price applies once.</p>
           </div>
         ) : null}
 

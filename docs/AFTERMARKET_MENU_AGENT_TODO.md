@@ -44,16 +44,16 @@
 
 ## DIFF REPORT
 
-- A) SelectionDrawer trust microcopy present? NO
-	- Evidence: Selection bar has totals + CTAs only; no trust row copy in src/components/SelectionDrawer.tsx (variant="bar").
-- B) PackageCard "Why this tier" present? NO
-	- Evidence: Header shows plan name + optional "Recommended" chip only; no compact reason line in src/components/PackageCard.tsx.
-- C) Pick2 info panel copy upgraded? NO
-	- Evidence: Pick2 info content uses current generic messaging in src/components/Pick2Selector.tsx.
-- D) Button families consolidated/aliased? NO
-	- Evidence: btn-lux-* styles defined, but no explicit aliasing for legacy btn-luxury-* in src/index.css.
-- E) ProductHub duplicate lineage / drift detection? NO
-	- Evidence: ProductFeature type lacks sourceFeatureId and ProductHub has no duplicate detection panel (src/types.ts, src/components/ProductHub.tsx).
+- A) SelectionDrawer trust microcopy present? YES
+	- Evidence: Trust row copy added in src/components/SelectionDrawer.tsx (variant="bar").
+- B) PackageCard "Why this tier" present? YES
+	- Evidence: "Best value" microcopy added to recommended tier header in src/components/PackageCard.tsx.
+- C) Pick2 info panel copy upgraded? YES
+	- Evidence: Pick2 info panel copy updated in src/components/Pick2Selector.tsx.
+- D) Button families consolidated/aliased? YES
+	- Evidence: Shared btn-lux base styles + focus/disabled behavior in src/index.css; focus-visible checks added in e2e.
+- E) ProductHub duplicate lineage / drift detection? YES
+	- Evidence: sourceFeatureId added in src/types.ts and src/schemas.ts; duplicates panel added in src/components/ProductHub.tsx.
 
 ## Resume Point
 

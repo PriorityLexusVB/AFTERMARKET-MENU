@@ -191,6 +191,15 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           <p className="am-text-label text-left text-shadow-sm font-semibold text-lux-textMuted">
             Plan
           </p>
+          {shouldShowRecommended && (
+            <p
+              className={`text-[10px] uppercase tracking-[0.2em] text-lux-gold/80 line-clamp-1 ${
+                isCompact ? "-mt-0.5" : "-mt-1"
+              }`}
+            >
+              Best value
+            </p>
+          )}
           <h3
             className={`font-teko ${
               isCompact

@@ -1,5 +1,7 @@
 # AFTERMARKET MENU Agent TODO
 
+Note: AGENTS.md is authoritative for guardrails and workflow.
+
 ## Done
 
 - 7406c9f docs: update decisions and verification log

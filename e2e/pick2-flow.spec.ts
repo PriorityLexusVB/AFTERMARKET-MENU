@@ -8,6 +8,31 @@ const parseUsd = (raw: string): number => {
   return parsed;
 };
 
+const focusViaKeyboard = async (
+  page: import("@playwright/test").Page,
+  testId: string,
+  maxTabs = 160
+) => {
+  await page.evaluate(() => {
+    (document.body as HTMLElement).focus();
+  });
+
+  for (let i = 0; i < maxTabs; i += 1) {
+    await page.keyboard.press("Tab");
+    const active = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      return {
+        testId: el?.getAttribute("data-testid"),
+        focusVisible: el ? el.matches(":focus-visible") : false,
+      };
+    });
+    if (active.testId === testId && active.focusVisible) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const getSelectionTotal = async (page: import("@playwright/test").Page) => {
   const bar = page.getByTestId("selection-drawer-bar");
   await expect(bar).toBeVisible({ timeout: 10000 });
@@ -83,7 +108,7 @@ test.describe("Pick2 flow", () => {
 
     // Select second item: bundle completes -> total increases by bundle price once.
     await selectButtons.nth(1).click();
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set - 2 selected/);
     const savingsBlock = page.getByTestId("pick2-savings");
     await expect(savingsBlock).toBeVisible({ timeout: 2000 });
     await expect(savingsBlock).toContainText(/Individually/i);
@@ -130,7 +155,7 @@ test.describe("Pick2 flow", () => {
         .first()
         .click();
     }
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set - 2 selected/);
 
     const totalAfterSwap = await getSelectionTotal(page);
     expect(totalAfterSwap).toBe(totalAfter2);
@@ -175,9 +200,10 @@ test.describe("Pick2 flow", () => {
       .getByRole("button", { name: /Select .* for Pick 2/i })
       .nth(1)
       .click();
-    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set [—-] 2 selected/);
+    await expect(page.getByLabel(/Pick 2 progress/i)).toContainText(/All set - 2 selected/);
 
     const clearButton = page.getByTestId("pick2-clear");
+    await clearButton.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await clearButton.click();
     await expect(page.getByLabel(/Pick 2 progress/i)).toContainText("0 of 2 selected");
     await expect(page.getByTestId("pick2-selected-chip")).toHaveCount(0);
@@ -199,12 +225,29 @@ test.describe("Pick2 flow", () => {
     await toggle.click();
     await expect(page.getByTestId("pick2-info-panel")).toBeVisible({ timeout: 2000 });
     await expect(page.getByTestId("pick2-info-panel")).toContainText(
-      /Pick any two upgrades for one price\./i
+      /Bundle advantage: two protections for one price\./i
     );
     await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 2000 }).toBe(0);
 
     await toggle.click();
     await expect(page.getByTestId("pick2-info-panel")).toHaveCount(0);
+  });
+
+  test("pick2 buttons show focus-visible on keyboard focus", async ({ page }) => {
+    await page.setViewportSize({ width: 1368, height: 912 });
+
+    await page.goto("/?demo=1");
+    await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+
+    await page.getByRole("button", { name: /you pick 2/i }).click();
+    await expect(page.getByTestId("pick2-header")).toBeVisible({ timeout: 10000 });
+
+    const list = page.getByTestId("pick2-list");
+    await expect(list).toBeVisible({ timeout: 10000 });
+    await list.getByRole("button", { name: /Select .* for Pick 2/i }).first().click();
+
+    expect(await focusViaKeyboard(page, "pick2-done")).toBe(true);
+    expect(await focusViaKeyboard(page, "pick2-clear")).toBe(true);
   });
 
   test("summaries shown + fix action reopens Pick2 when incomplete", async ({ page }) => {

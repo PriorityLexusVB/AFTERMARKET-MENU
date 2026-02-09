@@ -20,6 +20,7 @@ export const ProductFeatureSchema = z
     price: z.number().nonnegative("Price must be non-negative"), // Allow 0 for features included in packages
     cost: z.number().nonnegative("Cost must be non-negative"),
     warranty: z.string().optional(),
+    sourceFeatureId: z.string().optional(),
     imageUrl: z.string().url("Image URL must be valid").optional().or(z.literal("")),
     thumbnailUrl: z.string().url("Thumbnail URL must be valid").optional().or(z.literal("")),
     videoUrl: z.string().url("Video URL must be valid").optional().or(z.literal("")),

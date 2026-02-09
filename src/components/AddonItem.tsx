@@ -60,7 +60,31 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   const [showThumbnail, setShowThumbnail] = useState(Boolean(item.thumbnailUrl));
 
   useEffect(() => {
-    setShowThumbnail(Boolean(item.thumbnailUrl));
+    if (!item.thumbnailUrl) {
+      setShowThumbnail(false);
+      return;
+    }
+
+    let cancelled = false;
+    const image = new Image();
+
+    image.onload = () => {
+      if (!cancelled) {
+        setShowThumbnail(true);
+      }
+    };
+
+    image.onerror = () => {
+      if (!cancelled) {
+        setShowThumbnail(false);
+      }
+    };
+
+    image.src = item.thumbnailUrl;
+
+    return () => {
+      cancelled = true;
+    };
   }, [item.thumbnailUrl]);
 
   const highlightsSource =
@@ -137,7 +161,6 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                   alt={`${item.name} thumbnail`}
                   loading="lazy"
                   decoding="async"
-                  onError={() => setShowThumbnail(false)}
                   className="h-full w-full object-cover"
                   data-testid={`pick2-thumbnail-${item.id}`}
                 />

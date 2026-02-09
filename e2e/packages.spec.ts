@@ -1,5 +1,19 @@
 import { test, expect } from "@playwright/test";
 
+const focusViaKeyboard = async (
+  page: import("@playwright/test").Page,
+  target: ReturnType<import("@playwright/test").Page["locator"]>,
+  maxTabs = 40
+) => {
+  for (let i = 0; i < maxTabs; i += 1) {
+    await page.keyboard.press("Tab");
+    if (await target.evaluate((el) => el.matches(":focus-visible"))) {
+      return true;
+    }
+  }
+  return false;
+};
+
 test.describe("Package Selection", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/?demo=1");
@@ -97,6 +111,24 @@ test.describe("Package Selection", () => {
       fullPage: false,
       maxDiffPixelRatio: 0.15,
     });
+  });
+
+  test("cta buttons show focus-visible on keyboard focus", async ({ page }) => {
+    await page.setViewportSize({ width: 1194, height: 834 });
+    await page.goto("/?forceIpad=1&demo=1");
+    await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+
+    const openAddonsButton = page.getByRole("button", { name: /open add-ons/i });
+    await expect(openAddonsButton).toBeVisible({ timeout: 10000 });
+    expect(await focusViaKeyboard(page, openAddonsButton)).toBe(true);
+
+    const selectPlanButton = page.getByRole("button", { name: /select plan/i }).first();
+    await expect(selectPlanButton).toBeVisible({ timeout: 10000 });
+    expect(await focusViaKeyboard(page, selectPlanButton)).toBe(true);
+
+    const finalizeButton = page.getByRole("button", { name: /finalize/i }).first();
+    await expect(finalizeButton).toBeVisible({ timeout: 10000 });
+    expect(await focusViaKeyboard(page, finalizeButton)).toBe(true);
   });
 });
 

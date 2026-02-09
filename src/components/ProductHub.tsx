@@ -445,6 +445,50 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       });
   }, [alaCarteOptions]);
 
+  const normalizeFeatureName = (name: string) =>
+    name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+  const possibleDuplicates = useMemo(() => {
+    const grouped = new Map<string, ProductFeature[]>();
+
+    features.forEach((feature) => {
+      const normalized = normalizeFeatureName(feature.name);
+      if (!normalized) return;
+
+      const existing = grouped.get(normalized);
+      if (existing) {
+        existing.push(feature);
+      } else {
+        grouped.set(normalized, [feature]);
+      }
+    });
+
+    return Array.from(grouped.entries())
+      .filter(([, group]) => group.length > 1)
+      .map(([normalized, group]) => {
+        const priceSet = new Set(group.map((item) => item.price));
+        const costSet = new Set(group.map((item) => item.cost));
+        const warrantySet = new Set(group.map((item) => (item.warranty ?? "").trim()));
+        const descriptionLengthSet = new Set(
+          group.map((item) => (item.description ?? "").trim().length)
+        );
+
+        const mismatches: string[] = [];
+        if (priceSet.size > 1) mismatches.push("price");
+        if (costSet.size > 1) mismatches.push("cost");
+        if (warrantySet.size > 1) mismatches.push("warranty");
+        if (descriptionLengthSet.size > 1) mismatches.push("description length");
+
+        return {
+          key: normalized,
+          name: group[0]?.name ?? normalized,
+          count: group.length,
+          mismatches,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [features]);
+
   const filteredFeatures = useMemo(() => {
     const queryText = searchTerm.trim().toLowerCase();
     return features.filter((feature) => {
@@ -633,12 +677,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     []
   );
 
-  const moveRecommendedPair = useCallback(
+    const moveRecommendedPair = useCallback(
     (fromIndex: number, toIndex: number) => {
       setPick2RecommendedPairsDraft((prev) => {
         if (toIndex < 0 || toIndex >= prev.length) return prev;
         const next = [...prev];
-        const [moved] = next.splice(fromIndex, 1);
+        const moved = next[fromIndex];
+        if (moved === undefined) return prev;
+        next.splice(fromIndex, 1);
         next.splice(toIndex, 0, moved);
         void saveRecommendedPairs(next);
         return next;
@@ -818,6 +864,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         ...rest,
         column: targetColumn,
         position: nextPosition,
+        sourceFeatureId: feature.sourceFeatureId ?? feature.id,
       };
 
       const docRef = await addDoc(collection(db, "features"), payload);
@@ -2031,6 +2078,43 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       ) : null}
 
       <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <p className="text-sm text-gray-300 font-semibold">Duplicates</p>
+            <p className="text-xs text-gray-500">
+              Grouped by normalized name. Drift flags highlight price, cost, warranty, and
+              description length mismatches.
+            </p>
+          </div>
+          <span className="text-xs text-gray-400">{possibleDuplicates.length} group(s)</span>
+        </div>
+        {possibleDuplicates.length === 0 ? (
+          <p className="text-xs text-gray-500 mt-2">No possible duplicates detected.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {possibleDuplicates.map((group) => (
+              <div
+                key={group.key}
+                className="rounded-md border border-white/10 bg-black/30 px-3 py-2"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-200 font-semibold">{group.name}</p>
+                  <span className="text-xs text-gray-400">{group.count} items</span>
+                </div>
+                {group.mismatches.length > 0 ? (
+                  <p className="text-xs text-red-300 mt-1">
+                    Drift: {group.mismatches.join(", ")}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">No drift detected.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
         <div className="flex items-start justify-between flex-wrap gap-2">
           <div>
             <p className="text-sm text-gray-300 font-semibold">You Pick 2 Config</p>
@@ -2204,8 +2288,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           ) : (
             <>
               <div className="mt-2">
-                <label className="text-xs text-gray-400 block mb-1">Featured preset</label>
+                <label htmlFor="pick2-featured-preset" className="text-xs text-gray-400 block mb-1">Featured preset</label>
                 <select
+                  id="pick2-featured-preset"
                   value={pick2FeaturedPresetLabel}
                   onChange={async (e) => {
                     const nextRaw = e.target.value;
@@ -2622,3 +2707,5 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     </div>
   );
 };
+
+

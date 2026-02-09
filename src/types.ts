@@ -18,6 +18,7 @@ export interface ProductFeature extends OrderableItem {
   price: number;
   cost: number;
   warranty?: string;
+  sourceFeatureId?: string; // Optional lineage for duplicates
   imageUrl?: string; // URL to main product image
   thumbnailUrl?: string; // URL to thumbnail (optional, falls back to imageUrl)
   videoUrl?: string; // URL to product video (optional)

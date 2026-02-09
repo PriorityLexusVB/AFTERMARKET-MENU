@@ -493,6 +493,15 @@ h6,
   }
 
   /* Button styles */
+  .btn-lux-base {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/70 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
+    @apply disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none;
+  }
+
+  .btn-lux-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/60 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
+  }
+
   .btn-luxury-primary {
     @apply bg-gradient-to-r from-lexus-blue-600 to-lexus-blue-500;
     @apply text-white font-bold uppercase tracking-wider;
@@ -500,6 +509,7 @@ h6,
     @apply transition-all duration-300;
     @apply active:scale-95;
     @apply min-h-touch px-8 py-4;
+    @apply btn-lux-base;
   }
 
   .btn-luxury-secondary {
@@ -511,6 +521,7 @@ h6,
     @apply hover:bg-white/20 hover:border-white/30;
     @apply active:scale-95;
     @apply min-h-touch px-8 py-4;
+    @apply btn-lux-base;
   }
 
   .btn-luxury-success {
@@ -520,6 +531,7 @@ h6,
     @apply transition-all duration-300;
     @apply active:scale-95;
     @apply min-h-touch px-8 py-4;
+    @apply btn-lux-base;
   }
 
   /* Lexus Highline theme */
@@ -571,19 +583,19 @@ h6,
   .btn-lux-primary {
     @apply bg-lux-blue text-lux-textStrong font-semibold rounded-xl px-4 py-3 min-h-[48px] shadow-luxury hover:shadow-luxury-lg transition-colors duration-200;
     @apply active:scale-98;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/70 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
+    @apply btn-lux-base;
   }
 
   .btn-lux-secondary {
     @apply bg-lux-bg2 text-lux-text font-semibold rounded-xl px-4 py-3 min-h-[48px] border border-lux-border/70 hover:border-lux-gold/60 transition-colors duration-200;
     @apply active:scale-98;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/60 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
+    @apply btn-lux-base;
   }
 
   .btn-lux-ghost {
     @apply text-lux-textMuted rounded-xl px-4 py-3 min-h-[48px] border border-transparent hover:border-lux-border/70 transition-colors duration-200;
     @apply active:scale-98;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/50 focus-visible:ring-offset-2 focus-visible:ring-offset-lux-bg1;
+    @apply btn-lux-base;
   }
 }
 

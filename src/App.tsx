@@ -721,8 +721,8 @@ const App: React.FC = () => {
 
     return presets
       .map((preset) => {
-        const firstId = findPick2IdByName(preset.optionCandidates[0]);
-        const secondId = findPick2IdByName(preset.optionCandidates[1]);
+        const firstId = findPick2IdByName(preset.optionCandidates[0] ?? []);
+        const secondId = findPick2IdByName(preset.optionCandidates[1] ?? []);
         if (!firstId || !secondId) return null;
         if (firstId === secondId) return null;
         return { label: preset.label, optionIds: [firstId, secondId] as [string, string] };

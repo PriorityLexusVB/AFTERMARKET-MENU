@@ -8,7 +8,7 @@
 ## Wins Implemented (F-I)
 - F: Featured preset highlight and preset ordering (config-driven).
 - G: Pick2 thumbnails (fixed-size) when thumbnailUrl exists.
-- H: Compact “Why this matters” info panel in Pick2 header.
+- H: Compact "Why this matters" info panel in Pick2 header.
 - I: Pick2 telemetry logging (flagged; off by default).
 
 ## Guardrails Confirmed

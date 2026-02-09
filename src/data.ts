@@ -231,7 +231,12 @@ export async function fetchAllData(): Promise<FetchDataResult> {
 }
 
 export async function fetchPick2Config(): Promise<Pick2Config> {
-  const fallback: Pick2Config = { ...MOCK_PICK2_CONFIG, maxSelections: 2 };
+  const fallback: Pick2Config = {
+    ...MOCK_PICK2_CONFIG,
+    maxSelections: 2,
+    recommendedPairs: [...MOCK_PICK2_CONFIG.recommendedPairs],
+    presetOrder: [...MOCK_PICK2_CONFIG.presetOrder],
+  };
 
   if (!db) {
     return fallback;

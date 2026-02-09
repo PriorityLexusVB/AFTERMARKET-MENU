@@ -205,14 +205,8 @@ describe("ProductHub drag-and-drop interface", () => {
     const duplicateButton = within(card).getByRole("button", { name: /Duplicate/i });
     
     await userEvent.click(duplicateButton);
-    
-    // Wait for dropdown menu to appear
-    await waitFor(() => {
-      expect(within(card).queryByRole("button", { name: /Gold/i })).toBeInTheDocument();
-    }, { timeout: 1000 });
-    
-    // Click " Gold" option in dropdown menu
-    const goldOption = within(card).getByRole("button", { name: /Gold/i });
+
+    const goldOption = await screen.findByRole("button", { name: /Gold/i });
     await userEvent.click(goldOption);
     
     await waitFor(() => expect(mockAddDoc).toHaveBeenCalled());

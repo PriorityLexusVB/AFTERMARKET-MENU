@@ -677,12 +677,14 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     []
   );
 
-  const moveRecommendedPair = useCallback(
+    const moveRecommendedPair = useCallback(
     (fromIndex: number, toIndex: number) => {
       setPick2RecommendedPairsDraft((prev) => {
         if (toIndex < 0 || toIndex >= prev.length) return prev;
         const next = [...prev];
-        const [moved] = next.splice(fromIndex, 1);
+        const moved = next[fromIndex];
+        if (moved === undefined) return prev;
+        next.splice(fromIndex, 1);
         next.splice(toIndex, 0, moved);
         void saveRecommendedPairs(next);
         return next;
@@ -2286,8 +2288,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           ) : (
             <>
               <div className="mt-2">
-                <label className="text-xs text-gray-400 block mb-1">Featured preset</label>
+                <label htmlFor="pick2-featured-preset" className="text-xs text-gray-400 block mb-1">Featured preset</label>
                 <select
+                  id="pick2-featured-preset"
                   value={pick2FeaturedPresetLabel}
                   onChange={async (e) => {
                     const nextRaw = e.target.value;
@@ -2704,3 +2707,5 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     </div>
   );
 };
+
+

@@ -213,15 +213,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           >
             {packageInfo.name}
           </h3>
-          {shouldShowRecommended ? (
-            <p className="text-[11px] uppercase tracking-[0.18em] text-lux-gold/90">
-              Most balanced coverage and value
-            </p>
-          ) : (
-            <p className="text-[11px] uppercase tracking-[0.18em] text-lux-textMuted/90">
-              Clear coverage with dealer-installed protection
-            </p>
-          )}
+          <p className="text-[11px] uppercase tracking-[0.18em] text-lux-textMuted/90">
+            {shouldShowRecommended
+              ? "Balanced coverage and best overall value"
+              : "Clear protection and transparent pricing"}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {onMagnify && (

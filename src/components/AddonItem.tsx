@@ -19,6 +19,16 @@ interface AddonItemProps {
   isCtaDisabled?: boolean;
 }
 
+
+const resolveCategoryAccentClass = (signal: string): string => {
+  if (/warranty|service contract|vsc/.test(signal)) return "am-chip-accent-warranty";
+  if (/tire|wheel|road hazard/.test(signal)) return "am-chip-accent-tire";
+  if (/maintenan|oil|service/.test(signal)) return "am-chip-accent-maintenance";
+  if (/appear|paint|interior|fabric|leather/.test(signal)) return "am-chip-accent-appearance";
+  if (/gap|theft|loss/.test(signal)) return "am-chip-accent-risk";
+  return "";
+};
+
 const PlusIcon: React.FC = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -142,17 +152,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
       : [];
 
   const categorySignal = `${item.name} ${item.description} ${(item.points ?? []).join(" ")}`.toLowerCase();
-  const categoryAccentClass = /warranty|service contract|vsc/.test(categorySignal)
-    ? "am-chip-accent-warranty"
-    : /tire|wheel|road hazard/.test(categorySignal)
-      ? "am-chip-accent-tire"
-      : /maintenan|oil|service/.test(categorySignal)
-        ? "am-chip-accent-maintenance"
-        : /appear|paint|interior|fabric|leather/.test(categorySignal)
-          ? "am-chip-accent-appearance"
-          : /gap|theft|loss/.test(categorySignal)
-            ? "am-chip-accent-risk"
-            : "";
+  const categoryAccentClass = resolveCategoryAccentClass(categorySignal);
 
   const thumbnailSizeClass = isCompact ? "h-12 w-12" : "h-14 w-14";
   const shouldShowThumbnail = variant === "pick2" && Boolean(item.thumbnailUrl) && showThumbnail;
@@ -174,6 +174,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                   alt={`${item.name} thumbnail`}
                   loading="lazy"
                   decoding="async"
+                  onError={() => setShowThumbnail(false)}
                   className="h-full w-full object-cover"
                   data-testid={`pick2-thumbnail-${item.id}`}
                 />

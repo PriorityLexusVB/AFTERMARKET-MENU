@@ -2528,7 +2528,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
           </select>
         </label>
         <span className="text-xs text-gray-500">
-          Duplicates are intentional placements. Use Duplicate to lane only when a separate record is needed.
+          Duplicate to lane creates a separate record. Use only when placements must diverge.
         </span>
       </div>
 
@@ -2592,7 +2592,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   Drag them to the sections below to assign them.
                 </p>
                 <p className="text-[11px] text-blue-300/60 mt-1">
-                  Ordering is saved by lane position. Package lane assignment takes priority over A La Carte visibility.
+                  Ordering saves by lane position. Package lane assignment overrides A La Carte visibility.
                 </p>
               </div>
               <span className="text-sm text-blue-400 font-semibold">

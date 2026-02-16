@@ -609,28 +609,28 @@ h6,
   }
 
   .am-chip-accent-warranty {
-    border-color: color-mix(in srgb, var(--color-accent-warranty) 60%, transparent);
-    color: color-mix(in srgb, var(--color-accent-warranty) 85%, white);
+    border-color: rgba(95, 143, 214, 0.7);
+    color: #c6dbff;
   }
 
   .am-chip-accent-tire {
-    border-color: color-mix(in srgb, var(--color-accent-tire) 65%, transparent);
-    color: color-mix(in srgb, var(--color-accent-tire) 80%, white);
+    border-color: rgba(255, 179, 0, 0.75);
+    color: #ffe4a1;
   }
 
   .am-chip-accent-maintenance {
-    border-color: color-mix(in srgb, var(--color-accent-maintenance) 65%, transparent);
-    color: color-mix(in srgb, var(--color-accent-maintenance) 85%, white);
+    border-color: rgba(0, 182, 122, 0.75);
+    color: #b7f6de;
   }
 
   .am-chip-accent-appearance {
-    border-color: color-mix(in srgb, var(--color-accent-appearance) 65%, transparent);
-    color: color-mix(in srgb, var(--color-accent-appearance) 85%, white);
+    border-color: rgba(138, 120, 214, 0.75);
+    color: #d6cdfc;
   }
 
   .am-chip-accent-risk {
-    border-color: color-mix(in srgb, var(--color-accent-risk) 60%, transparent);
-    color: color-mix(in srgb, var(--color-accent-risk) 80%, white);
+    border-color: rgba(220, 0, 0, 0.75);
+    color: #ffb7b7;
   }
 }
 

@@ -2527,6 +2527,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             <option value="none">Not placed</option>
           </select>
         </label>
+        <span className="text-xs text-gray-500">
+          Duplicates are intentional placements. Use Duplicate to lane only when a separate record is needed.
+        </span>
       </div>
 
       {error && (
@@ -2587,6 +2590,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 <p className="text-xs text-blue-300/70 mt-1">
                   Products that haven't been assigned to Packages or published to A La Carte yet.
                   Drag them to the sections below to assign them.
+                </p>
+                <p className="text-[11px] text-blue-300/60 mt-1">
+                  Ordering is saved by lane position. Package lane assignment takes priority over A La Carte visibility.
                 </p>
               </div>
               <span className="text-sm text-blue-400 font-semibold">
@@ -2707,5 +2713,4 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     </div>
   );
 };
-
 

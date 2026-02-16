@@ -137,6 +137,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 >
                   {formatPrice(totalPrice)}
                 </p>
+                <p className="text-[11px] text-lux-textMuted">Dealer-backed protection summary</p>
               </div>
               <p
                 className={`text-[10px] leading-tight text-lux-textMuted line-clamp-1 ${

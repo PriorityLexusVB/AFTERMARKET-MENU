@@ -80,6 +80,13 @@ h6,
   --color-luxury-silver: #e8e8e8;
   --color-luxury-platinum: #f5f5f5;
 
+  /* Product category accents (subtle signal tokens) */
+  --color-accent-warranty: #5f8fd6;
+  --color-accent-tire: #ffb300;
+  --color-accent-maintenance: #00b67a;
+  --color-accent-appearance: #8a78d6;
+  --color-accent-risk: #dc0000;
+
   /* Easing curves */
   --ease-luxury: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -582,20 +589,48 @@ h6,
 
   .btn-lux-primary {
     @apply bg-lux-blue text-lux-textStrong font-semibold rounded-xl px-4 py-3 min-h-[48px] shadow-luxury hover:shadow-luxury-lg transition-colors duration-200;
+    @apply hover:bg-[#6ab0ff];
     @apply active:scale-98;
     @apply btn-lux-base;
   }
 
   .btn-lux-secondary {
     @apply bg-lux-bg2 text-lux-text font-semibold rounded-xl px-4 py-3 min-h-[48px] border border-lux-border/70 hover:border-lux-gold/60 transition-colors duration-200;
+    @apply hover:bg-lux-bg1;
     @apply active:scale-98;
     @apply btn-lux-base;
   }
 
   .btn-lux-ghost {
     @apply text-lux-textMuted rounded-xl px-4 py-3 min-h-[48px] border border-transparent hover:border-lux-border/70 transition-colors duration-200;
+    @apply hover:text-lux-text;
     @apply active:scale-98;
     @apply btn-lux-base;
+  }
+
+  .am-chip-accent-warranty {
+    border-color: color-mix(in srgb, var(--color-accent-warranty) 60%, transparent);
+    color: color-mix(in srgb, var(--color-accent-warranty) 85%, white);
+  }
+
+  .am-chip-accent-tire {
+    border-color: color-mix(in srgb, var(--color-accent-tire) 65%, transparent);
+    color: color-mix(in srgb, var(--color-accent-tire) 80%, white);
+  }
+
+  .am-chip-accent-maintenance {
+    border-color: color-mix(in srgb, var(--color-accent-maintenance) 65%, transparent);
+    color: color-mix(in srgb, var(--color-accent-maintenance) 85%, white);
+  }
+
+  .am-chip-accent-appearance {
+    border-color: color-mix(in srgb, var(--color-accent-appearance) 65%, transparent);
+    color: color-mix(in srgb, var(--color-accent-appearance) 85%, white);
+  }
+
+  .am-chip-accent-risk {
+    border-color: color-mix(in srgb, var(--color-accent-risk) 60%, transparent);
+    color: color-mix(in srgb, var(--color-accent-risk) 80%, white);
   }
 }
 

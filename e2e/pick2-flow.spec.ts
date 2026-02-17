@@ -135,7 +135,7 @@ test.describe("Pick2 flow", () => {
     const extraSelectLabel = await extraSelect.getAttribute("aria-label");
     await extraSelect.scrollIntoViewIfNeeded();
     await extraSelect.click();
-    await expect(page.getByRole("status")).toContainText(/You.?re at 2.*Remove one to swap\./, {
+    await expect(page.getByRole("status")).toContainText(/Two selected.*Remove one to choose a different option\./, {
       timeout: 2000,
     });
     const totalAfterBlocked = await getSelectionTotal(page);

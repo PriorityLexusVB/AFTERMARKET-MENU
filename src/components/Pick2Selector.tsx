@@ -93,7 +93,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     }
 
     if (selectedCount >= maxSelections) {
-      setBlockedMessage("You're at 2. Remove one to swap.");
+      setBlockedMessage("Two selected. Remove one to choose a different option.");
       onBlockedThird?.();
       return;
     }

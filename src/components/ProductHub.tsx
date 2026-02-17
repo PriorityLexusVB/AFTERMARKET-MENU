@@ -2527,6 +2527,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             <option value="none">Not placed</option>
           </select>
         </label>
+        <span className="text-xs text-gray-500">
+          Duplicate to lane creates a separate record. Use only when placements must diverge.
+        </span>
       </div>
 
       {error && (
@@ -2587,6 +2590,9 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 <p className="text-xs text-blue-300/70 mt-1">
                   Products that haven't been assigned to Packages or published to A La Carte yet.
                   Drag them to the sections below to assign them.
+                </p>
+                <p className="text-[11px] text-blue-300/60 mt-1">
+                  Ordering saves by lane position. Package lane assignment overrides A La Carte visibility.
                 </p>
               </div>
               <span className="text-sm text-blue-400 font-semibold">
@@ -2707,5 +2713,4 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     </div>
   );
 };
-
 

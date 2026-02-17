@@ -19,6 +19,16 @@ interface AddonItemProps {
   isCtaDisabled?: boolean;
 }
 
+
+const resolveCategoryAccentClass = (signal: string): string => {
+  if (/warranty|service contract|vsc/.test(signal)) return "am-chip-accent-warranty";
+  if (/tire|wheel|road hazard/.test(signal)) return "am-chip-accent-tire";
+  if (/maintenan|oil|service/.test(signal)) return "am-chip-accent-maintenance";
+  if (/appear|paint|interior|fabric|leather/.test(signal)) return "am-chip-accent-appearance";
+  if (/gap|theft|loss/.test(signal)) return "am-chip-accent-risk";
+  return "";
+};
+
 const PlusIcon: React.FC = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -141,6 +151,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         ].filter(Boolean)
       : [];
 
+  const categorySignal = `${item.name} ${item.description} ${(item.points ?? []).join(" ")}`.toLowerCase();
+  const categoryAccentClass = resolveCategoryAccentClass(categorySignal);
+
   const thumbnailSizeClass = isCompact ? "h-12 w-12" : "h-14 w-14";
   const shouldShowThumbnail = variant === "pick2" && Boolean(item.thumbnailUrl) && showThumbnail;
 
@@ -161,6 +174,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                   alt={`${item.name} thumbnail`}
                   loading="lazy"
                   decoding="async"
+                  onError={() => setShowThumbnail(false)}
                   className="h-full w-full object-cover"
                   data-testid={`pick2-thumbnail-${item.id}`}
                 />
@@ -169,7 +183,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
             <button
               type="button"
               onClick={onView}
-              className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-lux-blue transition-colors w-full min-w-0 leading-snug clamp-2 break-words`}
+              className={`font-semibold ${nameClass} text-gray-200 text-left hover:text-lux-blue transition-colors w-full min-w-0 leading-snug clamp-2 break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded`}
               aria-label={`Learn more about ${item.name}`}
             >
               {item.name}
@@ -235,7 +249,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
           </div>
         ) : item.warranty ? (
           <div className={`${isCompact ? "mt-2" : "mt-2.5"}`}>
-            <span className="inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200 transition-all duration-200">
+            <span
+              className={`inline-flex items-center rounded-full bg-black/30 border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-gray-200 transition-all duration-200 ${categoryAccentClass}`}
+            >
               {item.warranty}
             </span>
           </div>
@@ -252,7 +268,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                 ? "bg-luxury-green-600 text-white hover:bg-luxury-green-700"
                 : "bg-lux-gold text-lux-bg0 hover:bg-luxury-gold-400"
             }
-            ${isCtaDisabled && !isSelected ? "opacity-60 cursor-not-allowed hover:bg-lux-gold" : ""}
+            ${isCtaDisabled && !isSelected ? "opacity-60 cursor-not-allowed hover:bg-lux-gold" : ""} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-blue/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900
           `}
           aria-label={
             isSelected

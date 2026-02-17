@@ -48,7 +48,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
   barRef,
 }) => {
   const showDiscountTotal = typeof baseTotalPrice === "number" && baseTotalPrice > totalPrice;
-  const trustRowText = "Dealer-backed coverage | No obligation until finalized | Installed today";
+  const trustRowText = "Dealer-backed coverage | Installed today";
 
   const basePackagePrice = selectedPackage
     ? basePackagePricesById?.[selectedPackage.id]
@@ -137,9 +137,10 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
                 >
                   {formatPrice(totalPrice)}
                 </p>
+                <p className="text-[11px] text-lux-textMuted">Dealer-backed protection summary</p>
               </div>
               <p
-                className={`text-[10px] leading-tight text-lux-textMuted line-clamp-1 ${
+                className={`text-[10px] leading-tight text-lux-textMuted clamp-1 ${
                   isCompact
                     ? "max-w-[32vw] text-right"
                     : "max-w-[40vw] text-right sm:text-left"

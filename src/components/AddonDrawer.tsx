@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useId, useRef } from "react";
 
 interface AddonDrawerProps {
   isOpen: boolean;
@@ -16,7 +16,11 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
   children,
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const drawerPanelRef = useRef<HTMLElement | null>(null);
   const lastOpenerRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const subtitleId = useId();
+  const selectedCountId = useId();
 
   const handleOpen = () => {
     if (typeof document !== "undefined") {
@@ -39,12 +43,48 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const panel = drawerPanelRef.current;
+      if (!panel) return;
+
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true");
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        closeButtonRef.current?.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const activeInPanel = active instanceof HTMLElement ? panel.contains(active) : false;
+
+      if (event.shiftKey) {
+        if (!activeInPanel || active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (!activeInPanel || active === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -90,14 +130,21 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
           />
 
           <aside
-            className="absolute right-0 top-0 w-[360px] max-w-[90vw] bg-gray-900/95 border-l border-gray-700 shadow-2xl flex flex-col"
+            ref={drawerPanelRef}
+            className="absolute right-0 top-0 w-[360px] max-w-[90vw] bg-gray-900/95 border-l border-gray-700 shadow-2xl flex flex-col min-h-0 overflow-hidden"
             style={{ bottom: "var(--ipad-bottom-bar-h, 170px)" }}
+            aria-labelledby={titleId}
+            aria-describedby={`${subtitleId} ${selectedCountId}`}
           >
             <header className="sticky top-0 z-10 px-4 pt-4 pb-3 border-b border-gray-700 bg-gray-900/95">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-teko text-3xl text-white tracking-wider">Add-Ons</h3>
-                  <p className="am-text-label text-lux-textMuted">Customize</p>
+                  <h3 id={titleId} className="font-teko text-3xl text-white tracking-wider">
+                    Add-Ons
+                  </h3>
+                  <p id={subtitleId} className="am-text-label text-lux-textMuted">
+                    Customize
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -110,7 +157,7 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <div className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-300">
+              <div id={selectedCountId} className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-300">
                 {selectedCount} selected
               </div>
             </header>

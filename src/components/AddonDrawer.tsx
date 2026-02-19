@@ -65,6 +65,11 @@ export const AddonDrawer: React.FC<AddonDrawerProps> = ({
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        closeButtonRef.current?.focus();
+        return;
+      }
       const active = document.activeElement;
       const activeInPanel = active instanceof HTMLElement ? panel.contains(active) : false;
 

@@ -448,7 +448,7 @@ h6,
     gap: var(--am-col-gap);
   }
 
-  @media (max-width: 1180px) {
+  @media (max-width: 1120px) {
     .am-packages-grid-compact {
       grid-template-columns: repeat(2, minmax(var(--am-col-min), 1fr));
     }

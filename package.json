@@ -60,7 +60,7 @@
     "express": "^4.22.0",
     "express-rate-limit": "^8.2.1",
     "firebase": "^12.9.0",
-    "lucide-react": "^0.564.0",
+    "lucide-react": "^0.575.0",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -69,7 +69,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@eslint/js": "^9.19.0",
+    "@eslint/js": "^9.39.3",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -86,14 +86,14 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "firebase-admin": "^13.6.1",
-    "firebase-tools": "^15.6.0",
+    "firebase-tools": "^15.7.0",
     "globals": "^15.14.0",
     "jsdom": "^27.4.0",
     "prettier": "^3.8.1",
     "prettier-eslint": "^16.4.2",
     "tsx": "^4.21.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.55.0",
+    "typescript-eslint": "^8.56.0",
     "vitest": "^4.0.14"
   }
 }

@@ -90,6 +90,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   const isRecommended = packageInfo.isRecommended ?? packageInfo.is_recommended ?? false;
   const shouldShowRecommended = Boolean(showRecommendedBadge && isRecommended);
+  const showRecommendedCaption = shouldShowRecommended && !isCompact;
 
   const isDiscounted = typeof basePrice === "number" && basePrice > packageInfo.price;
 
@@ -191,7 +192,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           <p className="am-text-label text-left text-shadow-sm font-semibold text-lux-textMuted">
             Plan
           </p>
-          {shouldShowRecommended && (
+          {showRecommendedCaption && (
             <p
               className={`text-[10px] uppercase tracking-[0.2em] text-lux-gold/80 line-clamp-1 ${
                 isCompact ? "-mt-0.5" : "-mt-1"
@@ -331,9 +332,20 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         }`}
       >
         {pick2Summary ? (
-          <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-200">
+          <div
+            className={`rounded-lg border border-white/10 bg-black/30 text-xs text-gray-200 min-w-0 ${
+              isCompact ? "px-2 py-1.5" : "px-3 py-2"
+            }`}
+          >
             <span className="text-gray-400 uppercase tracking-[0.2em]">Pick-2:</span>
-            <span className="ml-2 font-semibold">{pick2Summary}</span>
+            <span
+              className={`ml-2 font-semibold inline-block align-bottom min-w-0 ${
+                isCompact ? "max-w-[78%] truncate" : ""
+              }`}
+              title={pick2Summary}
+            >
+              {pick2Summary}
+            </span>
           </div>
         ) : null}
         <div className="lux-price-plaque">

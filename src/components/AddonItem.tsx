@@ -100,6 +100,8 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   const highlightsSource =
     item.highlights && item.highlights.length > 0 ? item.highlights : (item.points ?? []);
   const highlights = highlightsSource.filter(Boolean).slice(0, 2);
+  const isCompactPick2 = isCompact && variant === "pick2";
+  const visibleHighlights = isCompactPick2 ? highlights.slice(0, 1) : highlights;
 
   const description =
     variant === "pick2"
@@ -112,8 +114,10 @@ export const AddonItem: React.FC<AddonItemProps> = ({
     ? textSize === "xl"
       ? "text-lg"
       : textSize === "large"
-        ? "text-base"
-        : "text-sm"
+        ? "text-lg"
+        : variant === "pick2"
+          ? "text-base"
+          : "text-sm"
     : textSize === "xl"
       ? "text-xl"
       : textSize === "large"
@@ -159,7 +163,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
   return (
     <div
-      className={`bg-gray-800 border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
+      className={`border rounded-lg ${isCompact ? "p-2" : "p-3"} flex flex-col transition-shadow hover:shadow-md ${
+        variant === "pick2" && isCompact ? "bg-gray-900/75" : "bg-gray-800"
+      } ${
         isSelected ? "border-lux-gold/70 ring-1 ring-lux-gold/20" : "border-gray-700"
       }`}
       data-testid={cardTestId}
@@ -174,7 +180,6 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                   alt={`${item.name} thumbnail`}
                   loading="lazy"
                   decoding="async"
-                  onError={() => setShowThumbnail(false)}
                   className="h-full w-full object-cover"
                   data-testid={`pick2-thumbnail-${item.id}`}
                 />
@@ -216,15 +221,15 @@ export const AddonItem: React.FC<AddonItemProps> = ({
 
         {description ? (
           <p
-            className={`${isCompact ? "mt-1 text-xs" : "mt-1.5 text-[11px]"} text-gray-300/90 leading-snug clamp-2`}
+            className={`${isCompact ? "mt-1 text-xs" : "mt-1.5 text-[11px]"} text-gray-300/90 leading-snug ${isCompactPick2 ? "clamp-1" : "clamp-2"}`}
           >
             {description}
           </p>
         ) : null}
 
-        {highlights.length > 0 ? (
+        {visibleHighlights.length > 0 ? (
           <ul className={`${isCompact ? "mt-2" : "mt-2.5"} space-y-1`}>
-            {highlights.map((point, idx) => (
+            {visibleHighlights.map((point, idx) => (
               <li
                 key={`${item.id}-highlight-${idx}`}
                 className={`${isCompact ? "text-xs" : "text-[11px]"} text-gray-300 flex gap-2`}

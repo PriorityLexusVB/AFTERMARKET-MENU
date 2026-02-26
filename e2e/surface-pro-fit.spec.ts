@@ -49,7 +49,7 @@ test.describe("Surface Pro fit guardrails", () => {
         timeout: 10000,
       });
     }
-    await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
+    await expect(page.getByRole("button", { name: /(install|finalize)/i }).first()).toBeVisible({
       timeout: 10000,
     });
     await expect(page.getByRole("button", { name: /print/i }).first()).toBeVisible({

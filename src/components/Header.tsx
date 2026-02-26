@@ -1,5 +1,10 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useEffect, useMemo, useState } from "react";
 import { User } from "firebase/auth";
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 const SettingsIcon: React.FC = () => (
   <svg
@@ -50,6 +55,75 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
     },
     ref
   ) => {
+    const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+    const [isInstalled, setIsInstalled] = useState(false);
+
+    const installSupport = useMemo(() => {
+      if (typeof window === "undefined" || typeof navigator === "undefined") {
+        return {
+          isIOS: false,
+          isStandalone: false,
+        };
+      }
+
+      const platform = navigator.platform || "";
+      const isIpadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+      const isIOS = isIpadOS || /\b(iPad|iPhone|iPod)\b/i.test(navigator.userAgent || "");
+      const isStandalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        (navigator as unknown as { standalone?: boolean }).standalone === true;
+
+      return {
+        isIOS,
+        isStandalone,
+      };
+    }, []);
+
+    useEffect(() => {
+      if (typeof window === "undefined") return;
+
+      const onBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault?.();
+        setInstallPrompt(e as BeforeInstallPromptEvent);
+      };
+
+      const onAppInstalled = () => {
+        setInstallPrompt(null);
+        setIsInstalled(true);
+      };
+
+      window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+      window.addEventListener("appinstalled", onAppInstalled);
+      setIsInstalled(installSupport.isStandalone);
+
+      return () => {
+        window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+        window.removeEventListener("appinstalled", onAppInstalled);
+      };
+    }, [installSupport.isStandalone]);
+
+    const canShowInstallButton = !installSupport.isStandalone && !isInstalled;
+
+    const handleInstallApp = async () => {
+      if (installSupport.isIOS) {
+        alert(
+          "To install on iPad/iPhone:\n\n1) Open this site in Safari\n2) Tap the Share icon\n3) Tap 'Add to Home Screen'"
+        );
+        return;
+      }
+
+      if (!installPrompt) {
+        alert(
+          "Install is not available in this browser right now. In Chrome/Edge, open the menu and choose 'Install app'."
+        );
+        return;
+      }
+
+      await installPrompt.prompt();
+      await installPrompt.userChoice;
+      setInstallPrompt(null);
+    };
+
     return (
       <header
         ref={ref}
@@ -65,6 +139,19 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {canShowInstallButton && (
+            <button
+              type="button"
+              onClick={() => {
+                void handleInstallApp();
+              }}
+              className="btn-lux-ghost text-sm px-3"
+              aria-label="Install app"
+              title="Install app"
+            >
+              Install App
+            </button>
+          )}
           <button onClick={onPrint} className="btn-lux-ghost text-sm flex items-center gap-2 px-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"

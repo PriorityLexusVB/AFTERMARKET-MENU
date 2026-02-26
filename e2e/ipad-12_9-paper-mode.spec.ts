@@ -21,7 +21,7 @@ test.describe("iPad Pro 12.9 paper mode", () => {
 
     // Ensure primary CTAs remain visible in locked no-scroll mode.
     await expect(page.locator('button:has-text("Select Plan")')).toHaveCount(3);
-    await expect(page.getByRole("button", { name: /finalize/i }).first()).toBeVisible({
+    await expect(page.getByRole("button", { name: /(install|finalize)/i }).first()).toBeVisible({
       timeout: 10000,
     });
 

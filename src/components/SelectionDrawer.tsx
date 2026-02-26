@@ -141,9 +141,7 @@ export const SelectionDrawer: React.FC<SelectionDrawerProps> = ({
               </div>
               <p
                 className={`text-[10px] leading-tight text-lux-textMuted clamp-1 ${
-                  isCompact
-                    ? "max-w-[32vw] text-right"
-                    : "max-w-[40vw] text-right sm:text-left"
+                  isCompact ? "max-w-[32vw] text-right" : "max-w-[40vw] text-right sm:text-left"
                 }`}
               >
                 {trustRowText}

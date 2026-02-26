@@ -311,6 +311,12 @@ h6,
   }
 
   /* iPad landscape: tighten header height without impacting desktop */
+  .ipad-landscape-lock {
+    --am-col-min: 240px;
+    --am-card-pad-compact: clamp(0.5rem, 0.7vw, 0.8rem);
+    --am-text-price: clamp(1.8rem, 1vw + 1.4rem, 2.4rem);
+  }
+
   .ipad-landscape-lock .am-page-header {
     @apply pt-0 pb-0;
   }
@@ -446,6 +452,10 @@ h6,
     display: grid;
     grid-template-columns: repeat(3, minmax(var(--am-col-min), 1fr));
     gap: var(--am-col-gap);
+  }
+
+  .ipad-landscape-lock .am-packages-grid-compact {
+    gap: clamp(0.4rem, 0.6vw, 0.75rem);
   }
 
   @media (max-width: 1120px) {

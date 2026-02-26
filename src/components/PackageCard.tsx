@@ -125,7 +125,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 
   // Use packageInfo.features directly - it's already derived by deriveTierFeatures for the tier mapping
   const includedPackageFeatures = packageInfo.features ?? [];
-  const maxFeatureCount = isCompact ? 6 : 7;
+  const maxFeatureCount = isCompact ? 4 : 7;
   const displayedPackageFeatures = isMagnified
     ? includedPackageFeatures
     : includedPackageFeatures.slice(0, maxFeatureCount);

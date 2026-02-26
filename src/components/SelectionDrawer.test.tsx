@@ -1,14 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '../test/test-utils';
-import userEvent from '@testing-library/user-event';
-import { SelectionDrawer } from './SelectionDrawer';
-import { createMockAlaCarteOption, createMockPackageTier } from '../test/test-utils';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "../test/test-utils";
+import userEvent from "@testing-library/user-event";
+import { SelectionDrawer } from "./SelectionDrawer";
+import { createMockAlaCarteOption, createMockPackageTier } from "../test/test-utils";
 
-describe('SelectionDrawer', () => {
-  const pkg = createMockPackageTier({ name: 'Gold', price: 1999 });
-  const item = createMockAlaCarteOption({ id: 'opt-1', name: 'Tire Protection', price: 299 });
+describe("SelectionDrawer", () => {
+  const pkg = createMockPackageTier({ name: "Gold", price: 1999 });
+  const item = createMockAlaCarteOption({ id: "opt-1", name: "Tire Protection", price: 299 });
 
-  it('renders selected package, add-ons, and total', () => {
+  it("renders selected package, add-ons, and total", () => {
     render(
       <SelectionDrawer
         selectedPackage={pkg}
@@ -20,14 +20,14 @@ describe('SelectionDrawer', () => {
       />
     );
 
-    expect(screen.getByText('Gold')).toBeInTheDocument();
-    expect(screen.getByText('Tire Protection')).toBeInTheDocument();
-    expect(screen.getByText('$1,999')).toBeInTheDocument();
-    expect(screen.getByText('$299')).toBeInTheDocument();
-    expect(screen.getByText('$2,298')).toBeInTheDocument();
+    expect(screen.getByText("Gold")).toBeInTheDocument();
+    expect(screen.getByText("Tire Protection")).toBeInTheDocument();
+    expect(screen.getByText("$1,999")).toBeInTheDocument();
+    expect(screen.getByText("$299")).toBeInTheDocument();
+    expect(screen.getByText("$2,298")).toBeInTheDocument();
   });
 
-  it('calls onRemoveItem when remove is clicked', async () => {
+  it("calls onRemoveItem when remove is clicked", async () => {
     const onRemoveItem = vi.fn();
     const user = userEvent.setup();
 
@@ -41,11 +41,11 @@ describe('SelectionDrawer', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /Remove Tire Protection/i }));
-    expect(onRemoveItem).toHaveBeenCalledWith('opt-1');
+    await user.click(screen.getByRole("button", { name: /Remove Tire Protection/i }));
+    expect(onRemoveItem).toHaveBeenCalledWith("opt-1");
   });
 
-  it('calls onPrint when print buttons are clicked', async () => {
+  it("calls onPrint when print buttons are clicked", async () => {
     const onPrint = vi.fn();
     const user = userEvent.setup();
 
@@ -59,11 +59,11 @@ describe('SelectionDrawer', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /Print Selection/i }));
+    await user.click(screen.getByRole("button", { name: /Print Selection/i }));
     expect(onPrint).toHaveBeenCalled();
   });
 
-  it('calls onDeselectPackage when clear is clicked', async () => {
+  it("calls onDeselectPackage when clear is clicked", async () => {
     const onDeselectPackage = vi.fn();
     const user = userEvent.setup();
 
@@ -78,11 +78,11 @@ describe('SelectionDrawer', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /Remove selected package/i }));
+    await user.click(screen.getByRole("button", { name: /Remove selected package/i }));
     expect(onDeselectPackage).toHaveBeenCalled();
   });
 
-  it('shows empty add-ons state when none selected', () => {
+  it("shows empty add-ons state when none selected", () => {
     render(
       <SelectionDrawer
         selectedPackage={null}
@@ -93,10 +93,10 @@ describe('SelectionDrawer', () => {
       />
     );
 
-    expect(screen.getByText('No add-ons selected')).toBeInTheDocument();
+    expect(screen.getByText("No add-ons selected")).toBeInTheDocument();
   });
 
-  it('renders bar variant with finalize action and correct classes', () => {
+  it("renders bar variant with finalize action and correct classes", () => {
     const onShowAgreement = vi.fn();
     const { container } = render(
       <SelectionDrawer
@@ -111,12 +111,14 @@ describe('SelectionDrawer', () => {
     );
 
     const root = container.firstChild as HTMLElement;
-    expect(root).toHaveClass('fixed');
-    expect(root).toHaveClass('z-50');
-    expect(root).toHaveClass('print:hidden');
-    expect(screen.getByRole('button', { name: /Finalize and view agreement/i })).toBeInTheDocument();
-    const totalBlock = screen.getByText('Total').parentElement as HTMLElement;
-    expect(totalBlock).toHaveClass('text-left');
-    expect(totalBlock.className).toContain('sm:text-right');
+    expect(root).toHaveClass("fixed");
+    expect(root).toHaveClass("z-50");
+    expect(root).toHaveClass("print:hidden");
+    expect(
+      screen.getByRole("button", { name: /Finalize and view agreement/i })
+    ).toBeInTheDocument();
+    const totalBlock = screen.getByText("Total").parentElement as HTMLElement;
+    expect(totalBlock).toHaveClass("text-left");
+    expect(totalBlock.className).toContain("sm:text-right");
   });
 });

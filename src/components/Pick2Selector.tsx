@@ -58,6 +58,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
 
   const selectedCount = selectedIds.length;
   const isComplete = selectedCount === maxSelections;
+  const showInfoToggle = !isCompact;
 
   useEffect(() => {
     // Clear the message once the user deselects something (or max changes).
@@ -76,8 +77,8 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
     ? textSize === "xl"
       ? "text-2xl"
       : textSize === "large"
-        ? "text-xl"
-        : "text-lg"
+        ? "text-2xl"
+        : "text-xl"
     : textSize === "xl"
       ? "text-4xl"
       : textSize === "large"
@@ -177,7 +178,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
   return (
     <div
       className={`bg-gray-800/50 border border-gray-700 rounded-xl shadow-lg ${
-        isCompact ? "p-2 pb-[72px]" : "p-4"
+        isCompact ? "p-2" : "p-4"
       } h-full min-h-0 flex flex-col ${className ?? ""}`}
     >
       <header className={headerWrapperClass} data-testid="pick2-header">
@@ -185,7 +186,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           <div className="min-w-0">
             <h3
               className={`${headerClass} font-teko font-bold tracking-wider ${
-                isCompact ? "text-lux-gold text-shadow-sm" : "text-gray-200"
+                isCompact ? "text-lux-textStrong text-shadow-sm" : "text-gray-200"
               } text-left`}
             >
               {titleText}
@@ -211,19 +212,19 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                   className={`${isCompact ? "mt-1" : "mt-2"} text-[11px] text-gray-300 space-y-0.5`}
                   data-testid="pick2-savings"
                 >
-                  <p>Individually: {formatPrice(selectedValue ?? 0)}</p>
-                  <p>Bundle: {formatPrice(bundlePrice)}</p>
+                  {!isCompact ? <p>Individually: {formatPrice(selectedValue ?? 0)}</p> : null}
+                  {!isCompact ? <p>Bundle: {formatPrice(bundlePrice)}</p> : null}
                   {savings && savings > 0 ? (
                     <p className="text-lux-gold/90">Savings: {formatPrice(savings)}</p>
                   ) : (
-                    <p className="text-gray-400">Bundle price applied.</p>
+                    !isCompact ? <p className="text-gray-400">Bundle price applied.</p> : null
                   )}
                 </div>
               ) : null}
             </div>
             <div className="flex items-center gap-2">
               <span
-                className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold ${
                   isComplete
                     ? "bg-luxury-green-600/20 border-luxury-green-600/30 text-luxury-green-200"
                     : "bg-black/30 border-white/10 text-gray-300"
@@ -232,21 +233,22 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
               >
                 {progressText}
               </span>
-              <button
-                type="button"
-                onClick={() => setIsInfoOpen((prev) => !prev)}
-                className="h-7 w-7 rounded-full border border-white/10 bg-black/40 text-xs text-gray-200 hover:border-lux-gold/60 transition-colors btn-lux-focus"
-                aria-label="Why this matters"
-                aria-expanded={isInfoOpen}
-                data-testid="pick2-info-toggle"
-              >
-                i
-              </button>
+              {showInfoToggle ? (
+                <button
+                  type="button"
+                  onClick={() => setIsInfoOpen((prev) => !prev)}
+                  className="h-7 w-7 rounded-full border border-white/10 bg-black/40 text-xs text-gray-200 hover:border-lux-gold/60 transition-colors btn-lux-focus"
+                  aria-label="Why this matters"
+                  data-testid="pick2-info-toggle"
+                >
+                  i
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
 
-        {isInfoOpen ? (
+        {showInfoToggle && isInfoOpen ? (
           <div
             className={`${isCompact ? "mt-2" : "mt-3"} rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-[11px] text-gray-200`}
             data-testid="pick2-info-panel"
@@ -267,7 +269,7 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
                     key={`pick2-chip-${item.id}`}
                     type="button"
                     onClick={() => onToggle(item)}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch transition-all duration-200 btn-lux-focus"
+                    className="inline-flex items-center gap-2 rounded-full border border-lux-blue/30 bg-lux-blue/10 px-3 py-2 text-xs text-gray-100 hover:border-lux-gold/60 hover:text-white min-h-touch transition-all duration-200 btn-lux-focus"
                     aria-label={`Remove ${item.name} from Pick 2`}
                     data-testid="pick2-selected-chip"
                   >
@@ -281,10 +283,10 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
 
               const emptyText =
                 index === 0
-                  ? "Select your first add-on"
+                  ? "Select first"
                   : index === 1
                     ? "Select one more"
-                    : "Select another add-on";
+                    : "Select another";
               return (
                 <span
                   key={`pick2-slot-${index}`}
@@ -356,9 +358,11 @@ export const Pick2Selector: React.FC<Pick2SelectorProps> = ({
           </div>
         ) : (
           <div
-            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${
-              isCompact ? "gap-2" : "gap-3"
-            } pr-2`}
+            className={
+              isCompact
+                ? "grid grid-cols-1 md:grid-cols-2 gap-2 pr-1"
+                : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-2"
+            }
           >
             {items.map((item) => {
               const isSelected = selectedIdSet.has(item.id);

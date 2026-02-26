@@ -126,7 +126,7 @@ test.describe("Package Selection", () => {
     await expect(selectPlanButton).toBeVisible({ timeout: 10000 });
     expect(await focusViaKeyboard(page, selectPlanButton)).toBe(true);
 
-    const finalizeButton = page.getByRole("button", { name: /finalize/i }).first();
+    const finalizeButton = page.getByRole("button", { name: /(install|finalize)/i }).first();
     await expect(finalizeButton).toBeVisible({ timeout: 10000 });
     expect(await focusViaKeyboard(page, finalizeButton)).toBe(true);
   });

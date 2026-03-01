@@ -7,6 +7,9 @@ Note: AGENTS.md is authoritative for guardrails and workflow.
 - 7406c9f docs: update decisions and verification log
 - aae9e86 feat(ui): refine package grid density and pick2 layout
 - 24c0581 fix(ui): improve add-ons drawer and selection bar interaction
+- 2026-03-01: unified presentation viewport height to app contract
+  (`--app-height`) via `value-presentation-*` classes and aligned
+  presentation E2E viewport assertions.
 - Fixed ProductHub hook dependencies to satisfy react-hooks/exhaustive-deps (pending lint verification).
 - Added Pick-2 fix action on selection bar for incomplete bundles.
 - Hardened add-ons drawer UX (ESC close + overscroll containment).
@@ -45,6 +48,11 @@ Note: AGENTS.md is authoritative for guardrails and workflow.
 - 2026-02-08 (Phase 5): npm run healthcheck -> failed (lint warnings in AddonItem.tsx and ProductHub.tsx; typecheck errors in App.tsx, ProductHub.tsx, data.ts).
 - 2026-02-08 (Step 0): npm run lint -> 2 warnings (AddonItem.tsx jsx-a11y/no-noninteractive-element-interactions; ProductHub.tsx jsx-a11y/label-has-associated-control).
 - 2026-02-08 (Step 0): npm run healthcheck -> failed (lint warnings above + typecheck errors: App.tsx:724, App.tsx:725, ProductHub.tsx:686, data.ts:234).
+- 2026-03-01: npm run build -> passed.
+- 2026-03-01: npm run check:unicode -> passed (no hidden unicode characters found).
+- 2026-03-01: npm run test:e2e:webkit:smoke -> passed (4/4).
+- 2026-03-01: npm run healthcheck -> passed
+  (24 vitest files passed; 30 playwright tests passed).
 
 ## DIFF REPORT
 

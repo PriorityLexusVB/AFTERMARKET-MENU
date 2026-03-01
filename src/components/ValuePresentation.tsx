@@ -223,7 +223,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#0d0d0d] overflow-hidden text-white font-sans selection:bg-blue-500/30">
+    <div className="value-presentation-root fixed inset-0 z-[9999] bg-[#0d0d0d] overflow-hidden text-white font-sans selection:bg-blue-500/30">
       <CustomerInfoModal
         isOpen={isCustomerModalOpen}
         onClose={() => setIsCustomerModalOpen(false)}
@@ -299,7 +299,7 @@ const ValuePresentation: React.FC<ValuePresentationProps> = ({
       <div
         ref={scrollRootRef}
         tabIndex={-1}
-        className="h-screen overflow-y-auto snap-y snap-mandatory scrollbar-none scroll-smooth overscroll-contain focus:outline-none"
+        className="value-presentation-scroll-root overflow-y-auto snap-y snap-mandatory scrollbar-none scroll-smooth overscroll-contain focus:outline-none"
       >
         {/* Slide 1: Welcome */}
         <div

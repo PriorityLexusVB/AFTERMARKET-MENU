@@ -4,6 +4,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "landscape",
   "background_color": "#050608",
   "theme_color": "#050608",
   "description": "Interactive digital menu for exploring Priority Lexus aftermarket vehicle accessories and upgrades",

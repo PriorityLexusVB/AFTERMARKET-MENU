@@ -125,6 +125,19 @@ h6,
   }
 }
 
+.value-presentation-root {
+  --presentation-content-h: var(--app-height);
+}
+
+.value-presentation-scroll-root {
+  height: var(--presentation-content-h);
+}
+
+.value-presentation-root .slide-container {
+  height: var(--presentation-content-h);
+  min-height: var(--presentation-content-h);
+}
+
 /* ========================================
    BASE LAYER - Global Styles
    ======================================== */

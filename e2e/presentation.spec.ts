@@ -48,12 +48,15 @@ async function expectSlideFitsViewport(
   );
   await expect(bulletDots.first()).toBeVisible({ timeout: 10000 });
 
-  // The slide container is `h-screen`. Ensure the main content wrapper fits inside it.
+  // Slides follow presentation content height (app-height minus fixed controls).
   const fits = await page.evaluate((id) => {
     const el = document.getElementById(id);
     if (!el) return { ok: false, reason: "missing" };
 
-    const viewportH = window.innerHeight;
+    const scrollRoot = document.querySelector(".value-presentation-scroll-root") as HTMLElement | null;
+    if (!scrollRoot) return { ok: false, reason: "missing-scroll-root" };
+
+    const scrollRootRect = scrollRoot.getBoundingClientRect();
     const slideRect = el.getBoundingClientRect();
 
     // Content wrapper is the first child div inside the slide.
@@ -67,11 +70,12 @@ async function expectSlideFitsViewport(
     const ok =
       contentRect.top >= slideRect.top - margin &&
       contentRect.bottom <= slideRect.bottom + margin &&
-      slideRect.height <= viewportH + margin;
+      slideRect.height <= scrollRootRect.height + margin &&
+      slideRect.bottom <= scrollRootRect.bottom + margin;
 
     return {
       ok,
-      viewportH,
+      scrollRootH: scrollRootRect.height,
       slideH: slideRect.height,
       contentTop: contentRect.top,
       contentBottom: contentRect.bottom,

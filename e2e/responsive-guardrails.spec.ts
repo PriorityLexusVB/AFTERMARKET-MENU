@@ -5,6 +5,7 @@ type ViewportCase = {
   width: number;
   height: number;
   url: string;
+  expectLandscapePrompt?: boolean;
   /**
    * Only enable this check when an existing test/doc already enforces a
    * no-vertical-scroll (kiosk/paper-mode) contract.
@@ -26,6 +27,7 @@ const VIEWPORTS: ViewportCase[] = [
     width: 1024,
     height: 1366,
     url: "/?forceIpad=1&demo=1",
+    expectLandscapePrompt: true,
   },
 
   // iPad Pro 11
@@ -42,6 +44,7 @@ const VIEWPORTS: ViewportCase[] = [
     width: 834,
     height: 1194,
     url: "/?forceIpad=1&demo=1",
+    expectLandscapePrompt: true,
   },
 
   // Surface-ish (match existing surface-fit.spec.ts)
@@ -73,7 +76,11 @@ test.describe("Responsive guardrails (overflow)", () => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
       await page.goto(viewport.url);
-      await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+      if (viewport.expectLandscapePrompt) {
+        await page.waitForSelector("text=Rotate device to landscape", { timeout: 10000 });
+      } else {
+        await page.waitForSelector("text=Protection Packages", { timeout: 10000 });
+      }
 
       const metrics = await page.evaluate(() => {
         const el = document.documentElement;

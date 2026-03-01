@@ -9,3 +9,11 @@
 - [ ] Rotate or resize the viewport and confirm CSS vars `--app-vh` and `--app-height` update together.
 - [ ] Desktop preview tip: if DevTools emulation doesn't trigger iPad layout, append `?forceIpad=1` to the URL.
 - [ ] Run the repo's test script (npm/pnpm/yarn as configured) and ensure tests pass.
+
+## Latest verification snapshot (2026-03-01)
+
+- Presentation menu height contract verified with iPad-fit and presentation assertions.
+- `npm run build` passed.
+- `npm run check:unicode` passed (no hidden unicode found).
+- `npm run test:e2e:webkit:smoke` passed (4/4).
+- `npm run healthcheck` passed (lint + typecheck + vitest + playwright all completed).

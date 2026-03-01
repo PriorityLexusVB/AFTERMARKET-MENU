@@ -121,6 +121,10 @@ const App: React.FC = () => {
   });
 
   const [showBuildBadge, setShowBuildBadge] = useState(false);
+  const [isLandscapeViewport, setIsLandscapeViewport] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia("(orientation: landscape)").matches;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -241,6 +245,43 @@ const App: React.FC = () => {
       mediaQuery.removeEventListener("change", updateMatches);
     };
   }, [computeIsIpadLandscape, ipadLandscapeQuery]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(orientation: landscape)");
+    const updateOrientation = () => {
+      const byMedia = mediaQuery.matches;
+      const byDimensions = window.innerWidth >= window.innerHeight;
+      setIsLandscapeViewport(byMedia || byDimensions);
+    };
+
+    const lockLandscape = async () => {
+      try {
+        const orientation = window.screen.orientation as ScreenOrientation & {
+          lock?: (orientation: "any" | "natural" | "landscape" | "portrait") => Promise<void>;
+        };
+        if (typeof orientation?.lock === "function") {
+          await orientation.lock("landscape");
+        }
+      } catch {
+        // Best effort only; many browsers restrict lock() without fullscreen/PWA context.
+      }
+    };
+
+    updateOrientation();
+    void lockLandscape();
+
+    window.addEventListener("resize", updateOrientation);
+    window.addEventListener("orientationchange", updateOrientation);
+    mediaQuery.addEventListener("change", updateOrientation);
+
+    return () => {
+      window.removeEventListener("resize", updateOrientation);
+      window.removeEventListener("orientationchange", updateOrientation);
+      mediaQuery.removeEventListener("change", updateOrientation);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -1038,6 +1079,20 @@ const App: React.FC = () => {
     </div>
   );
 
+  const LandscapeOnlyView: React.FC = () => (
+    <div className="lux-app am-app-min-h antialiased flex items-center justify-center px-6 py-8">
+      <div className="lux-surface w-full max-w-2xl p-8 text-center">
+        <h1 className="lux-title text-3xl md:text-4xl">Rotate device to landscape</h1>
+        <p className="lux-subtitle mt-3">
+          This application is configured for landscape presentation only.
+        </p>
+        <p className="text-sm text-lux-textMuted mt-2">
+          Rotate your device, then continue when the screen is wider than it is tall.
+        </p>
+      </div>
+    </div>
+  );
+
   // Track whether we're in a "desktop kiosk" viewport using a dedicated media query.
   // This should stay in sync with the kiosk CSS/media-query definition.
   const [isDesktopKiosk, setIsDesktopKiosk] = useState(false);
@@ -1260,6 +1315,10 @@ const App: React.FC = () => {
 
   // If not authenticated and not in demo mode, show the Login screen.
   // This also handles the initial authentication loading state.
+  if (!isLandscapeViewport) {
+    return <LandscapeOnlyView />;
+  }
+
   if (!user && !isDemoMode) {
     return <Login isAuthLoading={isAuthLoading} firebaseError={firebaseInitializationError} />;
   }

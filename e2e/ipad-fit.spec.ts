@@ -14,6 +14,28 @@ test.describe("iPad / kiosk fit", () => {
     );
     expect(hasLockClass).toBe(true);
 
+    const viewportHeightContract = await page.evaluate(() => {
+      const root = document.documentElement;
+      const rawAppHeight = getComputedStyle(root).getPropertyValue("--app-height").trim();
+      const appHeight = Number.parseFloat(rawAppHeight);
+      const innerHeight = window.innerHeight;
+      const visualHeight = window.visualViewport?.height ?? innerHeight;
+      const visibleHeight = Math.min(innerHeight, visualHeight);
+
+      return {
+        appHeight,
+        innerHeight,
+        visualHeight,
+        visibleHeight,
+      };
+    });
+
+    expect(viewportHeightContract.appHeight).toBeGreaterThan(0);
+    expect(
+      viewportHeightContract.appHeight,
+      `--app-height should not exceed visible viewport (appHeight=${viewportHeightContract.appHeight}, visibleHeight=${viewportHeightContract.visibleHeight}, innerHeight=${viewportHeightContract.innerHeight}, visualHeight=${viewportHeightContract.visualHeight})`
+    ).toBeLessThanOrEqual(Math.round(viewportHeightContract.visibleHeight) + 2);
+
     // Ensure the selection bar is visible and not clipped.
     const selectionBar = page.locator(".am-selection-bar").first();
     await expect(selectionBar).toBeVisible({ timeout: 10000 });

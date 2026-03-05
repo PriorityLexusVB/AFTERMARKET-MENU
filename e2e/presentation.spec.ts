@@ -21,6 +21,33 @@ async function openPresentation(page: import("@playwright/test").Page) {
   await expect(page.locator("#rs1")).toBeVisible({ timeout: 10000 });
 }
 
+async function expectAppHeightWithinVisibleViewport(
+  page: import("@playwright/test").Page,
+  scope: string
+) {
+  const viewportHeightContract = await page.evaluate(() => {
+    const root = document.documentElement;
+    const rawAppHeight = getComputedStyle(root).getPropertyValue("--app-height").trim();
+    const appHeight = Number.parseFloat(rawAppHeight);
+    const innerHeight = window.innerHeight;
+    const visualHeight = window.visualViewport?.height ?? innerHeight;
+    const visibleHeight = Math.min(innerHeight, visualHeight);
+
+    return {
+      appHeight,
+      innerHeight,
+      visualHeight,
+      visibleHeight,
+    };
+  });
+
+  expect(viewportHeightContract.appHeight, `${scope}: --app-height should be set`).toBeGreaterThan(0);
+  expect(
+    viewportHeightContract.appHeight,
+    `${scope}: --app-height should not exceed visible viewport (appHeight=${viewportHeightContract.appHeight}, visibleHeight=${viewportHeightContract.visibleHeight}, innerHeight=${viewportHeightContract.innerHeight}, visualHeight=${viewportHeightContract.visualHeight})`
+  ).toBeLessThanOrEqual(Math.round(viewportHeightContract.visibleHeight) + 2);
+}
+
 async function expectSlideFitsViewport(
   page: import("@playwright/test").Page,
   slideId: string,
@@ -102,6 +129,7 @@ async function expectSlideFitsViewport(
 test.describe("Presentation Layout", () => {
   test("slides 6, 7, 8, 9, 10, and 11 fit iPad viewport", async ({ page }, testInfo) => {
     await openPresentation(page);
+    await expectAppHeightWithinVisibleViewport(page, "presentation");
 
     await expectSlideFitsViewport(page, "rs6", testInfo.outputPath("presentation-slide-6.png"), [
       "RustGuard",

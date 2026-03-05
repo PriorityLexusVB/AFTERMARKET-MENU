@@ -382,21 +382,43 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") return;
     const root = document.documentElement;
+    let lastStableHeight = 0;
+
+    const isValidHeight = (value: number | null | undefined): value is number =>
+      typeof value === "number" && Number.isFinite(value) && value >= 300;
 
     const setViewportVars = () => {
-      const visualHeight = window.visualViewport?.height;
-      const innerHeight = window.innerHeight;
-      // iOS/iPadOS can briefly report incorrect visualViewport.height (including 0) during
-      // orientation changes or initial paint. Using the larger of innerHeight/visualViewport
-      // prevents the no-scroll layout from collapsing until the viewport settles.
-      let height = Math.round(
-        Math.max(innerHeight, typeof visualHeight === "number" ? visualHeight : 0)
-      );
+      const innerHeight = Math.round(window.innerHeight);
+      const clientHeight = Math.round(document.documentElement.clientHeight);
+      const visualHeightRaw = window.visualViewport?.height;
+      const visualHeight = isValidHeight(visualHeightRaw) ? Math.round(visualHeightRaw) : null;
 
-      // Absolute last-resort fallback.
-      if (!Number.isFinite(height) || height < 300) {
-        height = Math.round(innerHeight);
+      const baseHeight = isValidHeight(innerHeight)
+        ? innerHeight
+        : isValidHeight(clientHeight)
+          ? clientHeight
+          : 0;
+
+      let height = baseHeight;
+
+      if (visualHeight != null) {
+        const candidateHeight = baseHeight > 0 ? Math.min(baseHeight, visualHeight) : visualHeight;
+        const isLikelyTransient =
+          baseHeight > 0 && candidateHeight < Math.round(baseHeight * 0.65);
+        if (!isLikelyTransient) {
+          height = candidateHeight;
+        }
       }
+
+      if (!isValidHeight(height)) {
+        height = lastStableHeight > 0 ? lastStableHeight : Math.max(baseHeight, 300);
+      }
+
+      if (lastStableHeight > 0 && height < Math.round(lastStableHeight * 0.6)) {
+        height = lastStableHeight;
+      }
+
+      lastStableHeight = height;
       root.style.setProperty("--app-vh", `${height}px`);
       root.style.setProperty("--app-height", `${height}px`);
     };

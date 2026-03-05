@@ -4,6 +4,15 @@ Note: AGENTS.md is authoritative for guardrails and workflow.
 
 ## Done
 
+- 2026-03-05: iPad real-device sizing + WebKit smoke hardening release
+  - d876c9c fix(ipad): stabilize visible viewport height to prevent oversized menu/presentation
+  - 4a4f342 test(webkit): handle compact Pick2 info-toggle layout in iPad smoke
+  - Outcome: menu/presentation no longer render oversized on physical iPad viewport states; CI WebKit smoke is stable in compact Pick2 layout.
+  - Verification:
+    - npm run healthcheck -> passed (lint/typecheck/vitest/playwright)
+    - npm run build -> passed
+    - CI workflow_dispatch with run_webkit_ipad_smoke=true -> success
+      https://github.com/PriorityLexusVB/AFTERMARKET-MENU/actions/runs/22725607420
 - 7406c9f docs: update decisions and verification log
 - aae9e86 feat(ui): refine package grid density and pick2 layout
 - 24c0581 fix(ui): improve add-ons drawer and selection bar interaction
@@ -30,6 +39,14 @@ Note: AGENTS.md is authoritative for guardrails and workflow.
 
 ## Verification Log
 
+- 2026-03-05: npm run lint -> passed.
+- 2026-03-05: npm run healthcheck -> passed
+  (24 vitest files passed; 30 playwright tests passed).
+- 2026-03-05: npm run build -> passed; missing VITE*FIREBASE* vars warned and mock fallback applied.
+- 2026-03-05: npx playwright test --project=webkit-ipad e2e/ipad-fit.spec.ts e2e/pick2-flow.spec.ts -> 8 passed.
+- 2026-03-05: CI workflow_dispatch
+  (`run_webkit_ipad_smoke=true`) -> success
+  https://github.com/PriorityLexusVB/AFTERMARKET-MENU/actions/runs/22725607420
 - 2026-02-04: npm run lint -> clean (0 warnings).
 - 2026-02-04: npx playwright test e2e/ipad-fit.spec.ts -> pass.
 - 2026-02-04: npx playwright test e2e/ipad-fit.spec.ts e2e/surface-pro-fit.spec.ts e2e/pick2-flow.spec.ts e2e/packages.spec.ts -> 14 passed, 1 failed (ipad-fit). Fixed and re-ran ipad-fit.

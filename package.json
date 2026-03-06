@@ -7,6 +7,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "predev": "node -e \"if (process.platform==='win32'){console.error('ERROR: Run this repo in WSL. In VS Code: Remote-WSL: Reopen Folder in WSL. Then run: npm run dev');process.exit(1)}\"",
     "dev": "vite",
     "dev:emulator": "cross-env VITE_USE_FIRESTORE_EMULATOR=true VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu npm run dev",
     "build": "vite build",

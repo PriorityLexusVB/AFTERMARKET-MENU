@@ -331,7 +331,17 @@ export const PackageCard: React.FC<PackageCardProps> = ({
           isCompact ? "am-package-footer-compact" : "am-package-footer"
         }`}
       >
-        {pick2Summary ? (
+        {pick2Summary && isCompact ? (
+          <div className="text-[10px] text-gray-300 uppercase tracking-[0.14em] min-w-0">
+            <span>Pick-2:</span>
+            <span
+              className="ml-1 normal-case tracking-normal font-semibold text-gray-200 inline-block max-w-[74%] truncate align-bottom"
+              title={pick2Summary}
+            >
+              {pick2Summary}
+            </span>
+          </div>
+        ) : pick2Summary ? (
           <div
             className={`rounded-lg border border-white/10 bg-black/30 text-xs text-gray-200 min-w-0 ${
               isCompact ? "px-2 py-1.5" : "px-3 py-2"
@@ -348,6 +358,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             </span>
           </div>
         ) : null}
+
         <div className="lux-price-plaque">
           <div>
             <p className="am-text-label text-lux-textMuted">Investment</p>

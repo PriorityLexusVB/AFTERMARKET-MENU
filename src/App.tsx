@@ -25,8 +25,8 @@ import type {
   Pick2Config,
 } from "./types";
 import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
-import { sortPackagesForDisplay } from "./utils/packageOrder";
 import { usePick2Selection } from "./hooks/usePick2Selection";
+import { usePriceCalculation } from "./hooks/usePriceCalculation";
 import {
   initializeAnalytics,
   trackPackageSelect,
@@ -513,77 +513,24 @@ const App: React.FC = () => {
     setCustomerInfo(info);
   }, []);
 
-  const hasPricingOverrides = useMemo(() => {
-    return Object.values(priceOverrides).some(
-      (override) =>
-        Boolean(override) &&
-        (typeof override.price === "number" || typeof override.cost === "number")
-    );
-  }, [priceOverrides]);
-
-  // Price calculations and display data (must be before handleShowAgreement)
-  const applyOverrides = <T extends { id: string; price: number; cost: number }>(
-    items: T[],
-    overrides: PriceOverrides
-  ): T[] => {
-    return items.map((item) => {
-      const override = overrides[item.id];
-      if (!override) return item;
-      return {
-        ...item,
-        price: override.price ?? item.price,
-        cost: override.cost ?? item.cost,
-      };
-    });
-  };
-
-  const basePackagePricesById = useMemo(() => {
-    const record: Record<string, number> = {};
-    packages.forEach((pkg) => {
-      record[pkg.id] = pkg.price;
-    });
-    return record;
-  }, [packages]);
-
-  const basePackageCostsById = useMemo(() => {
-    const record: Record<string, number> = {};
-    packages.forEach((pkg) => {
-      record[pkg.id] = pkg.cost;
-    });
-    return record;
-  }, [packages]);
-
-  const baseAddonPricesById = useMemo(() => {
-    const record: Record<string, number> = {};
-    allAlaCarteOptions.forEach((opt) => {
-      record[opt.id] = opt.price;
-    });
-    return record;
-  }, [allAlaCarteOptions]);
-
-  const baseAddonCostsById = useMemo(() => {
-    const record: Record<string, number> = {};
-    allAlaCarteOptions.forEach((opt) => {
-      record[opt.id] = opt.cost;
-    });
-    return record;
-  }, [allAlaCarteOptions]);
-
-  const displayPackages = useMemo(() => {
-    // Deterministic customer-facing order: Elite  Platinum  Gold (matches requested layout).
-    const sorted = sortPackagesForDisplay(packages);
-    return applyOverrides(sorted, priceOverrides);
-  }, [packages, priceOverrides]);
-  const displayAllAlaCarteOptions = useMemo(
-    () => applyOverrides(allAlaCarteOptions, priceOverrides),
-    [allAlaCarteOptions, priceOverrides]
-  );
-
-  const displayAlaCarteById = useMemo(() => {
-    const map = new Map<string, AlaCarteOption>();
-    displayAllAlaCarteOptions.forEach((opt) => map.set(opt.id, opt));
-    return map;
-  }, [displayAllAlaCarteOptions]);
+  // Price calculations and display data
+  const {
+    hasPricingOverrides,
+    basePackagePricesById,
+    basePackageCostsById,
+    baseAddonPricesById,
+    baseAddonCostsById,
+    displayPackages,
+    displayAllAlaCarteOptions,
+    displayAlaCarteById,
+    curatedSelectedItems,
+    displayCustomPackageItems,
+  } = usePriceCalculation({
+    packages,
+    allAlaCarteOptions,
+    priceOverrides,
+    customPackageItems,
+  });
 
   const {
     pick2SelectedIds,
@@ -614,15 +561,6 @@ const App: React.FC = () => {
     setCurrentPage,
     setCustomPackageItems,
   });
-  const curatedSelectedItems = useMemo(
-    () => customPackageItems.filter(isCuratedOption),
-    [customPackageItems]
-  );
-
-  const displayCustomPackageItems = useMemo(
-    () => applyOverrides(curatedSelectedItems, priceOverrides),
-    [curatedSelectedItems, priceOverrides]
-  );
 
   const { totalPrice, totalCost } = useMemo(() => {
     let price = 0;

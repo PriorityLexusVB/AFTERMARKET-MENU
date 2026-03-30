@@ -173,7 +173,7 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
             <p>Checking session...</p>
           </div>
         )}
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
               Email Address
@@ -206,7 +206,7 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
               }}
               disabled={isSubmitting}
               ref={emailRef}
-              className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2.5 sm:py-2 text-white text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             />
           </div>
           <div>
@@ -235,7 +235,7 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
               onBlur={() => setFocusedField((prev) => (prev === "password" ? null : prev))}
               disabled={isSubmitting}
               ref={passwordRef}
-              className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2.5 sm:py-2 text-white text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             />
           </div>
           {error && (
@@ -269,7 +269,7 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
         </form>
 
         {!installSupport.isStandalone && (
-          <div className="mt-6 pt-6 border-t border-gray-700">
+          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-700">
             <button
               type="button"
               className="w-full btn-lux-ghost text-sm px-3"
@@ -305,13 +305,13 @@ export const Login: React.FC<LoginProps> = ({ isAuthLoading, firebaseError }) =>
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-[var(--app-height,100vh)] overflow-y-auto flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-800 p-8 rounded-lg shadow-2xl border border-gray-700">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-widest font-teko text-white">
+    <div className="bg-gray-900 text-white min-h-[var(--app-height,100vh)] overflow-y-auto flex items-center justify-center p-3 sm:p-4 md:p-6">
+      <div className="w-full max-w-[calc(100%-0.5rem)] sm:max-w-md bg-gray-800 p-5 sm:p-6 md:p-8 rounded-lg shadow-2xl border border-gray-700">
+        <div className="text-center mb-5 sm:mb-6 md:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-widest font-teko text-white">
             PRIORITY <span className="text-gray-400">LEXUS</span>
           </h1>
-          <p className="text-xl text-gray-400 font-teko tracking-wider">
+          <p className="text-lg sm:text-xl text-gray-400 font-teko tracking-wider">
             {firebaseError ? "System Configuration" : "Admin Panel"}
           </p>
         </div>

@@ -47,8 +47,8 @@ describe("PackageSelector layout", () => {
 
     const grid = screen.getByTestId("package-grid");
     expect(grid.className).toContain("grid-cols-1");
-    expect(grid.className).toContain("md:grid-cols-2");
-    expect(grid.className).toContain("lg:grid-cols-4");
+    expect(grid.className).toContain("sm:grid-cols-2");
+    expect(grid.className).toContain("lg:grid-cols-3");
     expect(screen.getByText("Add-Ons")).toBeInTheDocument();
   });
 

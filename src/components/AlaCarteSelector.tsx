@@ -53,7 +53,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
 
   if (curatedItems.length === 0) {
     return (
-      <div className="text-center py-10 px-6 lux-card border-dashed border-lux-border/60 col-span-1 md:col-span-2 xl:col-span-3 flex flex-col items-center justify-center">
+      <div className="text-center py-10 px-6 lux-card border-dashed border-lux-border/60 col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-3 flex flex-col items-center justify-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -152,7 +152,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
       {featuredItems.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-lg font-semibold text-lux-text">Featured Add-Ons</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {featuredItems.map((item) => (
               <AlaCarteItem
                 key={item.id}
@@ -172,7 +172,7 @@ export const AlaCarteSelector: React.FC<AlaCarteSelectorProps> = ({
       {otherItems.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-lg font-semibold text-lux-text">All Add-Ons</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:col-span-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {otherItems.map((item) => (
               <AlaCarteItem
                 key={item.id}

@@ -24,12 +24,12 @@ import type {
   Pick2Config,
 } from "./types";
 import { useAlaCarteSelection } from "./hooks/useAlaCarteSelection";
+import { usePackageSelection } from "./hooks/usePackageSelection";
 import { usePick2Selection } from "./hooks/usePick2Selection";
 import { usePriceCalculation } from "./hooks/usePriceCalculation";
 import { useViewportLayout } from "./hooks/useViewportLayout";
 import {
   initializeAnalytics,
-  trackPackageSelect,
   trackFeatureView,
   trackQuoteFinalize,
   trackQuotePrint,
@@ -64,7 +64,7 @@ const App: React.FC = () => {
   const [pendingPrint, setPendingPrint] = useState<null | {
     returnToMenu: boolean;
   }>(null);
-  const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(null);
+  const { selectedPackage, setSelectedPackage, handleSelectPackage } = usePackageSelection();
   const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
   // pick2SelectedIds state moved to usePick2Selection hook
   const [viewingDetailItem, setViewingDetailItem] = useState<
@@ -438,15 +438,6 @@ const App: React.FC = () => {
   }, [selectedPackage, customPackageItems, totalPrice, customerInfo]);
   const handleShowMenu = useCallback(() => setCurrentView("menu"), []);
 
-  const handleSelectPackage = useCallback((pkg: PackageTier) => {
-    setSelectedPackage((prev) => {
-      const isSelecting = prev?.id !== pkg.id;
-      if (isSelecting) {
-        trackPackageSelect(pkg);
-      }
-      return prev?.id === pkg.id ? null : pkg;
-    });
-  }, []);
 
 
   const handleViewDetail = useCallback(

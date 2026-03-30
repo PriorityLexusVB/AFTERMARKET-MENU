@@ -14,7 +14,6 @@ import { AdminPanel } from "./components/AdminPanel";
 import { SetupGuide } from "./components/SetupGuide";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ValuePresentation from "./components/ValuePresentation";
-import { MAIN_PAGE_ADDON_IDS } from "./constants";
 import { fetchAllData, fetchPick2Config } from "./data";
 import { auth, firebaseInitializationError } from "./firebase";
 import type {
@@ -24,14 +23,13 @@ import type {
   PriceOverrides,
   Pick2Config,
 } from "./types";
-import { columnOrderValue, isCuratedOption } from "./utils/alaCarte";
-import { sortPackagesForDisplay } from "./utils/packageOrder";
-import { logPick2Event, setPick2TelemetryConfig } from "./utils/telemetry";
+import { useAlaCarteSelection } from "./hooks/useAlaCarteSelection";
+import { usePackageSelection } from "./hooks/usePackageSelection";
+import { usePick2Selection } from "./hooks/usePick2Selection";
+import { usePriceCalculation } from "./hooks/usePriceCalculation";
+import { useViewportLayout } from "./hooks/useViewportLayout";
 import {
   initializeAnalytics,
-  trackPackageSelect,
-  trackAlaCarteAdd,
-  trackAlaCarteRemove,
   trackFeatureView,
   trackQuoteFinalize,
   trackQuotePrint,
@@ -66,49 +64,17 @@ const App: React.FC = () => {
   const [pendingPrint, setPendingPrint] = useState<null | {
     returnToMenu: boolean;
   }>(null);
-  const [selectedPackage, setSelectedPackage] = useState<PackageTier | null>(null);
+  const { selectedPackage, handleSelectPackage } = usePackageSelection();
   const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
-  const [pick2SelectedIds, setPick2SelectedIds] = useState<string[]>([]);
   const [viewingDetailItem, setViewingDetailItem] = useState<
     ProductFeature | AlaCarteOption | null
   >(null);
   const [currentPage, setCurrentPage] = useState<Page>("packages");
-  const previousPageRef = useRef<Page>("packages");
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isAdminView, setIsAdminView] = useState(false);
-  const ipadLandscapeQuery =
-    // iPad "paper mode" should stay enabled on 12.9" iPads even if iPadOS
-    // changes the effective width (e.g. Display Zoom / More Space / windowed).
-    // Prefer a height bound over a tight max-width bound.
-    "(min-width: 1024px) and (min-height: 740px) and (max-height: 1100px) and (orientation: landscape)";
-  const desktopKioskQuery =
-    // Desktop kiosk mode for larger landscape displays that should use no-scroll layout.
-    "(min-width: 1280px) and (min-height: 800px) and (orientation: landscape)";
-  const computeIsIpadLandscape = useCallback(() => {
-    if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-
-    // Local override to help validate iPad-only layout in desktop emulation.
-    // Example: http://localhost:5174/?forceIpad=1
-    const forceIpad = new URLSearchParams(window.location.search).get("forceIpad") === "1";
-    if (forceIpad) {
-      return true;
-    }
-
-    // Prefer layout-based detection over user agent parsing.
-    // This keeps the iPad "paper mode" lock stable across iOS/Safari UA changes.
-    const matchesLayout = window.matchMedia(ipadLandscapeQuery).matches;
-    if (!matchesLayout) return false;
-
-    // iPadOS commonly reports itself as "MacIntel" with touch points.
-    // This is a strong signal that avoids false-positives on desktop Chromium (incl. Playwright).
-    const platform = navigator.platform || "";
-    const isIpadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
-    if (isIpadOS) return true;
-
-    const ua = navigator.userAgent || "";
-    return /\biPad\b/i.test(ua);
-  }, [ipadLandscapeQuery]);
-  const [isIpadLandscape, setIsIpadLandscape] = useState<boolean>(() => computeIsIpadLandscape());
+  // Viewport and layout detection (iPad, kiosk, landscape, build badge)
+  const { isIpadLandscape, isDesktopKiosk, isLandscapeViewport, showBuildBadge } =
+    useViewportLayout();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // Lock guest UI to a single optimized size for consistency (no A/A+/A++ toggle).
@@ -119,45 +85,6 @@ const App: React.FC = () => {
     make: "",
     model: "",
   });
-
-  const [showBuildBadge, setShowBuildBadge] = useState(false);
-  const [isLandscapeViewport, setIsLandscapeViewport] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return window.matchMedia("(orientation: landscape)").matches;
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const key = "aftermarketMenu:debugBuild";
-    const params = new URLSearchParams(window.location.search);
-
-    const q = params.get("debugBuild");
-    if (q === "1") {
-      try {
-        window.localStorage.setItem(key, "1");
-      } catch {
-        // ignore
-      }
-      setShowBuildBadge(true);
-      return;
-    }
-
-    if (q === "0") {
-      try {
-        window.localStorage.removeItem(key);
-      } catch {
-        // ignore
-      }
-      setShowBuildBadge(false);
-      return;
-    }
-
-    try {
-      setShowBuildBadge(window.localStorage.getItem(key) === "1");
-    } catch {
-      setShowBuildBadge(false);
-    }
-  }, []);
 
   // Auth State
   const [user, setUser] = useState<User | null>(null);
@@ -234,53 +161,6 @@ const App: React.FC = () => {
       }
     });
     return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia(ipadLandscapeQuery);
-    const updateMatches = () => setIsIpadLandscape(computeIsIpadLandscape());
-    mediaQuery.addEventListener("change", updateMatches);
-    return () => {
-      mediaQuery.removeEventListener("change", updateMatches);
-    };
-  }, [computeIsIpadLandscape, ipadLandscapeQuery]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia("(orientation: landscape)");
-    const updateOrientation = () => {
-      const byMedia = mediaQuery.matches;
-      const byDimensions = window.innerWidth >= window.innerHeight;
-      setIsLandscapeViewport(byMedia || byDimensions);
-    };
-
-    const lockLandscape = async () => {
-      try {
-        const orientation = window.screen.orientation as ScreenOrientation & {
-          lock?: (orientation: "any" | "natural" | "landscape" | "portrait") => Promise<void>;
-        };
-        if (typeof orientation?.lock === "function") {
-          await orientation.lock("landscape");
-        }
-      } catch {
-        // Best effort only; many browsers restrict lock() without fullscreen/PWA context.
-      }
-    };
-
-    updateOrientation();
-    void lockLandscape();
-
-    window.addEventListener("resize", updateOrientation);
-    window.addEventListener("orientationchange", updateOrientation);
-    mediaQuery.addEventListener("change", updateOrientation);
-
-    return () => {
-      window.removeEventListener("resize", updateOrientation);
-      window.removeEventListener("orientationchange", updateOrientation);
-      mediaQuery.removeEventListener("change", updateOrientation);
-    };
   }, []);
 
   useEffect(() => {
@@ -379,99 +259,6 @@ const App: React.FC = () => {
     }
   }, [guestMode, isAdminView, isDemoMode]);
 
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof document === "undefined") return;
-    const root = document.documentElement;
-    let lastStableHeight = 0;
-
-    const isValidHeight = (value: number | null | undefined): value is number =>
-      typeof value === "number" && Number.isFinite(value) && value >= 300;
-
-    const setViewportVars = () => {
-      const innerHeight = Math.round(window.innerHeight);
-      const clientHeight = Math.round(document.documentElement.clientHeight);
-      const visualHeightRaw = window.visualViewport?.height;
-      const visualHeight = isValidHeight(visualHeightRaw) ? Math.round(visualHeightRaw) : null;
-
-      const baseHeight = isValidHeight(innerHeight)
-        ? innerHeight
-        : isValidHeight(clientHeight)
-          ? clientHeight
-          : 0;
-
-      let height = baseHeight;
-
-      if (visualHeight != null) {
-        const candidateHeight = baseHeight > 0 ? Math.min(baseHeight, visualHeight) : visualHeight;
-        const isLikelyTransient =
-          baseHeight > 0 && candidateHeight < Math.round(baseHeight * 0.65);
-        if (!isLikelyTransient) {
-          height = candidateHeight;
-        }
-      }
-
-      if (!isValidHeight(height)) {
-        height = lastStableHeight > 0 ? lastStableHeight : Math.max(baseHeight, 300);
-      }
-
-      if (lastStableHeight > 0 && height < Math.round(lastStableHeight * 0.6)) {
-        height = lastStableHeight;
-      }
-
-      lastStableHeight = height;
-      root.style.setProperty("--app-vh", `${height}px`);
-      root.style.setProperty("--app-height", `${height}px`);
-    };
-
-    // iOS Safari can change the *visual* viewport height as the address bar
-    // shows/hides. This doesn't always trigger a window resize, but it does
-    // commonly trigger visualViewport scroll/resize.
-    let rafId: number | null = null;
-    let delayedId: number | null = null;
-
-    const scheduleViewportVarsUpdate = () => {
-      if (rafId != null) {
-        window.cancelAnimationFrame(rafId);
-      }
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        setViewportVars();
-      });
-
-      // Follow-up update to catch late address-bar settling.
-      if (delayedId != null) {
-        window.clearTimeout(delayedId);
-      }
-      delayedId = window.setTimeout(() => {
-        delayedId = null;
-        setViewportVars();
-      }, 200);
-    };
-
-    setViewportVars();
-    scheduleViewportVarsUpdate();
-
-    window.addEventListener("resize", scheduleViewportVarsUpdate);
-    window.addEventListener("orientationchange", scheduleViewportVarsUpdate);
-    window.addEventListener("scroll", scheduleViewportVarsUpdate, { passive: true });
-    window.visualViewport?.addEventListener("resize", scheduleViewportVarsUpdate);
-    window.visualViewport?.addEventListener("scroll", scheduleViewportVarsUpdate);
-
-    return () => {
-      window.removeEventListener("resize", scheduleViewportVarsUpdate);
-      window.removeEventListener("orientationchange", scheduleViewportVarsUpdate);
-      window.removeEventListener("scroll", scheduleViewportVarsUpdate);
-      window.visualViewport?.removeEventListener("resize", scheduleViewportVarsUpdate);
-      window.visualViewport?.removeEventListener("scroll", scheduleViewportVarsUpdate);
-      if (rafId != null) {
-        window.cancelAnimationFrame(rafId);
-      }
-      if (delayedId != null) {
-        window.clearTimeout(delayedId);
-      }
-    };
-  }, []);
-
   const handleLogout = useCallback(async () => {
     if (isDemoMode) {
       alert("Logout is disabled in demo mode.");
@@ -513,122 +300,51 @@ const App: React.FC = () => {
     setCustomerInfo(info);
   }, []);
 
-  const hasPricingOverrides = useMemo(() => {
-    return Object.values(priceOverrides).some(
-      (override) =>
-        Boolean(override) &&
-        (typeof override.price === "number" || typeof override.cost === "number")
-    );
-  }, [priceOverrides]);
+  // Price calculations and display data
+  const {
+    hasPricingOverrides,
+    basePackagePricesById,
+    basePackageCostsById,
+    baseAddonPricesById,
+    baseAddonCostsById,
+    displayPackages,
+    displayAllAlaCarteOptions,
+    displayAlaCarteById,
+    curatedSelectedItems,
+    displayCustomPackageItems,
+  } = usePriceCalculation({
+    packages,
+    allAlaCarteOptions,
+    priceOverrides,
+    customPackageItems,
+  });
 
-  // Price calculations and display data (must be before handleShowAgreement)
-  const applyOverrides = <T extends { id: string; price: number; cost: number }>(
-    items: T[],
-    overrides: PriceOverrides
-  ): T[] => {
-    return items.map((item) => {
-      const override = overrides[item.id];
-      if (!override) return item;
-      return {
-        ...item,
-        price: override.price ?? item.price,
-        cost: override.cost ?? item.cost,
-      };
-    });
-  };
-
-  const basePackagePricesById = useMemo(() => {
-    const record: Record<string, number> = {};
-    packages.forEach((pkg) => {
-      record[pkg.id] = pkg.price;
-    });
-    return record;
-  }, [packages]);
-
-  const basePackageCostsById = useMemo(() => {
-    const record: Record<string, number> = {};
-    packages.forEach((pkg) => {
-      record[pkg.id] = pkg.cost;
-    });
-    return record;
-  }, [packages]);
-
-  const baseAddonPricesById = useMemo(() => {
-    const record: Record<string, number> = {};
-    allAlaCarteOptions.forEach((opt) => {
-      record[opt.id] = opt.price;
-    });
-    return record;
-  }, [allAlaCarteOptions]);
-
-  const baseAddonCostsById = useMemo(() => {
-    const record: Record<string, number> = {};
-    allAlaCarteOptions.forEach((opt) => {
-      record[opt.id] = opt.cost;
-    });
-    return record;
-  }, [allAlaCarteOptions]);
-
-  const displayPackages = useMemo(() => {
-    // Deterministic customer-facing order: Elite  Platinum  Gold (matches requested layout).
-    const sorted = sortPackagesForDisplay(packages);
-    return applyOverrides(sorted, priceOverrides);
-  }, [packages, priceOverrides]);
-  const displayAllAlaCarteOptions = useMemo(
-    () => applyOverrides(allAlaCarteOptions, priceOverrides),
-    [allAlaCarteOptions, priceOverrides]
-  );
-
-  const displayAlaCarteById = useMemo(() => {
-    const map = new Map<string, AlaCarteOption>();
-    displayAllAlaCarteOptions.forEach((opt) => map.set(opt.id, opt));
-    return map;
-  }, [displayAllAlaCarteOptions]);
-
-  const pick2MaxSelections = pick2Config?.maxSelections ?? 2;
-  const pick2Enabled = pick2Config?.enabled === true;
-  const pick2BundlePrice = pick2Config?.price ?? 0;
-  const pick2SelectedItems = useMemo(() => {
-    return pick2SelectedIds
-      .map((id) => displayAlaCarteById.get(id))
-      .filter((item): item is AlaCarteOption => Boolean(item));
-  }, [pick2SelectedIds, displayAlaCarteById]);
-
-  const pick2SummaryText = useMemo(() => {
-    if (!pick2Enabled) return undefined;
-    if (pick2SelectedItems.length === 0) return `0/${pick2MaxSelections}`;
-    if (pick2SelectedItems.length < pick2MaxSelections) {
-      return `${pick2SelectedItems.length}/${pick2MaxSelections}`;
-    }
-    return pick2SelectedItems.map((item) => item.name).join(" + ");
-  }, [pick2Enabled, pick2SelectedItems, pick2MaxSelections]);
-
-  const pick2NeedsAttention =
-    pick2Enabled && pick2SelectedItems.length > 0 && pick2SelectedItems.length < pick2MaxSelections;
-
-  const pick2BundleActive = pick2Enabled && pick2SelectedItems.length === pick2MaxSelections;
-  const pick2BundleCost = useMemo(() => {
-    if (!pick2BundleActive) return 0;
-    return pick2SelectedItems.reduce((sum, item) => sum + item.cost, 0);
-  }, [pick2BundleActive, pick2SelectedItems]);
-
-  const pick2Selection = useMemo(() => {
-    if (!pick2BundleActive) return undefined;
-    return {
-      price: pick2BundlePrice,
-      items: pick2SelectedItems,
-      cost: pick2BundleCost,
-    };
-  }, [pick2BundleActive, pick2BundlePrice, pick2SelectedItems, pick2BundleCost]);
-  const curatedSelectedItems = useMemo(
-    () => customPackageItems.filter(isCuratedOption),
-    [customPackageItems]
-  );
-
-  const displayCustomPackageItems = useMemo(
-    () => applyOverrides(curatedSelectedItems, priceOverrides),
-    [curatedSelectedItems, priceOverrides]
-  );
+  const {
+    pick2SelectedIds,
+    setPick2SelectedIds,
+    pick2MaxSelections,
+    pick2BundlePrice,
+    pick2SummaryText,
+    pick2NeedsAttention,
+    pick2BundleActive,
+    pick2BundleCost,
+    pick2Selection,
+    pick2EligibleItems,
+    pick2RecommendedPairs,
+    showPick2Tab,
+    handleTogglePick2Item,
+    handlePick2PresetSelect,
+    handlePick2Clear,
+    handlePick2Done,
+    handlePick2BlockedThird,
+  } = usePick2Selection({
+    pick2Config,
+    displayAllAlaCarteOptions,
+    displayAlaCarteById,
+    currentPage,
+    setCurrentPage,
+    setCustomPackageItems,
+  });
 
   const { totalPrice, totalCost } = useMemo(() => {
     let price = 0;
@@ -687,181 +403,18 @@ const App: React.FC = () => {
     return price;
   }, [curatedSelectedItems, baseAddonPricesById]);
 
-  const curatedAlaCarteOptions = useMemo(() => {
-    return [...displayAllAlaCarteOptions].filter(isCuratedOption).sort((a, b) => {
-      const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
-      if (columnDiff !== 0) return columnDiff;
-      const posA = a.position ?? Number.MAX_SAFE_INTEGER;
-      const posB = b.position ?? Number.MAX_SAFE_INTEGER;
-      return posA - posB;
-    });
-  }, [displayAllAlaCarteOptions]);
-
-  const pick2EligibleItems = useMemo(() => {
-    return [...displayAllAlaCarteOptions]
-      .filter((option) => option.pick2Eligible)
-      .sort((a, b) => {
-        const sortA = a.pick2Sort ?? Number.MAX_SAFE_INTEGER;
-        const sortB = b.pick2Sort ?? Number.MAX_SAFE_INTEGER;
-        if (sortA !== sortB) return sortA - sortB;
-        const columnDiff = columnOrderValue(a.column) - columnOrderValue(b.column);
-        if (columnDiff !== 0) return columnDiff;
-        const posA = a.position ?? Number.MAX_SAFE_INTEGER;
-        const posB = b.position ?? Number.MAX_SAFE_INTEGER;
-        return posA - posB;
-      });
-  }, [displayAllAlaCarteOptions]);
-
-  const pick2EligibleIdSet = useMemo(
-    () => new Set(pick2EligibleItems.map((item) => item.id)),
-    [pick2EligibleItems]
-  );
-
-  const pick2HadCompleteRef = useRef(false);
-
-
-  const normalizePick2Name = useCallback((value: string) => {
-    return value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, " ")
-      .replace(/\bpackage\b/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }, []);
-
-  const pick2NameToId = useMemo(() => {
-    const map = new Map<string, string>();
-    pick2EligibleItems.forEach((item) => {
-      const normalized = normalizePick2Name(item.name);
-      if (normalized) {
-        map.set(normalized, item.id);
-      }
-    });
-    return map;
-  }, [pick2EligibleItems, normalizePick2Name]);
-
-  const findPick2IdByName = useCallback(
-    (candidates: string[]) => {
-      for (const candidate of candidates) {
-        const normalized = normalizePick2Name(candidate);
-        const match = pick2NameToId.get(normalized);
-        if (match) return match;
-      }
-      return undefined;
-    },
-    [normalizePick2Name, pick2NameToId]
-  );
-
-  const fallbackPick2RecommendedPairs = useMemo(() => {
-    const presets = [
-      {
-        label: "Best Protection",
-        optionCandidates: [
-          [
-            "Suntek Pro Standard Package",
-            "Suntek Protective Film (Standard Package)",
-            "Suntek Pro Standard",
-          ],
-          ["Diamond Shield Windshield Protection"],
-        ],
-      },
-      {
-        label: "Resale Focus",
-        optionCandidates: [
-          ["EverNew Appearance Protection"],
-          ["Interior Leather & Fabric Protection"],
-        ],
-      },
-      {
-        label: "Visibility + Daily Wear",
-        optionCandidates: [["Headlights Protection"], ["Door Cups Only"]],
-      },
-      {
-        label: "Coastal Defense",
-        optionCandidates: [["RustGuard Pro"], ["ToughGuard Premium"]],
-      },
-    ];
-
-    return presets
-      .map((preset) => {
-        const firstId = findPick2IdByName(preset.optionCandidates[0] ?? []);
-        const secondId = findPick2IdByName(preset.optionCandidates[1] ?? []);
-        if (!firstId || !secondId) return null;
-        if (firstId === secondId) return null;
-        return { label: preset.label, optionIds: [firstId, secondId] as [string, string] };
-      })
-      .filter((pair): pair is { label: string; optionIds: [string, string] } => Boolean(pair));
-  }, [findPick2IdByName]);
-
-  const pick2RecommendedPairs = useMemo(() => {
-    const configured = pick2Config?.recommendedPairs ?? [];
-    const validConfigured = configured.filter((pair) => {
-      const [first, second] = pair.optionIds;
-      return pick2EligibleIdSet.has(first) && pick2EligibleIdSet.has(second);
-    });
-    if (validConfigured.length > 0) {
-      return validConfigured;
-    }
-    return fallbackPick2RecommendedPairs;
-  }, [pick2Config?.recommendedPairs, pick2EligibleIdSet, fallbackPick2RecommendedPairs]);
-
-  const showPick2Tab = pick2Enabled && pick2EligibleItems.length > 0;
-
-  useEffect(() => {
-    setPick2TelemetryConfig({
-      telemetryEnabled: pick2Config?.telemetryEnabled,
-      telemetrySampleRate: pick2Config?.telemetrySampleRate,
-    });
-  }, [pick2Config?.telemetryEnabled, pick2Config?.telemetrySampleRate]);
-
-  useEffect(() => {
-    if (pick2SelectedIds.length === pick2MaxSelections) {
-      pick2HadCompleteRef.current = true;
-    }
-  }, [pick2SelectedIds.length, pick2MaxSelections]);
-
-  useEffect(() => {
-    const previousPage = previousPageRef.current;
-    if (currentPage === "pick2" && previousPage !== "pick2" && showPick2Tab) {
-      void logPick2Event("pick2_opened", {
-        countSelected: pick2SelectedIds.length,
-        page: "pick2",
-      });
-    }
-    previousPageRef.current = currentPage;
-  }, [currentPage, pick2SelectedIds.length, showPick2Tab]);
-
-
-  useEffect(() => {
-    if (currentPage === "pick2" && !showPick2Tab) {
-      setCurrentPage("packages");
-    }
-  }, [currentPage, showPick2Tab]);
-
-  const mainPageAddons = useMemo(() => {
-    // The Packages page "Add Ons" column prefers a tight, explicit whitelist
-    // (matching the printed menu). If the whitelist doesn't match the current DB
-    // (e.g., different dealer dataset), fall back to Column 4 "Featured" items.
-    const byId = new Map(curatedAlaCarteOptions.map((option) => [option.id, option]));
-    const explicit = MAIN_PAGE_ADDON_IDS.map((id) => byId.get(id)).filter(
-      (option): option is AlaCarteOption => Boolean(option)
-    );
-    if (explicit.length > 0) return explicit;
-
-    return curatedAlaCarteOptions
-      .filter((option) => option.column === 4)
-      .sort((a, b) => {
-        const posA = a.position ?? Number.MAX_SAFE_INTEGER;
-        const posB = b.position ?? Number.MAX_SAFE_INTEGER;
-        return posA - posB;
-      });
-  }, [curatedAlaCarteOptions]);
-
-  const availableAlaCarteItems = useMemo(() => {
-    return curatedAlaCarteOptions.filter(
-      (option) => !curatedSelectedItems.some((item) => item.id === option.id)
-    );
-  }, [curatedSelectedItems, curatedAlaCarteOptions]);
+  const {
+    mainPageAddons,
+    availableAlaCarteItems,
+    handleToggleAlaCarteItem,
+    handleDropAlaCarte,
+    handleRemoveAlaCarte,
+  } = useAlaCarteSelection({
+    displayAllAlaCarteOptions,
+    curatedSelectedItems,
+    setCustomPackageItems,
+    setPick2SelectedIds,
+  });
 
   const handleShowAgreement = useCallback(() => {
     // Track quote finalization
@@ -879,124 +432,7 @@ const App: React.FC = () => {
   }, [selectedPackage, customPackageItems, totalPrice, customerInfo]);
   const handleShowMenu = useCallback(() => setCurrentView("menu"), []);
 
-  const handleSelectPackage = useCallback((pkg: PackageTier) => {
-    setSelectedPackage((prev) => {
-      const isSelecting = prev?.id !== pkg.id;
-      if (isSelecting) {
-        trackPackageSelect(pkg);
-      }
-      return prev?.id === pkg.id ? null : pkg;
-    });
-  }, []);
 
-  const handleToggleAlaCarteItem = useCallback((item: AlaCarteOption) => {
-    setCustomPackageItems((prev) => {
-      const isSelected = prev.some((i) => i.id === item.id);
-      if (isSelected) {
-        trackAlaCarteRemove(item);
-        return prev.filter((i) => i.id !== item.id);
-      } else {
-        setPick2SelectedIds((prevPick2) => prevPick2.filter((id) => id !== item.id));
-        trackAlaCarteAdd(item);
-        return [...prev, item];
-      }
-    });
-  }, []);
-
-  const handleDropAlaCarte = useCallback((item: AlaCarteOption) => {
-    setCustomPackageItems((prev) => {
-      if (prev.find((i) => i.id === item.id)) {
-        return prev;
-      }
-      setPick2SelectedIds((prevPick2) => prevPick2.filter((id) => id !== item.id));
-      trackAlaCarteAdd(item);
-      return [...prev, item];
-    });
-  }, []);
-
-  const handleTogglePick2Item = useCallback(
-    (item: AlaCarteOption) => {
-      setPick2SelectedIds((prev) => {
-        const isSelected = prev.includes(item.id);
-        if (isSelected) {
-          return prev.filter((id) => id !== item.id);
-        }
-
-        if (prev.length >= pick2MaxSelections) {
-          return prev;
-        }
-
-        // Conflict rule: selecting via Pick2 removes the item from individually-priced add-ons.
-        setCustomPackageItems((prevCustom) => prevCustom.filter((i) => i.id !== item.id));
-        const nextIds = [...prev, item.id];
-        void logPick2Event("pick2_selected", {
-          itemId: item.id,
-          countSelected: nextIds.length,
-          page: "pick2",
-        });
-        if (pick2HadCompleteRef.current && prev.length === pick2MaxSelections - 1) {
-          void logPick2Event("pick2_swap", {
-            itemId: item.id,
-            countSelected: nextIds.length,
-            page: "pick2",
-          });
-        }
-        return nextIds;
-      });
-    },
-    [pick2MaxSelections]
-  );
-
-  const handlePick2PresetSelect = useCallback(
-    (optionIds: string[], label?: string) => {
-      const uniqueIds = Array.from(new Set(optionIds)).filter((id) => pick2EligibleIdSet.has(id));
-      if (uniqueIds.length < pick2MaxSelections) return;
-      const nextIds = uniqueIds.slice(0, pick2MaxSelections);
-      void logPick2Event("pick2_preset_clicked", {
-        presetLabel: label,
-        countSelected: nextIds.length,
-        page: "pick2",
-      });
-      setCustomPackageItems((prevCustom) =>
-        prevCustom.filter((item) => !nextIds.includes(item.id))
-      );
-      setPick2SelectedIds(nextIds);
-    },
-    [pick2EligibleIdSet, pick2MaxSelections]
-  );
-
-  const handlePick2Clear = useCallback(() => {
-    void logPick2Event("pick2_clear", {
-      countSelected: pick2SelectedIds.length,
-      page: "pick2",
-    });
-    setPick2SelectedIds([]);
-  }, [pick2SelectedIds.length]);
-
-  const handlePick2Done = useCallback(() => {
-    void logPick2Event("pick2_done", {
-      countSelected: pick2SelectedIds.length,
-      page: "pick2",
-    });
-    setCurrentPage("packages");
-  }, [pick2SelectedIds.length]);
-
-  const handlePick2BlockedThird = useCallback(() => {
-    void logPick2Event("pick2_blocked_third", {
-      countSelected: pick2SelectedIds.length,
-      page: "pick2",
-    });
-  }, [pick2SelectedIds.length]);
-
-  const handleRemoveAlaCarte = useCallback((itemId: string) => {
-    setCustomPackageItems((prev) => {
-      const item = prev.find((i) => i.id === itemId);
-      if (item) {
-        trackAlaCarteRemove(item);
-      }
-      return prev.filter((i) => i.id !== itemId);
-    });
-  }, []);
 
   const handleViewDetail = useCallback(
     (item: ProductFeature | AlaCarteOption) => {
@@ -1115,10 +551,6 @@ const App: React.FC = () => {
     </div>
   );
 
-  // Track whether we're in a "desktop kiosk" viewport using a dedicated media query.
-  // This should stay in sync with the kiosk CSS/media-query definition.
-  const [isDesktopKiosk, setIsDesktopKiosk] = useState(false);
-
   const enableIpadMenuLayout = isIpadLandscape && currentView === "menu" && !isAdminView;
   const enableIpadPackagesLayout = enableIpadMenuLayout && currentPage === "packages";
   const enableIpadAlaCarteLayout = enableIpadMenuLayout && currentPage === "alacarte";
@@ -1130,37 +562,6 @@ const App: React.FC = () => {
   const enableCompactAlaCarteLayout = enableIpadAlaCarteLayout || enableKioskAlaCarteLayout;
   const enableCompactPick2Layout = enableIpadPick2Layout || enableKioskPick2Layout;
   const disableAlaCarteDrag = enableCompactAlaCarteLayout || guestMode;
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia(desktopKioskQuery);
-
-    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
-      setIsDesktopKiosk(event.matches);
-    };
-
-    // Set initial value.
-    handleChange(mediaQuery);
-
-    if ("addEventListener" in mediaQuery) {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => {
-        mediaQuery.removeEventListener("change", handleChange);
-      };
-    } else {
-      // Fallback for older browsers that only support addListener/removeListener.
-      // TypeScript needs explicit type assertion here since control flow narrowing
-      // makes the else branch incompatible with MediaQueryList.
-      const mql = mediaQuery as MediaQueryList;
-      mql.addListener(handleChange);
-      return () => {
-        mql.removeListener(handleChange);
-      };
-    }
-  }, []);
 
   // Enable no-scroll layout only for iPad landscape and explicit desktop kiosk viewports in menu view.
   const enableNoScrollLayout =

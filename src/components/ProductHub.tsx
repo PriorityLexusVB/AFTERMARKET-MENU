@@ -11,16 +11,13 @@ import {
   closestCenter,
   useSensor,
   useSensors,
-  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { db } from "../firebase";
 import type { AlaCarteOption, Pick2Config, ProductFeature, PackageTier } from "../types";
 import {
@@ -34,6 +31,16 @@ import {
 } from "../data";
 import { FeatureForm } from "./FeatureForm";
 import { sortOrderableItems } from "../utils/featureOrdering";
+import {
+  SortableProductCard,
+  DragOverlayItem,
+  DroppableColumn,
+  DuplicatesPanel,
+  RecommendedPackagePanel,
+  FilterBar,
+  BulkActionsBar,
+} from "./product-hub";
+import type { DuplicateGroup } from "./product-hub";
 
 interface ProductHubProps {
   onDataUpdate: () => void;
@@ -54,12 +61,6 @@ interface ProductHubProps {
 
 // Default package column when moving items to packages section
 const DEFAULT_PACKAGE_COLUMN: 1 | 2 | 3 = 2; // Elite Package
-
-const columnLabels: Record<1 | 2 | 3, string> = {
-  1: "Gold Package (Column 1)",
-  2: "Elite Package (Column 2)",
-  3: "Platinum Package (Column 3)",
-};
 
 export const ProductHub: React.FC<ProductHubProps> = ({
   onDataUpdate,
@@ -448,7 +449,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
   const normalizeFeatureName = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-  const possibleDuplicates = useMemo(() => {
+  const possibleDuplicates: DuplicateGroup[] = useMemo(() => {
     const grouped = new Map<string, ProductFeature[]>();
 
     features.forEach((feature) => {
@@ -497,6 +498,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         !queryText ||
         feature.name.toLowerCase().includes(queryText) ||
         feature.description?.toLowerCase().includes(queryText);
+
       if (!matchesSearch) return false;
 
       const lane = feature.column ? String(feature.column) : "none";
@@ -1196,8 +1198,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       }));
 
       // Update features state optimistically with position normalization
-      // Normalize positions for all features so that even items not in the
-      // current visible columns have consistent, contiguous positions.
       const updatedFeatures = features.map((f) => {
         const unassignedUpdate = unassignedUpdates.find((u) => u.id === f.id);
         const packageUpdate = packagesUpdates.find((u) => u.id === f.id);
@@ -1310,668 +1310,276 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     }
   };
 
-  const getCategoryLabel = (option?: AlaCarteOption) => {
-    if (!option) return "Not placed";
-    if (option.column === 4) return "Featured";
-    if (option.column) return columnLabels[option.column as 1 | 2 | 3] ?? "Placed";
-    return "Not placed";
-  };
-
-  // Sortable Product Card Component
-  interface SortableProductCardProps {
-    feature: ProductFeature;
-    option?: AlaCarteOption;
-    onEdit: (feature: ProductFeature) => void;
-    onDuplicate: (feature: ProductFeature, column: 1 | 2 | 3) => void;
-    isSelected: boolean;
-    onToggleSelection: (featureId: string) => void;
-  }
-
-  const SortableProductCard: React.FC<SortableProductCardProps> = ({
-    feature,
-    option,
-    onEdit,
-    onDuplicate,
-    isSelected,
-    onToggleSelection,
-  }) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-      id: feature.id,
-    });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    const isPublished = option?.isPublished ?? feature.publishToAlaCarte ?? false;
-    const isFeatured = option?.column === 4;
-    const laneLabel = feature.column
-      ? (columnLabels[feature.column as 1 | 2 | 3] ?? "Not in packages")
-      : "Not in packages";
-    const categoryLabel = getCategoryLabel(option);
-    // Display position as 1-based (position + 1) for user clarity, consistent with position badge
-    const positionLabel =
-      feature.position !== undefined ? `Position ${feature.position + 1}` : "Position -";
-
-    const [showDuplicateMenu, setShowDuplicateMenu] = useState(false);
-    const isExpanded = expandedIds.has(feature.id);
-    const duplicateMenuRef = useRef<HTMLDivElement>(null);
-
-    const [pick2EligibleDraft, setPick2EligibleDraft] = useState<boolean>(
-      Boolean(option?.pick2Eligible)
-    );
-    const [pick2SortDraft, setPick2SortDraft] = useState<string>(
-      option?.pick2Sort !== undefined ? String(option.pick2Sort) : ""
-    );
-    const [pick2ShortValueDraft, setPick2ShortValueDraft] = useState<string>(
-      option?.shortValue ?? ""
-    );
-    const [pick2Highlight1Draft, setPick2Highlight1Draft] = useState<string>(
-      option?.highlights?.[0] ?? ""
-    );
-    const [pick2Highlight2Draft, setPick2Highlight2Draft] = useState<string>(
-      option?.highlights?.[1] ?? ""
-    );
-
-    const pick2Highlight1 = option?.highlights?.[0];
-    const pick2Highlight2 = option?.highlights?.[1];
-
-    useEffect(() => {
-      setPick2EligibleDraft(Boolean(option?.pick2Eligible));
-      setPick2SortDraft(option?.pick2Sort !== undefined ? String(option.pick2Sort) : "");
-      setPick2ShortValueDraft(option?.shortValue ?? "");
-      setPick2Highlight1Draft(pick2Highlight1 ?? "");
-      setPick2Highlight2Draft(pick2Highlight2 ?? "");
-    }, [
-      option?.pick2Eligible,
-      option?.pick2Sort,
-      option?.shortValue,
-      pick2Highlight1,
-      pick2Highlight2,
-    ]);
-
-    const canEditPick2Fields = Boolean(option) || pick2EligibleDraft;
-
-    const getPick2DraftHighlights = () =>
-      [pick2Highlight1Draft.trim(), pick2Highlight2Draft.trim()].filter(Boolean).slice(0, 2);
-
-    const getPick2DraftSort = () => {
-      const trimmed = pick2SortDraft.trim();
-      if (!trimmed) return undefined;
-      const parsed = Number(trimmed);
-      if (!Number.isFinite(parsed) || parsed < 0) return undefined;
-      return parsed;
-    };
-
-    const ensurePick2Option = async (updates: Partial<AlaCarteOption>) => {
-      const resolvedPrice = feature.alaCartePrice ?? option?.price ?? feature.price;
-      await upsertAlaCarteFromFeature(
-        {
-          ...feature,
-          alaCartePrice: resolvedPrice,
-          publishToAlaCarte: feature.publishToAlaCarte ?? false,
-        },
-        {
-          isPublished: false,
-          price: resolvedPrice,
-          ...updates,
+  // Pick2 callbacks for SortableProductCard
+  const handlePick2EligibleChange = useCallback(async (
+    feature: ProductFeature,
+    option: AlaCarteOption | undefined,
+    next: boolean
+  ) => {
+    const previous = Boolean(option?.pick2Eligible);
+    if (option || next) {
+      upsertOptionState(feature, { pick2Eligible: next });
+    }
+    clearRowError(feature.id);
+    try {
+      if (!option) {
+        if (next) {
+          const resolvedPrice = feature.alaCartePrice ?? option?.price ?? feature.price;
+          await upsertAlaCarteFromFeature(
+            {
+              ...feature,
+              alaCartePrice: resolvedPrice,
+              publishToAlaCarte: feature.publishToAlaCarte ?? false,
+            },
+            {
+              isPublished: false,
+              price: resolvedPrice,
+              pick2Eligible: true,
+            }
+          );
+          upsertOptionState(feature, { isPublished: false, price: resolvedPrice, pick2Eligible: true });
         }
-      );
-      upsertOptionState(feature, { isPublished: false, price: resolvedPrice, ...updates });
-    };
-
-    const savePick2Eligible = async (next: boolean) => {
-      const previous = Boolean(option?.pick2Eligible);
-      setPick2EligibleDraft(next);
+        requestMenuRefresh();
+        markSaved(feature.id);
+        return;
+      }
+      await updateAlaCarteOption(feature.id, { pick2Eligible: next });
+      requestMenuRefresh();
+      markSaved(feature.id);
+    } catch (err) {
+      console.error("Failed to save pick2Eligible", err);
       if (option || next) {
-        upsertOptionState(feature, { pick2Eligible: next });
+        upsertOptionState(feature, { pick2Eligible: previous });
+      }
+      setRowErrorMessage(feature.id, "Failed to save Pick2 Eligible.");
+    }
+  }, [requestMenuRefresh]);
+
+  const handlePick2SortBlur = useCallback(async (
+    feature: ProductFeature,
+    option: AlaCarteOption | undefined,
+    raw: string
+  ) => {
+    if (!option && !(option?.pick2Eligible ?? false)) return;
+    const trimmed = raw.trim();
+    const previous = option?.pick2Sort;
+
+    if (!trimmed) {
+      if (option) {
+        upsertOptionState(feature, { pick2Sort: undefined });
       }
       clearRowError(feature.id);
       try {
         if (!option) {
-          if (next) {
-            await ensurePick2Option({
-              pick2Eligible: true,
-              pick2Sort: getPick2DraftSort(),
-              shortValue: pick2ShortValueDraft.trim() || undefined,
-              highlights: getPick2DraftHighlights(),
-            });
-          }
-          requestMenuRefresh();
-          markSaved(feature.id);
-          return;
-        }
-        await updateAlaCarteOption(feature.id, { pick2Eligible: next });
-        requestMenuRefresh();
-        markSaved(feature.id);
-      } catch (err) {
-        console.error("Failed to save pick2Eligible", err);
-        if (option || next) {
-          upsertOptionState(feature, { pick2Eligible: previous });
-        }
-        setPick2EligibleDraft(previous);
-        setRowErrorMessage(feature.id, "Failed to save Pick2 Eligible.");
-      }
-    };
-
-    const savePick2Sort = async (raw: string) => {
-      if (!option && !pick2EligibleDraft) return;
-      const trimmed = raw.trim();
-      const previous = option?.pick2Sort;
-
-      if (!trimmed) {
-        if (option || pick2EligibleDraft) {
-          upsertOptionState(feature, { pick2Sort: undefined });
-        }
-        clearRowError(feature.id);
-        try {
-          if (!option) {
-            await ensurePick2Option({
+          const resolvedPrice = feature.alaCartePrice ?? feature.price;
+          await upsertAlaCarteFromFeature(
+            {
+              ...feature,
+              alaCartePrice: resolvedPrice,
+              publishToAlaCarte: feature.publishToAlaCarte ?? false,
+            },
+            {
+              isPublished: false,
+              price: resolvedPrice,
               pick2Eligible: true,
               pick2Sort: undefined,
-              shortValue: pick2ShortValueDraft.trim() || undefined,
-              highlights: getPick2DraftHighlights(),
-            });
-            requestMenuRefresh();
-            markSaved(feature.id);
-            return;
-          }
-          await updateAlaCarteOption(feature.id, { pick2Sort: undefined });
-          requestMenuRefresh();
-          markSaved(feature.id);
-        } catch (err) {
-          console.error("Failed to clear pick2Sort", err);
-          if (option || pick2EligibleDraft) {
-            upsertOptionState(feature, { pick2Sort: previous });
-          }
-          setPick2SortDraft(previous !== undefined ? String(previous) : "");
-          setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
-        }
-        return;
-      }
-
-      const parsed = Number(trimmed);
-      if (!Number.isFinite(parsed) || parsed < 0) {
-        setRowErrorMessage(feature.id, "Pick2 Sort must be a valid number (0 or greater).");
-        setPick2SortDraft(previous !== undefined ? String(previous) : "");
-        return;
-      }
-
-      if (option || pick2EligibleDraft) {
-        upsertOptionState(feature, { pick2Sort: parsed });
-      }
-      clearRowError(feature.id);
-      try {
-        if (!option) {
-          await ensurePick2Option({
-            pick2Eligible: true,
-            pick2Sort: parsed,
-            shortValue: pick2ShortValueDraft.trim() || undefined,
-            highlights: getPick2DraftHighlights(),
-          });
+            }
+          );
+          upsertOptionState(feature, { isPublished: false, price: resolvedPrice, pick2Sort: undefined });
           requestMenuRefresh();
           markSaved(feature.id);
           return;
         }
-        await updateAlaCarteOption(feature.id, { pick2Sort: parsed });
+        await updateAlaCarteOption(feature.id, { pick2Sort: undefined });
         requestMenuRefresh();
         markSaved(feature.id);
       } catch (err) {
-        console.error("Failed to save pick2Sort", err);
-        if (option || pick2EligibleDraft) {
+        console.error("Failed to clear pick2Sort", err);
+        if (option) {
           upsertOptionState(feature, { pick2Sort: previous });
         }
-        setPick2SortDraft(previous !== undefined ? String(previous) : "");
         setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
       }
-    };
+      return;
+    }
 
-    const savePick2ShortValue = async (raw: string) => {
-      if (!option && !pick2EligibleDraft) return;
-      const trimmed = raw.trim();
-      const next = trimmed ? trimmed : undefined;
-      const previous = option?.shortValue;
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setRowErrorMessage(feature.id, "Pick2 Sort must be a valid number (0 or greater).");
+      return;
+    }
 
-      if (option || pick2EligibleDraft) {
-        upsertOptionState(feature, { shortValue: next });
-      }
-      clearRowError(feature.id);
-      try {
-        if (!option) {
-          await ensurePick2Option({
+    if (option) {
+      upsertOptionState(feature, { pick2Sort: parsed });
+    }
+    clearRowError(feature.id);
+    try {
+      if (!option) {
+        const resolvedPrice = feature.alaCartePrice ?? feature.price;
+        await upsertAlaCarteFromFeature(
+          {
+            ...feature,
+            alaCartePrice: resolvedPrice,
+            publishToAlaCarte: feature.publishToAlaCarte ?? false,
+          },
+          {
+            isPublished: false,
+            price: resolvedPrice,
             pick2Eligible: true,
-            pick2Sort: getPick2DraftSort(),
+            pick2Sort: parsed,
+          }
+        );
+        upsertOptionState(feature, { isPublished: false, price: resolvedPrice, pick2Sort: parsed });
+        requestMenuRefresh();
+        markSaved(feature.id);
+        return;
+      }
+      await updateAlaCarteOption(feature.id, { pick2Sort: parsed });
+      requestMenuRefresh();
+      markSaved(feature.id);
+    } catch (err) {
+      console.error("Failed to save pick2Sort", err);
+      if (option) {
+        upsertOptionState(feature, { pick2Sort: previous });
+      }
+      setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
+    }
+  }, [requestMenuRefresh]);
+
+  const handlePick2ShortValueBlur = useCallback(async (
+    feature: ProductFeature,
+    option: AlaCarteOption | undefined,
+    raw: string
+  ) => {
+    if (!option && !(option?.pick2Eligible ?? false)) return;
+    const trimmed = raw.trim();
+    const next = trimmed ? trimmed : undefined;
+    const previous = option?.shortValue;
+
+    if (option) {
+      upsertOptionState(feature, { shortValue: next });
+    }
+    clearRowError(feature.id);
+    try {
+      if (!option) {
+        const resolvedPrice = feature.alaCartePrice ?? feature.price;
+        await upsertAlaCarteFromFeature(
+          {
+            ...feature,
+            alaCartePrice: resolvedPrice,
+            publishToAlaCarte: feature.publishToAlaCarte ?? false,
+          },
+          {
+            isPublished: false,
+            price: resolvedPrice,
+            pick2Eligible: true,
             shortValue: next,
-            highlights: getPick2DraftHighlights(),
-          });
-          requestMenuRefresh();
-          markSaved(feature.id);
-          return;
-        }
-        await updateAlaCarteOption(feature.id, { shortValue: next });
+          }
+        );
+        upsertOptionState(feature, { isPublished: false, price: resolvedPrice, shortValue: next });
         requestMenuRefresh();
         markSaved(feature.id);
-      } catch (err) {
-        console.error("Failed to save shortValue", err);
-        if (option || pick2EligibleDraft) {
-          upsertOptionState(feature, { shortValue: previous });
-        }
-        setPick2ShortValueDraft(previous ?? "");
-        setRowErrorMessage(feature.id, "Failed to save Short Value.");
+        return;
       }
-    };
-
-    const savePick2Highlights = async (line1: string, line2: string) => {
-      if (!option && !pick2EligibleDraft) return;
-
-      const nextHighlights = [line1.trim(), line2.trim()].filter(Boolean).slice(0, 2);
-      const next = nextHighlights.length > 0 ? nextHighlights : undefined;
-      const previous = option?.highlights;
-
-      if (option || pick2EligibleDraft) {
-        upsertOptionState(feature, { highlights: next });
+      await updateAlaCarteOption(feature.id, { shortValue: next });
+      requestMenuRefresh();
+      markSaved(feature.id);
+    } catch (err) {
+      console.error("Failed to save shortValue", err);
+      if (option) {
+        upsertOptionState(feature, { shortValue: previous });
       }
-      clearRowError(feature.id);
-      try {
-        if (!option) {
-          await ensurePick2Option({
+      setRowErrorMessage(feature.id, "Failed to save Short Value.");
+    }
+  }, [requestMenuRefresh]);
+
+  const handlePick2HighlightsBlur = useCallback(async (
+    feature: ProductFeature,
+    option: AlaCarteOption | undefined,
+    line1: string,
+    line2: string
+  ) => {
+    if (!option && !(option?.pick2Eligible ?? false)) return;
+
+    const nextHighlights = [line1.trim(), line2.trim()].filter(Boolean).slice(0, 2);
+    const next = nextHighlights.length > 0 ? nextHighlights : undefined;
+    const previous = option?.highlights;
+
+    if (option) {
+      upsertOptionState(feature, { highlights: next });
+    }
+    clearRowError(feature.id);
+    try {
+      if (!option) {
+        const resolvedPrice = feature.alaCartePrice ?? feature.price;
+        await upsertAlaCarteFromFeature(
+          {
+            ...feature,
+            alaCartePrice: resolvedPrice,
+            publishToAlaCarte: feature.publishToAlaCarte ?? false,
+          },
+          {
+            isPublished: false,
+            price: resolvedPrice,
             pick2Eligible: true,
-            pick2Sort: getPick2DraftSort(),
-            shortValue: pick2ShortValueDraft.trim() || undefined,
             highlights: nextHighlights,
-          });
-          requestMenuRefresh();
-          markSaved(feature.id);
-          return;
-        }
-        await updateAlaCarteOption(feature.id, { highlights: next });
+          }
+        );
+        upsertOptionState(feature, { isPublished: false, price: resolvedPrice, highlights: next });
         requestMenuRefresh();
         markSaved(feature.id);
-      } catch (err) {
-        console.error("Failed to save highlights", err);
-        if (option || pick2EligibleDraft) {
-          upsertOptionState(feature, { highlights: previous });
-        }
-        setPick2Highlight1Draft(previous?.[0] ?? "");
-        setPick2Highlight2Draft(previous?.[1] ?? "");
-        setRowErrorMessage(feature.id, "Failed to save Highlights.");
+        return;
       }
-    };
+      await updateAlaCarteOption(feature.id, { highlights: next });
+      requestMenuRefresh();
+      markSaved(feature.id);
+    } catch (err) {
+      console.error("Failed to save highlights", err);
+      if (option) {
+        upsertOptionState(feature, { highlights: previous });
+      }
+      setRowErrorMessage(feature.id, "Failed to save Highlights.");
+    }
+  }, [requestMenuRefresh]);
 
-    // Click-outside handler to close duplicate menu
-    useEffect(() => {
-      if (!showDuplicateMenu) return;
-
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          duplicateMenuRef.current &&
-          event.target &&
-          !duplicateMenuRef.current.contains(event.target as Node)
-        ) {
-          setShowDuplicateMenu(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [showDuplicateMenu]);
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`bg-gray-800 p-4 rounded-md border ${
-          isDragging ? "border-blue-500" : "border-gray-700"
-        }`}
-      >
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="flex items-start gap-3 flex-1">
-            {/* Selection checkbox for bulk operations */}
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => onToggleSelection(feature.id)}
-              className="mt-1 flex-shrink-0"
-              aria-label={`Select ${feature.name}`}
-              onClick={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
-            />
-            {/* Position badge - Display 1-based index (position + 1) for user clarity */}
-            {feature.position !== undefined && (
-              <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-gray-900 bg-blue-400 rounded-full flex-shrink-0">
-                {feature.position + 1}
-              </span>
-            )}
-            {/* Drag handle */}
-            <button
-              {...attributes}
-              {...listeners}
-              className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded"
-              title="Drag to reorder or move between columns"
-              aria-label={`Drag ${feature.name} to reorder or move between columns`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="w-4 h-4"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            <div className="space-y-1 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="font-semibold text-base text-white">{feature.name}</div>
-                {rowErrors[feature.id] && (
-                  <p className="text-xs text-red-400">{rowErrors[feature.id]}</p>
-                )}
-                {savedIds.has(feature.id) && <p className="text-xs text-green-400">Saved</p>}
-              </div>
-              <div className="text-xs text-gray-400 clamp-2">{feature.description}</div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
-                  {laneLabel}
-                </span>
-                <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                    isPublished
-                      ? "bg-green-500/10 text-green-300 border-green-500/40"
-                      : "bg-gray-700 text-gray-300 border-gray-600"
-                  }`}
-                >
-                  {isPublished ? "Published" : "Unpublished"}
-                </span>
-                {isFeatured && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/40">
-                    Featured
-                  </span>
-                )}
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
-                  {categoryLabel}
-                </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-200 border border-gray-600">
-                  {positionLabel}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => toggleRowExpanded(feature.id)}
-              className="px-3 py-1.5 rounded bg-gray-700 text-gray-100 border border-gray-600 hover:border-blue-400 transition-colors text-xs whitespace-nowrap"
-            >
-              {isExpanded ? "Collapse" : "Expand"}
-            </button>
-            <button
-              onClick={() => onEdit(feature)}
-              className="px-3 py-1.5 rounded bg-blue-600/80 text-white hover:bg-blue-500 text-xs transition-colors whitespace-nowrap"
-            >
-              Edit details
-            </button>
-            <div className="relative" ref={duplicateMenuRef}>
-              <button
-                onClick={() => setShowDuplicateMenu(!showDuplicateMenu)}
-                className="px-3 py-1.5 rounded bg-gray-700 text-gray-100 border border-gray-600 hover:border-green-400 transition-colors text-xs whitespace-nowrap w-full"
-              >
-                Duplicate
-              </button>
-              {showDuplicateMenu && (
-                <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg z-10 p-2 space-y-1">
-                  <button
-                    onClick={() => {
-                      onDuplicate(feature, 1);
-                      setShowDuplicateMenu(false);
-                    }}
-                    disabled={feature.column === 1}
-                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Gold
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDuplicate(feature, 2);
-                      setShowDuplicateMenu(false);
-                    }}
-                    disabled={feature.column === 2}
-                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Elite
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDuplicate(feature, 3);
-                      setShowDuplicateMenu(false);
-                    }}
-                    disabled={feature.column === 3}
-                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Platinum
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        {isExpanded && (
-          <div className="mt-3 pt-3 border-t border-gray-700 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor={`package-lane-${feature.id}`}
-                  className="text-xs text-gray-400 block mb-1"
-                >
-                  Package Lane
-                </label>
-                <select
-                  id={`package-lane-${feature.id}`}
-                  value={feature.column ?? ""}
-                  onChange={(e) =>
-                    handlePackagePlacement(
-                      feature,
-                      e.target.value ? (Number(e.target.value) as 1 | 2 | 3) : undefined
-                    )
-                  }
-                  className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
-                >
-                  <option value="">Not in Packages</option>
-                  <option value="1">Gold Package (Column 1)</option>
-                  <option value="2">Elite Package (Column 2)</option>
-                  <option value="3">Platinum Package (Column 3)</option>
-                </select>
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={isPublished}
-                    onChange={(e) => handlePublishToggle(feature, e.target.checked)}
-                  />
-                  <span>Publish to A La Carte</span>
-                </label>
-                {isPublished && (
-                  <div className="mt-2">
-                    <label
-                      htmlFor={`alacarte-price-${feature.id}`}
-                      className="text-xs text-gray-400 block mb-1"
-                    >
-                      A La Carte Price
-                    </label>
-                    <input
-                      id={`alacarte-price-${feature.id}`}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={priceInputs[feature.id] ?? (feature.alaCartePrice ?? "").toString()}
-                      onChange={(e) =>
-                        setPriceInputs((prev) => ({
-                          ...prev,
-                          [feature.id]: e.target.value,
-                        }))
-                      }
-                      onBlur={() => handlePriceBlur(feature)}
-                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm text-gray-200 font-semibold">You Pick 2 (Pick2) Fields</p>
-                  {canEditPick2Fields ? (
-                    <p className="text-xs text-gray-500">
-                      These fields are stored on{" "}
-                      <span className="text-gray-400">ala_carte_options</span>.
-                    </p>
-                  ) : (
-                    <p className="text-xs text-gray-500">
-                      Enable Pick2 to create a hidden A La Carte record.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-gray-200">
-                    <input
-                      type="checkbox"
-                      checked={pick2EligibleDraft}
-                      disabled={false}
-                      onChange={(e) => savePick2Eligible(e.target.checked)}
-                    />
-                    <span>Pick2 Eligible</span>
-                  </label>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor={`pick2-sort-${feature.id}`}
-                    className="text-xs text-gray-400 block mb-1"
-                  >
-                    Pick2 Sort
-                  </label>
-                  <input
-                    id={`pick2-sort-${feature.id}`}
-                    type="number"
-                    min="0"
-                    step="1"
-                    inputMode="numeric"
-                    value={pick2SortDraft}
-                    disabled={!canEditPick2Fields}
-                    onChange={(e) => setPick2SortDraft(e.target.value)}
-                    onBlur={() => savePick2Sort(pick2SortDraft)}
-                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
-                    placeholder="(optional)"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor={`pick2-shortvalue-${feature.id}`}
-                    className="text-xs text-gray-400 block mb-1"
-                  >
-                    Short Value (single line)
-                  </label>
-                  <input
-                    id={`pick2-shortvalue-${feature.id}`}
-                    type="text"
-                    value={pick2ShortValueDraft}
-                    disabled={!canEditPick2Fields}
-                    onChange={(e) => setPick2ShortValueDraft(e.target.value)}
-                    onBlur={() => savePick2ShortValue(pick2ShortValueDraft)}
-                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
-                    placeholder="e.g. $599"
-                  />
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-400 block mb-1">Highlights (up to 2 lines)</p>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={pick2Highlight1Draft}
-                      disabled={!canEditPick2Fields}
-                      onChange={(e) => setPick2Highlight1Draft(e.target.value)}
-                      onBlur={() => savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)}
-                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
-                      placeholder="Highlight line 1"
-                    />
-                    <input
-                      type="text"
-                      value={pick2Highlight2Draft}
-                      disabled={!canEditPick2Fields}
-                      onChange={(e) => setPick2Highlight2Draft(e.target.value)}
-                      onBlur={() => savePick2Highlights(pick2Highlight1Draft, pick2Highlight2Draft)}
-                      className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white w-full disabled:opacity-50"
-                      placeholder="Highlight line 2"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Drag overlay component
-  const DragOverlayItem: React.FC<{ feature: ProductFeature }> = ({ feature }) => (
-    <div className="bg-gray-800 p-4 rounded-md border border-blue-500 shadow-lg">
-      <div className="flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="w-4 h-4 text-gray-500"
-        >
-          <path
-            fillRule="evenodd"
-            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z"
-            clipRule="evenodd"
-          />
-        </svg>
-        <span className="font-semibold text-gray-200 text-sm">{feature.name}</span>
-      </div>
-    </div>
-  );
-
-  // Droppable column component
-  interface DroppableColumnProps {
-    columnId: "unassigned" | "packages" | "alacarte";
-    children: React.ReactNode;
-  }
-
-  const DroppableColumn: React.FC<DroppableColumnProps> = ({ columnId, children }) => {
-    const { isOver, setNodeRef } = useDroppable({
-      id: `lane-${columnId}`,
-    });
-
-    return (
-      <div
-        ref={setNodeRef}
-        className={`min-h-[200px] transition-colors rounded-lg ${
-          isOver ? "bg-blue-500/10 ring-2 ring-blue-500/50" : ""
-        }`}
-      >
-        {children}
-      </div>
-    );
-  };
+  const handlePriceInputChange = useCallback((featureId: string, value: string) => {
+    setPriceInputs((prev) => ({
+      ...prev,
+      [featureId]: value,
+    }));
+  }, []);
 
   if (isLoading) {
     return <p className="text-gray-400">Loading Product Hub...</p>;
   }
+
+  const renderProductCard = (feature: ProductFeature) => {
+    const option = alaCarteMap.get(feature.id);
+    return (
+      <SortableProductCard
+        key={feature.id}
+        feature={feature}
+        option={option}
+        onEdit={handleEditDetails}
+        onDuplicate={handleDuplicateToLane}
+        isSelected={selectedIds.has(feature.id)}
+        onToggleSelection={toggleSelection}
+        isExpanded={expandedIds.has(feature.id)}
+        onToggleExpanded={toggleRowExpanded}
+        rowError={rowErrors[feature.id]}
+        isSaved={savedIds.has(feature.id)}
+        priceInputValue={priceInputs[feature.id]}
+        onPackagePlacement={handlePackagePlacement}
+        onPublishToggle={handlePublishToggle}
+        onPriceInputChange={handlePriceInputChange}
+        onPriceBlur={handlePriceBlur}
+        onPick2EligibleChange={handlePick2EligibleChange}
+        onPick2SortBlur={handlePick2SortBlur}
+        onPick2ShortValueBlur={handlePick2ShortValueBlur}
+        onPick2HighlightsBlur={handlePick2HighlightsBlur}
+      />
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -2004,115 +1612,20 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       </div>
 
       {packages && onRecommendedChange && typeof recommendedSelection === "string" ? (
-        <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <p className="text-sm text-gray-300 font-semibold">Recommended package</p>
-              <p className="text-xs text-gray-500">
-                Choose which package shows the recommended badge to customers.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              {isSavingRecommended ? (
-                <span className="text-blue-400 flex items-center gap-1">Saving...</span>
-              ) : null}
-              {recommendedMessage && !isSavingRecommended ? (
-                <span className="text-green-400 flex items-center gap-1">Saved</span>
-              ) : null}
-            </div>
-          </div>
-          <div
-            className="flex flex-wrap gap-4 mt-3"
-            role="radiogroup"
-            aria-label="Recommended package"
-          >
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input
-                type="radio"
-                name="recommended-package-product-hub"
-                checked={recommendedSelection === elitePackageId}
-                disabled={!elitePackageId || Boolean(isSavingRecommended)}
-                onChange={() => elitePackageId && onRecommendedChange(elitePackageId)}
-                className="form-radio h-4 w-4 text-blue-500"
-              />
-              Elite
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input
-                type="radio"
-                name="recommended-package-product-hub"
-                checked={recommendedSelection === platinumPackageId}
-                disabled={!platinumPackageId || Boolean(isSavingRecommended)}
-                onChange={() => platinumPackageId && onRecommendedChange(platinumPackageId)}
-                className="form-radio h-4 w-4 text-blue-500"
-              />
-              Platinum
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input
-                type="radio"
-                name="recommended-package-product-hub"
-                checked={recommendedSelection === goldPackageId}
-                disabled={!goldPackageId || Boolean(isSavingRecommended)}
-                onChange={() => goldPackageId && onRecommendedChange(goldPackageId)}
-                className="form-radio h-4 w-4 text-blue-500"
-              />
-              Gold
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input
-                type="radio"
-                name="recommended-package-product-hub"
-                checked={recommendedSelection === "none"}
-                disabled={Boolean(isSavingRecommended)}
-                onChange={() => onRecommendedChange("none")}
-                className="form-radio h-4 w-4 text-blue-500"
-              />
-              None
-            </label>
-          </div>
-          {recommendedError ? (
-            <p className="text-red-400 text-sm mt-2">{recommendedError}</p>
-          ) : null}
-        </div>
+        <RecommendedPackagePanel
+          packages={packages}
+          recommendedSelection={recommendedSelection}
+          isSavingRecommended={isSavingRecommended}
+          recommendedMessage={recommendedMessage}
+          recommendedError={recommendedError}
+          onRecommendedChange={onRecommendedChange}
+          elitePackageId={elitePackageId}
+          platinumPackageId={platinumPackageId}
+          goldPackageId={goldPackageId}
+        />
       ) : null}
 
-      <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <p className="text-sm text-gray-300 font-semibold">Duplicates</p>
-            <p className="text-xs text-gray-500">
-              Grouped by normalized name. Drift flags highlight price, cost, warranty, and
-              description length mismatches.
-            </p>
-          </div>
-          <span className="text-xs text-gray-400">{possibleDuplicates.length} group(s)</span>
-        </div>
-        {possibleDuplicates.length === 0 ? (
-          <p className="text-xs text-gray-500 mt-2">No possible duplicates detected.</p>
-        ) : (
-          <div className="mt-3 space-y-2">
-            {possibleDuplicates.map((group) => (
-              <div
-                key={group.key}
-                className="rounded-md border border-white/10 bg-black/30 px-3 py-2"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-200 font-semibold">{group.name}</p>
-                  <span className="text-xs text-gray-400">{group.count} items</span>
-                </div>
-                {group.mismatches.length > 0 ? (
-                  <p className="text-xs text-red-300 mt-1">
-                    Drift: {group.mismatches.join(", ")}
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500 mt-1">No drift detected.</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <DuplicatesPanel possibleDuplicates={possibleDuplicates} />
 
       <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4">
         <div className="flex items-start justify-between flex-wrap gap-2">
@@ -2401,136 +1914,28 @@ export const ProductHub: React.FC<ProductHubProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-sm text-gray-300">
-        <label className="flex items-center gap-2">
-          <span className="text-gray-400">Package lane</span>
-          <select
-            value={packageLaneFilter}
-            onChange={(e) => setPackageLaneFilter(e.target.value as typeof packageLaneFilter)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="all">All</option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
-            <option value="none">Not in packages</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
-          <span className="text-gray-400">Published</span>
-          <select
-            value={publishFilter}
-            onChange={(e) => setPublishFilter(e.target.value as typeof publishFilter)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="all">All</option>
-            <option value="published">Published</option>
-            <option value="unpublished">Unpublished</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
-          <span className="text-gray-400">Featured</span>
-          <select
-            value={featuredFilter}
-            onChange={(e) => setFeaturedFilter(e.target.value as typeof featuredFilter)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="all">All</option>
-            <option value="featured">Featured</option>
-            <option value="not-featured">Not featured</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
-          <span className="text-gray-400">A La Carte Category</span>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-          >
-            <option value="all">All</option>
-            <option value="featured">Featured</option>
-            <option value="1">Column 1 (Gold)</option>
-            <option value="2">Column 2 (Elite)</option>
-            <option value="3">Column 3 (Platinum)</option>
-            <option value="unplaced">Not placed</option>
-          </select>
-        </label>
-      </div>
+      <FilterBar
+        packageLaneFilter={packageLaneFilter}
+        publishFilter={publishFilter}
+        featuredFilter={featuredFilter}
+        categoryFilter={categoryFilter}
+        onPackageLaneFilterChange={setPackageLaneFilter}
+        onPublishFilterChange={setPublishFilter}
+        onFeaturedFilterChange={setFeaturedFilter}
+        onCategoryFilterChange={setCategoryFilter}
+      />
 
-      <div className="flex flex-wrap items-center gap-2 text-sm bg-gray-900/60 border border-gray-800 rounded px-3 py-2">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            ref={bulkSelectRef}
-            checked={allFilteredSelected}
-            onChange={(e) => handleSelectAll(e.target.checked)}
-            aria-label="Select all filtered products"
-          />
-          <span className="text-gray-300">{selectedIds.size} selected</span>
-        </label>
-        <span className="text-gray-600">|</span>
-        <button
-          className="px-2 py-1 rounded bg-green-600 text-white disabled:opacity-50"
-          onClick={() => bulkPublishToggle(true)}
-          disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-label="Publish selected items"
-        >
-          Publish
-        </button>
-        <button
-          className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-          onClick={() => bulkPublishToggle(false)}
-          disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-label="Unpublish selected items"
-        >
-          Unpublish
-        </button>
-        <button
-          className="px-2 py-1 rounded bg-blue-700 text-white disabled:opacity-50"
-          onClick={() => bulkSetFeatured(true)}
-          disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-label="Mark selected items as featured"
-        >
-          Set Featured
-        </button>
-        <button
-          className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-          onClick={() => bulkSetFeatured(false)}
-          disabled={isBulkWorking || selectedFeatures.length === 0}
-          aria-label="Remove featured from selected items"
-        >
-          Remove Featured
-        </button>
-        <label className="flex items-center gap-2 text-gray-300">
-          Category:
-          <select
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white"
-            aria-label="Set A La Carte category for selected items"
-            onChange={(e) => {
-              const val = e.target.value;
-              if (!val) return;
-              if (val === "none") {
-                bulkSetCategory(null);
-              } else {
-                bulkSetCategory(Number(val) as 1 | 2 | 3);
-              }
-            }}
-            defaultValue=""
-            disabled={isBulkWorking || selectedFeatures.length === 0}
-          >
-            <option value="" disabled>
-              Set category...
-            </option>
-            <option value="1">Gold</option>
-            <option value="2">Elite</option>
-            <option value="3">Platinum</option>
-            <option value="none">Not placed</option>
-          </select>
-        </label>
-        <span className="text-xs text-gray-500">
-          Duplicate to lane creates a separate record. Use only when placements must diverge.
-        </span>
-      </div>
+      <BulkActionsBar
+        bulkSelectRef={bulkSelectRef}
+        allFilteredSelected={allFilteredSelected}
+        selectedCount={selectedIds.size}
+        selectedFeatureCount={selectedFeatures.length}
+        isBulkWorking={isBulkWorking}
+        onSelectAll={handleSelectAll}
+        onBulkPublish={bulkPublishToggle}
+        onBulkSetFeatured={bulkSetFeatured}
+        onBulkSetCategory={bulkSetCategory}
+      />
 
       {error && (
         <p className="text-red-400 bg-red-500/10 border border-red-500/30 p-3 rounded">{error}</p>
@@ -2606,20 +2011,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-3">
-                  {unassignedFeatures.map((feature) => {
-                    const option = alaCarteMap.get(feature.id);
-                    return (
-                      <SortableProductCard
-                        key={feature.id}
-                        feature={feature}
-                        option={option}
-                        onEdit={handleEditDetails}
-                        onDuplicate={handleDuplicateToLane}
-                        isSelected={selectedIds.has(feature.id)}
-                        onToggleSelection={toggleSelection}
-                      />
-                    );
-                  })}
+                  {unassignedFeatures.map(renderProductCard)}
                 </div>
               </SortableContext>
             </DroppableColumn>
@@ -2646,20 +2038,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
-                    {packagesFeatures.map((feature) => {
-                      const option = alaCarteMap.get(feature.id);
-                      return (
-                        <SortableProductCard
-                          key={feature.id}
-                          feature={feature}
-                          option={option}
-                          onEdit={handleEditDetails}
-                          onDuplicate={handleDuplicateToLane}
-                          isSelected={selectedIds.has(feature.id)}
-                          onToggleSelection={toggleSelection}
-                        />
-                      );
-                    })}
+                    {packagesFeatures.map(renderProductCard)}
                   </div>
                 </SortableContext>
               )}
@@ -2685,20 +2064,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
-                    {alaCarteFeatures.map((feature) => {
-                      const option = alaCarteMap.get(feature.id);
-                      return (
-                        <SortableProductCard
-                          key={feature.id}
-                          feature={feature}
-                          option={option}
-                          onEdit={handleEditDetails}
-                          onDuplicate={handleDuplicateToLane}
-                          isSelected={selectedIds.has(feature.id)}
-                          onToggleSelection={toggleSelection}
-                        />
-                      );
-                    })}
+                    {alaCarteFeatures.map(renderProductCard)}
                   </div>
                 </SortableContext>
               )}
@@ -2713,4 +2079,3 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     </div>
   );
 };
-

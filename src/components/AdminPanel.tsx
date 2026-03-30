@@ -897,20 +897,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
   };
 
   return (
-    <main className="container mx-auto px-4 py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">
-      <div className="mb-6">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-teko tracking-wider uppercase text-gray-100">
+    <main className="container mx-auto px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6 max-w-screen-2xl flex-grow flex flex-col">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-teko tracking-wider uppercase text-gray-100">
           Admin Control Panel
         </h2>
       </div>
 
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 md:p-8 flex-grow">
+      <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-5 md:p-6 lg:p-8 flex-grow">
         {/* Tab Navigation */}
-        <div className="mb-6 border-b border-gray-700">
-          <div className="flex gap-1">
+        <div className="mb-4 sm:mb-6 border-b border-gray-700 overflow-x-auto">
+          <div className="flex gap-1 min-w-max">
             <button
               onClick={() => handleTabChange("features")}
-              className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold font-teko text-base sm:text-lg tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "features"
                   ? "text-blue-400 border-b-2 border-blue-400"
                   : "text-gray-400 hover:text-gray-300"
@@ -929,7 +929,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </button>
             <button
               onClick={() => handleTabChange("alacarte")}
-              className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold font-teko text-base sm:text-lg tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "alacarte"
                   ? "text-blue-400 border-b-2 border-blue-400"
                   : "text-gray-400 hover:text-gray-300"
@@ -939,7 +939,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </button>
             <button
               onClick={() => handleTabChange("product-hub")}
-              className={`px-6 py-3 font-semibold font-teko text-lg tracking-wider transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold font-teko text-base sm:text-lg tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "product-hub"
                   ? "text-blue-400 border-b-2 border-blue-400"
                   : "text-gray-400 hover:text-gray-300"
@@ -971,8 +971,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
           />
         ) : (
           <>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-teko tracking-wider text-white">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4 sm:mb-6">
+              <h3 className="text-xl sm:text-2xl font-teko tracking-wider text-white">
                 Manage Package Features
               </h3>
               <div className="flex items-center gap-3">
@@ -1015,11 +1015,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
               .
             </p>
 
-            <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="bg-gray-900/40 border border-gray-700 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <p className="text-sm text-gray-300 font-semibold">Recommended package</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[11px] sm:text-xs text-gray-500">
                     Choose which package shows the recommended badge to customers.
                   </p>
                 </div>
@@ -1086,16 +1086,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
             </div>
 
             <div className="border-t border-gray-700 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xl font-teko tracking-wider text-gray-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <h4 className="text-lg sm:text-xl font-teko tracking-wider text-gray-300">
                   Features by Column
                 </h4>
-                <div className="flex items-center gap-4">
-                  <p className="text-sm text-gray-500">
-                    Drag using the  handle to reorder or move between columns  AND/OR controls the
-                    connector to the NEXT item below (hidden on the last item)
-                  </p>
-                </div>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Drag using the handle to reorder or move between columns. AND/OR controls the
+                  connector to the NEXT item below (hidden on the last item)
+                </p>
               </div>
               {isLoading && <p className="text-gray-400">Loading features...</p>}
               {error && (
@@ -1118,11 +1116,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataUpdate }) => {
                       </p>
                     ) : (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                           {COLUMNS.map(({ num, label }) => (
                             <div
                               key={num}
-                              className="p-4 rounded-lg border bg-gray-900/30 border-gray-700 relative max-h-[70vh] overflow-y-auto"
+                              className="p-3 sm:p-4 rounded-lg border bg-gray-900/30 border-gray-700 relative max-h-[50vh] sm:max-h-[60vh] lg:max-h-[70vh] overflow-y-auto"
                               data-testid={`column-${num}`}
                             >
                               <div className="sticky top-0 z-10 bg-gray-900/90 backdrop-blur-sm pb-2">

@@ -64,14 +64,12 @@ const App: React.FC = () => {
   const [pendingPrint, setPendingPrint] = useState<null | {
     returnToMenu: boolean;
   }>(null);
-  const { selectedPackage, setSelectedPackage, handleSelectPackage } = usePackageSelection();
+  const { selectedPackage, handleSelectPackage } = usePackageSelection();
   const [customPackageItems, setCustomPackageItems] = useState<AlaCarteOption[]>([]);
-  // pick2SelectedIds state moved to usePick2Selection hook
   const [viewingDetailItem, setViewingDetailItem] = useState<
     ProductFeature | AlaCarteOption | null
   >(null);
   const [currentPage, setCurrentPage] = useState<Page>("packages");
-  // previousPageRef moved to usePick2Selection hook
   const [priceOverrides, setPriceOverrides] = useState<PriceOverrides>({});
   const [isAdminView, setIsAdminView] = useState(false);
   // Viewport and layout detection (iPad, kiosk, landscape, build badge)
@@ -325,16 +323,13 @@ const App: React.FC = () => {
     pick2SelectedIds,
     setPick2SelectedIds,
     pick2MaxSelections,
-    pick2Enabled,
     pick2BundlePrice,
-    pick2SelectedItems,
     pick2SummaryText,
     pick2NeedsAttention,
     pick2BundleActive,
     pick2BundleCost,
     pick2Selection,
     pick2EligibleItems,
-    pick2EligibleIdSet,
     pick2RecommendedPairs,
     showPick2Tab,
     handleTogglePick2Item,
@@ -409,7 +404,6 @@ const App: React.FC = () => {
   }, [curatedSelectedItems, baseAddonPricesById]);
 
   const {
-    curatedAlaCarteOptions,
     mainPageAddons,
     availableAlaCarteItems,
     handleToggleAlaCarteItem,

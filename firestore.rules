@@ -6,51 +6,71 @@ rules_version = '2';
 // ---------------------------------------
 // It didn't, and that was the problem. With no rules file in the repo, the rules
 // lived only in the Firebase Console where nobody reviewed them — and they were
-// left wide open. Verified against the LIVE project on 2026-07-29 with nothing but
-// the public browser API key (the one embedded in every copy of the app bundle):
+// left wide open. Verified against the LIVE project on 2026-07-29 using nothing but
+// the public browser API key that ships inside every copy of the app bundle:
 //
 //   GET /documents/packages           -> HTTP 200,  3 documents returned
 //   GET /documents/features           -> HTTP 200, 15 documents returned
 //   GET /documents/ala_carte_options  -> HTTP 200
 //
-// `packages` documents carry `cost` and `price`. That is dealer cost on aftermarket
-// product, readable by anyone on the internet who pulls the key out of the JS bundle
-// — which takes about ten seconds and requires no login. A write probe returned 400
-// (malformed request) rather than 403 (permission denied), meaning the request passed
-// the rules layer; write access was therefore NOT ruled out. No actual write was
-// attempted against production to confirm it.
+// `packages` documents carry `cost` and `price` — dealer cost on aftermarket product,
+// readable by anyone on the internet who pulls the key out of the JS bundle, which
+// takes about ten seconds and requires no login. A write probe returned 400 (malformed)
+// rather than 403 (permission denied), meaning the request passed the rules layer, so
+// write access was NOT ruled out. No actual write was attempted against production.
 //
-// A Firebase browser API key is PUBLIC BY DESIGN — Google's own guidance is that it
-// is not a secret. It identifies the project; it does not protect it. These rules are
-// what protects it. That is why the exposure was never about the key.
+// A Firebase browser API key is PUBLIC BY DESIGN — Google's own guidance is that it is
+// not a secret. It identifies the project; it does not protect it. These rules are what
+// protects it. The exposure was never about the key.
 //
-// WHY `request.auth != null` IS THE RIGHT BAR — AND WHY IT DOESN'T BREAK THE FLOOR
-// --------------------------------------------------------------------------------
-// The app never touches Firestore anonymously in production. `src/App.tsx:251` gates
-// every load behind `if (user || isDemoMode)`, and `src/App.tsx:745` sends anyone
-// without a user to the Login view. The only anonymous path is demo mode, driven by
-// `VITE_FORCE_DEMO_MODE` (`src/firebase.ts:54`) — which is NOT set on the live Cloud
-// Run service and does NOT appear in the deployed bundle (both checked 2026-07-29).
-// Note that when demo mode IS on, `src/firebase.ts:78` skips Firebase init entirely,
-// so it never reads Firestore either way.
+// THE ANONYMOUS PATH THIS FILE'S FIRST DRAFT GOT WRONG
+// ----------------------------------------------------
+// An earlier version of this comment claimed "the only anonymous path is
+// VITE_FORCE_DEMO_MODE, which is not set in production." THAT WAS FALSE, and two
+// independent adversarial reviews caught it. There are TWO demo paths:
 //
-// Net: every legitimate read and write already arrives authenticated. Requiring auth
-// matches what the app does today rather than changing it.
+//   1. VITE_FORCE_DEMO_MODE (env var)  -> firebase.ts:74 skips Firebase init entirely,
+//      so it genuinely never touches Firestore. Not set on the live service.
+//   2. `?demo=1` in the URL (or the hash-query form) -> App.tsx:91-113. On the LIVE
+//      deployment the env config IS present, so Firebase fully initializes, `user` is
+//      null, `isDemoMode` is true, and App.tsx:251 fires loadData() -> real getDocs()
+//      against all three collections with request.auth == null.
 //
-// Reads AND writes are both gated: the app writes from the same authenticated
-// screens it reads from — ProductHub `addDoc` (`ProductHub.tsx:872`) and the admin
-// save/reorder paths in `src/data.ts` (`setDoc`, `updateDoc`, `writeBatch`).
+// So today, anyone visiting `<live-url>/?demo=1` is served real catalog data including
+// dealer cost, through a completely ordinary app path. Deploying these rules CLOSES
+// that leak: the reads are denied, caught at data.ts:222-229, and demo mode falls back
+// to MOCK data — which is what a demo should have been showing all along.
 //
-// If per-role admin restrictions are wanted later, tighten `write` on these three
-// collections to a custom claim (e.g. `request.auth.token.admin == true`) — but that
-// needs claims minted on the accounts first, so it is deliberately NOT done here.
+// WHY REQUIRING AUTH DOES NOT LOCK OUT THE SALES FLOOR
+// ----------------------------------------------------
+// Every real rep session is authenticated. App.tsx:745 routes anyone without a user to
+// the Login screen, and the only data-loading effect (App.tsx:249-254) is dependency-
+// gated on [user, isDemoMode] — it cannot fire during the auth-loading window, because
+// `user` is only ever set by the onAuthStateChanged callback (App.tsx:150-152), by which
+// point the SDK holds a token. Verified: no module-scope Firestore calls, no service
+// worker, no prefetch, no onSnapshot, no collectionGroup.
+//
+// COLLECTIONS ARE ENUMERATED DELIBERATELY — AND THE FIRST DRAFT WAS ONE SHORT
+// ---------------------------------------------------------------------------
+// A blanket `match /{document=**}` allow would silently grant access to any collection
+// added later. The cost of enumerating is that a MISSED collection breaks the app, and
+// the first draft missed two. Both reviews independently found them:
+//
+//   app_config/pick2  — read on EVERY authenticated session (data.ts:246 via App.tsx:240)
+//                       and written from 6 admin save paths (data.ts:279, ProductHub).
+//                       Denying it fails SILENTLY: data.ts:268-271 falls back to
+//                       MOCK_PICK2_CONFIG (hardcoded enabled:true, price:995), so reps
+//                       would present mock pricing on a customer-facing menu with no
+//                       visible error and a passing smoke test. Worse than a crash.
+//   pick2_events      — telemetry writes from usePick2Selection (telemetry.ts:32).
+//                       Fails soft (console.warn) but loses all Pick2 telemetry.
+//
+// If you add a collection, add it here in the same commit.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // The three collections the app actually uses. Enumerated on purpose: a blanket
-    // match would silently grant access to any collection added later, which is how
-    // this kind of thing goes wrong a second time.
+    // Catalog — read and written by authenticated reps and the admin panels.
     match /packages/{doc} {
       allow read, write: if request.auth != null;
     }
@@ -63,8 +83,23 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // Everything else is denied outright. New collections must be added above
-    // deliberately, with a decision about who can read them.
+    // Pick-2 configuration. Read on every authenticated session; written by admins.
+    match /app_config/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Pick-2 telemetry. WRITE-ONLY on purpose: the client only ever appends events
+    // (telemetry.ts:32) and never reads them back, so there is no reason to expose
+    // customer interaction history to a signed-in browser session.
+    match /pick2_events/{doc} {
+      allow read: if false;
+      allow write: if request.auth != null;
+    }
+
+    // Everything else is denied outright. This is already Firestore's default; it is
+    // stated explicitly so the intent is visible. Note that Firestore ORs all matching
+    // allow expressions — a `if false` here can never revoke what the blocks above
+    // grant, so this is documentation, not an override.
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// Firestore security rules for the Priority Lexus Aftermarket Menu.
+//
+// WHY THIS FILE EXISTS (added 2026-07-29)
+// ---------------------------------------
+// It didn't, and that was the problem. With no rules file in the repo, the rules
+// lived only in the Firebase Console where nobody reviewed them — and they were
+// left wide open. Verified against the LIVE project on 2026-07-29 with nothing but
+// the public browser API key (the one embedded in every copy of the app bundle):
+//
+//   GET /documents/packages           -> HTTP 200,  3 documents returned
+//   GET /documents/features           -> HTTP 200, 15 documents returned
+//   GET /documents/ala_carte_options  -> HTTP 200
+//
+// `packages` documents carry `cost` and `price`. That is dealer cost on aftermarket
+// product, readable by anyone on the internet who pulls the key out of the JS bundle
+// — which takes about ten seconds and requires no login. A write probe returned 400
+// (malformed request) rather than 403 (permission denied), meaning the request passed
+// the rules layer; write access was therefore NOT ruled out. No actual write was
+// attempted against production to confirm it.
+//
+// A Firebase browser API key is PUBLIC BY DESIGN — Google's own guidance is that it
+// is not a secret. It identifies the project; it does not protect it. These rules are
+// what protects it. That is why the exposure was never about the key.
+//
+// WHY `request.auth != null` IS THE RIGHT BAR — AND WHY IT DOESN'T BREAK THE FLOOR
+// --------------------------------------------------------------------------------
+// The app never touches Firestore anonymously in production. `src/App.tsx:251` gates
+// every load behind `if (user || isDemoMode)`, and `src/App.tsx:745` sends anyone
+// without a user to the Login view. The only anonymous path is demo mode, driven by
+// `VITE_FORCE_DEMO_MODE` (`src/firebase.ts:54`) — which is NOT set on the live Cloud
+// Run service and does NOT appear in the deployed bundle (both checked 2026-07-29).
+// Note that when demo mode IS on, `src/firebase.ts:78` skips Firebase init entirely,
+// so it never reads Firestore either way.
+//
+// Net: every legitimate read and write already arrives authenticated. Requiring auth
+// matches what the app does today rather than changing it.
+//
+// Reads AND writes are both gated: the app writes from the same authenticated
+// screens it reads from — ProductHub `addDoc` (`ProductHub.tsx:872`) and the admin
+// save/reorder paths in `src/data.ts` (`setDoc`, `updateDoc`, `writeBatch`).
+//
+// If per-role admin restrictions are wanted later, tighten `write` on these three
+// collections to a custom claim (e.g. `request.auth.token.admin == true`) — but that
+// needs claims minted on the accounts first, so it is deliberately NOT done here.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The three collections the app actually uses. Enumerated on purpose: a blanket
+    // match would silently grant access to any collection added later, which is how
+    // this kind of thing goes wrong a second time.
+    match /packages/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /features/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /ala_carte_options/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Everything else is denied outright. New collections must be added above
+    // deliberately, with a decision about who can read them.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

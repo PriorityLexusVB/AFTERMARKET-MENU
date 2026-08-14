@@ -19,6 +19,10 @@ const port = await new Promise((resolve, reject) => {
   server.listen(0, "127.0.0.1", () => {
     const address = server.address();
     const reservedPort = typeof address === "object" && address ? address.port : null;
+    if (!Number.isInteger(reservedPort) || reservedPort < 1 || reservedPort > 65535) {
+      server.close(() => reject(new Error("Unable to reserve a numeric fail-closed test port")));
+      return;
+    }
     server.close((error) => (error ? reject(error) : resolve(reservedPort)));
   });
 });

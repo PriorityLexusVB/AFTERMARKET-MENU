@@ -19,6 +19,8 @@ permissions:
 
 jobs:
   build-and-test:
+    # A dedicated WebKit dispatch builds inside its own Playwright web server.
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_webkit_ipad_smoke }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -54,6 +56,7 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     needs: build-and-test
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_webkit_ipad_smoke }}
     permissions:
       contents: read
 
@@ -95,7 +98,6 @@ jobs:
 
   e2e-webkit-ipad-smoke:
     runs-on: ubuntu-latest
-    needs: build-and-test
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_webkit_ipad_smoke }}
     permissions:
       contents: read

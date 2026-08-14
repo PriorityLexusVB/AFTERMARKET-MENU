@@ -14,17 +14,40 @@ export const validateRuntimeArtifacts = (distDir) => {
   const indexPath = path.join(distDir, "index.html");
   const buildInfoPath = path.join(distDir, "build-info.json");
 
-  if (!fs.existsSync(distDir) || !fs.statSync(distDir).isDirectory()) {
-    return ["dist directory is missing"];
+  try {
+    if (!fs.statSync(distDir).isDirectory()) return ["dist path is not a directory"];
+  } catch (error) {
+    return [
+      error?.code === "ENOENT" ? "dist directory is missing" : "dist directory is unreadable",
+    ];
   }
 
-  if (!fs.existsSync(indexPath) || !fs.statSync(indexPath).isFile()) {
-    errors.push("dist/index.html is missing");
-  }
+  const isReadableFile = (filePath, missingMessage, unreadableMessage) => {
+    try {
+      if (!fs.statSync(filePath).isFile()) {
+        errors.push(missingMessage);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      errors.push(error?.code === "ENOENT" ? missingMessage : unreadableMessage);
+      return false;
+    }
+  };
 
-  if (!fs.existsSync(buildInfoPath) || !fs.statSync(buildInfoPath).isFile()) {
-    errors.push("dist/build-info.json is missing");
-  } else {
+  const indexIsReadable = isReadableFile(
+    indexPath,
+    "dist/index.html is missing",
+    "dist/index.html is unreadable"
+  );
+
+  const buildInfoIsReadable = isReadableFile(
+    buildInfoPath,
+    "dist/build-info.json is missing",
+    "dist/build-info.json is unreadable"
+  );
+
+  if (buildInfoIsReadable) {
     try {
       const buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, "utf8"));
       const keys = Object.keys(buildInfo).sort();
@@ -42,7 +65,7 @@ export const validateRuntimeArtifacts = (distDir) => {
     }
   }
 
-  if (fs.existsSync(indexPath) && fs.statSync(indexPath).isFile()) {
+  if (indexIsReadable) {
     try {
       const indexHtml = fs.readFileSync(indexPath, "utf8");
       const references = [
@@ -62,12 +85,21 @@ export const validateRuntimeArtifacts = (distDir) => {
 
         const assetPath = path.resolve(distDir, reference);
         const distPrefix = `${path.resolve(distDir)}${path.sep}`;
-        if (
-          !assetPath.startsWith(distPrefix) ||
-          !fs.existsSync(assetPath) ||
-          !fs.statSync(assetPath).isFile()
-        ) {
+        if (!assetPath.startsWith(distPrefix)) {
           errors.push(`referenced asset is missing: ${reference}`);
+          continue;
+        }
+
+        try {
+          if (!fs.statSync(assetPath).isFile()) {
+            errors.push(`referenced asset is missing: ${reference}`);
+          }
+        } catch (error) {
+          errors.push(
+            error?.code === "ENOENT"
+              ? `referenced asset is missing: ${reference}`
+              : `referenced asset is unreadable: ${reference}`
+          );
         }
       }
     } catch {

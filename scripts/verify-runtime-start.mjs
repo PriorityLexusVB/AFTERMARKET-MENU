@@ -37,6 +37,10 @@ const reservePort = () =>
     server.listen(0, "127.0.0.1", () => {
       const address = server.address();
       const port = typeof address === "object" && address ? address.port : null;
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        server.close(() => reject(new Error("Unable to reserve a numeric runtime-smoke port")));
+        return;
+      }
       server.close((error) => (error ? reject(error) : resolve(port)));
     });
   });
@@ -144,7 +148,7 @@ try {
   );
 
   const identity = await buildInfo.json();
-  if (typeof identity.sha !== "string" || !/^[0-9a-f]{7,40}$/i.test(identity.sha)) {
+  if (typeof identity.sha !== "string" || !/^[0-9a-f]{40}$/i.test(identity.sha)) {
     throw new Error("build-info SHA is missing or invalid");
   }
   if (typeof identity.time !== "string" || Number.isNaN(Date.parse(identity.time))) {

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { validateRuntimeArtifacts } from "./artifact-contract.js";
 
 const SHA = "654470fae2b659e8d50e454bb887513c1d6ee84f";
@@ -25,6 +25,7 @@ const makeDist = () => {
 };
 
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const directory of tempDirectories) fs.rmSync(directory, { recursive: true, force: true });
   tempDirectories.clear();
 });
@@ -37,6 +38,15 @@ describe("runtime artifact contract", () => {
   it("rejects an absent dist directory", () => {
     const missing = path.join(os.tmpdir(), `aftermarket-missing-${Date.now()}`);
     expect(validateRuntimeArtifacts(missing)).toContain("dist directory is missing");
+  });
+
+  it("returns a controlled error for an unreadable or broken dist mount", () => {
+    const accessError = Object.assign(new Error("access denied"), { code: "EACCES" });
+    vi.spyOn(fs, "statSync").mockImplementationOnce(() => {
+      throw accessError;
+    });
+
+    expect(validateRuntimeArtifacts("inaccessible-dist")).toEqual(["dist directory is unreadable"]);
   });
 
   it("rejects missing referenced assets", () => {

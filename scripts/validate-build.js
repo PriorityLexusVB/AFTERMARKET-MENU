@@ -100,6 +100,90 @@ function validateDistDirectory() {
   return true;
 }
 
+function listFilesRecursive(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
+    return entry.isDirectory() ? listFilesRecursive(entryPath) : [entryPath];
+  });
+}
+
+/**
+ * Ensures production artifacts do not publish source maps or source-map references.
+ */
+function validateNoPublicSourceMaps() {
+  const distPath = path.join(projectRoot, "dist");
+
+  logInfo("Validating source-map policy...");
+
+  try {
+    const files = listFilesRecursive(distPath);
+    const mapFiles = files.filter((file) => file.endsWith(".map"));
+    const mapReferences = files.filter((file) => {
+      if (!file.endsWith(".js") && !file.endsWith(".css")) return false;
+      return fs.readFileSync(file, "utf8").includes("sourceMappingURL=");
+    });
+
+    if (mapFiles.length > 0 || mapReferences.length > 0) {
+      for (const file of [...mapFiles, ...mapReferences]) {
+        logError(`Public source-map artifact/reference: ${path.relative(distPath, file)}`);
+      }
+      return false;
+    }
+
+    logSuccess("No public source maps or source-map references found");
+    return true;
+  } catch (error) {
+    logError(`Error validating source-map policy: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Requires a usable SHA/time release identity in every deployable build.
+ */
+function validateBuildInfo() {
+  const buildInfoPath = path.join(projectRoot, "dist", "build-info.json");
+
+  logInfo("Validating build identity...");
+
+  try {
+    if (!fs.existsSync(buildInfoPath)) {
+      logError("dist/build-info.json not found");
+      return false;
+    }
+
+    const buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, "utf8"));
+    const buildInfoKeys = Object.keys(buildInfo).sort();
+    const shaIsValid = typeof buildInfo.sha === "string" && /^[0-9a-f]{40}$/i.test(buildInfo.sha);
+    const parsedTime = new Date(buildInfo.time);
+    const timeIsValid =
+      typeof buildInfo.time === "string" &&
+      !Number.isNaN(parsedTime.getTime()) &&
+      parsedTime.toISOString() === buildInfo.time;
+
+    if (buildInfoKeys.join(",") !== "sha,time") {
+      logError("build-info.json must contain only sha and time");
+      return false;
+    }
+
+    if (!shaIsValid) {
+      logError("build-info.json must contain a full 40-character hexadecimal Git SHA");
+      return false;
+    }
+
+    if (!timeIsValid) {
+      logError("build-info.json must contain a valid ISO build time");
+      return false;
+    }
+
+    logSuccess(`Build identity present for SHA ${buildInfo.sha}`);
+    return true;
+  } catch (error) {
+    logError(`Error validating build identity: ${error.message}`);
+    return false;
+  }
+}
+
 // Constants
 const BYTES_PER_MB = 1024 * 1024;
 const LARGE_FILE_THRESHOLD_MB = 1;
@@ -199,6 +283,8 @@ function main() {
 
   // Run validations
   if (!validateDistDirectory()) allValid = false;
+  if (!validateNoPublicSourceMaps()) allValid = false;
+  if (!validateBuildInfo()) allValid = false;
   if (!checkBuildSize()) allValid = false;
   if (!validateIndexHtml()) allValid = false;
 

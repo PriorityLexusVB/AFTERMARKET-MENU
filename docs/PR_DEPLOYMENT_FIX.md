@@ -1,5 +1,8 @@
 # Cloud Run Deployment Fix & A La Carte Admin UI
 
+> Historical record only. Use [CLOUD_DEPLOYMENT.md](./CLOUD_DEPLOYMENT.md) for the current release
+> lifecycle. The public `/__debug` endpoint described below has been retired.
+
 ## Summary
 
 This document provides a comprehensive overview of the changes made to fix Cloud Run deployment failures and implement admin UI for managing A La Carte options.
@@ -20,7 +23,6 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 **Solutions Implemented**:
 
 1. **Environment Variable Validation** (`scripts/validate-env-vars.js`)
-
    - Runs automatically before every build (`prebuild` script)
    - Detects leading/trailing whitespace in variable names
    - Validates PORT is a number between 1-65535
@@ -29,7 +31,6 @@ This document provides a comprehensive overview of the changes made to fix Cloud
    - Validates Firebase configuration format
 
 2. **Enhanced Server Startup** (`index.js`)
-
    - Early PORT validation with clear error messages
    - Comprehensive startup logging (Node version, PORT, working directory)
    - Warning messages for missing build artifacts (GCSFuse detection)
@@ -37,7 +38,7 @@ This document provides a comprehensive overview of the changes made to fix Cloud
      - `EADDRINUSE` - Port already in use
      - `EACCES` - Permission denied (ports < 1024)
    - Graceful shutdown on SIGTERM/SIGINT (Cloud Run compatibility)
-   - Health check endpoints: `/health-check` and `/__debug`
+   - Health and release readbacks: `/health-check` and `/build-info.json`
 
 3. **Tests** (`src/test/server.test.ts`)
    - PORT validation edge cases
@@ -46,11 +47,11 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 
 **Verification**:
 
--  Server starts successfully on localhost:8080
--  Health check endpoint returns `ok`
--  Debug endpoint shows dist artifacts present
--  Env validation correctly detects invalid PORT
--  Graceful shutdown on signals
+- Server starts successfully on localhost:8080
+- Health check endpoint returns `ok`
+- Build identity endpoint shows the deployed SHA and build time
+- Env validation correctly detects invalid PORT
+- Graceful shutdown on signals
 
 ### Issue #2: A La Carte Options Not in Admin Panel
 
@@ -67,7 +68,6 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 **Solutions Implemented**:
 
 1. **A La Carte Form** (`src/components/AlaCarteForm.tsx`)
-
    - Full CRUD form for creating/editing A La Carte options
    - Fields match ProductFeature structure:
      - Name, price, cost, description
@@ -81,7 +81,6 @@ This document provides a comprehensive overview of the changes made to fix Cloud
    - Consistent styling with FeatureForm
 
 2. **A La Carte Admin Panel** (`src/components/AlaCarteAdminPanel.tsx`)
-
    - Drag-and-drop interface matching features panel
    - Column-based organization (Gold/Elite/Platinum/Popular Add-ons)
    - Cross-column drag support
@@ -92,13 +91,11 @@ This document provides a comprehensive overview of the changes made to fix Cloud
    - Rollback on errors
 
 3. **Admin Panel Tabs** (`src/components/AdminPanel.tsx`)
-
    - Added tab navigation between Features and A La Carte
    - Consistent UI/UX between both sections
    - Maintains state when switching tabs
 
 4. **Data Layer Functions** (`src/data.ts`)
-
    - `addAlaCarteOption(optionData)` - Create new option
    - `updateAlaCarteOption(id, optionData)` - Update existing option
    - `batchUpdateAlaCartePositions(updates)` - Bulk position updates
@@ -111,10 +108,10 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 
 **Verification**:
 
--  UI compiles with TypeScript strict mode
--  Follows same pattern as feature management
--  All admin capabilities available (drag-drop, pricing, columns, etc.)
--  Consistent with existing sale setup patterns
+- UI compiles with TypeScript strict mode
+- Follows same pattern as feature management
+- All admin capabilities available (drag-drop, pricing, columns, etc.)
+- Consistent with existing sale setup patterns
 
 ## Files Changed
 
@@ -134,123 +131,58 @@ This document provides a comprehensive overview of the changes made to fix Cloud
 - `src/test/server.test.ts` - PORT validation tests
 - `docs/PR_DEPLOYMENT_FIX.md` - This documentation
 
-## Cloud Run Deployment Guide
+## Historical deployment notes
 
-### Environment Variables
+The original manual Cloud Run deployment instructions have been retired. They bypassed the current
+GitHub-to-Cloud-Build trigger, encouraged Firebase values on a command line, and did not prove which
+revision received traffic.
 
-#### Build-Time Variables (use `--set-build-env-vars`)
-
-Required for Vite to bundle values into the client code:
-
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-
-### Example Deploy Command
-
-```bash
-gcloud run deploy aftermarket-menu \
-  --source . \
-  --region us-west1 \
-  --allow-unauthenticated \
-   --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT,VITE_FIREBASE_STORAGE_BUCKET=YOUR_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER,VITE_FIREBASE_APP_ID=YOUR_APP_ID"
-```
-
-### Pre-Deployment Checklist
-
-1. **Validate Environment Variables**
-
-   ```bash
-   npm run validate-env
-   ```
-
-2. **Run Tests**
-
-   ```bash
-   npm run test:run
-   ```
-
-3. **Type Check**
-
-   ```bash
-   npm run typecheck
-   ```
-
-4. **Build Locally**
-
-   ```bash
-   npm run build
-   ```
-
-5. **Test Server Locally**
-   ```bash
-   npm start
-   # Visit http://localhost:8080/health-check
-   # Visit http://localhost:8080/__debug
-   ```
-
-### GCSFuse Volume Mount Considerations
-
-If using GCSFuse to mount a volume to `/app/dist`:
-
-** Warning**: This will overwrite build artifacts!
-
-**Options**:
-
-1. **Store build artifacts in GCS bucket** - Ensure the mounted volume contains the built `dist` directory
-2. **Use different mount path** - Mount to `/app/storage` instead of `/app/dist`
-3. **Don't mount dist** - If you don't need persistent storage for the app build
-
-**Detection**: The server now logs warnings if `dist` directory is missing or empty, which may indicate a GCSFuse mount issue.
+Use [CLOUD_DEPLOYMENT.md](CLOUD_DEPLOYMENT.md) for the current immutable release lifecycle and
+[CLOUD_RUN_TROUBLESHOOTING.md](CLOUD_RUN_TROUBLESHOOTING.md) for read-only failure classification.
+Provider configuration, Firebase values, revisions, and traffic remain explicit approval gates.
 
 ## Verification Results
 
 ### Automated Tests
 
--  All 169 unit tests passing
--  TypeScript strict mode passes (0 errors)
--  CodeQL security scan passes (0 vulnerabilities)
--  Build succeeds with validation checks
+- All 169 unit tests passing
+- TypeScript strict mode passes (0 errors)
+- CodeQL security scan passes (0 vulnerabilities)
+- Build succeeds with validation checks
 
 ### Manual Verification
 
--  Server starts on localhost:8080
--  `/health-check` returns 200 OK
--  `/__debug` shows dist artifacts
--  Env validation detects invalid PORT
--  Graceful shutdown works
+- Server starts on localhost:8080
+- `/health-check` returns 200 OK
+- `/build-info.json` shows the deployed SHA and build time
+- Env validation detects invalid PORT
+- Graceful shutdown works
 
 ### Admin UI Verification
 
--  A La Carte tab appears in Admin Panel
--  Can add new A La Carte options
--  Can edit existing options
--  Drag-and-drop reordering works
--  Column assignments work
--  AND/OR connectors toggle correctly
--  Form validation prevents invalid data
+- A La Carte tab appears in Admin Panel
+- Can add new A La Carte options
+- Can edit existing options
+- Drag-and-drop reordering works
+- Column assignments work
+- AND/OR connectors toggle correctly
+- Form validation prevents invalid data
 
 ## Future Enhancements
 
 While not in scope for this PR, consider these improvements:
 
 1. **Admin UI Enhancements**
-
    - Delete functionality for A La Carte options
    - Bulk import/export
    - Image uploader integration (currently URL-based)
 
 2. **Server Improvements**
-
    - Liveness probe endpoint
    - Metrics endpoint for monitoring
    - Request logging middleware
 
 3. **Deployment**
-
    - Automated deployment on merge to main
    - Staging environment
    - Blue-green deployment strategy
@@ -270,7 +202,7 @@ While not in scope for this PR, consider these improvements:
 
 For issues or questions:
 
-1. Check the [/\_\_debug](http://localhost:8080/__debug) endpoint for diagnostics
+1. Check the [`/build-info.json`](http://localhost:8080/build-info.json) release identity
 2. Review server logs for startup errors
 3. Run `npm run validate-env` to check configuration
 4. Refer to [CLOUD_DEPLOYMENT.md](./CLOUD_DEPLOYMENT.md) for detailed guidance

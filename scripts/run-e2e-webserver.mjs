@@ -4,13 +4,18 @@ const baseEnv = {
   ...process.env,
   VITE_FORCE_DEMO_MODE: "true",
 };
+const npmExecPath = process.env.npm_execpath;
+
+if (!npmExecPath) {
+  throw new Error("npm_execpath is required to run the deterministic E2E web server");
+}
 
 const run = (command, args, { waitForExit } = { waitForExit: true }) => {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: "inherit",
       env: baseEnv,
-      shell: process.platform === "win32",
+      windowsHide: true,
     });
 
     if (!waitForExit) {
@@ -27,12 +32,13 @@ const run = (command, args, { waitForExit } = { waitForExit: true }) => {
   });
 };
 
+const runNpm = (args, options) => run(process.execPath, [npmExecPath, ...args], options);
+
 try {
-  await run("npm", ["run", "build"], { waitForExit: true });
+  await runNpm(["run", "build"], { waitForExit: true });
 
   // Start preview and keep the process alive (Playwright will manage lifecycle).
-  const preview = await run(
-    "npm",
+  const preview = await runNpm(
     ["run", "preview", "--", "--host", "0.0.0.0", "--port", "4173", "--strictPort"],
     { waitForExit: false }
   );

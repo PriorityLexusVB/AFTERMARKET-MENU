@@ -4,6 +4,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
 import { logStartupDiagnostics, startMemoryMonitoring } from "./utils/runtime-checks.js";
+import { validateRuntimeArtifacts } from "./utils/artifact-contract.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,11 +34,26 @@ if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
 }
 
 // Paths
-const distDir = path.join(__dirname, "dist");
+const runtimeContractTestDist =
+  process.env.RUNTIME_CONTRACT_TEST === "1" ? process.env.RUNTIME_CONTRACT_TEST_DIST_DIR : null;
+const distDir = runtimeContractTestDist
+  ? path.resolve(runtimeContractTestDist)
+  : path.join(__dirname, "dist");
 const publicDir = path.join(__dirname, "public");
 const manifestPath = path.join(distDir, "manifest.webmanifest");
 const publicManifestPath = path.join(publicDir, "manifest.webmanifest");
-const buildInfoPath = path.join(distDir, "build-info.json");
+const artifactErrors = validateRuntimeArtifacts(distDir);
+const allowIncompleteArtifacts = process.env.NODE_ENV === "test";
+
+if (artifactErrors.length > 0 && !allowIncompleteArtifacts) {
+  console.error("[BOOT ERROR] Validated production build artifacts are required:");
+  for (const error of artifactErrors) console.error(`[BOOT ERROR]   - ${error}`);
+  process.exit(1);
+}
+
+if (artifactErrors.length > 0) {
+  console.warn("[BOOT TEST WARNING] Incomplete build artifacts allowed only for NODE_ENV=test");
+}
 
 let manifestPayload = null;
 let lastManifestLoadAttempt = 0;
@@ -86,7 +102,18 @@ console.log("[BOOT] PORT:", port);
 console.log("[BOOT] Working directory:", process.cwd());
 
 const app = express();
-app.use(express.json());
+app.disable("x-powered-by");
+
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), geolocation=(), microphone=()");
+  next();
+});
+
+// Express defaults to 100 KB; keep the current limit explicit and reviewable.
+app.use(express.json({ limit: "100kb" }));
 
 // Simple path traversal guard
 app.use((req, res, next) => {
@@ -107,20 +134,10 @@ const pwaAssetLimiter = rateLimit({
   skip: (req) => req.path === "/health-check" || req.path === "/ping",
 });
 
-const debugLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 const indexHtml = path.join(distDir, "index.html");
 const distExists = fs.existsSync(distDir);
 const indexExists = fs.existsSync(indexHtml);
-const buildInfoExists = fs.existsSync(buildInfoPath);
 let indexHtmlPayload = null;
-let debugDistFiles = [];
-let buildInfoPayload = null;
 
 if (indexExists) {
   try {
@@ -130,39 +147,14 @@ if (indexExists) {
   }
 }
 
-if (distExists) {
-  try {
-    debugDistFiles = fs.readdirSync(distDir);
-  } catch (error) {
-    console.warn("[BOOT WARNING] Failed to read dist directory:", error);
-  }
-}
-
-if (buildInfoExists) {
-  try {
-    const raw = fs.readFileSync(buildInfoPath, "utf8");
-    buildInfoPayload = JSON.parse(raw);
-  } catch (error) {
-    console.warn("[BOOT WARNING] Failed to read build-info.json:", error);
-  }
-}
-
 console.log("[BOOT] distDir:", distDir, "exists?", distExists);
 console.log("[BOOT] indexHtml:", indexHtml, "exists?", indexExists);
-
-if (!distExists || !indexExists) {
-  console.warn("[BOOT WARNING] Build artifacts missing - app will show splash page");
-  console.warn("[BOOT WARNING] This may indicate:");
-  console.warn("[BOOT WARNING]   1. Build step was skipped or failed");
-  console.warn("[BOOT WARNING]   2. GCS volume mount overwrote /app/dist");
-  console.warn("[BOOT WARNING]   3. Incorrect working directory");
-}
 
 const splashHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Aftermarket Menu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/></head>
 <body style="font-family:sans-serif;padding:24px"><h2>Aftermarket Menu</h2>
 <p>Build artifacts are not present yet.</p>
-<p>We added <code>gcp-build</code> and <code>prestart</code> so Cloud Run builds before start.</p></body></html>`;
+<p>The container image must include artifacts produced and validated by <code>gcp-build</code>.</p></body></html>`;
 
 // Never cache HTML (SPA)
 app.use((req, res, next) => {
@@ -222,24 +214,24 @@ app.use(
 // Explicitly block direct index.html access to avoid traversal fallbacks
 app.get("/index.html", (_req, res) => res.status(404).send("Not Found"));
 
+// The former debug response exposed runtime and file inventory. Keep the path reserved as 404.
+app.get("/__debug", (_req, res) => res.status(404).send("Not Found"));
+
+// Build SHA/time is the minimal public release readback. Never cache it.
+app.get("/build-info.json", (_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
 // Static app build (js/css/assets)
 if (distExists) app.use(express.static(distDir));
+
+// Do not let a missing build-info artifact fall through to the SPA shell.
+app.get("/build-info.json", (_req, res) => res.status(404).send("Not Found"));
 
 // Cloud Run/K8s-friendly probes
 app.get("/health-check", (_req, res) => res.status(200).send("ok"));
 app.get("/ping", (_req, res) => res.status(200).send("pong"));
-
-// Debug endpoint to confirm build presence
-app.get("/__debug", debugLimiter, (_req, res) => {
-  res.json({
-    node: process.version,
-    distExists,
-    indexExists,
-    buildInfoExists,
-    buildInfo: buildInfoPayload,
-    distFiles: debugDistFiles,
-  });
-});
 
 // SPA fallback
 app.get("*", (_req, res) => {
@@ -256,7 +248,6 @@ app.get("*", (_req, res) => {
 const server = app.listen(portNum, () => {
   console.log(`[BOOT]  Aftermarket Menu listening on :${portNum}`);
   console.log(`[BOOT]  Health check available at /health-check`);
-  console.log(`[BOOT]  Debug info available at /__debug`);
   console.log(`[BOOT]  Server ready to accept connections`);
 });
 

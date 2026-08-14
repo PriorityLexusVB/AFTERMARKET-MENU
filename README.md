@@ -4,19 +4,19 @@ This is an interactive digital menu for customers to explore and select vehicle 
 
 ## Features
 
--  **Interactive Package Selection** - Browse and select from curated protection packages
--  **A La Carte Options** - Build custom packages with individual options
--  **Analytics Tracking** - Comprehensive Firebase Analytics integration
--  **Image Upload** - Firebase Storage integration for product images
--  **Admin Panel** - Secure admin interface for managing products
--  **Type-Safe** - Full TypeScript with strict mode enabled
--  **Tested** - Comprehensive test coverage with Vitest
--  **Responsive** - Mobile-friendly design with Tailwind CSS
--  **Popular Add-Ons** come from A La Carte Featured (Column 4)
+- **Interactive Package Selection** - Browse and select from curated protection packages
+- **A La Carte Options** - Build custom packages with individual options
+- **Analytics Tracking** - Comprehensive Firebase Analytics integration
+- **Image Upload** - Firebase Storage integration for product images
+- **Admin Panel** - Secure admin interface for managing products
+- **Type-Safe** - Full TypeScript with strict mode enabled
+- **Tested** - Comprehensive test coverage with Vitest
+- **Responsive** - Mobile-friendly design with Tailwind CSS
+- **Popular Add-Ons** come from A La Carte Featured (Column 4)
 
 ## Install on iPad
 
-Open the site in Safari on iPad  tap **Share**  **Add to Home Screen**  launch from the new icon for a full-screen experience.
+Open the site in Safari on iPad tap **Share** **Add to Home Screen** launch from the new icon for a full-screen experience.
 
 ## Local Development Setup
 
@@ -26,23 +26,17 @@ Clone this repository to your local machine.
 
 ### Step 2: Install Dependencies
 
-Navigate to the project directory and install the required npm packages.
+Navigate to the project directory and install the exact locked dependency graph.
 
 ```bash
-npm install
+npm ci
 ```
 
-### Step 3: Set Up Environment Variables
+### Step 3: Use the local Firebase Emulator Suite
 
-The application connects to a Firebase project. You need to provide Firebase credentials.
-
-1.  Create a new file named `.env.local` in the root of the project.
-2.  Copy the contents of `.env.example` into your new `.env.local` file.
-3.  Fill in the values with your actual Firebase Web App configuration. All variables must start with `VITE_` to be recognized by the application.
-
-#### Option: Use the Firestore Emulator (recommended for local dev)
-
-This repo supports an emulator-first workflow so you can run the app locally without real Firebase credentials.
+Local development is emulator-only by default. Do not copy an actual Firebase Web App configuration
+into `.env.local` or connect this checkout to a cloud project without explicit provider approval and
+exact project-identity evidence.
 
 1. Start the emulators:
 
@@ -68,21 +62,19 @@ Notes:
 - The seed data lives in `tools/firestore-seed.json` and is loaded by `tools/seed-emulator.ts`.
 - `npm run emulators:seed` waits for the Firestore emulator port to be reachable before seeding.
 
-#### Optional: Firebase MCP Server (AI tooling)
+#### Firebase MCP boundary
 
-Firebase CLI includes an MCP server that some AI tools can connect to for Firebase operations (query Firestore, validate rules, manage Auth users, etc.). This is optional and not required for running the app.
-
-- Start it via VS Code task: `Firebase: MCP Server (stdio)`
-- Or via npm: `npm run firebase:mcp`
-
-Important: the MCP server uses your Firebase CLI credentials. Prefer using it against emulators or a dedicated non-production Firebase project.
+The optional Firebase MCP uses the active Firebase CLI credentials and can reach Firestore, rules,
+and Auth. It is not part of the normal local workflow. Do not start it against any cloud project
+without explicit approval, an exact non-production project identity, least-privilege credentials,
+and a read/write scope review. Never infer the target from cached CLI state.
 
 ### Step 4: Run the Development Server
 
-Start the Vite development server.
+Start the Vite development server in emulator mode.
 
 ```bash
-npm run dev
+npm run dev:emulator
 ```
 
 The application will now be running on your local machine, typically at `http://localhost:5173`.
@@ -97,6 +89,7 @@ npm run dev:emulator # Start dev server connected to Firebase emulators
 npm run build        # Build for production
 npm run preview      # Preview production build locally
 npm run typecheck    # Run TypeScript type checking
+npm run verify       # Run the complete local merge gate
 ```
 
 ### Firebase Emulators
@@ -125,202 +118,53 @@ npm run lint:fix     # Auto-fix what ESLint can
 ### Deployment
 
 ```bash
-npm start            # Build and start production server
+npm start            # Start the prebuilt production server
 npm run serve        # Start production server (requires build)
 ```
 
+`npm start` and `npm run serve` never compile the application. They serve the already validated
+`dist` directory from the container image.
+
 ## CI / GitHub Actions notes
 
-### Optional E2E secrets
+### Firebase isolation
 
-The CI workflow runs Playwright E2E tests. If Firebase secrets are present, CI exports them as `VITE_FIREBASE_*` for the E2E run; if not, CI runs E2E in demo/mock mode.
-
-Optional GitHub repository secrets used by [.github/workflows/ci.yml](.github/workflows/ci.yml):
-
-- `FIREBASE_API_KEY`
-- `FIREBASE_AUTH_DOMAIN`
-- `TEST_FIRESTORE_PROJECT_ID`
-- `FIREBASE_STORAGE_BUCKET`
-- `FIREBASE_MESSAGING_SENDER_ID`
-- `FIREBASE_APP_ID`
+The CI workflow runs Playwright E2E in demo/mock mode only. It does not read Firebase repository
+secrets or connect the test build to a cloud Firebase project.
 
 ## Deploying to Google Cloud Run
 
-### The Problem: Build-Time vs. Run-Time Variables
+Production uses the existing GitHub-to-Cloud-Build trigger. Do not run an ad hoc local deploy or
+place Firebase values on a command line. Cloud Build must provide all six required
+`VITE_FIREBASE_*` names while `npm run gcp-build` creates the image. Git metadata or the provider
+`COMMIT_SHA` value must supply the same full 40-character commit. The build validator then requires
+that exact SHA, an ISO build time, and no public source maps.
 
-A Vite application like this one needs its environment variables (the ones starting with `VITE_`) to be available when it's **built**, not just when it's running. This is because Vite bundles the values directly into the final JavaScript files. The standard Google Cloud Run deployment process sets variables for run-time, which is too late for the build step, causing the build to fail or the app to run in a broken state.
+Cloud Run starts with `node index.js` and serves that immutable build. Runtime `VITE_*` values do
+not modify an already built bundle.
 
-### The Solution: Pass Variables to the Build
+See [docs/CLOUD_DEPLOYMENT.md](docs/CLOUD_DEPLOYMENT.md) for the authoritative release gates,
+readback, and rollback sequence.
 
-The correct way to fix this is to explicitly tell Google Cloud Build (which `gcloud run deploy` uses behind the scenes) to use your variables during the build.
+## Firebase backend boundary
 
-### Step 1: Deploy from Your Local Machine
+The production Firebase project, web app, Firestore rules, Auth providers/users, Storage rules,
+Analytics, credentials, and data are existing protected resources. Do not create, link, copy, or
+modify any of them from this README. Every provider, Auth, rules, credential, or production-data
+change requires explicit approval plus exact project-identity and rollback evidence.
 
-Run the following command from your project's root directory. This single command will build your application with the correct variables and deploy it to Cloud Run.
+For ordinary development, use the local Firebase Emulator Suite described below. If a separate
+non-production cloud project is ever approved, it must have a distinct project identity, test-only
+data, least-privilege rules, separate credentials, and a documented deletion/rollback owner. Never
+point local seed or migration scripts at production by inference.
 
-**Replace all the `YOUR_...` placeholders with your actual keys and settings.**
+The application data model uses these collections:
 
-```bash
-gcloud run deploy YOUR_SERVICE_NAME \
-  --source . \
-  --region YOUR_REGION \
-  --allow-unauthenticated \
-  --set-build-env-vars="VITE_FIREBASE_API_KEY=YOUR_API_KEY,VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID=YOUR_APP_ID"
-```
+- `features`: product description, pricing, ordering, connector, warranty, and presentation fields;
+- `ala_carte_options`: standalone option pricing and presentation fields;
+- `packages`: tier pricing, presentation fields, and legacy-reference metadata.
 
-**Command Breakdown:**
-
-- `YOUR_SERVICE_NAME`: The name you want for your Cloud Run service (e.g., `lexus-aftermarket-menu`).
-- `YOUR_REGION`: The Google Cloud region where you want to host your service (e.g., `us-central1`).
-- `--set-build-env-vars`: This is the crucial flag. It takes a comma-separated list of key-value pairs and makes them available to the build process.
-
-After running this command, your application should be successfully deployed and fully functional.
-This application is configured to be deployed to Google Cloud Run.
-
-### Step 1: Build the Application
-
-First, build the application for production.
-
-```bash
-npm run build
-```
-
-### Step 2: Deploy to Google Cloud Run
-
-Deploy the application using the `gcloud` CLI. You will be prompted to set up the service during the first deployment.
-
-```bash
-gcloud run deploy
-```
-
-### Step 3: Configure Environment Variables in Google Cloud Run
-
-After deploying, you need to configure the environment variables in the Google Cloud Run service.
-
-1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2.  Navigate to your Cloud Run service.
-3.  Click **"Edit & Deploy New Revision"**.
-4.  Under the **"Variables & Secrets"** tab, add the following environment variables with their corresponding values from your Firebase project:
-    - `VITE_FIREBASE_API_KEY`
-    - `VITE_FIREBASE_AUTH_DOMAIN`
-    - `VITE_FIREBASE_PROJECT_ID`
-    - `VITE_FIREBASE_STORAGE_BUCKET`
-    - `VITE_FIREBASE_MESSAGING_SENDER_ID`
-    - `VITE_FIREBASE_APP_ID`
-5.  Click **"Deploy"** to apply the changes.
-
-## Firebase Backend Setup
-
-This guide walks you through setting up a Firebase project to act as a dynamic backend.
-
-### Step 1: Create a Firebase Project
-
-1.  Go to the [Firebase Console](https://console.firebase.google.com/).
-2.  Click **"Add project"**.
-3.  Give your project a name (e.g., `lexus-menu-backend`).
-4.  Disable Google Analytics if not needed and click **"Create project"**.
-
-### Step 2: Set Up Firestore Database
-
-1.  In your project dashboard, go to **Build > Firestore Database**.
-2.  Click **"Create database"**.
-3.  Start in **Production mode**.
-4.  Select a Cloud Firestore location and click **"Enable"**.
-
-### Step 3: Create Data Collections
-
-In the **Data** tab within Firestore, create three collections: `features`, `ala_carte_options`, and `packages`.
-
-### Step 4: Add Your Product Data
-
-Structure your documents as follows:
-
-#### `features` collection
-
-- **name** (string): "Graphene Ceramic Coating"
-- **price** (number): 1295
-- **cost** (number): 600
-- **description** (string): "A liquid polymer that bonds..."
-- **points** (array): ["Extreme Gloss & Shine"]
-- **useCases** (array): ["Water beads and rolls off..."]
-- **warranty** (string): "7-Year Limited Warranty"
-
-#### `ala_carte_options` collection
-
-- **name** (string): "Suntek Standard PPF"
-- **price** (number): 995
-- **cost** (number): 450
-- **description** (string): "Partial hood and fender coverage..."
-- **points** (array): ["Protects key impact zones"]
-- **isNew** (boolean): true
-- **warranty** (string): "10-Year Limited Warranty"
-
-#### `packages` collection
-
-- **name** (string): "Platinum"
-- **price** (number): 3995
-- **cost** (number): 1900
-- **isRecommended** (boolean): true
-- **tier_color** (string): "blue-400"
-- **legacyFeatureIds** (array, optional): Backup of removed `featureIds` (not used for rendering; retained only for reference).
-
-### Step 5: Configure Firestore Security Rules
-
-In the **Rules** tab of Firestore, use these rules to allow public reading and authenticated writing.
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-  }
-}
-```
-
-### Step 6: Set Up Authentication
-
-1.  Go to **Build > Authentication** and click **"Get started"**.
-2.  Enable the **Email/Password** sign-in provider.
-3.  In the **Users** tab, click **"Add user"** to create an account for the admin panel.
-
-### Step 7: Enable Firebase Analytics
-
-1. Go to **Build > Analytics** and click **"Get started"**.
-2. Follow the prompts to enable Google Analytics for your Firebase project.
-3. Analytics will automatically track user interactions and custom events.
-
-### Step 8: Set Up Firebase Storage
-
-1. Go to **Build > Storage** and click **"Get started"**.
-2. Start in **Production mode** (you'll configure rules later).
-3. Select a Cloud Storage location and click **"Done"**.
-
-#### Configure Storage Security Rules
-
-In the **Rules** tab of Storage, use these rules for secure image uploads:
-
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /product_images/{imageId} {
-      allow read: if true;
-      allow write: if request.auth != null
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-  }
-}
-```
-
-### Step 9: Get App Credentials for `.env` file
-
-1. Go to **Project Settings** (gear icon).
-2. Under **"Your apps"**, click the Web icon (`</>`) to register a web app if you haven't already.
-3. Find the `firebaseConfig` object. Copy the key-value pairs from this object into your `.env.local` file as shown in the "Local Development Setup" section.
+Treat this list as a source schema summary, not authorization to create or edit provider data.
 
 ## Testing
 
@@ -374,48 +218,16 @@ describe("MyComponent", () => {
 });
 ```
 
-## Feature Position & Connector Migration
+## Feature position and connector migration
 
-The application supports feature ordering and connector configuration (AND/OR) between features in packages. This requires a one-time migration for existing data.
+The repository retains migration utilities for feature ordering and connectors. They can write
+Firestore and are not routine setup commands. Before any use, first prove the migration is still
+needed against the exact approved project, review its dry-run output, record a backup/rollback plan,
+and obtain explicit production-data and credential approval. A successful local dry run does not
+authorize the write.
 
-### Running the Migration
-
-1. **Set up credentials**: Export the path to your Firebase Admin SDK service account JSON file:
-
-   ```bash
-   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-   ```
-
-2. **Run dry-run first** (recommended): This will show what changes would be made without actually modifying data:
-
-   ```bash
-   npm run migrate:feature-positions -- --dry-run
-   ```
-
-3. **Run the migration**:
-   ```bash
-   npm run migrate:feature-positions
-   ```
-
-### Migration Details
-
-- Creates a backup JSON file before making any changes (stored in `./backup/`)
-- Assigns sequential positions (0-indexed) to features within each column
-- Sets `connector='AND'` for all features that don't have a connector set
-- Idempotent: Safe to run multiple times
-- Uses chunked batch writes (max 500 per batch) with retry logic
-
-### Required Secrets for CI
-
-For the CI pipeline to run E2E tests with Firebase, you'll need to configure these secrets in your repository:
-
-- `FIREBASE_SERVICE_ACCOUNT_JSON` - Service account JSON for Firebase Admin SDK
-- `TEST_FIRESTORE_PROJECT_ID` - Firebase project ID for testing
-- `FIREBASE_API_KEY` - Firebase Web API key
-- `FIREBASE_AUTH_DOMAIN` - Firebase Auth domain
-- `FIREBASE_STORAGE_BUCKET` - Firebase Storage bucket
-- `FIREBASE_MESSAGING_SENDER_ID` - Firebase Messaging sender ID
-- `FIREBASE_APP_ID` - Firebase App ID
+CI secret names are centrally managed repository settings. Do not add, rotate, print, or copy secret
+values from this README; changes require separate secrets/permissions approval.
 
 ## Analytics
 
@@ -501,15 +313,10 @@ Example: A "Ceramic Coating" feature appearing in all three tiers would need thr
 
 #### Removing legacy `featureIds`
 
-Legacy package `featureIds` are no longer used for rendering. Run the migration script to back them up to `legacyFeatureIds` and remove the old field:
-
-```bash
-# From Cloud Shell
-gcloud config set project <your-project-id>
-npm install
-# DRY_RUN=1 by default; set to 0 to commit
-DRY_RUN=0 npm run migrate:packages:remove-featureids
-```
+Legacy package `featureIds` are no longer used for rendering. The repository retains a removal
+migration, but its need and deployed-data state are not established by this README. Do not run it
+against any cloud project without the migration approval, exact project identity, dry-run evidence,
+backup, and rollback gates above.
 
 ### Guest View Rendering
 
@@ -525,15 +332,15 @@ For local development without connecting to production Firebase, you can use the
 
 ### Prerequisites
 
-1. Install the Firebase CLI: `npm install -g firebase-tools`
-2. Initialize Firebase in your project: `firebase init emulators`
-3. Select Firestore emulator when prompted
+1. Install the locked repository dependencies: `npm ci`
+2. Confirm the repository CLI version: `npx --no-install firebase --version`
+3. Use the checked-in emulator configuration; do not run a new global or floating CLI install
 
 ### Starting the Emulator
 
 ```bash
 # Start Firebase emulators (from project root)
-firebase emulators:start
+npm run emulators:start
 
 # The Firestore emulator typically runs at localhost:8081
 # The Emulator UI will be available at http://localhost:4000
@@ -579,18 +386,11 @@ The seed data in `tools/firestore-seed.json` includes:
 
 ### Running the App with Emulator
 
-After seeding, run the development server pointing to the emulator project:
+After seeding, start the preconfigured emulator development mode. It supplies the demo project ID
+for this process without writing cloud configuration into `.env.local`.
 
 ```bash
-# Add emulator project ID to .env.local (preserves existing content)
-# If you don't have a .env.local file, create one first
-echo "VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu" >> .env.local
-
-# Alternatively, manually add the following line to your .env.local file:
-# VITE_FIREBASE_PROJECT_ID=demo-aftermarket-menu
-
-# Start the dev server
-npm run dev
+npm run dev:emulator
 ```
 
 ## Architecture

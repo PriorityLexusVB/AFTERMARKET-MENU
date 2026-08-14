@@ -11,7 +11,6 @@ The following security automation has been configured via files in this reposito
 Dependabot is configured to automatically check for dependency updates:
 
 - **npm ecosystem** (directory: `/`)
-
   - Scans `package.json` and `package-lock.json` for JavaScript/TypeScript dependency updates
   - Schedule: Weekly on Mondays at 9:00 AM ET
   - Groups production and development dependency updates to reduce PR noise
@@ -38,42 +37,36 @@ CodeQL static analysis is configured to scan for security vulnerabilities:
 
 To fully activate security features, the following settings need to be enabled in the GitHub repository settings:
 
-### Navigate to: Settings  Code security and analysis
+### Navigate to: Settings Code security and analysis
 
 Enable the following features:
 
-1. **Dependency graph** 
-
+1. **Dependency graph**
    - Required for Dependabot to function
    - Usually enabled by default for public repositories
 
-2. **Dependabot alerts** 
-
+2. **Dependabot alerts**
    - Alerts you when vulnerabilities are found in your dependencies
    - Recommended: Enable
 
-3. **Dependabot security updates** 
-
+3. **Dependabot security updates**
    - Automatically creates PRs to fix vulnerable dependencies
    - Recommended: Enable
 
-4. **Dependabot version updates** 
-
+4. **Dependabot version updates**
    - Uses the `dependabot.yml` configuration in this repo
    - Recommended: Enable (should work automatically once the file is present)
 
-5. **Code scanning** 
-
+5. **Code scanning**
    - Enable the CodeQL workflow added to this repo
    - Option 1: Use "Default setup" if offered
    - Option 2: The workflow file `.github/workflows/codeql.yml` will be detected automatically
 
-6. **Secret scanning** 
-
+6. **Secret scanning**
    - Scans for accidentally committed secrets (API keys, tokens, etc.)
    - Recommended: Enable
 
-7. **Push protection** 
+7. **Push protection**
    - Prevents pushing commits that contain secrets
    - Recommended: Enable
 
@@ -93,17 +86,15 @@ For public repositories, these features are generally available for free.
 After enabling the settings above:
 
 1. **Verify Dependabot**:
-
-   - Go to "Insights"  "Dependency graph"  "Dependabot" tab
+   - Go to "Insights" "Dependency graph" "Dependabot" tab
    - You should see the configured ecosystems listed
 
 2. **Verify CodeQL**:
-
-   - Go to "Security"  "Code scanning alerts"
+   - Go to "Security" "Code scanning alerts"
    - The CodeQL workflow should run on the next push to `main` or PR
 
 3. **Verify Secret Scanning**:
-   - Go to "Security"  "Secret scanning alerts"
+   - Go to "Security" "Secret scanning alerts"
    - This page should be accessible if secret scanning is enabled
 
 ## Troubleshooting
@@ -112,7 +103,7 @@ After enabling the settings above:
 
 - Ensure "Dependabot version updates" is enabled in settings
 - Wait up to 24 hours for the first scan to complete
-- Check the Dependabot logs in "Insights"  "Dependency graph"
+- Check the Dependabot logs in "Insights" "Dependency graph"
 
 ### CodeQL workflow not running
 
@@ -127,15 +118,9 @@ After enabling the settings above:
 
 ## CI secrets (Playwright E2E)
 
-The CI workflow [.github/workflows/ci.yml](../.github/workflows/ci.yml) can run Playwright E2E tests using Firebase credentials when available.
+The CI workflow [.github/workflows/ci.yml](../.github/workflows/ci.yml) runs Playwright E2E only in
+demo/mock mode. It does not read Firebase repository secrets or connect to a cloud Firebase project.
 
-Add these as GitHub repository secrets (Settings  Secrets and variables  Actions) if you want E2E to run against a real Firebase config:
-
-- `FIREBASE_API_KEY`
-- `FIREBASE_AUTH_DOMAIN`
-- `TEST_FIRESTORE_PROJECT_ID`
-- `FIREBASE_STORAGE_BUCKET`
-- `FIREBASE_MESSAGING_SENDER_ID`
-- `FIREBASE_APP_ID`
-
-If these secrets are not set (or the workflow is running from a fork PR), the workflow will still run and will execute E2E in demo/mock mode.
+Do not add a credentialed Firebase E2E lane from this guide. That would require separate
+secrets/permissions approval, an exact isolated non-production project identity, least-privilege
+test data and rules, bounded write cleanup, and a rollback owner.

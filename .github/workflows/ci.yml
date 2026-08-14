@@ -19,6 +19,8 @@ permissions:
 
 jobs:
   build-and-test:
+    # A dedicated WebKit dispatch builds inside its own Playwright web server.
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_webkit_ipad_smoke }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,6 +41,9 @@ jobs:
       - name: Check for hidden Unicode characters
         run: npm run check:unicode
 
+      - name: Run lint
+        run: npm run lint
+
       - name: Run TypeScript type checking
         run: npm run typecheck
 
@@ -51,6 +56,7 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     needs: build-and-test
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_webkit_ipad_smoke }}
     permissions:
       contents: read
 
@@ -70,57 +76,9 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build application
-        run: npm run build
-
       - name: Run Playwright E2E tests
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Fork PRs do not receive secrets; exporting empty VITE_* vars would fail prebuild validation.
-          # Export only non-empty secrets to avoid "empty required env var" failures.
-          has_firebase_secrets=false
-
-          if [ -n "${FIREBASE_API_KEY:-}" ]; then
-            export VITE_FIREBASE_API_KEY="$FIREBASE_API_KEY"
-            has_firebase_secrets=true
-          fi
-          if [ -n "${FIREBASE_AUTH_DOMAIN:-}" ]; then
-            export VITE_FIREBASE_AUTH_DOMAIN="$FIREBASE_AUTH_DOMAIN"
-            has_firebase_secrets=true
-          fi
-          if [ -n "${TEST_FIRESTORE_PROJECT_ID:-}" ]; then
-            export VITE_FIREBASE_PROJECT_ID="$TEST_FIRESTORE_PROJECT_ID"
-            has_firebase_secrets=true
-          fi
-          if [ -n "${FIREBASE_STORAGE_BUCKET:-}" ]; then
-            export VITE_FIREBASE_STORAGE_BUCKET="$FIREBASE_STORAGE_BUCKET"
-            has_firebase_secrets=true
-          fi
-          if [ -n "${FIREBASE_MESSAGING_SENDER_ID:-}" ]; then
-            export VITE_FIREBASE_MESSAGING_SENDER_ID="$FIREBASE_MESSAGING_SENDER_ID"
-            has_firebase_secrets=true
-          fi
-          if [ -n "${FIREBASE_APP_ID:-}" ]; then
-            export VITE_FIREBASE_APP_ID="$FIREBASE_APP_ID"
-            has_firebase_secrets=true
-          fi
-
-          if [ "$has_firebase_secrets" = true ]; then
-            echo "Firebase secrets detected; running E2E with VITE_FIREBASE_* exported (only non-empty values)."
-          else
-            echo "Firebase secrets not available; running E2E in demo/mock mode."
-          fi
-
-          npm run test:e2e
-        env:
-          FIREBASE_API_KEY: ${{ secrets['FIREBASE_API_KEY'] }}
-          FIREBASE_AUTH_DOMAIN: ${{ secrets['FIREBASE_AUTH_DOMAIN'] }}
-          TEST_FIRESTORE_PROJECT_ID: ${{ secrets['TEST_FIRESTORE_PROJECT_ID'] }}
-          FIREBASE_STORAGE_BUCKET: ${{ secrets['FIREBASE_STORAGE_BUCKET'] }}
-          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets['FIREBASE_MESSAGING_SENDER_ID'] }}
-          FIREBASE_APP_ID: ${{ secrets['FIREBASE_APP_ID'] }}
+        # E2E is intentionally isolated from cloud Firebase; e2e:web forces demo/mock mode.
+        run: npm run test:e2e
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -140,7 +98,6 @@ jobs:
 
   e2e-webkit-ipad-smoke:
     runs-on: ubuntu-latest
-    needs: build-and-test
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_webkit_ipad_smoke }}
     permissions:
       contents: read
@@ -160,9 +117,6 @@ jobs:
 
       - name: Install Playwright browsers (webkit only)
         run: npx playwright install --with-deps webkit
-
-      - name: Build application
-        run: npm run build
 
       - name: WebKit iPad smoke
         run: PW_WEBKIT=1 npx playwright test --project=webkit-ipad e2e/ipad-fit.spec.ts e2e/pick2-flow.spec.ts

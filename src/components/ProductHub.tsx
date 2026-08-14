@@ -160,12 +160,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     [packages]
   );
 
-  const clearRowError = (featureId: string) => {
+  const clearRowError = useCallback((featureId: string) => {
     setRowErrors((prev) => {
       const { [featureId]: _removed, ...rest } = prev;
       return rest;
     });
-  };
+  }, []);
 
   const clearSaved = (featureId: string) => {
     setSavedIds((prev) => {
@@ -196,7 +196,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     setRowErrors((prev) => ({ ...prev, [featureId]: message }));
   };
 
-  const markSaved = (featureId: string) => {
+  const markSaved = useCallback((featureId: string) => {
     clearRowError(featureId);
     if (!isMounted.current) return;
     setSavedIds((prev) => {
@@ -217,7 +217,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       const { [featureId]: _timer, ...rest } = saveTimers.current;
       saveTimers.current = rest;
     }, 1500);
-  };
+  }, [clearRowError]);
 
   const fetchData = useCallback(async () => {
     if (!db) {
@@ -1324,7 +1324,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     try {
       if (!option) {
         if (next) {
-          const resolvedPrice = feature.alaCartePrice ?? option?.price ?? feature.price;
+          const resolvedPrice = feature.alaCartePrice ?? feature.price;
           await upsertAlaCarteFromFeature(
             {
               ...feature,
@@ -1353,14 +1353,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       }
       setRowErrorMessage(feature.id, "Failed to save Pick2 Eligible.");
     }
-  }, [requestMenuRefresh]);
+  }, [clearRowError, markSaved, requestMenuRefresh]);
 
   const handlePick2SortBlur = useCallback(async (
     feature: ProductFeature,
     option: AlaCarteOption | undefined,
     raw: string
   ) => {
-    if (!option && !(option?.pick2Eligible ?? false)) return;
     const trimmed = raw.trim();
     const previous = option?.pick2Sort;
 
@@ -1444,14 +1443,13 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       }
       setRowErrorMessage(feature.id, "Failed to save Pick2 Sort.");
     }
-  }, [requestMenuRefresh]);
+  }, [clearRowError, markSaved, requestMenuRefresh]);
 
   const handlePick2ShortValueBlur = useCallback(async (
     feature: ProductFeature,
     option: AlaCarteOption | undefined,
     raw: string
   ) => {
-    if (!option && !(option?.pick2Eligible ?? false)) return;
     const trimmed = raw.trim();
     const next = trimmed ? trimmed : undefined;
     const previous = option?.shortValue;
@@ -1491,7 +1489,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       }
       setRowErrorMessage(feature.id, "Failed to save Short Value.");
     }
-  }, [requestMenuRefresh]);
+  }, [clearRowError, markSaved, requestMenuRefresh]);
 
   const handlePick2HighlightsBlur = useCallback(async (
     feature: ProductFeature,
@@ -1499,8 +1497,6 @@ export const ProductHub: React.FC<ProductHubProps> = ({
     line1: string,
     line2: string
   ) => {
-    if (!option && !(option?.pick2Eligible ?? false)) return;
-
     const nextHighlights = [line1.trim(), line2.trim()].filter(Boolean).slice(0, 2);
     const next = nextHighlights.length > 0 ? nextHighlights : undefined;
     const previous = option?.highlights;
@@ -1540,7 +1536,7 @@ export const ProductHub: React.FC<ProductHubProps> = ({
       }
       setRowErrorMessage(feature.id, "Failed to save Highlights.");
     }
-  }, [requestMenuRefresh]);
+  }, [clearRowError, markSaved, requestMenuRefresh]);
 
   const handlePriceInputChange = useCallback((featureId: string, value: string) => {
     setPriceInputs((prev) => ({

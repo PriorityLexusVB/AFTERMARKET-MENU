@@ -253,7 +253,7 @@ describe("ProductHub drag-and-drop interface", () => {
     await waitFor(() => expect(mockUpsert).toHaveBeenCalledTimes(1));
 
     const pick2EligibleCheckbox = within(card).getByRole("checkbox", { name: /Pick2 Eligible/i });
-    expect(pick2EligibleCheckbox).toBeChecked();
+    await waitFor(() => expect(pick2EligibleCheckbox).toBeChecked());
   });
 
   it("displays unpublished status on card", async () => {

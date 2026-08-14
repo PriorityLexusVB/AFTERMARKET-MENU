@@ -1384,7 +1384,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
               pick2Sort: undefined,
             }
           );
-          upsertOptionState(feature, { isPublished: false, price: resolvedPrice, pick2Sort: undefined });
+          upsertOptionState(feature, {
+            isPublished: false,
+            price: resolvedPrice,
+            pick2Eligible: true,
+            pick2Sort: undefined,
+          });
           requestMenuRefresh();
           markSaved(feature.id);
           return;
@@ -1428,7 +1433,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             pick2Sort: parsed,
           }
         );
-        upsertOptionState(feature, { isPublished: false, price: resolvedPrice, pick2Sort: parsed });
+        upsertOptionState(feature, {
+          isPublished: false,
+          price: resolvedPrice,
+          pick2Eligible: true,
+          pick2Sort: parsed,
+        });
         requestMenuRefresh();
         markSaved(feature.id);
         return;
@@ -1474,7 +1484,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             shortValue: next,
           }
         );
-        upsertOptionState(feature, { isPublished: false, price: resolvedPrice, shortValue: next });
+        upsertOptionState(feature, {
+          isPublished: false,
+          price: resolvedPrice,
+          pick2Eligible: true,
+          shortValue: next,
+        });
         requestMenuRefresh();
         markSaved(feature.id);
         return;
@@ -1521,7 +1536,12 @@ export const ProductHub: React.FC<ProductHubProps> = ({
             highlights: nextHighlights,
           }
         );
-        upsertOptionState(feature, { isPublished: false, price: resolvedPrice, highlights: next });
+        upsertOptionState(feature, {
+          isPublished: false,
+          price: resolvedPrice,
+          pick2Eligible: true,
+          highlights: next,
+        });
         requestMenuRefresh();
         markSaved(feature.id);
         return;

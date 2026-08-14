@@ -12,10 +12,12 @@ This guide provides detailed instructions for deploying the Priority Lexus After
 
 When deploying to Cloud Run with buildpacks (no Dockerfile):
 
-1. Cloud Build runs `npm run gcp-build` which executes `vite build`
+1. Cloud Build runs `npm run gcp-build`, which first requires all six Firebase build variables and then executes `vite build`
 2. During this build step, Vite looks for `VITE_*` environment variables
-3. If these variables are not available, Vite compiles `undefined` into your code
+3. If these variables are not available, `gcp-build` exits before an image can be pushed or deployed
 4. Even if you set runtime environment variables later in Cloud Run, they won't help because the build is already complete
+
+Ordinary `npm run build` remains demo-capable for local development and test automation. The fail-closed requirement is intentionally limited to the buildpack entry point used for GCP production deployments.
 
 ### The Symptom
 

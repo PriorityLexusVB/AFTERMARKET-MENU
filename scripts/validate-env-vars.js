@@ -6,7 +6,7 @@
  * - Missing required variables at build time
  * - Invalid variable formats
  *
- * Usage: node scripts/validate-env-vars.js
+ * Usage: node scripts/validate-env-vars.js [--require-firebase]
  *
  * Exit codes:
  *   0 - All environment variables are valid
@@ -61,11 +61,12 @@ function logInfo(message) {
 /**
  * Validates that environment variable names don't have leading/trailing spaces
  */
-function validateEnvVarNames() {
+function validateEnvVarNames({ rejectRequiredNormalizations = false } = {}) {
   logInfo("Checking for malformed environment variable names...");
   let normalized = 0;
   let detected = 0;
   let collisions = 0;
+  let rejectedRequired = 0;
 
   const envKeys = Object.keys(process.env);
   const normalizations = [];
@@ -83,6 +84,16 @@ function validateEnvVarNames() {
       if (trimmedKey === "") {
         logWarning(
           "Environment variable name consists only of whitespace; ignoring this variable."
+        );
+        return;
+      }
+      if (
+        rejectRequiredNormalizations &&
+        REQUIRED_BUILD_VARS.includes(trimmedKey)
+      ) {
+        rejectedRequired += 1;
+        logError(
+          `Malformed Firebase variable name is not allowed for the GCP production build: "${key}"`
         );
         return;
       }
@@ -131,13 +142,13 @@ function validateEnvVarNames() {
 
   logSuccess("Environment variable name check completed");
 
-  return collisions === 0;
+  return collisions === 0 && rejectedRequired === 0;
 }
 
 /**
  * Validates that required build-time variables are present
  */
-function validateRequiredVars() {
+function validateRequiredVars({ requireAll = false } = {}) {
   logInfo("Checking for required build-time environment variables...");
 
   const missing = [];
@@ -152,9 +163,14 @@ function validateRequiredVars() {
   });
 
   if (missing.length > 0) {
-    logWarning("Missing required environment variables:");
-    missing.forEach((v) => logWarning(`  - ${v}`));
-    logWarning("The app will use mock data in demo mode.");
+    const logMissing = requireAll ? logError : logWarning;
+    logMissing("Missing required environment variables:");
+    missing.forEach((v) => logMissing(`  - ${v}`));
+    if (requireAll) {
+      logError("Firebase configuration is required for the GCP production build.");
+    } else {
+      logWarning("The app will use mock data in demo mode.");
+    }
   }
 
   if (empty.length > 0) {
@@ -170,7 +186,7 @@ function validateRequiredVars() {
     logSuccess("All required environment variables are present");
   }
 
-  return empty.length === 0; // Only fail on empty, not missing (demo mode ok)
+  return empty.length === 0 && (!requireAll || missing.length === 0);
 }
 
 /**
@@ -237,15 +253,17 @@ function validatePort() {
 /**
  * Main validation function
  */
-function main() {
+function main({ requireAll = process.argv.includes("--require-firebase") } = {}) {
   log("\n=== Environment Variable Validation ===\n", "blue");
 
   let allValid = true;
 
   // Run validations
-  if (!validateEnvVarNames()) allValid = false;
+  if (!validateEnvVarNames({ rejectRequiredNormalizations: requireAll })) {
+    allValid = false;
+  }
   if (!validatePort()) allValid = false;
-  if (!validateRequiredVars()) allValid = false;
+  if (!validateRequiredVars({ requireAll })) allValid = false;
   if (!validateEnvVarValues()) allValid = false;
 
   // Summary

@@ -1,7 +1,7 @@
 import React from "react";
 
 interface BulkActionsBarProps {
-  bulkSelectRef: React.RefObject<HTMLInputElement | null>;
+  bulkSelectRef: React.Ref<HTMLInputElement>;
   allFilteredSelected: boolean;
   selectedCount: number;
   selectedFeatureCount: number;

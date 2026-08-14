@@ -8,6 +8,7 @@ import {
   screen,
   waitFor,
   within,
+  fireEvent,
 } from "../test/test-utils";
 import type { AlaCarteOption, ProductFeature } from "../types";
 
@@ -236,6 +237,23 @@ describe("ProductHub drag-and-drop interface", () => {
     
     const card = findProductCard(feature.name, "packages");
     expect(within(card).getByText("Published")).toBeInTheDocument();
+  });
+
+  it("keeps Pick2 eligible true for the missing-option Pick2 sort admin save path", async () => {
+    const { feature } = await renderHub({ publishToAlaCarte: false, alaCartePrice: 149 });
+
+    const card = findProductCard(feature.name);
+    await userEvent.click(within(card).getByRole("button", { name: /Expand/i }));
+
+    // The sort input is a disabled fallback when Pick2 is unavailable because there is no missing option yet.
+    // Drive it directly to the exact onBlur contract for the missing-option handler.
+    const pick2SortInput = within(card).getByLabelText(/Pick2 Sort/i);
+    fireEvent.blur(pick2SortInput);
+
+    await waitFor(() => expect(mockUpsert).toHaveBeenCalledTimes(1));
+
+    const pick2EligibleCheckbox = within(card).getByRole("checkbox", { name: /Pick2 Eligible/i });
+    await waitFor(() => expect(pick2EligibleCheckbox).toBeChecked());
   });
 
   it("displays unpublished status on card", async () => {
